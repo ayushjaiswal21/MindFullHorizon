@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+
+{% block title %}Progress Tracking - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Your Mental Health Progress</h1>
+        <p class="text-gray-600">Track your mental health journey with detailed insights and trends</p>
+    </div>
+
+    <!-- Progress Overview Cards -->
+    <div class="grid md:grid-cols-3 gap-6 mb-8">
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Anxiety Levels</h3>
+                <i class="fas fa-heart text-blue-500 text-xl"></i>
+            </div>
+            <div class="text-3xl font-bold text-blue-600 mb-2">8/21</div>
+            <div class="text-sm text-gray-600 mb-3">Latest GAD-7 Score</div>
+            <div class="flex items-center">
+                <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Mild</span>
+                <span class="ml-2 text-sm text-green-600">
+                    <i class="fas fa-arrow-down mr-1"></i>Improved from last week
+                </span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Depression Screen</h3>
+                <i class="fas fa-brain text-purple-500 text-xl"></i>
+            </div>
+            <div class="text-3xl font-bold text-purple-600 mb-2">5/27</div>
+            <div class="text-sm text-gray-600 mb-3">Latest PHQ-9 Score</div>
+            <div class="flex items-center">
+                <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Minimal</span>
+                <span class="ml-2 text-sm text-green-600">
+                    <i class="fas fa-check mr-1"></i>Stable
+                </span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Overall Wellness</h3>
+                <i class="fas fa-chart-line text-green-500 text-xl"></i>
+            </div>
+            <div class="text-3xl font-bold text-green-600 mb-2">7.2/10</div>
+            <div class="text-sm text-gray-600 mb-3">AI Wellness Score</div>
+            <div class="flex items-center">
+                <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Good</span>
+                <span class="ml-2 text-sm text-green-600">
+                    <i class="fas fa-arrow-up mr-1"></i>Trending up
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid lg:grid-cols-2 gap-8 mb-8">
+        <!-- Mood Trends Chart -->
+        <div class="card">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                <i class="fas fa-smile text-yellow-500 mr-2"></i>Mood Trends (Last 30 Days)
+            </h3>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4" style="height: 250px;">
+                <canvas id="moodChart" width="400" height="200"></canvas>
+            </div>
+            <div class="text-sm text-gray-600">
+                <i class="fas fa-info-circle mr-2"></i>
+                Your mood has been gradually improving over the past month. Keep up the good work!
+            </div>
+        </div>
+
+        <!-- Assessment Scores Chart -->
+        <div class="card">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                <i class="fas fa-chart-bar text-blue-500 mr-2"></i>Assessment Score History
+            </h3>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4" style="height: 250px;">
+                <canvas id="assessmentChart" width="400" height="200"></canvas>
+            </div>
+            <div class="text-sm text-gray-600">
+                <i class="fas fa-trending-down text-green-500 mr-2"></i>
+                Both anxiety and depression scores are trending downward (improvement).
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Progress Analysis -->
+    <div class="card mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-robot text-purple-500 mr-2"></i>AI Progress Analysis
+        </h3>
+        
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg mb-6">
+            <h4 class="font-semibold text-gray-800 mb-3">Personalized Insights</h4>
+            <div class="space-y-3 text-sm text-gray-700">
+                <div class="flex items-start">
+                    <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                    <span><strong>Positive Trend:</strong> Your anxiety levels have decreased by 25% over the past month, indicating effective coping strategies.</span>
+                </div>
+                <div class="flex items-start">
+                    <i class="fas fa-lightbulb text-yellow-500 mr-3 mt-1"></i>
+                    <span><strong>Recommendation:</strong> Your mood dips typically occur on Mondays. Consider implementing weekend self-care routines.</span>
+                </div>
+                <div class="flex items-start">
+                    <i class="fas fa-star text-blue-500 mr-3 mt-1"></i>
+                    <span><strong>Strength:</strong> You've maintained consistent daily mood tracking for 3 weeks - excellent commitment to your mental health!</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-green-50 p-4 rounded-lg">
+                <h5 class="font-semibold text-green-800 mb-2">What's Working Well</h5>
+                <ul class="text-sm text-green-700 space-y-1">
+                    <li>• Regular sleep schedule (7-8 hours)</li>
+                    <li>• Consistent exercise routine</li>
+                    <li>• Active engagement with therapy sessions</li>
+                    <li>• Improved stress management techniques</li>
+                </ul>
+            </div>
+            
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h5 class="font-semibold text-blue-800 mb-2">Areas for Growth</h5>
+                <ul class="text-sm text-blue-700 space-y-1">
+                    <li>• Social connection opportunities</li>
+                    <li>• Mindfulness practice consistency</li>
+                    <li>• Work-life balance optimization</li>
+                    <li>• Nutrition pattern improvements</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goal Setting Section -->
+    <div class="card mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-target text-red-500 mr-2"></i>Mental Health Goals
+        </h3>
+        
+        <div class="space-y-4">
+            <div class="border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-semibold text-gray-800">Reduce Anxiety Score to Below 5</h4>
+                    <span class="text-sm text-gray-600">Target: Feb 15, 2024</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: 65%"></div>
+                </div>
+                <div class="flex justify-between text-sm text-gray-600">
+                    <span>Current: 8/21</span>
+                    <span>65% to goal</span>
+                </div>
+            </div>
+            
+            <div class="border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-semibold text-gray-800">Maintain Daily Mood Tracking</h4>
+                    <span class="text-sm text-gray-600">21-day streak</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div class="bg-green-600 h-2 rounded-full" style="width: 100%"></div>
+                </div>
+                <div class="flex justify-between text-sm text-gray-600">
+                    <span>21/21 days completed</span>
+                    <span>Goal achieved! 🎉</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <button class="btn-primary" onclick="setNewGoal()">
+                <i class="fas fa-plus mr-2"></i>Set New Goal
+            </button>
+        </div>
+    </div>
+
+    <!-- Action Items -->
+    <div class="grid md:grid-cols-2 gap-6">
+        <div class="card">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                <i class="fas fa-tasks text-orange-500 mr-2"></i>Recommended Actions
+            </h3>
+            <div class="space-y-3">
+                <div class="flex items-center p-3 bg-orange-50 rounded-lg">
+                    <i class="fas fa-calendar text-orange-500 mr-3"></i>
+                    <div>
+                        <div class="font-medium text-gray-800">Schedule Next Assessment</div>
+                        <div class="text-sm text-gray-600">Due in 2 weeks</div>
+                    </div>
+                </div>
+                <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                    <i class="fas fa-user-md text-blue-500 mr-3"></i>
+                    <div>
+                        <div class="font-medium text-gray-800">Book Therapy Session</div>
+                        <div class="text-sm text-gray-600">Follow up on progress</div>
+                    </div>
+                </div>
+                <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                    <i class="fas fa-book text-green-500 mr-3"></i>
+                    <div>
+                        <div class="font-medium text-gray-800">Complete Mindfulness Module</div>
+                        <div class="text-sm text-gray-600">Digital therapy exercise</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                <i class="fas fa-share-alt text-purple-500 mr-2"></i>Share Progress
+            </h3>
+            <p class="text-gray-600 mb-4">Share your progress with your healthcare provider or support system.</p>
+            <div class="space-y-3">
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200">
+                    <i class="fas fa-envelope mr-2"></i>Email Progress Report
+                </button>
+                <button class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200">
+                    <i class="fas fa-download mr-2"></i>Download PDF Summary
+                </button>
+                <button class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200">
+                    <i class="fas fa-user-md mr-2"></i>Share with Provider
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMoodChart();
+    initializeAssessmentChart();
+});
+
+function initializeMoodChart() {
+    const canvas = document.getElementById('moodChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Sample mood data for the last 30 days
+    const moodData = [3, 4, 3, 5, 4, 3, 4, 5, 4, 3, 4, 4, 5, 4, 3, 4, 5, 5, 4, 4, 5, 4, 4, 5, 5, 4, 5, 5, 4, 5];
+    const days = Array.from({length: 30}, (_, i) => i + 1);
+    
+    // Simple line chart implementation
+    drawLineChart(ctx, canvas, days, moodData, 'Mood Score', '#f59e0b');
+}
+
+function initializeAssessmentChart() {
+    const canvas = document.getElementById('assessmentChart');
+    const ctx = canvas.getContext('2d');
+    
+    // Sample assessment data over time
+    const dates = ['Dec 1', 'Dec 15', 'Jan 1', 'Jan 8'];
+    const anxietyScores = [12, 10, 9, 8];
+    const depressionScores = [8, 7, 6, 5];
+    
+    // Draw dual line chart
+    drawDualLineChart(ctx, canvas, dates, anxietyScores, depressionScores);
+}
+
+function drawLineChart(ctx, canvas, xData, yData, label, color) {
+    const padding = 40;
+    const width = canvas.width - 2 * padding;
+    const height = canvas.height - 2 * padding;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Set up scales
+    const maxY = Math.max(...yData);
+    const minY = Math.min(...yData);
+    const yRange = maxY - minY || 1;
+    
+    // Draw axes
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    
+    // Y-axis
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, padding + height);
+    ctx.stroke();
+    
+    // X-axis
+    ctx.beginPath();
+    ctx.moveTo(padding, padding + height);
+    ctx.lineTo(padding + width, padding + height);
+    ctx.stroke();
+    
+    // Draw grid lines
+    for (let i = 0; i <= 5; i++) {
+        const y = padding + (height / 5) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(padding + width, y);
+        ctx.stroke();
+    }
+    
+    // Draw data line
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    
+    for (let i = 0; i < yData.length; i++) {
+        const x = padding + (width / (yData.length - 1)) * i;
+        const y = padding + height - ((yData[i] - minY) / yRange) * height;
+        
+        if (i === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    ctx.stroke();
+    
+    // Draw data points
+    ctx.fillStyle = color;
+    for (let i = 0; i < yData.length; i++) {
+        const x = padding + (width / (yData.length - 1)) * i;
+        const y = padding + height - ((yData[i] - minY) / yRange) * height;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+    
+    // Add labels
+    ctx.fillStyle = '#6b7280';
+    ctx.font = '12px Inter';
+    ctx.textAlign = 'center';
+    
+    // Y-axis labels
+    for (let i = 0; i <= 5; i++) {
+        const value = minY + (yRange / 5) * (5 - i);
+        const y = padding + (height / 5) * i;
+        ctx.fillText(Math.round(value * 10) / 10, padding - 20, y + 4);
+    }
+}
+
+function drawDualLineChart(ctx, canvas, xLabels, data1, data2) {
+    const padding = 40;
+    const width = canvas.width - 2 * padding;
+    const height = canvas.height - 2 * padding;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Set up scales
+    const allData = [...data1, ...data2];
+    const maxY = Math.max(...allData);
+    const minY = Math.min(...allData);
+    const yRange = maxY - minY || 1;
+    
+    // Draw axes
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    
+    // Y-axis
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, padding + height);
+    ctx.stroke();
+    
+    // X-axis
+    ctx.beginPath();
+    ctx.moveTo(padding, padding + height);
+    ctx.lineTo(padding + width, padding + height);
+    ctx.stroke();
+    
+    // Draw anxiety line
+    drawDataLine(ctx, padding, width, height, data1, minY, yRange, '#3b82f6');
+    
+    // Draw depression line
+    drawDataLine(ctx, padding, width, height, data2, minY, yRange, '#8b5cf6');
+    
+    // Add legend
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillRect(padding + width - 120, padding + 10, 15, 3);
+    ctx.fillStyle = '#374151';
+    ctx.font = '12px Inter';
+    ctx.fillText('Anxiety (GAD-7)', padding + width - 100, padding + 15);
+    
+    ctx.fillStyle = '#8b5cf6';
+    ctx.fillRect(padding + width - 120, padding + 30, 15, 3);
+    ctx.fillStyle = '#374151';
+    ctx.fillText('Depression (PHQ-9)', padding + width - 100, padding + 35);
+}
+
+function drawDataLine(ctx, padding, width, height, data, minY, yRange, color) {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    
+    for (let i = 0; i < data.length; i++) {
+        const x = padding + (width / (data.length - 1)) * i;
+        const y = padding + height - ((data[i] - minY) / yRange) * height;
+        
+        if (i === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    ctx.stroke();
+    
+    // Draw data points
+    ctx.fillStyle = color;
+    for (let i = 0; i < data.length; i++) {
+        const x = padding + (width / (data.length - 1)) * i;
+        const y = padding + height - ((data[i] - minY) / yRange) * height;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+}
+
+function setNewGoal() {
+    showNotification('Goal setting feature coming soon! This will allow you to set personalized mental health targets.', 'info');
+}
+</script>
+{% endblock %}

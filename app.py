@@ -189,5 +189,17 @@ Licensed Mental Health Professional
 def telehealth():
     return render_template('telehealth.html', user_name=session['user_name'])
 
+@app.route('/assessment')
+@login_required
+@role_required('patient')
+def assessment():
+    return render_template('assessment.html', user_name=session['user_name'])
+
+@app.route('/progress')
+@login_required
+@role_required('patient')
+def progress():
+    return render_template('progress.html', user_name=session['user_name'])
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

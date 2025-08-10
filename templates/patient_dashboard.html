@@ -78,6 +78,38 @@
         </div>
     </div>
 
+    <!-- Mental Health Assessment Section -->
+    <div class="card mb-8">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">
+            <i class="fas fa-clipboard-check text-indigo-500 mr-2"></i>Mental Health Assessment
+        </h3>
+        <p class="text-gray-600 mb-4">Take standardized assessments to track your mental health progress and get personalized insights.</p>
+        <div class="grid md:grid-cols-2 gap-4">
+            <a href="{{ url_for('assessment') }}" class="block p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition duration-200">
+                <div class="flex items-center">
+                    <div class="bg-indigo-100 rounded-full w-12 h-12 flex items-center justify-center mr-4">
+                        <i class="fas fa-brain text-indigo-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Take Assessment</h4>
+                        <p class="text-sm text-gray-600">GAD-7, PHQ-9 & Daily Mood</p>
+                    </div>
+                </div>
+            </a>
+            <a href="{{ url_for('progress') }}" class="block p-4 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition duration-200">
+                <div class="flex items-center">
+                    <div class="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mr-4">
+                        <i class="fas fa-chart-line text-green-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">View Progress</h4>
+                        <p class="text-sm text-gray-600">Trends & AI Insights</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="dashboard-grid">
         <div class="card">
