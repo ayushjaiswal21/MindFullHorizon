@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Telehealth Session - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="card">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-video text-green-500 mr-2"></i>Telehealth Session
+        </h2>
+        
+        <div class="bg-gray-900 rounded-lg p-8 text-center mb-6">
+            <div class="bg-gray-800 rounded-lg p-12 mb-4">
+                <i class="fas fa-video text-gray-400 text-6xl mb-4"></i>
+                <p class="text-white text-lg">Video session will appear here</p>
+                <p class="text-gray-400 text-sm">Secure, HIPAA-compliant video conferencing</p>
+            </div>
+            
+            <div class="flex justify-center space-x-4">
+                <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full transition duration-200">
+                    <i class="fas fa-microphone-slash"></i>
+                </button>
+                <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full transition duration-200">
+                    <i class="fas fa-video-slash"></i>
+                </button>
+                <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full transition duration-200">
+                    <i class="fas fa-phone"></i>
+                </button>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition duration-200">
+                    <i class="fas fa-share-screen"></i>
+                </button>
+            </div>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-shield-alt text-blue-500 mr-2"></i>Security & Privacy
+                </h3>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• End-to-end encrypted video calls</li>
+                    <li>• HIPAA compliant platform</li>
+                    <li>• No session recordings without consent</li>
+                    <li>• Secure data transmission</li>
+                </ul>
+            </div>
+            
+            <div class="bg-green-50 p-4 rounded-lg">
+                <h3 class="font-semibold text-gray-800 mb-2">
+                    <i class="fas fa-headset text-green-500 mr-2"></i>Technical Support
+                </h3>
+                <ul class="text-sm text-gray-600 space-y-1">
+                    <li>• 24/7 technical assistance available</li>
+                    <li>• Browser-based, no downloads required</li>
+                    <li>• Mobile device compatible</li>
+                    <li>• Backup phone option available</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="mt-6 p-4 bg-yellow-50 rounded-lg">
+            <p class="text-sm text-yellow-800">
+                <i class="fas fa-info-circle mr-2"></i>
+                This is a placeholder for the telehealth interface. In a production environment, this would integrate with a secure video conferencing solution like Zoom Healthcare, Doxy.me, or a custom WebRTC implementation.
+            </p>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <a href="{{ url_for('patient_dashboard') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-full transition duration-300">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

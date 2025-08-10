@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Chat Support - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="card">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-comments text-blue-500 mr-2"></i>Chat Support
+        </h2>
+        
+        <div class="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto mb-4" id="chat-messages">
+            <div class="mb-4">
+                <div class="bg-blue-100 rounded-lg p-3 max-w-xs">
+                    <p class="text-sm text-gray-800">Hello {{ user_name }}! I'm here to help you with any questions or concerns you may have. How are you feeling today?</p>
+                    <span class="text-xs text-gray-500">Support Bot - Just now</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex space-x-2">
+            <input type="text" id="chat-input" placeholder="Type your message here..." 
+                   class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition duration-200">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+        
+        <div class="mt-4 p-3 bg-yellow-50 rounded-lg">
+            <p class="text-sm text-yellow-800">
+                <i class="fas fa-info-circle mr-2"></i>
+                This is a simulated chat interface. In a production environment, this would connect to a real support system or chatbot.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const messages = document.getElementById('chat-messages');
+    
+    if (input.value.trim()) {
+        // Add user message
+        const userMessage = document.createElement('div');
+        userMessage.className = 'mb-4 flex justify-end';
+        userMessage.innerHTML = `
+            <div class="bg-blue-600 text-white rounded-lg p-3 max-w-xs">
+                <p class="text-sm">${input.value}</p>
+                <span class="text-xs opacity-75">You - Just now</span>
+            </div>
+        `;
+        messages.appendChild(userMessage);
+        
+        // Simulate bot response
+        setTimeout(() => {
+            const botMessage = document.createElement('div');
+            botMessage.className = 'mb-4';
+            botMessage.innerHTML = `
+                <div class="bg-gray-200 rounded-lg p-3 max-w-xs">
+                    <p class="text-sm text-gray-800">Thank you for sharing. I understand you're going through a challenging time. Would you like to schedule a session with one of our providers?</p>
+                    <span class="text-xs text-gray-500">Support Bot - Just now</span>
+                </div>
+            `;
+            messages.appendChild(botMessage);
+            messages.scrollTop = messages.scrollHeight;
+        }, 1000);
+        
+        input.value = '';
+        messages.scrollTop = messages.scrollHeight;
+    }
+}
+
+document.getElementById('chat-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+</script>
+{% endblock %}

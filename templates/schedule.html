@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Schedule Appointment - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="card">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-calendar text-purple-500 mr-2"></i>Schedule Your Appointment
+        </h2>
+        
+        <form method="POST" class="space-y-6">
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label for="date" class="block text-gray-700 font-medium mb-2">Select Date</label>
+                    <input type="date" id="date" name="date" class="input-field" required min="{{ today }}">
+                </div>
+                
+                <div>
+                    <label for="time" class="block text-gray-700 font-medium mb-2">Select Time</label>
+                    <select id="time" name="time" class="input-field" required>
+                        <option value="" disabled selected>Choose a time slot</option>
+                        <option value="09:00">9:00 AM</option>
+                        <option value="10:00">10:00 AM</option>
+                        <option value="11:00">11:00 AM</option>
+                        <option value="14:00">2:00 PM</option>
+                        <option value="15:00">3:00 PM</option>
+                        <option value="16:00">4:00 PM</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div>
+                <label for="appointment-type" class="block text-gray-700 font-medium mb-2">Appointment Type</label>
+                <select id="appointment-type" name="appointment_type" class="input-field" required>
+                    <option value="" disabled selected>Select appointment type</option>
+                    <option value="therapy">Therapy Session</option>
+                    <option value="consultation">Initial Consultation</option>
+                    <option value="follow-up">Follow-up Session</option>
+                    <option value="crisis">Crisis Intervention</option>
+                </select>
+            </div>
+            
+            <div>
+                <label for="notes" class="block text-gray-700 font-medium mb-2">Additional Notes (Optional)</label>
+                <textarea id="notes" name="notes" rows="4" class="input-field" 
+                         placeholder="Please share any specific concerns or topics you'd like to discuss..."></textarea>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button type="submit" class="btn-primary flex-1">
+                    <i class="fas fa-check mr-2"></i>Schedule Appointment
+                </button>
+                <a href="{{ url_for('patient_dashboard') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-full transition duration-300 text-center flex-1">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </form>
+        
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h3 class="font-semibold text-gray-800 mb-2">
+                <i class="fas fa-info-circle text-blue-500 mr-2"></i>Appointment Information
+            </h3>
+            <ul class="text-sm text-gray-600 space-y-1">
+                <li>• Appointments are typically 50 minutes long</li>
+                <li>• You'll receive a confirmation email with session details</li>
+                <li>• Telehealth sessions will include a secure video link</li>
+                <li>• Please arrive 5 minutes early for in-person appointments</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+// Set minimum date to today
+document.getElementById('date').min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

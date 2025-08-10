@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Mindful Horizon - Empowering Your Mental Well-being{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-screen">
+    <div class="text-center">
+        <div class="header-bg text-white p-12 rounded-3xl shadow-2xl max-w-4xl mx-auto">
+            <h1 class="text-4xl md:text-6xl font-extrabold mb-4 animate-fade-in">Empowering Your Mental Well-being.</h1>
+            <p class="text-lg md:text-xl mb-8 opacity-90 animate-fade-in-delay">Proactive insights for a healthier mind. Take the first step towards a brighter future.</p>
+            <a href="{{ url_for('login') }}" class="btn-primary">Get Started</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

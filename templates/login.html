@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-screen">
+    <div class="card max-w-md mx-auto">
+        <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">Welcome Back</h2>
+        <form method="POST">
+            <div class="mb-4">
+                <label for="email" class="block text-gray-700 font-medium mb-2">Email Address</label>
+                <input type="email" id="email" name="email" class="input-field" placeholder="you@example.com" required>
+            </div>
+            <div class="mb-4">
+                <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
+                <input type="password" id="password" name="password" class="input-field" placeholder="••••••••" required>
+            </div>
+            <div class="mb-6">
+                <label for="role" class="block text-gray-700 font-medium mb-2">Login As</label>
+                <select id="role" name="role" class="input-field" required>
+                    <option value="" disabled selected>Select your role</option>
+                    <option value="patient">Patient</option>
+                    <option value="provider">Provider</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-primary w-full">Login</button>
+        </form>
+        
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h3 class="font-semibold text-gray-800 mb-2">Demo Credentials:</h3>
+            <div class="text-sm text-gray-600">
+                <p><strong>Patient:</strong> patient@example.com / password</p>
+                <p><strong>Provider:</strong> provider@example.com / password</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

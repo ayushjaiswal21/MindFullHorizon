@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Provider Dashboard - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Provider Dashboard</h1>
+        <p class="text-gray-600">Welcome back, {{ user_name }}. Manage your caseload and access tools.</p>
+    </div>
+
+    <!-- Business Intelligence Section -->
+    <div class="dashboard-grid mb-8">
+        <div class="card">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-chart-bar text-blue-500 mr-2"></i>Practice Analytics
+            </h3>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ bi_data.patient_engagement }}%</div>
+                    <div class="text-sm text-gray-600">Patient Engagement</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ bi_data.avg_session_duration }}min</div>
+                    <div class="text-sm text-gray-600">Avg Session Duration</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">{{ bi_data.completion_rate }}%</div>
+                    <div class="text-sm text-gray-600">Treatment Completion</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-yellow-600">{{ bi_data.satisfaction_score }}/5</div>
+                    <div class="text-sm text-gray-600">Patient Satisfaction</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-robot text-purple-500 mr-2"></i>AI Tools
+            </h3>
+            <div class="space-y-3">
+                <a href="{{ url_for('ai_documentation') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 text-center">
+                    <i class="fas fa-file-medical-alt mr-2"></i>AI Documentation
+                </a>
+                <p class="text-sm text-gray-600 text-center">Generate clinical notes from session transcripts</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Caseload Management -->
+    <div class="card mb-8">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">
+            <i class="fas fa-users text-green-500 mr-2"></i>Patient Caseload
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Patient Name</th>
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Age</th>
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Risk Level</th>
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Last Session</th>
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for patient in caseload %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ patient.name }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-700">{{ patient.age }}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium
+                                {% if patient.risk_level == 'High' %}bg-red-100 text-red-800
+                                {% elif patient.risk_level == 'Medium' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ patient.risk_level }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm text-gray-700">{{ patient.last_session }}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium
+                                {% if patient.status == 'Needs Attention' %}bg-red-100 text-red-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ patient.status }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 text-sm">
+                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="text-green-600 hover:text-green-800">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Interoperability & DTx Information -->
+    <div class="dashboard-grid">
+        <div class="card">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-exchange-alt text-blue-500 mr-2"></i>Interoperability
+            </h3>
+            <p class="text-gray-600 mb-4">
+                Our platform integrates seamlessly with major EHR systems and healthcare networks, 
+                ensuring secure data exchange and continuity of care.
+            </p>
+            <ul class="text-sm text-gray-600 space-y-2">
+                <li><i class="fas fa-check text-green-500 mr-2"></i>FHIR R4 Compliance</li>
+                <li><i class="fas fa-check text-green-500 mr-2"></i>HL7 Integration</li>
+                <li><i class="fas fa-check text-green-500 mr-2"></i>Epic MyChart Compatible</li>
+                <li><i class="fas fa-check text-green-500 mr-2"></i>Cerner PowerChart Ready</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-mobile-alt text-purple-500 mr-2"></i>Digital Therapeutics (DTx)
+            </h3>
+            <p class="text-gray-600 mb-4">
+                Evidence-based digital interventions that complement traditional therapy approaches 
+                with personalized, scalable mental health solutions.
+            </p>
+            <ul class="text-sm text-gray-600 space-y-2">
+                <li><i class="fas fa-brain text-blue-500 mr-2"></i>Cognitive Behavioral Therapy Modules</li>
+                <li><i class="fas fa-heart text-red-500 mr-2"></i>Mindfulness & Meditation Programs</li>
+                <li><i class="fas fa-chart-line text-green-500 mr-2"></i>Progress Tracking & Analytics</li>
+                <li><i class="fas fa-bell text-yellow-500 mr-2"></i>Personalized Intervention Triggers</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
