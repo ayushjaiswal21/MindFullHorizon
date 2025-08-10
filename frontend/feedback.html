@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback - Mindful Horizon</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/scripts.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+    <nav class="fixed top-0 left-0 w-full header-bg text-white shadow-lg z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="logo">
+                <i class="fas fa-brain logo-icon"></i> Mindful Horizon
+            </a>
+            <div id="nav-links" class="space-x-4 flex items-center">
+                <a href="examination.html" class="nav-link">Assessment</a>
+                <a href="#" class="nav-link" onclick="handleLogout()">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <main class="w-full max-w-7xl pt-24 p-4 flex-grow flex justify-center">
+        <div class="card max-w-2xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">Feedback</h2>
+            <form onsubmit="event.preventDefault(); submitFeedback();">
+                <div class="mb-4">
+                    <label for="prediction-accuracy" class="block text-gray-700 font-medium mb-2">How accurate was the prediction?</label>
+                    <select id="prediction-accuracy" class="input-field" required>
+                        <option value="1">Very Accurate</option>
+                        <option value="0">Somewhat Accurate</option>
+                        <option value="-1">Not Accurate</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label for="feedback-comments" class="block text-gray-700 font-medium mb-2">Comments</label>
+                    <textarea id="feedback-comments" class="input-field h-32" placeholder="Tell us what you think..." required></textarea>
+                </div>
+                <button type="submit" class="btn-primary w-full">Submit Feedback</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

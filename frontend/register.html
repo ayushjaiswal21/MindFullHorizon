@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Mindful Horizon</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/scripts.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+    <nav class="fixed top-0 left-0 w-full header-bg text-white shadow-lg z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="logo">
+                <i class="fas fa-brain logo-icon"></i> Mindful Horizon
+            </a>
+            <div id="nav-links" class="space-x-4 flex items-center">
+                <a href="login.html" class="nav-link">Login</a>
+            </div>
+        </div>
+    </nav>
+    <main class="w-full max-w-7xl pt-24 p-4 flex-grow flex items-center justify-center">
+        <div class="card max-w-md mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">Create an Account</h2>
+            <form onsubmit="event.preventDefault(); handleRegister();">
+                <div class="mb-4">
+                    <label for="register-name" class="block text-gray-700 font-medium mb-2">Full Name</label>
+                    <input type="text" id="register-name" class="input-field" placeholder="John Doe" required>
+                </div>
+                <div class="mb-4">
+                    <label for="register-email" class="block text-gray-700 font-medium mb-2">Email Address</label>
+                    <input type="email" id="register-email" class="input-field" placeholder="you@example.com" required>
+                </div>
+                <div class="mb-4">
+                    <label for="register-password" class="block text-gray-700 font-medium mb-2">Password</label>
+                    <input type="password" id="register-password" class="input-field" placeholder="••••••••" required>
+                </div>
+                <div class="mb-6">
+                    <label for="register-role" class="block text-gray-700 font-medium mb-2">Role</label>
+                    <select id="register-role" class="input-field" required>
+                        <option value="" disabled selected>Select your role</option>
+                        <option value="patient">Patient/User</option>
+                        <option value="student">Student</option>
+                        <option value="doctor">Doctor</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary w-full">Register</button>
+            </form>
+            <div class="text-center mt-6">
+                <p class="text-gray-600">Already have an account? <a href="login.html" class="text-blue-600 font-bold hover:underline">Login here</a></p>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment - Mindful Horizon</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/scripts.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+    <nav class="fixed top-0 left-0 w-full header-bg text-white shadow-lg z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="logo">
+                <i class="fas fa-brain logo-icon"></i> Mindful Horizon
+            </a>
+            <div id="nav-links" class="space-x-4 flex items-center">
+                <a href="examination.html" class="nav-link">Assessment</a>
+                <a href="#" class="nav-link" onclick="handleLogout()">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <main class="w-full max-w-7xl pt-24 p-4 flex-grow flex justify-center">
+        <div class="card max-w-2xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">Mental Health Assessment</h2>
+            <div class="mb-8">
+                <p class="text-gray-600 text-center">Please answer the following questions honestly. Your privacy is our priority.</p>
+            </div>
+            <form id="assessment-form">
+                <div class="space-y-6 mb-8">
+                    <div class="assessment-card">
+                        <p class="font-medium text-gray-700 mb-3">1. How often have you felt down, depressed, or hopeless?</p>
+                        <div class="flex flex-col space-y-2">
+                            <label class="inline-flex items-center text-gray-600"><input type="radio" class="form-radio text-blue-600" name="q1" value="0"><span class="ml-2">Not at all</span></label>
+                            <label class="inline-flex items-center text-gray-600"><input type="radio" class="form-radio text-blue-600" name="q1" value="1"><span class="ml-2">Several days</span></label>
+                            <label class="inline-flex items-center text-gray-600"><input type="radio" class="form-radio text-blue-600" name="q1" value="2"><span class="ml-2">More than half the days</span></label>
+                            <label class="inline-flex items-center text-gray-600"><input type="radio" class="form-radio text-blue-600" name="q1" value="3"><span class="ml-2">Nearly every day</span></label>
+                        </div>
+                    </div>
+                    <div class="assessment-card">
+                        <p class="font-medium text-gray-700 mb-3">2. How often have you had trouble falling or staying asleep?</p>
+                        <div class="flex flex-col space-y-2">
+                            <label class="inline-flex items-center text-gray-600"><input type="radio" class="form-radio text-blue-600" name="q2" value="0"><span class="ml-2">Not at all</span></label>
+                            <label class="inline-flex items-center text-gray-600"><input type="radio" class="form-radio text-blue-600" name="q2" value="1"><span class="ml-2">Several days</span></label>
+                            <label class="inline-flex items-center text-gray-600"><input type="radio" class="form-radio text-blue-600" name="q2" value="2"><span class="ml-2">More than half the days</span></label>
+                            <label class="inline-flex items-center text-gray-600"><input type="radio" class="form-radio text-blue-600" name="q2" value="3"><span class="ml-2">Nearly every day</span></label>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary w-full">Submit Assessment</button>
+            </form>
+        </div>
+    </main>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Profile - Mindful Horizon</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/scripts.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+    <nav class="fixed top-0 left-0 w-full header-bg text-white shadow-lg z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="logo">
+                <i class="fas fa-brain logo-icon"></i> Mindful Horizon
+            </a>
+            <div id="nav-links" class="space-x-4 flex items-center">
+                <a href="doctor_dashboard.html" class="nav-link">Dashboard</a>
+                <a href="#" class="nav-link" onclick="handleLogout()">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <main class="w-full max-w-7xl pt-24 p-4 flex-grow">
+        <div class="flex items-center mb-6">
+            <a href="doctor_dashboard.html" class="text-blue-600 hover:underline"><i class="fas fa-arrow-left mr-2"></i> Back to Dashboard</a>
+        </div>
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Patient Profile: <span id="patient-name">John Doe</span></h1>
+        <p class="text-lg text-gray-600 mb-8">Overall Risk: <span id="patient-risk" class="font-bold text-red-500">High</span></p>
+
+        <div class="dashboard-grid">
+            <div class="card col-span-2">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">Risk Score Trend</h3>
+                <canvas id="risk-chart"></canvas>
+            </div>
+            <div class="card">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">AI Prediction Insights</h3>
+                <div class="text-left mb-6">
+                    <p class="text-sm font-medium text-gray-700 mb-2">Based on their last assessment, the model highlighted:</p>
+                    <ul class="list-disc list-inside space-y-2 text-gray-600">
+                        <li><span class="font-medium text-red-600">High stress levels:</span> Your responses indicated a significant amount of stress.</li>
+                        <li><span class="font-medium text-red-600">Sleep disturbances:</span> Your reported sleep difficulties were a major contributing factor.</li>
+                    </ul>
+                </div>
+                <button class="btn-primary w-full bg-indigo-600 hover:bg-indigo-700">Log Clinical Notes</button>
+            </div>
+            <div class="card">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">Recent Assessments</h3>
+                <ul class="space-y-3 text-gray-600">
+                    <li class="flex justify-between items-center bg-red-100 p-2 rounded-lg">
+                        <span>10/10/2025</span>
+                        <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">High Risk (90)</span>
+                    </li>
+                    <li class="flex justify-between items-center bg-yellow-100 p-2 rounded-lg">
+                        <span>09/10/2025</span>
+                        <span class="bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">Moderate Risk (65)</span>
+                    </li>
+                </ul>
+                <a href="#" class="btn-primary mt-6 w-full">View All Assessments</a>
+            </div>
+        </div>
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const patientName = new URLSearchParams(window.location.search).get('name');
+            const patientRisk = new URLSearchParams(window.location.search).get('risk');
+            if (patientName) {
+                document.getElementById('patient-name').innerText = patientName;
+            }
+            if (patientRisk) {
+                 const riskElement = document.getElementById('patient-risk');
+                 riskElement.innerText = patientRisk.charAt(0).toUpperCase() + patientRisk.slice(1);
+                 riskElement.className = `font-bold text-${patientRisk === 'high' ? 'red' : patientRisk === 'moderate' ? 'yellow' : 'green'}-500`;
+            }
+            createChart();
+        });
+
+        function createChart() {
+            const ctx = document.getElementById('risk-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Aug 25', 'Sep 25', 'Oct 25'],
+                    datasets: [{
+                        label: 'Risk Score over Time',
+                        data: [50, 65, 90],
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

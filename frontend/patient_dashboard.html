@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - Mindful Horizon</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/scripts.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+    <nav class="fixed top-0 left-0 w-full header-bg text-white shadow-lg z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="logo">
+                <i class="fas fa-brain logo-icon"></i> Mindful Horizon
+            </a>
+            <div id="nav-links" class="space-x-4 flex items-center">
+                <a href="examination.html" class="nav-link">Assessment</a>
+                <a href="#" class="nav-link" onclick="handleLogout()">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <main class="w-full max-w-7xl pt-24 p-4 flex-grow">
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-8">Patient Dashboard</h1>
+        <div class="dashboard-grid">
+            <div class="card flex flex-col justify-center items-center text-center">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">Your Current Risk Score</h3>
+                <div class="bg-green-500 text-white text-6xl font-bold w-32 h-32 rounded-full flex items-center justify-center shadow-lg">25</div>
+                <p class="text-green-700 font-bold text-xl mt-4">Low Risk</p>
+                <p class="text-sm text-gray-500 mt-2">Last updated: 10/10/2025</p>
+                <p class="text-sm text-gray-500 mt-2 p-2 rounded-lg bg-gray-100">Great job! Keep up the positive habits.</p>
+            </div>
+            <div class="card">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">Take an Assessment</h3>
+                <p class="text-gray-600 mb-6">Complete a mental health assessment to receive your personalized risk score and insights.</p>
+                <a href="examination.html" class="btn-primary w-full">Start Assessment</a>
+            </div>
+            <div class="card">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">Historical Trends</h3>
+                <p class="text-gray-600 mb-4">View your risk score progression over time.</p>
+                <div class="bg-gray-200 h-40 rounded-lg flex items-center justify-center text-gray-500">
+                    <span>Chart.js Chart will be displayed here</span>
+                </div>
+                <a href="result.html" class="btn-primary mt-6 w-full">View Full History</a>
+            </div>
+            <div class="card">
+                <h3 class="text-lg font-semibold mb-4 text-gray-700">Recommended Resources</h3>
+                <ul class="space-y-3 text-gray-600">
+                    <li><i class="fas fa-phone-alt text-blue-500 mr-2"></i> Crisis Hotlines</li>
+                    <li><i class="fas fa-handshake text-blue-500 mr-2"></i> Therapy Options</li>
+                    <li><i class="fas fa-book-open text-blue-500 mr-2"></i> Self-help Tools & Articles</li>
+                </ul>
+                <a href="#" class="btn-primary mt-6 w-full">Explore Resources</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>

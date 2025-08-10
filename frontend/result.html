@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - Mindful Horizon</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/scripts.js" defer></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+    <nav class="fixed top-0 left-0 w-full header-bg text-white shadow-lg z-50">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="index.html" class="logo">
+                <i class="fas fa-brain logo-icon"></i> Mindful Horizon
+            </a>
+            <div id="nav-links" class="space-x-4 flex items-center">
+                <a href="examination.html" class="nav-link">Assessment</a>
+                <a href="#" class="nav-link" onclick="handleLogout()">Logout</a>
+            </div>
+        </div>
+    </nav>
+    <main class="w-full max-w-7xl pt-24 p-4 flex-grow flex justify-center">
+        <div class="card max-w-2xl mx-auto text-center">
+            <h2 class="text-3xl font-bold mb-4 text-gray-800">Your Assessment Results</h2>
+            <p class="text-gray-600 mb-6">Here is your predicted risk level based on your responses.</p>
+            <div id="result-card" class="mb-8">
+                <div class="bg-red-500 text-white text-7xl font-bold w-40 h-40 mx-auto rounded-full flex items-center justify-center shadow-lg mb-4">
+                    <span id="risk-score">90</span>
+                </div>
+                <p id="risk-level" class="text-red-700 font-bold text-2xl">High Risk</p>
+                <p class="text-sm text-gray-500 mt-2">Score is based on a scale of 0-100</p>
+            </div>
+            <div class="text-left mb-8">
+                <h3 class="text-lg font-semibold text-gray-700 mb-3">Why this score?</h3>
+                <ul class="list-disc list-inside space-y-2 text-gray-600">
+                    <li><span class="font-medium text-red-600">High stress levels:</span> Your responses indicated a significant amount of stress.</li>
+                    <li><span class="font-medium text-red-600">Sleep disturbances:</span> Your reported sleep difficulties were a major contributing factor.</li>
+                    <li><span class="font-medium text-yellow-600">Lack of social interaction:</span> You mentioned reduced engagement with friends and family.</li>
+                </ul>
+            </div>
+            <div class="space-y-4">
+                <a href="feedback.html" class="btn-primary w-full">Give Feedback</a>
+                <a href="patient_dashboard.html" class="btn-primary w-full">Return to Dashboard</a>
+            </div>
+        </div>
+    </main>
+</body>
+</html>
