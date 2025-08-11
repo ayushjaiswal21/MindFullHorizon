@@ -1,4 +1,8 @@
-// Enhanced JavaScript for Flask Mental Health Application
+// Enhanced JavaScript for Flask Mental Health Application with AI Integration
+
+// Global variables for real-time updates
+let rpmUpdateInterval;
+let aiProcessingModal;
 
 // Auto-hide flash messages after 5 seconds
 document.addEventListener('DOMContentLoaded', function() {
@@ -11,6 +15,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 300);
         }, 5000);
     });
+    
+    // Initialize real-time features
+    initializeRealTimeFeatures();
+    initializeAIInteractionCues();
+    initializeEnhancedForms();
 });
 
 // Function to show custom message box
@@ -290,6 +299,481 @@ function initializeTooltips() {
 document.addEventListener('DOMContentLoaded', function() {
     initializeTooltips();
 });
+
+// ============= NEW ENHANCED FEATURES =============
+
+// Real-time RPM data updates
+function initializeRealTimeFeatures() {
+    if (window.location.pathname.includes('patient-dashboard')) {
+        startRPMUpdates();
+    }
+}
+
+function startRPMUpdates() {
+    // Update RPM data every 10 seconds
+    rpmUpdateInterval = setInterval(updateRPMData, 10000);
+    
+    // Initial update
+    updateRPMData();
+}
+
+function updateRPMData() {
+    fetch('/api/rpm-data')
+        .then(response => response.json())
+        .then(data => {
+            // Update heart rate
+            const heartRateElement = document.getElementById('heart-rate');
+            if (heartRateElement) {
+                animateNumberChange(heartRateElement, data.heart_rate);
+            }
+            
+            // Update sleep duration
+            const sleepElement = document.getElementById('sleep-duration');
+            if (sleepElement) {
+                animateNumberChange(sleepElement, data.sleep_duration + 'h');
+            }
+            
+            // Update steps
+            const stepsElement = document.getElementById('steps');
+            if (stepsElement) {
+                animateNumberChange(stepsElement, data.steps.toLocaleString());
+            }
+            
+            // Update mood score
+            const moodElement = document.getElementById('mood-score');
+            if (moodElement) {
+                animateNumberChange(moodElement, data.mood_score + '/10');
+            }
+            
+            // Update timestamp
+            const timestampElement = document.getElementById('rpm-timestamp');
+            if (timestampElement) {
+                timestampElement.textContent = `Last updated: ${data.timestamp}`;
+            }
+            
+            // Show alerts if any
+            if (data.alerts && data.alerts.length > 0) {
+                data.alerts.forEach(alert => {
+                    showNotification(alert, 'warning', 8000);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error updating RPM data:', error);
+        });
+}
+
+function animateNumberChange(element, newValue) {
+    element.style.transform = 'scale(1.1)';
+    element.style.color = '#10b981';
+    element.textContent = newValue;
+    
+    setTimeout(() => {
+        element.style.transform = 'scale(1)';
+        element.style.color = '';
+    }, 300);
+}
+
+// AI Interaction Cues
+function initializeAIInteractionCues() {
+    // Add AI processing modal
+    createAIProcessingModal();
+}
+
+function createAIProcessingModal() {
+    const modal = document.createElement('div');
+    modal.id = 'ai-processing-modal';
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden';
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg p-8 max-w-md mx-4 shadow-xl text-center">
+            <div class="mb-4">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-800 mb-2">🧠 Analyzing with Mindwell...</h3>
+            <p class="text-gray-600 mb-4" id="ai-status">Processing your data with AI...</p>
+            <div class="bg-gray-100 rounded-lg p-3 text-sm text-left" id="ai-debug-info" style="display: none;">
+                <strong>Debug Info:</strong>
+                <div id="ai-raw-output"></div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    aiProcessingModal = modal;
+}
+
+function showAIProcessing(message = 'Processing your data with AI...', showDebug = false) {
+    const modal = document.getElementById('ai-processing-modal');
+    const statusElement = document.getElementById('ai-status');
+    const debugInfo = document.getElementById('ai-debug-info');
+    
+    statusElement.textContent = message;
+    debugInfo.style.display = showDebug ? 'block' : 'none';
+    modal.classList.remove('hidden');
+}
+
+function hideAIProcessing() {
+    const modal = document.getElementById('ai-processing-modal');
+    modal.classList.add('hidden');
+}
+
+function updateAIDebugInfo(data) {
+    const debugOutput = document.getElementById('ai-raw-output');
+    if (debugOutput) {
+        debugOutput.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+    }
+}
+
+// Enhanced Forms with AJAX
+function initializeEnhancedForms() {
+    // Enhanced digital detox form
+    const detoxForm = document.getElementById('digital-detox-form');
+    if (detoxForm) {
+        detoxForm.addEventListener('submit', handleDigitalDetoxSubmission);
+    }
+    
+    // Enhanced chat functionality
+    const chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+        chatForm.addEventListener('submit', handleChatMessage);
+    }
+}
+
+function handleDigitalDetoxSubmission(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    const data = {
+        screen_time: formData.get('screen_time'),
+        academic_score: formData.get('academic_score'),
+        social_interactions: formData.get('social_interactions')
+    };
+    
+    // Show AI processing
+    showAIProcessing('🔍 Analyzing your digital wellness patterns...', true);
+    
+    // Submit via AJAX
+    fetch('/api/submit-digital-detox', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(result => {
+        hideAIProcessing();
+        
+        if (result.success) {
+            // Update debug info
+            updateAIDebugInfo(result.ai_analysis);
+            
+            // Show success with gamification feedback
+            showGamificationFeedback(result);
+            
+            // Update UI with new data
+            updateDigitalDetoxUI(result);
+            
+            // Reset form
+            event.target.reset();
+        } else {
+            showNotification('Error: ' + result.error, 'error');
+        }
+    })
+    .catch(error => {
+        hideAIProcessing();
+        showNotification('Network error occurred', 'error');
+        console.error('Error:', error);
+    });
+}
+
+function showGamificationFeedback(result) {
+    let message = `🎉 You earned ${result.points_earned} points!`;
+    
+    if (result.badge_earned) {
+        message += ` 🏆 New badge unlocked: ${result.badge_earned}!`;
+    }
+    
+    message += ` AI Analysis: ${result.ai_analysis.score}`;
+    
+    // Create animated feedback popup
+    const popup = document.createElement('div');
+    popup.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+    popup.innerHTML = `
+        <div class="flex items-center">
+            <span class="text-2xl mr-3">🎉</span>
+            <div>
+                <div class="font-semibold">${message}</div>
+                <div class="text-sm opacity-90">AI processing time: ${result.analysis_time}s</div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(popup);
+    
+    // Animate in
+    setTimeout(() => {
+        popup.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Animate out and remove
+    setTimeout(() => {
+        popup.style.transform = 'translateX(full)';
+        setTimeout(() => popup.remove(), 300);
+    }, 5000);
+}
+
+function updateDigitalDetoxUI(result) {
+    // Update AI analysis display
+    const scoreElement = document.getElementById('ai-score');
+    if (scoreElement) {
+        scoreElement.textContent = result.ai_analysis.score;
+        scoreElement.className = `px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(result.ai_analysis.score)}`;
+    }
+    
+    const suggestionElement = document.getElementById('ai-suggestion');
+    if (suggestionElement) {
+        suggestionElement.textContent = result.ai_analysis.suggestion;
+    }
+}
+
+function getScoreColor(score) {
+    switch(score.toLowerCase()) {
+        case 'excellent': return 'bg-green-100 text-green-800';
+        case 'good': return 'bg-blue-100 text-blue-800';
+        case 'fair': return 'bg-yellow-100 text-yellow-800';
+        case 'poor': return 'bg-red-100 text-red-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function handleChatMessage(event) {
+    event.preventDefault();
+    
+    const messageInput = event.target.querySelector('input[name="message"]');
+    const message = messageInput.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addChatMessage(message, 'user');
+    
+    // Clear input
+    messageInput.value = '';
+    
+    // Show typing indicator
+    addTypingIndicator();
+    
+    // Send to server
+    fetch('/api/chat-message', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: message })
+    })
+    .then(response => response.json())
+    .then(result => {
+        removeTypingIndicator();
+        
+        if (result.success) {
+            addChatMessage(result.response, 'bot', result.timestamp);
+        } else {
+            addChatMessage('Sorry, I encountered an error. Please try again.', 'bot');
+        }
+    })
+    .catch(error => {
+        removeTypingIndicator();
+        addChatMessage('Connection error. Please check your internet connection.', 'bot');
+        console.error('Chat error:', error);
+    });
+}
+
+function addChatMessage(message, sender, timestamp = null) {
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `mb-4 ${sender === 'user' ? 'text-right' : 'text-left'}`;
+    
+    const time = timestamp || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    
+    messageDiv.innerHTML = `
+        <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+            sender === 'user' 
+                ? 'bg-blue-500 text-white' 
+                : 'bg-gray-200 text-gray-800'
+        }">
+            <p>${message}</p>
+            <p class="text-xs mt-1 opacity-70">${time}</p>
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addTypingIndicator() {
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) return;
+    
+    const typingDiv = document.createElement('div');
+    typingDiv.id = 'typing-indicator';
+    typingDiv.className = 'mb-4 text-left';
+    typingDiv.innerHTML = `
+        <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800">
+            <div class="flex items-center">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <span class="ml-2 text-sm">Bot is typing...</span>
+            </div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function removeTypingIndicator() {
+    const typingIndicator = document.getElementById('typing-indicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+// Enhanced Chart.js Integration (replacing canvas charts)
+function initializeChartJS() {
+    // Initialize Chart.js charts if the library is loaded
+    if (typeof Chart !== 'undefined') {
+        initializeWellnessChart();
+        initializeScreenTimeChart();
+        initializeCorrelationChart();
+    }
+}
+
+function initializeWellnessChart() {
+    const ctx = document.getElementById('wellness-trend-chart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Wellness Score',
+                data: [7.2, 6.8, 7.5, 6.9, 8.1, 7.8, 8.3],
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Weekly Wellness Trend'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 10
+                }
+            }
+        }
+    });
+}
+
+function initializeScreenTimeChart() {
+    const ctx = document.getElementById('screen-time-chart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Screen Time (hours)',
+                data: [8.5, 9.2, 7.8, 8.9, 6.5, 5.2, 4.8],
+                backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                borderColor: 'rgb(239, 68, 68)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Daily Screen Time'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function initializeCorrelationChart() {
+    const ctx = document.getElementById('correlation-chart');
+    if (!ctx) return;
+    
+    new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Screen Time vs Academic Score',
+                data: [
+                    {x: 8.5, y: 75},
+                    {x: 9.2, y: 72},
+                    {x: 7.8, y: 78},
+                    {x: 8.9, y: 70},
+                    {x: 6.5, y: 85},
+                    {x: 5.2, y: 88},
+                    {x: 4.8, y: 92}
+                ],
+                backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                borderColor: 'rgb(16, 185, 129)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Screen Time vs Academic Performance Correlation'
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Screen Time (hours)'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Academic Score'
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Cleanup function
+function cleanup() {
+    if (rpmUpdateInterval) {
+        clearInterval(rpmUpdateInterval);
+    }
+}
 
 
 // A reusable function to draw a line chart on a canvas

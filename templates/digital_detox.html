@@ -9,17 +9,31 @@
         <p class="text-lg text-gray-600">Take control of your digital habits for a healthier mind.</p>
     </div>
 
-    <!-- Screen Time Chart -->
+    <!-- Screen Time Chart with Chart.js -->
     <div class="card p-6 mb-8">
         <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
             <i class="fas fa-chart-line text-blue-500 mr-3"></i>Screen Time Trends
         </h3>
-        <div class="bg-gray-50 p-4 rounded-lg mb-4" style="height: 250px;">
-            <canvas id="screenTimeChart" width="400" height="200"></canvas>
+        <div class="chart-container">
+            <canvas id="screen-time-chart"></canvas>
         </div>
         <div class="text-sm text-gray-600">
             <i class="fas fa-info-circle mr-2"></i>
             Average screen time for the last {{ screen_time_log|length }} days: <span class="font-semibold text-blue-600">{{ avg_screen_time }} hours</span>
+        </div>
+    </div>
+    
+    <!-- Correlation Chart -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-chart-scatter text-purple-500 mr-3"></i>Screen Time vs Academic Performance
+        </h3>
+        <div class="chart-container">
+            <canvas id="correlation-chart"></canvas>
+        </div>
+        <div class="text-sm text-gray-600">
+            <i class="fas fa-info-circle mr-2"></i>
+            This chart shows the correlation between your screen time and academic performance.
         </div>
     </div>
     
@@ -30,7 +44,7 @@
                 <i class="fas fa-mobile-alt text-purple-500 mr-3"></i>Daily Digital Check-in
             </h3>
             
-            <form method="POST">
+            <form method="POST" id="digital-detox-form" class="enhanced-form">
                 <div class="space-y-4">
                     <div>
                         <label for="screen_time" class="block text-gray-700 font-medium mb-2">
@@ -59,32 +73,32 @@
                     </div>
                 </div>
                 
-                <button type="submit" class="btn-primary w-full mt-6">
-                    <i class="fas fa-check mr-2"></i>Save Check-in
+                <button type="submit" class="btn-ai w-full" id="submit-btn">
+                    <i class="fas fa-brain mr-2"></i>Analyze with AI
                 </button>
             </form>
         </div>
 
-        <!-- Analysis and Suggestions Section -->
+        <!-- AI Analysis Section -->
         <div class="card p-6">
             <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                <i class="fas fa-lightbulb text-yellow-500 mr-3"></i>Insights & Suggestions
+                <i class="fas fa-robot text-green-500 mr-3"></i>AI Analysis
+                <span class="status-indicator status-online ml-2" title="AI Online"></span>
             </h3>
             
-            {% if screen_time_log %}
-            <div class="bg-gray-50 p-4 rounded-xl mb-4">
-                <h4 class="text-lg font-semibold text-gray-800">Your Digital Detox Score: 
-                    <span class="px-3 py-1 rounded-full text-sm font-medium
-                        {% if score == 'Excellent' %}bg-green-100 text-green-800
-                        {% elif score == 'Good' %}bg-yellow-100 text-yellow-800
-                        {% else %}bg-red-100 text-red-800{% endif %}">
-                        {{ score }}
-                    </span>
-                </h4>
+            <div class="ai-analysis-card mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-white font-medium">Current Wellness Score:</span>
+                    <span id="ai-score" class="ai-score-badge bg-white bg-opacity-20">{{ score }}</span>
+                </div>
+                <div class="text-white text-sm">
+                    <i class="fas fa-lightbulb text-yellow-300 mr-2"></i>
+                    <strong>AI Suggestion:</strong> <span id="ai-suggestion">{{ suggestion }}</span>
+                </div>
+                <div class="mt-3 text-xs text-white text-opacity-80">
+                    <i class="fas fa-clock mr-1"></i>Last analysis: <span id="last-analysis-time">{{ moment().format('HH:mm:ss') }}</span>
+                </div>
             </div>
-            
-            <div class="bg-blue-50 p-4 rounded-xl mb-4">
-                <h4 class="font-semibold text-gray-800 mb-2">Personalized Suggestions</h4>
                 <p class="text-sm text-gray-700">
                     <i class="fas fa-info-circle text-blue-500 mr-2"></i>{{ suggestion }}
                 </p>
