@@ -3,88 +3,123 @@
 {% block title %}Patient Dashboard - Mindful Horizon{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Welcome back, {{ user_name }}!</h1>
-        <p class="text-gray-600">Here's your mental health journey overview</p>
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-2 animate-fade-in">Welcome back, {{ user_name }}!</h1>
+        <p class="text-lg text-gray-600 animate-fade-in-delay">Here's your mental health journey overview.</p>
     </div>
 
     <!-- Alerts Section -->
     {% if alerts %}
-    <div class="mb-6">
-        {% for alert in alerts %}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-2">
-            <i class="fas fa-exclamation-triangle mr-2"></i>{{ alert }}
+    <div class="mb-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded-xl shadow-lg">
+        <div class="flex items-center">
+            <i class="fas fa-exclamation-triangle text-xl mr-4"></i>
+            <div>
+                <h4 class="font-bold text-lg mb-1">Health Alerts</h4>
+                <ul class="list-disc list-inside space-y-1">
+                    {% for alert in alerts %}
+                    <li>{{ alert }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
-        {% endfor %}
     </div>
     {% endif %}
 
-    <!-- Gamification Section -->
-    <div class="dashboard-grid mb-8">
-        <div class="card">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-trophy text-yellow-500 mr-2"></i>Your Progress
-            </h3>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
+    <!-- Overview Grid -->
+    <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-8 mb-8">
+        <!-- Gamification Card -->
+        <div class="card p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">Your Progress</h3>
+                    <i class="fas fa-trophy text-yellow-500 text-2xl"></i>
+                </div>
+                <div class="flex justify-between items-center mb-2">
                     <span class="text-gray-600">Total Points</span>
-                    <span class="text-2xl font-bold text-blue-600">{{ data.points or 0 }}</span>
+                    <span class="text-3xl font-bold text-blue-600">{{ data.points or 0 }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Current Streak</span>
-                    <span class="text-2xl font-bold text-green-600">{{ data.streak or 0 }} days</span>
+                    <span class="text-3xl font-bold text-green-600">{{ data.streak or 0 }} days</span>
                 </div>
-                <div class="mt-4">
-                    <h4 class="font-semibold text-gray-700 mb-2">Badges Earned</h4>
-                    <div class="flex flex-wrap gap-2">
-                        {% for badge in data.badges or [] %}
-                        <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm">
-                            <i class="fas fa-medal mr-1"></i>{{ badge }}
-                        </span>
-                        {% endfor %}
-                    </div>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <h4 class="font-semibold text-gray-700 mb-2">Badges Earned</h4>
+                <div class="flex flex-wrap gap-2">
+                    {% for badge in data.badges or [] %}
+                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                        <i class="fas fa-medal mr-1"></i>{{ badge }}
+                    </span>
+                    {% endfor %}
                 </div>
             </div>
         </div>
 
-        <!-- RPM Data Section -->
-        <div class="card">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-heartbeat text-red-500 mr-2"></i>Health Monitoring
-            </h3>
-            <div class="space-y-3">
+        <!-- Health Monitoring Card -->
+        <div class="card p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">Health Monitoring</h3>
+                <i class="fas fa-heartbeat text-red-500 text-2xl"></i>
+            </div>
+            <div class="space-y-4">
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Heart Rate</span>
-                    <span class="font-semibold {{ 'text-red-600' if data.rpm_data.heart_rate > 100 else 'text-green-600' }}">
+                    <span class="font-semibold text-lg {{ 'text-red-600' if data.rpm_data.heart_rate > 100 else 'text-green-600' }}">
                         {{ data.rpm_data.heart_rate or 'N/A' }} bpm
                     </span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Sleep Duration</span>
-                    <span class="font-semibold {{ 'text-red-600' if data.rpm_data.sleep_duration < 6 else 'text-green-600' }}">
+                    <span class="font-semibold text-lg {{ 'text-red-600' if data.rpm_data.sleep_duration < 6 else 'text-green-600' }}">
                         {{ data.rpm_data.sleep_duration or 'N/A' }} hours
                     </span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Daily Steps</span>
-                    <span class="font-semibold text-blue-600">{{ data.rpm_data.steps or 'N/A' }}</span>
+                    <span class="font-semibold text-lg text-blue-600">{{ data.rpm_data.steps or 'N/A' }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-gray-600">Mood Score</span>
-                    <span class="font-semibold text-purple-600">{{ data.rpm_data.mood_score or 'N/A' }}/10</span>
+                    <span class="font-semibold text-lg text-purple-600">{{ data.rpm_data.mood_score or 'N/A' }}/10</span>
                 </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions Card -->
+        <div class="card p-6 flex flex-col justify-between">
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-xl font-semibold text-gray-800">Quick Actions</h3>
+                    <i class="fas fa-bolt text-blue-500 text-2xl"></i>
+                </div>
+                <div class="space-y-3">
+                    <a href="{{ url_for('chat') }}" class="btn-primary w-full flex items-center justify-center">
+                        <i class="fas fa-comment-dots mr-2"></i>Chat with Support
+                    </a>
+                    <a href="{{ url_for('telehealth') }}" class="btn-primary w-full bg-green-600 hover:bg-green-700 flex items-center justify-center">
+                        <i class="fas fa-video mr-2"></i>Start Telehealth Session
+                    </a>
+                    <a href="{{ url_for('schedule') }}" class="btn-primary w-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center">
+                        <i class="fas fa-plus mr-2"></i>Schedule Appointment
+                    </a>
+                </div>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <a href="{{ url_for('digital_detox') }}" class="w-full text-center text-sm font-medium text-red-600 hover:text-red-800 transition duration-200 block">
+                    <i class="fas fa-mobile-alt mr-1"></i>Digital Wellness Check-in
+                </a>
             </div>
         </div>
     </div>
 
     <!-- Mental Health Assessment Section -->
-    <div class="card mb-8">
+    <div class="card p-6 mb-8">
         <h3 class="text-xl font-semibold mb-4 text-gray-800">
             <i class="fas fa-clipboard-check text-indigo-500 mr-2"></i>Mental Health Assessment
         </h3>
         <p class="text-gray-600 mb-4">Take standardized assessments to track your mental health progress and get personalized insights.</p>
-        <div class="grid md:grid-cols-2 gap-4">
+        <div class="grid md:grid-cols-3 gap-4">
             <a href="{{ url_for('assessment') }}" class="block p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition duration-200">
                 <div class="flex items-center">
                     <div class="bg-indigo-100 rounded-full w-12 h-12 flex items-center justify-center mr-4">
@@ -107,38 +142,17 @@
                     </div>
                 </div>
             </a>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="dashboard-grid">
-        <div class="card">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-comments text-blue-500 mr-2"></i>Communication
-            </h3>
-            <div class="space-y-3">
-                <a href="{{ url_for('chat') }}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 text-center">
-                    <i class="fas fa-comment-dots mr-2"></i>Chat with Support
-                </a>
-                <a href="{{ url_for('telehealth') }}" class="block w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 text-center">
-                    <i class="fas fa-video mr-2"></i>Start Telehealth Session
-                </a>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-calendar text-purple-500 mr-2"></i>Appointments
-            </h3>
-            <div class="space-y-3">
-                <a href="{{ url_for('schedule') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 text-center">
-                    <i class="fas fa-plus mr-2"></i>Schedule Appointment
-                </a>
-                <div class="text-sm text-gray-600 text-center">
-                    Next appointment: <br>
-                    <span class="font-semibold">No upcoming appointments</span>
+            <a href="{{ url_for('digital_detox') }}" class="block p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition duration-200">
+                <div class="flex items-center">
+                    <div class="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mr-4">
+                        <i class="fas fa-mobile-alt text-purple-600"></i>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Digital Detox</h4>
+                        <p class="text-sm text-gray-600">Screen Time & Wellness</p>
+                    </div>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 </div>

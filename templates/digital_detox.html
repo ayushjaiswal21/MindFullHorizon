@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Digital Detox - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Digital Detox</h1>
+        <p class="text-lg text-gray-600">Take control of your digital habits for a healthier mind.</p>
+    </div>
+
+    <!-- Screen Time Chart -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-chart-line text-blue-500 mr-3"></i>Screen Time Trends
+        </h3>
+        <div class="bg-gray-50 p-4 rounded-lg mb-4" style="height: 250px;">
+            <canvas id="screenTimeChart" width="400" height="200"></canvas>
+        </div>
+        <div class="text-sm text-gray-600">
+            <i class="fas fa-info-circle mr-2"></i>
+            Average screen time for the last {{ screen_time_log|length }} days: <span class="font-semibold text-blue-600">{{ avg_screen_time }} hours</span>
+        </div>
+    </div>
+    
+    <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Input Section -->
+        <div class="card p-6">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                <i class="fas fa-mobile-alt text-purple-500 mr-3"></i>Daily Digital Check-in
+            </h3>
+            
+            <form method="POST">
+                <div class="space-y-4">
+                    <div>
+                        <label for="screen_time" class="block text-gray-700 font-medium mb-2">
+                            Daily Screen Time (in hours):
+                        </label>
+                        <input type="number" id="screen_time" name="screen_time" class="input-field" 
+                            placeholder="e.g., 5.5" min="0" step="0.1" required>
+                    </div>
+                    <div>
+                        <label for="academic_score" class="block text-gray-700 font-medium mb-2">
+                            Academic Score (last assignment/exam, out of 100):
+                        </label>
+                        <input type="number" id="academic_score" name="academic_score" class="input-field" 
+                            placeholder="e.g., 85" min="0" max="100" required>
+                    </div>
+                    <div>
+                        <label for="social_interactions" class="block text-gray-700 font-medium mb-2">
+                            Social Interactions Today:
+                        </label>
+                        <select id="social_interactions" name="social_interactions" class="input-field" required>
+                            <option value="" disabled selected>Select an option</option>
+                            <option value="high">High (e.g., met with friends/family)</option>
+                            <option value="medium">Medium (e.g., online chats)</option>
+                            <option value="low">Low (e.g., very little interaction)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-primary w-full mt-6">
+                    <i class="fas fa-check mr-2"></i>Save Check-in
+                </button>
+            </form>
+        </div>
+
+        <!-- Analysis and Suggestions Section -->
+        <div class="card p-6">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                <i class="fas fa-lightbulb text-yellow-500 mr-3"></i>Insights & Suggestions
+            </h3>
+            
+            {% if screen_time_log %}
+            <div class="bg-gray-50 p-4 rounded-xl mb-4">
+                <h4 class="text-lg font-semibold text-gray-800">Your Digital Detox Score: 
+                    <span class="px-3 py-1 rounded-full text-sm font-medium
+                        {% if score == 'Excellent' %}bg-green-100 text-green-800
+                        {% elif score == 'Good' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ score }}
+                    </span>
+                </h4>
+            </div>
+            
+            <div class="bg-blue-50 p-4 rounded-xl mb-4">
+                <h4 class="font-semibold text-gray-800 mb-2">Personalized Suggestions</h4>
+                <p class="text-sm text-gray-700">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>{{ suggestion }}
+                </p>
+            </div>
+            
+            <div class="bg-purple-50 p-4 rounded-xl">
+                <h4 class="font-semibold text-gray-800 mb-2">Academic & Social Analysis</h4>
+                <ul class="text-sm text-gray-700 space-y-2">
+                    <li><i class="fas fa-book-reader text-purple-500 mr-2"></i>Last Academic Score: <span class="font-bold">{{ screen_time_log[-1].academic_score }}</span></li>
+                    <li><i class="fas fa-user-friends text-purple-500 mr-2"></i>Last Social Interaction Level: <span class="font-bold">{{ screen_time_log[-1].social_interactions.capitalize() }}</span></li>
+                </ul>
+                <p class="text-sm text-gray-600 mt-2">
+                    <i>Note: The full AI analysis of these metrics will be implemented in a future version.</i>
+                </p>
+            </div>
+            {% else %}
+            <div class="bg-gray-100 p-8 rounded-lg text-center">
+                <i class="fas fa-star text-gray-400 text-4xl mb-4"></i>
+                <p class="text-gray-600">Enter your daily data to see insights and suggestions here.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize chart when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeScreenTimeChart();
+});
+
+async function initializeScreenTimeChart() {
+    const canvas = document.getElementById('screenTimeChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    // Fetch data from the new API endpoint
+    const response = await fetch('/api/digital-detox-data');
+    const screenTimeData = await response.json();
+    
+    if (screenTimeData.length === 0) {
+        ctx.font = '16px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText('No screen time data available yet.', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+
+    const dates = screenTimeData.map(item => formatDate(item.date));
+    const hours = screenTimeData.map(item => item.hours);
+    
+    drawLineChart(ctx, canvas, dates, hours, 'Screen Time (Hours)', '#3b82f6');
+}
+
+// Function to draw a generic line chart
+function drawLineChart(ctx, canvas, xLabels, yData, label, color) {
+    const padding = 40;
+    const width = canvas.width - 2 * padding;
+    const height = canvas.height - 2 * padding;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Set up scales
+    const maxY = Math.max(...yData) + 1;
+    const minY = 0;
+    const yRange = maxY - minY || 1;
+    
+    // Draw axes
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, padding + height);
+    ctx.moveTo(padding, padding + height);
+    ctx.lineTo(padding + width, padding + height);
+    ctx.stroke();
+    
+    // Draw data line
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    
+    for (let i = 0; i < yData.length; i++) {
+        const x = padding + (width / (yData.length - 1)) * i;
+        const y = padding + height - ((yData[i] - minY) / yRange) * height;
+        
+        if (i === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    ctx.stroke();
+    
+    // Draw data points and labels
+    ctx.fillStyle = color;
+    ctx.font = '12px Inter';
+    ctx.textAlign = 'center';
+    for (let i = 0; i < yData.length; i++) {
+        const x = padding + (width / (yData.length - 1)) * i;
+        const y = padding + height - ((yData[i] - minY) / yRange) * height;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Label points with the value
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText(yData[i], x, y - 10);
+        
+        // X-axis labels
+        ctx.fillText(xLabels[i], x, padding + height + 20);
+    }
+
+    // Y-axis labels
+    for (let i = 0; i <= 4; i++) {
+        const value = minY + (yRange / 4) * (4 - i);
+        const y = padding + (height / 4) * i;
+        ctx.fillStyle = '#6b7280';
+        ctx.textAlign = 'right';
+        ctx.fillText(Math.round(value * 10) / 10, padding - 10, y + 4);
+    }
+    
+    // Y-axis label
+    ctx.save();
+    ctx.translate(padding - 30, padding + height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(label, 0, 0);
+    ctx.restore();
+}
+</script>
+{% endblock %}
