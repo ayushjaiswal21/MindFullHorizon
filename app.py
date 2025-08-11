@@ -5,9 +5,22 @@ from functools import wraps
 from models import db, User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, get_user_wellness_trend, get_institutional_summary
 from ai_service import ai_service
 import os
+import logging
+import time
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-in-production'
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('mindful_horizon.log'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Database configuration
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -427,13 +440,20 @@ def digital_detox():
             } for log in historical_logs
         ]
         
-        # Use AI service for analysis
+        # Use AI service for analysis with logging
+        logger.info(f"Starting AI analysis for user {user_id} - screen_time: {screen_time}h, academic_score: {academic_score}")
+        start_time = time.time()
+        
         ai_analysis = ai_service.analyze_digital_wellness(
             screen_time=screen_time,
             academic_score=academic_score,
             social_interactions=social_interactions,
             historical_data=historical_data
         )
+        
+        analysis_time = time.time() - start_time
+        logger.info(f"AI analysis completed in {analysis_time:.2f} seconds for user {user_id}")
+        logger.debug(f"AI analysis result: {ai_analysis}")
         
         # Save to database with AI insights
         new_log = DigitalDetoxLog(
@@ -478,7 +498,16 @@ def digital_detox():
                 gamification.points += 50
         
         db.session.commit()
-        flash('Digital detox check-in saved successfully! AI analysis completed.', 'success')
+        logger.info(f"Digital detox log saved for user {user_id} with AI score: {ai_analysis.get('score')}")
+        
+        # Enhanced success message with gamification feedback
+        points_earned = 10
+        if ai_analysis.get('score') == 'Excellent':
+            points_earned += 50
+            flash(f'🎉 Excellent work! You earned {points_earned} points and unlocked the Digital Wellness Master badge!', 'success')
+        else:
+            flash(f'✅ Check-in saved! You earned {points_earned} points. AI analysis: {ai_analysis.get("score", "Completed")}', 'success')
+        
         return redirect(url_for('digital_detox'))
     
     # Get data from database
@@ -658,6 +687,183 @@ def wellness_report(user_id):
                          recent_sessions=recent_sessions,
                          ai_analysis=ai_analysis,
                          user_name=session['user_name'])
+
+# AJAX API endpoints for enhanced user experience
+@app.route('/api/submit-digital-detox', methods=['POST'])
+@login_required
+@role_required('patient')
+def api_submit_digital_detox():
+    """AJAX endpoint for digital detox submission with AI analysis"""
+    user_id = session['user_id']
+    
+    try:
+        # Get form data
+        screen_time = float(request.json.get('screen_time', 0))
+        academic_score = int(request.json.get('academic_score', 0))
+        social_interactions = request.json.get('social_interactions', '')
+        
+        logger.info(f"AJAX digital detox submission for user {user_id}")
+        
+        # Get historical data for AI analysis
+        historical_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
+        historical_data = [
+            {
+                'screen_time_hours': log.screen_time_hours,
+                'academic_score': log.academic_score,
+                'social_interactions': log.social_interactions,
+                'date': log.date.strftime('%Y-%m-%d')
+            } for log in historical_logs
+        ]
+        
+        # Simulate AI processing time for demo effect
+        time.sleep(1.5)
+        
+        # Use AI service for analysis
+        logger.info(f"Starting AI analysis for user {user_id} via AJAX")
+        start_time = time.time()
+        
+        ai_analysis = ai_service.analyze_digital_wellness(
+            screen_time=screen_time,
+            academic_score=academic_score,
+            social_interactions=social_interactions,
+            historical_data=historical_data
+        )
+        
+        analysis_time = time.time() - start_time
+        logger.info(f"AI analysis completed in {analysis_time:.2f} seconds")
+        
+        # Save to database
+        existing_log = DigitalDetoxLog.query.filter_by(user_id=user_id, date=date.today()).first()
+        if existing_log:
+            existing_log.screen_time_hours = screen_time
+            existing_log.academic_score = academic_score
+            existing_log.social_interactions = social_interactions
+            existing_log.ai_score = ai_analysis.get('score')
+            existing_log.ai_suggestion = ai_analysis.get('suggestion')
+        else:
+            new_log = DigitalDetoxLog(
+                user_id=user_id,
+                date=date.today(),
+                screen_time_hours=screen_time,
+                academic_score=academic_score,
+                social_interactions=social_interactions,
+                ai_score=ai_analysis.get('score'),
+                ai_suggestion=ai_analysis.get('suggestion')
+            )
+            db.session.add(new_log)
+        
+        # Update gamification
+        gamification = Gamification.query.filter_by(user_id=user_id).first()
+        points_earned = 10
+        badge_earned = None
+        
+        if gamification:
+            gamification.points += points_earned
+            
+            # Update streak
+            if gamification.last_activity == date.today() - timedelta(days=1):
+                gamification.streak += 1
+            elif gamification.last_activity != date.today():
+                gamification.streak = 1
+            
+            gamification.last_activity = date.today()
+            
+            # Award badges based on AI score
+            if ai_analysis.get('score') == 'Excellent' and 'Digital Wellness Master' not in gamification.badges:
+                gamification.badges.append('Digital Wellness Master')
+                gamification.points += 50
+                points_earned += 50
+                badge_earned = 'Digital Wellness Master'
+        
+        db.session.commit()
+        logger.info(f"Digital detox data saved successfully for user {user_id}")
+        
+        return jsonify({
+            'success': True,
+            'ai_analysis': ai_analysis,
+            'points_earned': points_earned,
+            'badge_earned': badge_earned,
+            'analysis_time': round(analysis_time, 2),
+            'message': 'Digital detox check-in completed successfully!'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in AJAX digital detox submission: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/rpm-data')
+@login_required
+@role_required('patient')
+def api_rpm_data():
+    """API endpoint for real-time RPM data simulation"""
+    user_id = session['user_id']
+    
+    # Get latest RPM data or create simulated data
+    rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.timestamp.desc()).first()
+    
+    if not rpm_data:
+        # Create initial RPM data
+        rpm_data = RPMData(
+            user_id=user_id,
+            heart_rate=72,
+            sleep_duration=7.5,
+            steps=8500,
+            mood_score=7
+        )
+        db.session.add(rpm_data)
+        db.session.commit()
+    
+    # Simulate real-time variations
+    import random
+    current_time = datetime.now()
+    
+    # Generate realistic variations
+    heart_rate = max(60, min(100, rpm_data.heart_rate + random.randint(-5, 5)))
+    sleep_duration = max(4, min(12, rpm_data.sleep_duration + random.uniform(-0.5, 0.5)))
+    steps = max(0, rpm_data.steps + random.randint(-200, 300))
+    mood_score = max(1, min(10, rpm_data.mood_score + random.uniform(-0.5, 0.5)))
+    
+    return jsonify({
+        'heart_rate': heart_rate,
+        'sleep_duration': round(sleep_duration, 1),
+        'steps': steps,
+        'mood_score': round(mood_score, 1),
+        'timestamp': current_time.strftime('%H:%M:%S'),
+        'alerts': []
+    })
+
+@app.route('/api/chat-message', methods=['POST'])
+@login_required
+def api_chat_message():
+    """AJAX endpoint for chat functionality"""
+    user_message = request.json.get('message', '')
+    user_id = session['user_id']
+    
+    logger.info(f"Chat message from user {user_id}: {user_message}")
+    
+    # Simulate processing time
+    time.sleep(1)
+    
+    # Generate a simple response
+    responses = [
+        "Thank you for sharing. A mental health provider will be with you shortly.",
+        "I understand. Your message has been recorded and will be reviewed by our care team.",
+        "That's important information. We'll make sure to address this in your next session.",
+        "Thank you for reaching out. Your wellbeing is our priority.",
+        "I've noted your message. A provider will follow up with you soon."
+    ]
+    
+    import random
+    bot_response = random.choice(responses)
+    
+    return jsonify({
+        'success': True,
+        'response': bot_response,
+        'timestamp': datetime.now().strftime('%H:%M')
+    })
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
