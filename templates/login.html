@@ -1,36 +1,90 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Mindful Horizon{% endblock %}
+{% block title %}Sign In - Mindful Horizon{% endblock %}
 
 {% block content %}
-<div class="flex items-center justify-center min-h-screen">
-    <div class="card max-w-md mx-auto">
-        <h2 class="text-3xl font-bold text-center mb-6 text-gray-800">Welcome Back</h2>
-        <form method="POST">
-            <div class="mb-4">
-                <label for="email" class="block text-gray-700 font-medium mb-2">Email Address</label>
-                <input type="email" id="email" name="email" class="input-field" placeholder="you@example.com" required>
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100">
+                <i class="fas fa-sign-in-alt text-indigo-600 text-xl"></i>
             </div>
-            <div class="mb-4">
-                <label for="password" class="block text-gray-700 font-medium mb-2">Password</label>
-                <input type="password" id="password" name="password" class="input-field" placeholder="••••••••" required>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                Welcome Back
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Sign in to your Mindful Horizon account
+            </p>
+            <p class="mt-2 text-center text-sm">
+                Don't have an account?
+                <a href="{{ url_for('signup') }}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    Create one here
+                </a>
+            </p>
+        </div>
+        
+        <form class="mt-8 space-y-6" method="POST">
+            <div class="space-y-4">
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <input id="email" name="email" type="email" required 
+                           class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                           placeholder="Enter your email address">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input id="password" name="password" type="password" required 
+                           class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
+                           placeholder="Enter your password">
+                </div>
+                
+                <div>
+                    <label for="role" class="block text-sm font-medium text-gray-700">Sign in as</label>
+                    <select id="role" name="role" required 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">Select your role</option>
+                        <option value="patient">Student (Patient)</option>
+                        <option value="provider">Mental Health Provider</option>
+                    </select>
+                </div>
             </div>
-            <div class="mb-6">
-                <label for="role" class="block text-gray-700 font-medium mb-2">Login As</label>
-                <select id="role" name="role" class="input-field" required>
-                    <option value="" disabled selected>Select your role</option>
-                    <option value="patient">Patient</option>
-                    <option value="provider">Provider</option>
-                </select>
+
+            <div>
+                <button type="submit" 
+                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
+                        <i class="fas fa-sign-in-alt text-indigo-500 group-hover:text-indigo-400"></i>
+                    </span>
+                    Sign In
+                </button>
             </div>
-            <button type="submit" class="btn-primary w-full">Login</button>
         </form>
         
-        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h3 class="font-semibold text-gray-800 mb-2">Demo Credentials:</h3>
-            <div class="text-sm text-gray-600">
-                <p><strong>Patient:</strong> patient@example.com / password</p>
+        <!-- Demo Credentials -->
+        <div class="mt-6 bg-gray-50 rounded-lg p-4">
+            <h3 class="text-sm font-medium text-gray-900 mb-2">Demo Credentials (for testing):</h3>
+            <div class="text-xs text-gray-600 space-y-1">
+                <p><strong>Student:</strong> patient@example.com / password</p>
                 <p><strong>Provider:</strong> provider@example.com / password</p>
+            </div>
+        </div>
+        
+        <!-- Features Info -->
+        <div class="mt-4 text-center">
+            <div class="flex justify-center space-x-6 text-xs text-gray-500">
+                <div class="flex items-center">
+                    <i class="fas fa-shield-alt mr-1"></i>
+                    <span>Secure</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-brain mr-1"></i>
+                    <span>AI-Powered</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-mobile-alt mr-1"></i>
+                    <span>Digital Wellness</span>
+                </div>
             </div>
         </div>
     </div>

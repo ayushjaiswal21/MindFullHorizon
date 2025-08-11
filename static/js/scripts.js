@@ -119,7 +119,7 @@ function copyToClipboard(text) {
 
 // Format date for display
 function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
 }
 
@@ -290,3 +290,95 @@ function initializeTooltips() {
 document.addEventListener('DOMContentLoaded', function() {
     initializeTooltips();
 });
+
+
+// A reusable function to draw a line chart on a canvas
+function drawLineChart(ctx, canvas, xLabels, yData, label, color) {
+    const padding = 40;
+    const width = canvas.width - 2 * padding;
+    const height = canvas.height - 2 * padding;
+
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (yData.length === 0) return;
+
+    // Set up scales
+    const maxY = Math.max(...yData) + 1;
+    const minY = 0;
+    const yRange = maxY - minY || 1;
+    
+    // Draw axes
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, padding + height);
+    ctx.moveTo(padding, padding + height);
+    ctx.lineTo(padding + width, padding + height);
+    ctx.stroke();
+    
+    // Draw grid lines
+    ctx.strokeStyle = '#f3f4f6';
+    for (let i = 1; i <= 4; i++) {
+        const y = padding + (height / 4) * i;
+        ctx.beginPath();
+        ctx.moveTo(padding, y);
+        ctx.lineTo(padding + width, y);
+        ctx.stroke();
+    }
+
+    // Draw data line
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    
+    for (let i = 0; i < yData.length; i++) {
+        const x = padding + (width / (yData.length - 1)) * i;
+        const y = padding + height - ((yData[i] - minY) / yRange) * height;
+        
+        if (i === 0) {
+            ctx.moveTo(x, y);
+        } else {
+            ctx.lineTo(x, y);
+        }
+    }
+    ctx.stroke();
+    
+    // Draw data points and labels
+    ctx.fillStyle = color;
+    ctx.font = '12px Inter';
+    ctx.textAlign = 'center';
+    for (let i = 0; i < yData.length; i++) {
+        const x = padding + (width / (yData.length - 1)) * i;
+        const y = padding + height - ((yData[i] - minY) / yRange) * height;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fill();
+        
+        // Label points with the value
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText(yData[i], x, y - 10);
+        
+        // X-axis labels
+        ctx.fillText(xLabels[i], x, padding + height + 20);
+    }
+
+    // Y-axis labels
+    for (let i = 0; i <= 4; i++) {
+        const value = minY + (yRange / 4) * (4 - i);
+        const y = padding + (height / 4) * i;
+        ctx.fillStyle = '#6b7280';
+        ctx.textAlign = 'right';
+        ctx.fillText(Math.round(value * 10) / 10, padding - 10, y + 4);
+    }
+    
+    // Y-axis label
+    ctx.save();
+    ctx.translate(padding - 30, padding + height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(label, 0, 0);
+    ctx.restore();
+}
+
