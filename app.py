@@ -9,7 +9,7 @@ import logging
 import time
 
 app = Flask(__name__)
-app.secret_key = 'your-secret-key-change-in-production'
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
 
 # Configure logging
 logging.basicConfig(
@@ -866,4 +866,6 @@ def api_chat_message():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    init_database()
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)

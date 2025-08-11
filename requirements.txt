@@ -9,4 +9,4 @@ Flask-SQLAlchemy==3.0.5
 SQLAlchemy==2.0.21
 requests==2.31.0
 python-dateutil==2.8.2
-werkzeug==2.3.7
+gunicorn==21.2.0
