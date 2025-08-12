@@ -96,139 +96,236 @@
                     <strong>AI Suggestion:</strong> <span id="ai-suggestion">{{ suggestion }}</span>
                 </div>
                 <div class="mt-3 text-xs text-white text-opacity-80">
-                    <i class="fas fa-clock mr-1"></i>Last analysis: <span id="last-analysis-time">{{ moment().format('HH:mm:ss') }}</span>
+                    <i class="fas fa-clock mr-1"></i>Last analysis: <span id="last-analysis-time">--:--:--</span>
                 </div>
             </div>
+            
+            {% if screen_time_log %}
                 <p class="text-sm text-gray-700">
                     <i class="fas fa-info-circle text-blue-500 mr-2"></i>{{ suggestion }}
                 </p>
-            </div>
             
-            <div class="bg-purple-50 p-4 rounded-xl">
-                <h4 class="font-semibold text-gray-800 mb-2">Academic & Social Analysis</h4>
-                <ul class="text-sm text-gray-700 space-y-2">
-                    <li><i class="fas fa-book-reader text-purple-500 mr-2"></i>Last Academic Score: <span class="font-bold">{{ screen_time_log[-1].academic_score }}</span></li>
-                    <li><i class="fas fa-user-friends text-purple-500 mr-2"></i>Last Social Interaction Level: <span class="font-bold">{{ screen_time_log[-1].social_interactions.capitalize() }}</span></li>
-                </ul>
-                <p class="text-sm text-gray-600 mt-2">
-                    <i>Note: The full AI analysis of these metrics will be implemented in a future version.</i>
-                </p>
-            </div>
+                <div class="bg-purple-50 p-4 rounded-xl mt-4">
+                    <h4 class="font-semibold text-gray-800 mb-2">Academic & Social Analysis</h4>
+                    <ul class="text-sm text-gray-700 space-y-2">
+                        <li><i class="fas fa-book-reader text-purple-500 mr-2"></i>Last Academic Score: <span class="font-bold">{{ screen_time_log[-1].academic_score if screen_time_log else 'N/A' }}</span></li>
+                        <li><i class="fas fa-user-friends text-purple-500 mr-2"></i>Last Social Interaction Level: <span class="font-bold">{{ (screen_time_log[-1].social_interactions.capitalize() if screen_time_log else 'N/A') }}</span></li>
+                    </ul>
+                    <p class="text-sm text-gray-600 mt-2">
+                        <i>Note: The full AI analysis of these metrics will be implemented in a future version.</i>
+                    </p>
+                </div>
             {% else %}
-            <div class="bg-gray-100 p-8 rounded-lg text-center">
-                <i class="fas fa-star text-gray-400 text-4xl mb-4"></i>
-                <p class="text-gray-600">Enter your daily data to see insights and suggestions here.</p>
-            </div>
+                <div class="bg-gray-100 p-8 rounded-lg text-center">
+                    <i class="fas fa-star text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-600">Enter your daily data to see insights and suggestions here.</p>
+                </div>
             {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_scripts %}
 <script>
-// Initialize chart when page loads
 document.addEventListener('DOMContentLoaded', function() {
     initializeScreenTimeChart();
+    initializeCorrelationChart();
+    setupDigitalDetoxForm();
 });
 
+function formatDate(dateString) {
+    const options = { month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+}
+
 async function initializeScreenTimeChart() {
-    const canvas = document.getElementById('screenTimeChart');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    
-    // Fetch data from the new API endpoint
+    const ctx = document.getElementById('screen-time-chart').getContext('2d');
     const response = await fetch('/api/digital-detox-data');
     const screenTimeData = await response.json();
-    
+
     if (screenTimeData.length === 0) {
         ctx.font = '16px Inter';
         ctx.textAlign = 'center';
         ctx.fillStyle = '#6b7280';
-        ctx.fillText('No screen time data available yet.', canvas.width / 2, canvas.height / 2);
+        ctx.fillText('No screen time data available yet.', ctx.canvas.width / 2, ctx.canvas.height / 2);
         return;
     }
 
     const dates = screenTimeData.map(item => formatDate(item.date));
     const hours = screenTimeData.map(item => item.hours);
-    
-    drawLineChart(ctx, canvas, dates, hours, 'Screen Time (Hours)', '#3b82f6');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [{
+                label: 'Screen Time (Hours)',
+                data: hours,
+                borderColor: '#3b82f6',
+                backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false,
+                    text: 'Screen Time Trends'
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Hours'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
 }
 
-// Function to draw a generic line chart
-function drawLineChart(ctx, canvas, xLabels, yData, label, color) {
-    const padding = 40;
-    const width = canvas.width - 2 * padding;
-    const height = canvas.height - 2 * padding;
+async function initializeCorrelationChart() {
+    const ctx = document.getElementById('correlation-chart').getContext('2d');
+    // This data would ideally come from an API endpoint that provides both screen time and academic scores
+    // For now, we'll use the data passed from the server for the latest log and some dummy data for illustration
+    const screenTimeLog = {{ screen_time_log | tojson }}; // Passed from Flask
     
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Set up scales
-    const maxY = Math.max(...yData) + 1;
-    const minY = 0;
-    const yRange = maxY - minY || 1;
-    
-    // Draw axes
-    ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, padding + height);
-    ctx.moveTo(padding, padding + height);
-    ctx.lineTo(padding + width, padding + height);
-    ctx.stroke();
-    
-    // Draw data line
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    
-    for (let i = 0; i < yData.length; i++) {
-        const x = padding + (width / (yData.length - 1)) * i;
-        const y = padding + height - ((yData[i] - minY) / yRange) * height;
-        
-        if (i === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    }
-    ctx.stroke();
-    
-    // Draw data points and labels
-    ctx.fillStyle = color;
-    ctx.font = '12px Inter';
-    ctx.textAlign = 'center';
-    for (let i = 0; i < yData.length; i++) {
-        const x = padding + (width / (yData.length - 1)) * i;
-        const y = padding + height - ((yData[i] - minY) / yRange) * height;
-        
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
-        ctx.fill();
-        
-        // Label points with the value
-        ctx.fillStyle = '#6b7280';
-        ctx.fillText(yData[i], x, y - 10);
-        
-        // X-axis labels
-        ctx.fillText(xLabels[i], x, padding + height + 20);
+    let correlationData = [];
+    if (screenTimeLog && screenTimeLog.length > 0) {
+        correlationData = screenTimeLog.map(log => ({
+            x: log.hours,
+            y: log.academic_score
+        }));
+    } else {
+        // Dummy data if no logs are available
+        correlationData = [
+            { x: 3, y: 90 }, { x: 5, y: 85 }, { x: 7, y: 70 }, { x: 4, y: 92 }, { x: 6, y: 78 }
+        ];
     }
 
-    // Y-axis labels
-    for (let i = 0; i <= 4; i++) {
-        const value = minY + (yRange / 4) * (4 - i);
-        const y = padding + (height / 4) * i;
-        ctx.fillStyle = '#6b7280';
-        ctx.textAlign = 'right';
-        ctx.fillText(Math.round(value * 10) / 10, padding - 10, y + 4);
-    }
-    
-    // Y-axis label
-    ctx.save();
-    ctx.translate(padding - 30, padding + height / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText(label, 0, 0);
-    ctx.restore();
+    new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Screen Time vs Academic Score',
+                data: correlationData,
+                backgroundColor: '#8b5cf6',
+                pointRadius: 6,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false,
+                    text: 'Screen Time vs Academic Performance'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Screen Time: ${context.parsed.x}h, Academic Score: ${context.parsed.y}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom',
+                    title: {
+                        display: true,
+                        text: 'Screen Time (Hours)'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Academic Score'
+                    },
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+}
+
+function setupDigitalDetoxForm() {
+    const form = document.getElementById('digital-detox-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const aiScoreSpan = document.getElementById('ai-score');
+    const aiSuggestionSpan = document.getElementById('ai-suggestion');
+    const lastAnalysisTimeSpan = document.getElementById('last-analysis-time');
+
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing...';
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/api/submit-digital-detox', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                aiScoreSpan.textContent = result.ai_analysis.score;
+                aiSuggestionSpan.textContent = result.ai_analysis.suggestion;
+                lastAnalysisTimeSpan.textContent = new Date().toLocaleTimeString();
+                
+                // Update flash messages (if any)
+                if (result.message) {
+                    // This part would typically involve dynamically adding a flash message to the DOM
+                    // For simplicity, we'll just log it or you can implement a dedicated flash message display
+                    console.log('Flash Message:', result.message);
+                    // You might want to reload the page or re-initialize charts to reflect new data
+                    location.reload(); 
+                }
+            } else {
+                alert('Error: ' + result.error);
+            }
+        } catch (error) {
+            console.error('Error submitting digital detox data:', error);
+            alert('An error occurred while submitting data.');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-brain mr-2"></i>Analyze with AI';
+        }
+    });
 }
 </script>
 {% endblock %}

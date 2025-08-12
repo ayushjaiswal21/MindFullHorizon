@@ -497,8 +497,14 @@ def digital_detox():
                 gamification.badges.append('Digital Wellness Master')
                 gamification.points += 50
         
-        db.session.commit()
-        logger.info(f"Digital detox log saved for user {user_id} with AI score: {ai_analysis.get('score')}")
+        try:
+            db.session.commit()
+            logger.info(f"Digital detox log saved for user {user_id} with AI score: {ai_analysis.get('score')}")
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error saving digital detox log for user {user_id}: {e}")
+            flash('An error occurred while saving your data. Please try again.', 'error')
+            return redirect(url_for('digital_detox'))
         
         # Enhanced success message with gamification feedback
         points_earned = 10
@@ -802,12 +808,13 @@ def api_rpm_data():
     user_id = session['user_id']
     
     # Get latest RPM data or create simulated data
-    rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.timestamp.desc()).first()
+    rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.created_at.desc()).first()
     
     if not rpm_data:
         # Create initial RPM data
         rpm_data = RPMData(
             user_id=user_id,
+            date=date.today(),
             heart_rate=72,
             sleep_duration=7.5,
             steps=8500,

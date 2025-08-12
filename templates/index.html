@@ -1,29 +1,198 @@
 {% extends "base.html" %}
 
-{% block title %}Mindful Horizon - Empowering Your Mental Well-being{% endblock %}
-
 {% block content %}
-<div class="flex items-center justify-center min-h-screen">
+<!--
+  This is the new, completely redesigned homepage for MindFullHorizon.
+  It's structured in sections to guide the user, build trust, and encourage them to sign up.
+-->
+
+<!-- 1. Hero Section -->
+<!-- This is the main welcoming area. It uses a background image for engagement. -->
+<!-- IMPORTANT: You need to find a suitable background image. Search for "calm nature" or "serene landscape" on a free stock photo site like Unsplash or Pexels. -->
+<!-- Then, create a folder 'static/img' and save the image there as 'hero-background.jpg' -->
+<div class="relative bg-white overflow-hidden">
+  <div class="absolute inset-0">
+    <img src="{{ url_for('static', filename='img/hero-background.jpg') }}" 
+         onerror="this.onerror=null;this.src='https://placehold.co/1920x1080/a7f3d0/1e3a8a?text=MindFullHorizon';" 
+         alt="Calm background" class="w-full h-full object-cover">
+    <!-- This overlay darkens the image slightly so the white text on top is easy to read. -->
+    <div class="absolute inset-0 bg-sky-800 mix-blend-multiply" aria-hidden="true"></div>
+  </div>
+  <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
+    <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">Your Personal Path to Mental Wellness</h1>
+    <p class="mt-6 max-w-3xl text-xl text-indigo-100">MindFullHorizon offers AI-powered tools, progress tracking, and professional support to help you navigate your mental health journey with confidence and clarity.</p>
+    <div class="mt-10">
+      <a href="{{ url_for('signup') }}" class="inline-block bg-white border border-transparent rounded-md py-3 px-8 text-base font-medium text-sky-700 hover:bg-sky-50">Get Started for Free</a>
+    </div>
+  </div>
+</div>
+
+
+<!-- 2. Features / "Why Choose Us?" Section -->
+<!-- This section quickly communicates the core benefits of your platform using icons. -->
+<div class="bg-slate-50 py-16 sm:py-24">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center">
-        <div class="header-bg text-white p-12 rounded-3xl shadow-2xl max-w-4xl mx-auto">
-            <h1 class="text-4xl md:text-6xl font-extrabold mb-4 animate-fade-in">Empowering Your Mental Well-being.</h1>
-            <p class="text-lg md:text-xl mb-8 opacity-90 animate-fade-in-delay">Proactive insights for a healthier mind. Take the first step towards a brighter future.</p>
-            
-            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <a href="{{ url_for('signup') }}" class="btn-primary bg-white text-indigo-600 hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold transition duration-200 flex items-center">
-                    <i class="fas fa-user-plus mr-2"></i>
-                    Create Account
-                </a>
-                <a href="{{ url_for('login') }}" class="btn-secondary border-2 border-white text-white hover:bg-white hover:text-indigo-600 px-8 py-3 rounded-lg font-semibold transition duration-200 flex items-center">
-                    <i class="fas fa-sign-in-alt mr-2"></i>
-                    Sign In
-                </a>
+      <h2 class="text-base font-semibold text-sky-600 tracking-wide uppercase">Our Features</h2>
+      <p class="mt-1 text-3xl font-extrabold text-gray-900 sm:text-4xl sm:tracking-tight lg:text-5xl">A Better Way to Care for Your Mind</p>
+      <p class="max-w-xl mt-5 mx-auto text-xl text-gray-500">Tools and support designed for your modern life.</p>
+    </div>
+    <div class="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+      <!-- Feature 1: AI Chat -->
+      <div class="pt-6">
+        <div class="flow-root bg-white rounded-lg px-6 pb-8 shadow-lg">
+          <div class="-mt-6">
+            <div>
+              <span class="inline-flex items-center justify-center p-3 bg-sky-500 rounded-md shadow-lg">
+                <!-- SVG Icon from Heroicons (heroicons.com) -->
+                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </span>
             </div>
-            
-            <div class="mt-8 text-sm opacity-75">
-                <p>Join thousands of students and mental health professionals using AI-powered wellness insights</p>
-            </div>
+            <h3 class="mt-8 text-lg font-medium text-gray-900 tracking-tight">AI-Powered Companion</h3>
+            <p class="mt-5 text-base text-gray-500">Chat with our intelligent AI anytime you need to talk, reflect, or work through your thoughts in a safe, private space.</p>
+          </div>
         </div>
+      </div>
+      <!-- Feature 2: Progress Tracking -->
+      <div class="pt-6">
+        <div class="flow-root bg-white rounded-lg px-6 pb-8 shadow-lg">
+          <div class="-mt-6">
+            <div>
+              <span class="inline-flex items-center justify-center p-3 bg-sky-500 rounded-md shadow-lg">
+                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </span>
+            </div>
+            <h3 class="mt-8 text-lg font-medium text-gray-900 tracking-tight">Track Your Progress</h3>
+            <p class="mt-5 text-base text-gray-500">Complete assessments and monitor your mental wellness over time with easy-to-understand visualizations and insights.</p>
+          </div>
+        </div>
+      </div>
+      <!-- Feature 3: Scheduling -->
+      <div class="pt-6">
+        <div class="flow-root bg-white rounded-lg px-6 pb-8 shadow-lg">
+          <div class="-mt-6">
+            <div>
+              <span class="inline-flex items-center justify-center p-3 bg-sky-500 rounded-md shadow-lg">
+                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </span>
+            </div>
+            <h3 class="mt-8 text-lg font-medium text-gray-900 tracking-tight">Connect with Providers</h3>
+            <p class="mt-5 text-base text-gray-500">Easily schedule telehealth appointments with licensed professionals for when you need to speak with a human expert.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- 3. "How It Works" Section -->
+<!-- This makes the service feel simple and accessible. -->
+<div class="bg-white py-16 sm:py-24">
+    <div class="max-w-xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+        <h2 class="sr-only">How it works</h2>
+        <dl class="space-y-10 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-8">
+            <div>
+                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-sky-500 text-white">
+                    <span class="text-xl font-bold">1</span>
+                </div>
+                <div class="mt-5">
+                    <dt class="text-lg leading-6 font-medium text-gray-900">Create Your Account</dt>
+                    <dd class="mt-2 text-base text-gray-500">Sign up in minutes to create your secure, private profile and begin your journey.</dd>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-sky-500 text-white">
+                    <span class="text-xl font-bold">2</span>
+                </div>
+                <div class="mt-5">
+                    <dt class="text-lg leading-6 font-medium text-gray-900">Take an Assessment</dt>
+                    <dd class="mt-2 text-base text-gray-500">Answer a few questions to help us understand your needs and establish a baseline for your progress.</dd>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-sky-500 text-white">
+                    <span class="text-xl font-bold">3</span>
+                </div>
+                <div class="mt-5">
+                    <dt class="text-lg leading-6 font-medium text-gray-900">Engage with Tools</dt>
+                    <dd class="mt-2 text-base text-gray-500">Use the AI companion, track your mood, and connect with providers, all from your personal dashboard.</dd>
+                </div>
+            </div>
+        </dl>
     </div>
 </div>
+
+
+<!-- 4. Testimonial Section -->
+<!-- Social proof is critical for trust. Even with a placeholder, this shows professionalism. -->
+<section class="bg-slate-50 py-16 sm:py-24">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="lg:grid lg:grid-cols-10 lg:gap-8">
+      <div class="lg:col-span-4">
+        <figure>
+          <blockquote class="text-2xl font-semibold text-gray-900">
+            <p>“MindFullHorizon gave me a space to organize my thoughts without judgment. The AI companion is surprisingly helpful, and tracking my progress has been incredibly motivating.”</p>
+          </blockquote>
+          <figcaption class="mt-6 flex items-center gap-x-4">
+            <img class="h-12 w-12 rounded-full bg-gray-200" src="https://placehold.co/100x100/e0e7ff/3730a3?text=A.P." alt="Placeholder for user photo">
+            <div>
+              <div class="font-semibold text-gray-900">Alex P.</div>
+              <div class="text-gray-600">User since 2024</div>
+            </div>
+          </figcaption>
+        </figure>
+      </div>
+      <div class="mt-12 lg:mt-0 lg:col-span-6 lg:col-start-5">
+        <div class="text-base text-gray-500">
+          <h2 class="text-base font-semibold text-sky-600">Confidential & Secure</h2>
+          <p class="mt-4 text-3xl font-extrabold text-gray-900">Your privacy is our priority</p>
+          <p class="mt-4">We understand the sensitivity of mental health. All your data, from assessments to chat logs, is encrypted and stored securely. We provide the tools for your journey; you are always in control of your information.</p>
+          <ul role="list" class="mt-6 space-y-4">
+            <li class="flex items-start">
+              <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              </div>
+              <p class="ml-3 text-base text-gray-500">End-to-end encryption for all communications</p>
+            </li>
+            <li class="flex items-start">
+              <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              </div>
+              <p class="ml-3 text-base text-gray-500">Anonymous and private assessments</p>
+            </li>
+            <li class="flex items-start">
+              <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+              </div>
+              <p class="ml-3 text-base text-gray-500">You control who sees your data</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. Final Call to Action (CTA) Section -->
+<!-- A final prompt for the user to sign up before the footer. -->
+<div class="bg-white">
+    <div class="max-w-4xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            <span class="block">Ready to take the first step?</span>
+        </h2>
+        <p class="mt-4 text-lg leading-6 text-gray-500">Create your free account today and start your journey towards a healthier mind.</p>
+        <a href="{{ url_for('signup') }}" class="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 sm:w-auto">
+            Sign Up Now
+        </a>
+    </div>
+</div>
+
+
 {% endblock %}
