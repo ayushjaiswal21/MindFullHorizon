@@ -12,11 +12,11 @@
 <!-- Then, create a folder 'static/img' and save the image there as 'hero-background.jpg' -->
 <div class="relative bg-white overflow-hidden">
   <div class="absolute inset-0">
-    <img src="{{ url_for('static', filename='img/hero-background.jpg') }}" 
+    <img src="{{ url_for('static', filename='images/hero_image.png') }}" 
          onerror="this.onerror=null;this.src='https://placehold.co/1920x1080/a7f3d0/1e3a8a?text=MindFullHorizon';" 
-         alt="Calm background" class="w-full h-full object-cover">
+         alt="Mindful Horizon - Your path to wellness" class="hero-image">
     <!-- This overlay darkens the image slightly so the white text on top is easy to read. -->
-    <div class="absolute inset-0 bg-sky-800 mix-blend-multiply" aria-hidden="true"></div>
+    <div class="absolute inset-0 hero-overlay" aria-hidden="true"></div>
   </div>
   <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
     <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">Your Personal Path to Mental Wellness</h1>
@@ -36,6 +36,26 @@
       <h2 class="text-base font-semibold text-sky-600 tracking-wide uppercase">Our Features</h2>
       <p class="mt-1 text-3xl font-extrabold text-gray-900 sm:text-4xl sm:tracking-tight lg:text-5xl">A Better Way to Care for Your Mind</p>
       <p class="max-w-xl mt-5 mx-auto text-xl text-gray-500">Tools and support designed for your modern life.</p>
+    </div>
+    
+    <!-- Quick Benefits with Emojis -->
+    <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="feature-tile text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+        <div class="emoji-tile mb-3 text-4xl bg-indigo-100 w-16 h-16 mx-auto rounded-full flex items-center justify-center">🧠</div>
+        <p class="text-sm font-medium text-gray-900">AI-Powered</p>
+      </div>
+      <div class="feature-tile text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+        <div class="emoji-tile mb-3 text-4xl bg-green-100 w-16 h-16 mx-auto rounded-full flex items-center justify-center">📊</div>
+        <p class="text-sm font-medium text-gray-900">Progress Tracking</p>
+      </div>
+      <div class="feature-tile text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+        <div class="emoji-tile mb-3 text-4xl bg-red-100 w-16 h-16 mx-auto rounded-full flex items-center justify-center">❤️</div>
+        <p class="text-sm font-medium text-gray-900">Mental Wellness</p>
+      </div>
+      <div class="feature-tile text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+        <div class="emoji-tile mb-3 text-4xl bg-purple-100 w-16 h-16 mx-auto rounded-full flex items-center justify-center">🔒</div>
+        <p class="text-sm font-medium text-gray-900">Secure & Private</p>
+      </div>
     </div>
     <div class="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
       <!-- Feature 1: AI Chat -->
