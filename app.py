@@ -816,6 +816,31 @@ def wellness_report(user_id):
                          ai_analysis=ai_analysis,
                          user_name=session['user_name'])
 
+@app.route('/profile')
+@login_required
+def profile():
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    gamification = Gamification.query.filter_by(user_id=user_id).first()
+    digital_detox_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
+
+    # Calculate average screen time for last 7 and 30 days
+    today = date.today()
+    last_7_days_logs = [log for log in digital_detox_logs if log.date >= today - timedelta(days=7)]
+    last_30_days_logs = [log for log in digital_detox_logs if log.date >= today - timedelta(days=30)]
+
+    avg_screen_time_7_days = round(sum(log.screen_time_hours for log in last_7_days_logs) / len(last_7_days_logs), 1) if last_7_days_logs else 0
+    avg_screen_time_30_days = round(sum(log.screen_time_hours for log in last_30_days_logs) / len(last_30_days_logs), 1) if last_30_days_logs else 0
+
+    return render_template(
+        'profile.html',
+        user=user,
+        gamification=gamification,
+        digital_detox_logs=digital_detox_logs,
+        avg_screen_time_7_days=avg_screen_time_7_days,
+        avg_screen_time_30_days=avg_screen_time_30_days
+    )
+
 # Helper function for Jinja2 to get assessment severity info
 def get_severity_info(assessment_type, score):
     severity, color = 'N/A', 'gray'
