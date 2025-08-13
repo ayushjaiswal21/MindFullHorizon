@@ -1590,3 +1590,14 @@ jinja2.exceptions.UndefinedError: 'current_user' is undefined
 2025-08-13 21:12:21,352 - __main__ - INFO - AJAX digital detox submission for user 3
 2025-08-13 21:12:22,850 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
 2025-08-13 21:12:22,866 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
+2025-08-13 21:14:24,926 - __main__ - INFO - AI analysis completed in 122.06 seconds
+2025-08-13 21:14:24,927 - __main__ - INFO - AI analysis completed in 122.08 seconds
+2025-08-13 21:14:25,325 - __main__ - INFO - Digital detox data saved successfully for user 3
+2025-08-13 21:14:25,327 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:14:25] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-13 21:14:25,354 - __main__ - INFO - Digital detox data saved successfully for user 3
+2025-08-13 21:14:25,358 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:14:25] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-13 21:14:26,644 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:14:26] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-13 21:15:07,004 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:15:07] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:15:09,500 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:15:09] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:15:19,639 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:15:19] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:15:29,631 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:15:29] "GET /api/rpm-data HTTP/1.1" 200 -
