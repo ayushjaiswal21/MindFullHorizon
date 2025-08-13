@@ -106,6 +106,25 @@ class InstitutionalAnalytics(db.Model):
     engagement_rate = db.Column(db.Float, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class Appointment(db.Model):
+    __tablename__ = 'appointments'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    provider_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True) # Optional, for future
+    date = db.Column(db.Date, nullable=False)
+    time = db.Column(db.String(10), nullable=False) # e.g., "09:00"
+    appointment_type = db.Column(db.String(50), nullable=False)
+    notes = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(20), default='booked', nullable=False) # e.g., 'booked', 'completed', 'cancelled'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user = db.relationship('User', foreign_keys=[user_id], backref='appointments')
+    provider = db.relationship('User', foreign_keys=[provider_id])
+
+    def __repr__(self):
+        return f'<Appointment {self.date} {self.time} for User {self.user_id}>'
+
 # Helper functions for analytics
 def get_user_wellness_trend(user_id, days=30):
     """Get wellness trend for a specific user over the last N days"""

@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from datetime import datetime, timedelta, date
 import json
 from functools import wraps
-from models import db, User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, get_user_wellness_trend, get_institutional_summary
+from models import db, User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, get_user_wellness_trend, get_institutional_summary
 from ai_service import ai_service
 import os
 import logging
@@ -223,7 +223,22 @@ def patient_dashboard():
     # Get user data from database
     gamification = Gamification.query.filter_by(user_id=user_id).first()
     rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.desc()).first()
-    
+
+    # Get appointments
+    today = date.today()
+    all_appointments = Appointment.query.filter_by(user_id=user_id).order_by(Appointment.date.asc(), Appointment.time.asc()).all()
+
+    upcoming_appointments = []
+    past_appointments = []
+
+    for appt in all_appointments:
+        appt_datetime_str = f"{appt.date} {appt.time}"
+        appt_datetime = datetime.strptime(appt_datetime_str, '%Y-%m-%d %H:%M')
+        if appt_datetime >= datetime.now():
+            upcoming_appointments.append(appt)
+        else:
+            past_appointments.append(appt)
+
     # Prepare data structure
     data = {
         'points': gamification.points if gamification else 0,
@@ -236,7 +251,7 @@ def patient_dashboard():
             'mood_score': rpm_data.mood_score if rpm_data else 8
         }
     }
-    
+
     # Check for RPM alerts
     alerts = []
     if rpm_data:
@@ -246,11 +261,13 @@ def patient_dashboard():
             alerts.append('Insufficient sleep detected')
         if rpm_data.mood_score and rpm_data.mood_score < 4:
             alerts.append('Low mood score detected')
-    
+
     return render_template('patient_dashboard.html', 
                          user_name=session['user_name'], 
                          data=data, 
-                         alerts=alerts)
+                         alerts=alerts,
+                         upcoming_appointments=upcoming_appointments,
+                         past_appointments=past_appointments)
 
 @app.route('/provider-dashboard')
 @login_required
@@ -314,10 +331,33 @@ def chat():
 @login_required
 def schedule():
     if request.method == 'POST':
-        date = request.form['date']
-        time = request.form['time']
-        flash(f'Appointment scheduled for {date} at {time}', 'success')
-        return redirect(url_for('patient_dashboard'))
+        date_str = request.form['date']
+        time_str = request.form['time']
+        appointment_type = request.form['appointment_type']
+        notes = request.form.get('notes', '')
+        user_id = session['user_id']
+
+        try:
+            # Convert date string to date object
+            appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+
+            new_appointment = Appointment(
+                user_id=user_id,
+                date=appointment_date,
+                time=time_str,
+                appointment_type=appointment_type,
+                notes=notes,
+                status='booked'
+            )
+            db.session.add(new_appointment)
+            db.session.commit()
+            flash(f'Appointment successfully booked for {date_str} at {time_str}!', 'success')
+            return redirect(url_for('patient_dashboard'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error booking appointment: {e}', 'error')
+            logger.error(f"Error booking appointment for user {user_id}: {e}")
+            return redirect(url_for('schedule'))
     
     return render_template('schedule.html', user_name=session['user_name'])
 
@@ -409,13 +449,95 @@ def telehealth():
 @login_required
 @role_required('patient')
 def assessment():
-    return render_template('assessment.html', user_name=session['user_name'])
+    user_id = session['user_id']
+    assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+    return render_template('assessment.html', user_name=session['user_name'], assessments=assessments)
+
+@app.route('/api/save-assessment', methods=['POST'])
+@login_required
+@role_required('patient')
+def api_save_assessment():
+    user_id = session['user_id']
+    assessment_type = request.json.get('assessment_type')
+    score = request.json.get('score')
+    responses = request.json.get('responses')
+
+    try:
+        new_assessment = Assessment(
+            user_id=user_id,
+            assessment_type=assessment_type,
+            score=score,
+            responses=responses
+        )
+        db.session.add(new_assessment)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Assessment saved successfully!'}), 200
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error saving assessment for user {user_id}: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/progress')
 @login_required
 @role_required('patient')
 def progress():
-    return render_template('progress.html', user_name=session['user_name'])
+    user_id = session['user_id']
+
+    # Fetch latest assessment scores
+    latest_gad7 = Assessment.query.filter_by(user_id=user_id, assessment_type='GAD-7').order_by(Assessment.created_at.desc()).first()
+    latest_phq9 = Assessment.query.filter_by(user_id=user_id, assessment_type='PHQ-9').order_by(Assessment.created_at.desc()).first()
+    latest_mood = Assessment.query.filter_by(user_id=user_id, assessment_type='Daily Mood').order_by(Assessment.created_at.desc()).first()
+
+    # Fetch historical mood data for chart (last 30 days)
+    mood_assessments = Assessment.query.filter_by(user_id=user_id, assessment_type='Daily Mood').order_by(Assessment.created_at.asc()).limit(30).all()
+    mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
+
+    # Fetch historical GAD-7 and PHQ-9 data for chart
+    gad7_assessments = Assessment.query.filter_by(user_id=user_id, assessment_type='GAD-7').order_by(Assessment.created_at.asc()).all()
+    phq9_assessments = Assessment.query.filter_by(user_id=user_id, assessment_type='PHQ-9').order_by(Assessment.created_at.asc()).all()
+
+    # Prepare data for assessment chart (aligning dates)
+    assessment_chart_data = {}
+    for a in gad7_assessments:
+        date_str = a.created_at.strftime('%Y-%m-%d')
+        if date_str not in assessment_chart_data: assessment_chart_data[date_str] = {'gad7': None, 'phq9': None}
+        assessment_chart_data[date_str]['gad7'] = a.score
+    for a in phq9_assessments:
+        date_str = a.created_at.strftime('%Y-%m-%d')
+        if date_str not in assessment_chart_data: assessment_chart_data[date_str] = {'gad7': None, 'phq9': None}
+        assessment_chart_data[date_str]['phq9'] = a.score
+
+    # Sort by date and extract for chart.js
+    sorted_dates = sorted(assessment_chart_data.keys())
+    assessment_chart_labels = sorted_dates
+    assessment_chart_gad7_data = [assessment_chart_data[d]['gad7'] for d in sorted_dates]
+    assessment_chart_phq9_data = [assessment_chart_data[d]['phq9'] for d in sorted_dates]
+
+    # Overall wellness score (simple average of latest mood, GAD-7, PHQ-9 for now)
+    # This could be more sophisticated with AI analysis
+    overall_wellness_score = 'N/A'
+    if latest_mood and latest_gad7 and latest_phq9:
+        # Normalize scores to a 1-10 scale for a simple average
+        # GAD-7: 0-21 -> 10-1 (higher score = worse, so invert)
+        # PHQ-9: 0-27 -> 10-1 (higher score = worse, so invert)
+        # Mood: 1-5 -> 1-10 (multiply by 2)
+        normalized_gad7 = 10 - (latest_gad7.score / 21 * 9) # Max 9, min 0, so 10 - (score/21 * 9)
+        normalized_phq9 = 10 - (latest_phq9.score / 27 * 9)
+        normalized_mood = latest_mood.score * 2
+        overall_wellness_score = round((normalized_gad7 + normalized_phq9 + normalized_mood) / 3, 1)
+
+    return render_template(
+        'progress.html',
+        user_name=session['user_name'],
+        latest_gad7=latest_gad7,
+        latest_phq9=latest_phq9,
+        latest_mood=latest_mood,
+        overall_wellness_score=overall_wellness_score,
+        mood_data=json.dumps(mood_data),
+        assessment_chart_labels=json.dumps(assessment_chart_labels),
+        assessment_chart_gad7_data=json.dumps(assessment_chart_gad7_data),
+        assessment_chart_phq9_data=json.dumps(assessment_chart_phq9_data)
+    )
 
 @app.route('/digital-detox', methods=['GET', 'POST'])
 @login_required
@@ -693,6 +815,27 @@ def wellness_report(user_id):
                          recent_sessions=recent_sessions,
                          ai_analysis=ai_analysis,
                          user_name=session['user_name'])
+
+# Helper function for Jinja2 to get assessment severity info
+def get_severity_info(assessment_type, score):
+    severity, color = 'N/A', 'gray'
+    if assessment_type == 'GAD-7':
+        if score <= 4: severity, color = 'Minimal', 'green'
+        elif score <= 9: severity, color = 'Mild', 'yellow'
+        elif score <= 14: severity, color = 'Moderate', 'orange'
+        else: severity, color = 'Severe', 'red'
+    elif assessment_type == 'PHQ-9':
+        if score <= 4: severity, color = 'Minimal', 'green'
+        elif score <= 9: severity, color = 'Mild', 'yellow'
+        elif score <= 14: severity, color = 'Moderate', 'orange'
+        else: severity, color = 'Severe', 'red'
+    elif assessment_type == 'Daily Mood':
+        if score >= 4: severity, color = 'Positive', 'green'
+        elif score >= 3: severity, color = 'Neutral', 'yellow'
+        else: severity, color = 'Negative', 'red'
+    return {'severity': severity, 'color': color}
+
+app.jinja_env.globals.update(get_severity_info=get_severity_info)
 
 # AJAX API endpoints for enhanced user experience
 @app.route('/api/submit-digital-detox', methods=['POST'])
