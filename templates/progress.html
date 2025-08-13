@@ -105,10 +105,415 @@
                     <i class="fas fa-lightbulb text-yellow-500 mr-3 mt-1"></i>
                     <span><strong>Recommendation:</strong> Your mood dips typically occur on Mondays. Consider implementing weekend self-care routines.</span>
                 </div>
+                {% extends "base.html" %}
+
+{% block title %}Progress Tracking - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Your Mental Health Progress</h1>
+        <p class="text-gray-600">Track your mental health journey with detailed insights and trends</p>
+    </div>
+
+    <!-- Progress Overview Cards -->
+    <div class="grid md:grid-cols-3 gap-6 mb-8">
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Anxiety Levels</h3>
+                <i class="fas fa-heart text-blue-500 text-xl"></i>
+            </div>
+            <div class="text-3xl font-bold text-blue-600 mb-2">{{ latest_gad7.score if latest_gad7 else 'N/A' }}{% if latest_gad7 %}/21{% endif %}</div>
+            <div class="text-sm text-gray-600 mb-3">Latest GAD-7 Score</div>
+            <div class="flex items-center">
+                {% if latest_gad7 %}
+                    {% set severity_info = get_severity_info('GAD-7', latest_gad7.score) %}
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-{{ severity_info.color }}-100 text-{{ severity_info.color }}-800">{{ severity_info.severity }}</span>
+                {% else %}
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">No Data</span>
+                {% endif %}
+                <span class="ml-2 text-sm text-gray-600">
+                    <!-- Trend analysis would go here -->
+                </span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Depression Screen</h3>
+                <i class="fas fa-brain text-purple-500 text-xl"></i>
+            </div>
+            <div class="text-3xl font-bold text-purple-600 mb-2">{{ latest_phq9.score if latest_phq9 else 'N/A' }}{% if latest_phq9 %}/27{% endif %}</div>
+            <div class="text-sm text-gray-600 mb-3">Latest PHQ-9 Score</div>
+            <div class="flex items-center">
+                {% if latest_phq9 %}
+                    {% set severity_info = get_severity_info('PHQ-9', latest_phq9.score) %}
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-{{ severity_info.color }}-100 text-{{ severity_info.color }}-800">{{ severity_info.severity }}</span>
+                {% else %}
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">No Data</span>
+                {% endif %}
+                <span class="ml-2 text-sm text-gray-600">
+                    <!-- Trend analysis would go here -->
+                </span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Overall Wellness</h3>
+                <i class="fas fa-chart-line text-green-500 text-xl"></i>
+            </div>
+            <div class="text-3xl font-bold text-green-600 mb-2">{{ overall_wellness_score }}</div>
+            <div class="text-sm text-gray-600 mb-3">AI Wellness Score</div>
+            <div class="flex items-center">
+                {% if overall_wellness_score != 'N/A' %}
+                    {% set severity_info = get_severity_info('Daily Mood', overall_wellness_score) %}
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-{{ severity_info.color }}-100 text-{{ severity_info.color }}-800">{{ severity_info.severity }}</span>
+                {% else %}
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">No Data</span>
+                {% endif %}
+                <span class="ml-2 text-sm text-gray-600">
+                    <!-- Trend analysis would go here -->
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid lg:grid-cols-2 gap-8 mb-8">
+        <!-- Mood Trends Chart -->
+        <div class="card">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                <i class="fas fa-smile text-yellow-500 mr-2"></i>Mood Trends (Last 30 Days)
+            </h3>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4" style="height: 250px;">
+                <canvas id="moodChart"></canvas>
+            </div>
+            <div class="text-sm text-gray-600">
+                <i class="fas fa-info-circle mr-2"></i>
+                Your mood trends over time.
+            </div>
+        </div>
+
+        <!-- Assessment Scores Chart -->
+        <div class="card">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                <i class="fas fa-chart-bar text-blue-500 mr-2"></i>Assessment Score History
+            </h3>
+            <div class="bg-gray-50 p-4 rounded-lg mb-4" style="height: 250px;">
+                <canvas id="assessmentChart"></canvas>
+            </div>
+            <div class="text-sm text-gray-600">
+                <i class="fas fa-info-circle mr-2"></i>
+                Anxiety (GAD-7) and Depression (PHQ-9) scores over time.
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed Progress Analysis -->
+    <div class="card mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-robot text-purple-500 mr-2"></i>AI Progress Analysis
+        </h3>
+        
+        <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg mb-6">
+            <h4 class="font-semibold text-gray-800 mb-3">Personalized Insights</h4>
+            <div class="space-y-3 text-sm text-gray-700">
+                <div class="flex items-start">
+                    <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                    <span><strong>Positive Trend:</strong> Your anxiety levels have decreased by 25% over the past month, indicating effective coping strategies.</span>
+                </div>
+                <div class="flex items-start">
+                    <i class="fas fa-lightbulb text-yellow-500 mr-3 mt-1"></i>
+                    <span><strong>Recommendation:</strong> Your mood dips typically occur on Mondays. Consider implementing weekend self-care routines.</span>
+                </div>
                 <div class="flex items-start">
                     <i class="fas fa-star text-blue-500 mr-3 mt-1"></i>
                     <span><strong>Strength:</strong> You've maintained consistent daily mood tracking for 3 weeks - excellent commitment to your mental health!</span>
                 </div>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-green-50 p-4 rounded-lg">
+                <h5 class="font-semibold text-green-800 mb-2">What's Working Well</h5>
+                <ul class="text-sm text-green-700 space-y-1">
+                    <li>• Regular sleep schedule (7-8 hours)</li>
+                    <li>• Consistent exercise routine</li>
+                    <li>• Active engagement with therapy sessions</li>
+                    <li>• Improved stress management techniques</li>
+                </ul>
+            </div>
+            
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h5 class="font-semibold text-blue-800 mb-2">Areas for Growth</h5>
+                <ul class="text-sm text-blue-700 space-y-1">
+                    <li>• Social connection opportunities</li>
+                    <li>• Mindfulness practice consistency</li>
+                    <li>• Work-life balance optimization</li>
+                    <li>• Nutrition pattern improvements</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Goal Setting Section -->
+    <div class="card mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-target text-red-500 mr-2"></i>Mental Health Goals
+        </h3>
+        
+        <div class="space-y-4">
+            <div class="border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-semibold text-gray-800">Reduce Anxiety Score to Below 5</h4>
+                    <span class="text-sm text-gray-600">Target: Feb 15, 2024</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: 65%"></div>
+                </div>
+                <div class="flex justify-between text-sm text-gray-600">
+                    <span>Current: 8/21</span>
+                    <span>65% to goal</span>
+                </div>
+            </div>
+            
+            <div class="border border-gray-200 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h4 class="font-semibold text-gray-800">Maintain Daily Mood Tracking</h4>
+                    <span class="text-sm text-gray-600">21-day streak</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div class="bg-green-600 h-2 rounded-full" style="width: 100%"></div>
+                </div>
+                <div class="flex justify-between text-sm text-gray-600">
+                    <span>21/21 days completed</span>
+                    <span>Goal achieved! 🎉</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <button class="btn-primary" onclick="setNewGoal()">
+                <i class="fas fa-plus mr-2"></i>Set New Goal
+            </button>
+        </div>
+    </div>
+
+    <!-- Action Items -->
+    <div class="grid md:grid-cols-2 gap-6">
+        <div class="card">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                <i class="fas fa-tasks text-orange-500 mr-2"></i>Recommended Actions
+            </h3>
+            <div class="space-y-3">
+                <div class="flex items-center p-3 bg-orange-50 rounded-lg">
+                    <i class="fas fa-calendar text-orange-500 mr-3"></i>
+                    <div>
+                        <div class="font-medium text-gray-800">Schedule Next Assessment</div>
+                        <div class="text-sm text-gray-600">Due in 2 weeks</div>
+                    </div>
+                </div>
+                <div class="flex items-center p-3 bg-blue-50 rounded-lg">
+                    <i class="fas fa-user-md text-blue-500 mr-3"></i>
+                    <div>
+                        <div class="font-medium text-gray-800">Book Therapy Session</div>
+                        <div class="text-sm text-gray-600">Follow up on progress</div>
+                    </div>
+                </div>
+                <div class="flex items-center p-3 bg-green-50 rounded-lg">
+                    <i class="fas fa-book text-green-500 mr-3"></i>
+                    <div>
+                        <div class="font-medium text-gray-800">Complete Mindfulness Module</div>
+                        <div class="text-sm text-gray-600">Digital therapy exercise</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">
+                <i class="fas fa-share-alt text-purple-500 mr-2"></i>Share Progress
+            </h3>
+            <p class="text-gray-600 mb-4">Share your progress with your healthcare provider or support system.</p>
+            <div class="space-y-3">
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200">
+                    <i class="fas fa-envelope mr-2"></i>Email Progress Report
+                </button>
+                <button class="w-full bg-green-600 hover:bg-green-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200">
+                    <i class="fas fa-download mr-2"></i>Download PDF Summary
+                </button>
+                <button class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200">
+                    <i class="fas fa-user-md mr-2"></i>Share with Provider
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeMoodChart();
+    initializeAssessmentChart();
+});
+
+function initializeMoodChart() {
+    const ctx = document.getElementById('moodChart').getContext('2d');
+    const moodData = JSON.parse({{ mood_data | tojson }});
+
+    if (moodData.length === 0) {
+        // Display a message if no data
+        ctx.font = '16px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText('No mood data available yet.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        return;
+    }
+
+    const labels = moodData.map(item => new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+    const scores = moodData.map(item => item.score);
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Mood Score',
+                data: scores,
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Mood Score (1-5)'
+                    },
+                    beginAtZero: true,
+                    max: 5
+                }
+            }
+        }
+    });
+}
+
+function initializeAssessmentChart() {
+    const ctx = document.getElementById('assessmentChart').getContext('2d');
+    const labels = JSON.parse({{ assessment_chart_labels | tojson }});
+    const gad7Data = JSON.parse({{ assessment_chart_gad7_data | tojson }});
+    const phq9Data = JSON.parse({{ assessment_chart_phq9_data | tojson }});
+
+    if (labels.length === 0) {
+        // Display a message if no data
+        ctx.font = '16px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#6b7280';
+        ctx.fillText('No assessment data available yet.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        return;
+    }
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+            datasets: [
+                {
+                    label: 'Anxiety (GAD-7)',
+                    data: gad7Data,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    tension: 0.3,
+                    fill: false
+                },
+                {
+                    label: 'Depression (PHQ-9)',
+                    data: phq9Data,
+                    borderColor: '#8b5cf6',
+                    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                    tension: 0.3,
+                    fill: false
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Score'
+                    },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function setNewGoal() {
+    showNotification('Goal setting feature coming soon! This will allow you to set personalized mental health targets.', 'info');
+}
+
+function showNotification(message, type) {
+    // This function assumes a notification system is available, e.g., a flash message div in base.html
+    // For a quick client-side notification, you might use a simple alert or a custom div that appears/disappears.
+    // For now, we'll just log to console and use a simple alert if no flash system is visible.
+    console.log(`Notification (${type}): ${message}`);
+    // If you have a dedicated notification area, update it here.
+    // Example: document.getElementById('notification-area').innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    alert(message); // Fallback for immediate feedback
+}
+</script>
+{% endblock %}
             </div>
         </div>
 

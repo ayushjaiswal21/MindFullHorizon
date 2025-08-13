@@ -93,32 +93,28 @@
                     </tr>
                 </thead>
                 <tbody id="assessmentHistory">
+                    {% if assessments %}
+                        {% for assessment in assessments %}
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ assessment.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ assessment.assessment_type }}</td>
+                            <td class="px-4 py-3 text-sm font-semibold text-blue-600">{{ assessment.score }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                {% set severity_info = get_severity_info(assessment.assessment_type, assessment.score) %}
+                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-{{ severity_info.color }}-100 text-{{ severity_info.color }}-800">{{ severity_info.severity }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <button class="text-blue-600 hover:text-blue-800 mr-2" onclick="viewAssessmentDetails({{ assessment.id }})">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
                     <tr>
-                        <td class="px-4 py-3 text-sm text-gray-700">2024-01-08</td>
-                        <td class="px-4 py-3 text-sm text-gray-700">GAD-7 (Anxiety)</td>
-                        <td class="px-4 py-3 text-sm font-semibold text-blue-600">8/21</td>
-                        <td class="px-4 py-3 text-sm">
-                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Mild</span>
-                        </td>
-                        <td class="px-4 py-3 text-sm">
-                            <button class="text-blue-600 hover:text-blue-800 mr-2">
-                                <i class="fas fa-eye"></i> View
-                            </button>
-                        </td>
+                        <td colspan="5" class="px-4 py-3 text-sm text-gray-600 text-center">No assessments recorded yet.</td>
                     </tr>
-                    <tr>
-                        <td class="px-4 py-3 text-sm text-gray-700">2024-01-05</td>
-                        <td class="px-4 py-3 text-sm text-gray-700">PHQ-9 (Depression)</td>
-                        <td class="px-4 py-3 text-sm font-semibold text-purple-600">5/27</td>
-                        <td class="px-4 py-3 text-sm">
-                            <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Minimal</span>
-                        </td>
-                        <td class="px-4 py-3 text-sm">
-                            <button class="text-blue-600 hover:text-blue-800 mr-2">
-                                <i class="fas fa-eye"></i> View
-                            </button>
-                        </td>
-                    </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>
@@ -169,6 +165,7 @@ let selectedMood = null;
 const assessments = {
     anxiety: {
         title: "GAD-7 Anxiety Assessment",
+        type: "GAD-7",
         description: "Over the last 2 weeks, how often have you been bothered by the following problems?",
         questions: [
             "Feeling nervous, anxious, or on edge",
@@ -188,6 +185,7 @@ const assessments = {
     },
     depression: {
         title: "PHQ-9 Depression Screening",
+        type: "PHQ-9",
         description: "Over the last 2 weeks, how often have you been bothered by any of the following problems?",
         questions: [
             "Little interest or pleasure in doing things",
@@ -289,7 +287,7 @@ function previousQuestion() {
     }
 }
 
-function completeAssessment() {
+async function completeAssessment() {
     if (assessmentAnswers[currentQuestion] === undefined) {
         alert('Please select an answer before completing the assessment.');
         return;
@@ -297,6 +295,31 @@ function completeAssessment() {
     
     const totalScore = assessmentAnswers.reduce((sum, score) => sum + score, 0);
     const maxScore = currentAssessment.questions.length * 3;
+
+    // Save assessment to backend
+    try {
+        const response = await fetch('/api/save-assessment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                assessment_type: currentAssessment.type,
+                score: totalScore,
+                responses: assessmentAnswers
+            }),
+        });
+
+        const data = await response.json();
+        if (data.success) {
+            showNotification('Assessment saved successfully!', 'success');
+        } else {
+            showNotification(`Error saving assessment: ${data.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('Error saving assessment:', error);
+        showNotification('An error occurred while saving the assessment.', 'error');
+    }
     
     // Show results
     showAssessmentResults(totalScore, maxScore);
@@ -383,6 +406,8 @@ function closeAssessment() {
     currentAssessment = null;
     currentQuestion = 0;
     assessmentAnswers = [];
+    // Reload the page to show updated history
+    location.reload();
 }
 
 function selectMood(mood) {
@@ -401,11 +426,35 @@ function selectMood(mood) {
     document.getElementById('saveMoodBtn').disabled = false;
 }
 
-function saveDailyMood() {
+async function saveDailyMood() {
     if (selectedMood) {
-        showNotification(`Daily mood saved! You selected ${selectedMood}/5`, 'success');
-        document.getElementById('saveMoodBtn').disabled = true;
-        document.getElementById('saveMoodBtn').innerHTML = '<i class="fas fa-check mr-2"></i>Mood Saved for Today';
+        try {
+            const response = await fetch('/api/save-assessment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    assessment_type: 'Daily Mood',
+                    score: selectedMood,
+                    responses: { mood: selectedMood }
+                }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                showNotification(`Daily mood saved! You selected ${selectedMood}/5`, 'success');
+                document.getElementById('saveMoodBtn').disabled = true;
+                document.getElementById('saveMoodBtn').innerHTML = '<i class="fas fa-check mr-2"></i>Mood Saved for Today';
+                // Reload the page to show updated history
+                location.reload();
+            } else {
+                showNotification(`Error saving mood: ${data.message}`, 'error');
+            }
+        } catch (error) {
+            console.error('Error saving daily mood:', error);
+            showNotification('An error occurred while saving your mood.', 'error');
+        }
     }
 }
 
@@ -416,6 +465,58 @@ function scheduleFollowUp() {
 function viewProgress() {
     window.location.href = "{{ url_for('progress') }}";
 }
+
+function showNotification(message, type) {
+    // This function assumes a notification system is available, e.g., a flash message div in base.html
+    // For a quick client-side notification, you might use a simple alert or a custom div that appears/disappears.
+    // For now, we'll just log to console and use a simple alert if no flash system is visible.
+    console.log(`Notification (${type}): ${message}`);
+    // If you have a dedicated notification area, update it here.
+    // Example: document.getElementById('notification-area').innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    alert(message); // Fallback for immediate feedback
+}
+
+// Helper function to determine severity info for history table
+function get_severity_info(assessment_type, score) {
+    let severity, color;
+    if (assessment_type.includes('GAD-7')) {
+        if (score <= 4) { severity = 'Minimal'; color = 'green'; }
+        else if (score <= 9) { severity = 'Mild'; color = 'yellow'; }
+        else if (score <= 14) { severity = 'Moderate'; color = 'orange'; }
+        else { severity = 'Severe'; color = 'red'; }
+    } else if (assessment_type.includes('PHQ-9')) {
+        if (score <= 4) { severity = 'Minimal'; color = 'green'; }
+        else if (score <= 9) { severity = 'Mild'; color = 'yellow'; }
+        else if (score <= 14) { severity = 'Moderate'; color = 'orange'; }
+        else { severity = 'Severe'; color = 'red'; }
+    } else if (assessment_type.includes('Daily Mood')) {
+        if (score >= 4) { severity = 'Positive'; color = 'green'; }
+        else if (score >= 3) { severity = 'Neutral'; color = 'yellow'; }
+        else { severity = 'Negative'; color = 'red'; }
+    } else {
+        severity = 'N/A'; color = 'gray';
+    }
+    return { severity: severity, color: color };
+}
+
+// Make get_severity_info available in Jinja2 context
+// This requires a custom filter or context processor in Flask, 
+// but for direct JS usage, we can define it here and call it from Jinja if needed.
+// For now, we'll assume Jinja can call it directly or we'll pass it from Flask.
+// Given the current setup, it's better to calculate severity in Flask and pass it.
+// However, for the purpose of fixing the HTML, I'll define it here for completeness.
+
+// This part is a bit tricky. Jinja2 cannot directly call JavaScript functions.
+// The `get_severity_info` function needs to be available in the Flask context.
+// I will add a custom filter in app.py for this.
+// For now, I'll keep the JS function as a reference for how it would work client-side.
+
+// Function to view assessment details (placeholder for now)
+function viewAssessmentDetails(assessmentId) {
+    alert(`Viewing details for assessment ID: ${assessmentId}`);
+    // In a real app, you'd fetch details via AJAX and display in a modal
+}
+
 </script>
 
 <style>

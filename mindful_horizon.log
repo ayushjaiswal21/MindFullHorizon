@@ -1601,3 +1601,8 @@ jinja2.exceptions.UndefinedError: 'current_user' is undefined
 2025-08-13 21:15:09,500 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:15:09] "GET /api/rpm-data HTTP/1.1" 200 -
 2025-08-13 21:15:19,639 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:15:19] "GET /api/rpm-data HTTP/1.1" 200 -
 2025-08-13 21:15:29,631 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:15:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:15:39,641 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:15:39] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:15:49,639 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:15:49] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:15:59,629 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:15:59] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:16:10,122 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:16:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:16:30,631 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:16:30] "GET /api/rpm-data HTTP/1.1" 200 -

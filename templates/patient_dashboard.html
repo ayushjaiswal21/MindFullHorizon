@@ -121,6 +121,63 @@
         </div>
     </div>
 
+    <!-- Appointment History Section -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">
+            <i class="fas fa-calendar-alt text-purple-500 mr-2"></i>Your Appointments
+        </h3>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} mb-4 p-3 rounded-lg text-sm {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <div>
+                <h4 class="font-semibold text-gray-700 mb-3">Upcoming Appointments</h4>
+                {% if upcoming_appointments %}
+                <ul class="space-y-3">
+                    {% for appt in upcoming_appointments %}
+                    <li class="bg-blue-50 p-3 rounded-lg border border-blue-200 flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-gray-800">{{ appt.date.strftime('%B %d, %Y') }} at {{ appt.time }}</p>
+                            <p class="text-sm text-gray-600">{{ appt.appointment_type | capitalize }} - Status: <span class="text-blue-600 font-semibold">{{ appt.status | capitalize }}</span></p>
+                        </div>
+                        <i class="fas fa-chevron-right text-blue-500"></i>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-gray-600">No upcoming appointments.</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <h4 class="font-semibold text-gray-700 mb-3">Past Appointments</h4>
+                {% if past_appointments %}
+                <ul class="space-y-3">
+                    {% for appt in past_appointments %}
+                    <li class="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center justify-between">
+                        <div>
+                            <p class="font-medium text-gray-800">{{ appt.date.strftime('%B %d, %Y') }} at {{ appt.time }}</p>
+                            <p class="text-sm text-gray-600">{{ appt.appointment_type | capitalize }} - Status: <span class="text-gray-500 font-semibold">{{ appt.status | capitalize }}</span></p>
+                        </div>
+                        <i class="fas fa-history text-gray-400"></i>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-gray-600">No past appointments.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <!-- Mental Health Assessment Section -->
     <div class="card p-6 mb-8">
         <h3 class="text-xl font-semibold mb-4 text-gray-800">

@@ -62,28 +62,16 @@ class OllamaAIService:
             - Trend: {'Improving' if screen_time < avg_screen_time else 'Concerning' if screen_time > avg_screen_time + 1 else 'Stable'}
             """
         
-        prompt = f"""
-        Analyze this college student's digital wellness data:
-        
-        Current Day:
-        - Screen time: {screen_time} hours
-        - Academic performance: {academic_score}/100
-        - Social interactions: {social_interactions}
-        
+        prompt = """Analyze this student's digital wellness data and provide a JSON response.
+
+        Current:
+        - Screen time: {screen_time}h
+        - Academic: {academic_score}/100
+        - Social: {social_interactions}
+
         {history_context}
-        
-        Please provide:
-        1. A wellness score (Excellent/Good/Needs Improvement)
-        2. 2-3 specific, actionable recommendations
-        3. Brief explanation of the relationship between these metrics
-        
-        Format your response as JSON:
-        {{
-            "score": "Excellent/Good/Needs Improvement",
-            "suggestion": "Main recommendation text",
-            "detailed_analysis": "Brief analysis of patterns and relationships",
-            "action_items": ["specific action 1", "specific action 2"]
-        }}
+
+        Output JSON: {{"score": "...", "suggestion": "...", "detailed_analysis": "...", "action_items": ["...", "..."]}}
         """
         
         response = self._make_request(prompt, system_prompt)
@@ -103,9 +91,7 @@ class OllamaAIService:
     def generate_clinical_note(self, transcript: str, patient_info: Dict = None) -> str:
         """Generate clinical documentation from session transcript"""
         
-        system_prompt = """You are a clinical documentation assistant specializing in mental health.
-        Generate professional, structured clinical notes from therapy session transcripts.
-        Follow standard clinical documentation practices and maintain patient confidentiality."""
+        system_prompt = """You are a mental health clinical documentation assistant. Generate professional, structured, concise clinical notes from therapy session transcripts."""
         
         patient_context = ""
         if patient_info:
@@ -116,25 +102,13 @@ class OllamaAIService:
             - Engagement level: {patient_info.get('engagement', 'Not available')}
             """
         
-        prompt = f"""
-        Generate a clinical note from this therapy session transcript:
-        
-        {patient_context}
-        
-        Transcript:
-        {transcript}
-        
-        Please provide a structured clinical note including:
-        1. Session summary
-        2. Patient presentation and mood
-        3. Key topics discussed
-        4. Interventions used
-        5. Patient response
-        6. Plan for next session
-        7. Risk assessment (if applicable)
-        
-        Keep the note professional, concise, and focused on clinical relevance.
-        """
+        prompt = f"""Generate a clinical note from the following therapy session transcript. Include: Session Summary, Patient Presentation/Mood, Key Topics, Interventions, Patient Response, Plan, and Risk Assessment (if applicable).
+
+{patient_context}
+
+Transcript:
+{transcript}
+"""
         
         response = self._make_request(prompt, system_prompt)
         return response if response else self._fallback_clinical_note(transcript)
@@ -145,30 +119,17 @@ class OllamaAIService:
         system_prompt = """You are an institutional wellness analyst. Analyze aggregated mental health data 
         for educational institutions and provide insights for administrators and counseling services."""
         
-        prompt = f"""
-        Analyze this institutional wellness data:
-        
-        Institution Metrics:
-        - Total students: {institution_data.get('total_users', 0)}
-        - Active users: {institution_data.get('active_users', 0)}
-        - Average screen time: {institution_data.get('avg_screen_time', 0)} hours
-        - High-risk students: {institution_data.get('high_risk_users', 0)}
-        - Engagement rate: {institution_data.get('engagement_rate', 0)}%
-        
-        Provide:
-        1. Overall wellness assessment
-        2. Key areas of concern
-        3. Recommended interventions
-        4. Resource allocation suggestions
-        
-        Format as JSON:
-        {{
-            "overall_status": "Excellent/Good/Concerning",
-            "key_insights": ["insight 1", "insight 2"],
-            "recommendations": ["recommendation 1", "recommendation 2"],
-            "priority_actions": ["action 1", "action 2"]
-        }}
-        """
+        prompt = f"""Analyze the following institutional wellness data and output a JSON response.
+
+Metrics:
+- Total students: {institution_data.get('total_users', 0)}
+- Active users: {institution_data.get('active_users', 0)}
+- Avg screen time: {institution_data.get('avg_screen_time', 0)}h
+- High-risk students: {institution_data.get('high_risk_users', 0)}
+- Engagement rate: {institution_data.get('engagement_rate', 0)}%
+
+Output JSON: {{"overall_status": "...", "key_insights": ["...", "..."], "recommendations": ["...", "..."], "priority_actions": ["...", "..."]}}
+"""
         
         response = self._make_request(prompt, system_prompt)
         
