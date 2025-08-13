@@ -1423,3 +1423,170 @@ jinja2.exceptions.UndefinedError: 'current_user' is undefined
 2025-08-12 13:24:03,817 - werkzeug - INFO - 192.168.0.112 - - [12/Aug/2025 13:24:03] "GET /api/rpm-data HTTP/1.1" 200 -
 2025-08-12 13:24:13,824 - werkzeug - INFO - 192.168.0.112 - - [12/Aug/2025 13:24:13] "GET /api/rpm-data HTTP/1.1" 200 -
 2025-08-12 13:24:24,173 - werkzeug - INFO - 192.168.0.112 - - [12/Aug/2025 13:24:24] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 20:53:59,392 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-13 20:53:59,397 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-13 20:54:06,663 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:54:06] "GET / HTTP/1.1" 200 -
+2025-08-13 20:54:07,396 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:54:07] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 20:54:07,418 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:54:07] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 20:54:07,418 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:54:07] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 20:54:07,433 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:54:07] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-13 20:54:07,963 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:54:07] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-13 20:55:22,537 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-13 20:55:22,537 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-13 20:55:25,985 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:25] "GET / HTTP/1.1" 200 -
+2025-08-13 20:55:26,808 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:26] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 20:55:26,826 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:26] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 20:55:26,904 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:26] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-13 20:55:26,913 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:26] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 20:55:30,000 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:30] "GET /signup HTTP/1.1" 200 -
+2025-08-13 20:55:30,052 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:30] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 20:55:30,073 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:30] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 20:55:30,082 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:30] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 20:55:33,372 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:33] "GET /login HTTP/1.1" 200 -
+2025-08-13 20:55:33,422 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:33] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 20:55:33,439 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:33] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 20:55:33,442 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:33] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 20:55:39,605 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:39] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-08-13 20:55:39,708 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:39] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-13 20:55:39,808 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:39] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 20:55:39,835 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:39] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 20:55:39,839 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:39] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 20:55:39,956 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:39] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 20:55:49,940 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:49] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 20:55:53,855 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:53] "GET /chat HTTP/1.1" 200 -
+2025-08-13 20:55:53,966 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:53] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 20:55:53,995 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:53] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 20:55:53,999 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:55:53] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 20:56:13,844 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:13] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 20:56:16,337 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:16] "GET /progress HTTP/1.1" 200 -
+2025-08-13 20:56:16,402 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:16] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 20:56:16,404 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:16] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 20:56:16,406 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:16] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 20:56:34,035 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:34] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 20:56:36,166 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:36] "GET /assessment HTTP/1.1" 200 -
+2025-08-13 20:56:36,302 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:36] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 20:56:36,308 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:36] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 20:56:36,320 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:36] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 20:56:46,444 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:46] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 20:56:49,950 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:49] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 20:56:53,879 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:53] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-13 20:56:54,018 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:54] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 20:56:54,026 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:54] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 20:56:54,037 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:54] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 20:56:54,157 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:54] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-13 20:56:54,202 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:56:54] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-13 20:57:09,529 - __main__ - INFO - AJAX digital detox submission for user 3
+2025-08-13 20:57:09,584 - __main__ - INFO - AJAX digital detox submission for user 3
+2025-08-13 20:57:11,044 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
+2025-08-13 20:57:11,100 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
+2025-08-13 20:59:13,429 - __main__ - INFO - AI analysis completed in 122.33 seconds
+2025-08-13 20:59:13,430 - __main__ - INFO - AI analysis completed in 122.39 seconds
+2025-08-13 20:59:16,163 - __main__ - INFO - Digital detox data saved successfully for user 3
+2025-08-13 20:59:16,171 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:59:16] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-13 20:59:16,299 - __main__ - INFO - Digital detox data saved successfully for user 3
+2025-08-13 20:59:16,304 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:59:16] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-13 20:59:16,361 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:59:16] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-13 20:59:16,720 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:59:16] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 20:59:16,763 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:59:16] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 20:59:16,781 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:59:16] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 20:59:16,825 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:59:16] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-13 20:59:16,855 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 20:59:16] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-13 20:59:45,881 - __main__ - INFO - AJAX digital detox submission for user 3
+2025-08-13 20:59:45,889 - __main__ - INFO - AJAX digital detox submission for user 3
+2025-08-13 20:59:47,405 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
+2025-08-13 20:59:47,405 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
+2025-08-13 21:01:37,641 - __main__ - INFO - AI analysis completed in 110.24 seconds
+2025-08-13 21:01:37,676 - __main__ - INFO - Digital detox data saved successfully for user 3
+2025-08-13 21:01:37,676 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:01:37] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-13 21:01:37,721 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:01:37] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-13 21:01:38,478 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:01:38] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:01:38,478 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:01:38] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:01:38,481 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:01:38] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:01:38,655 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:01:38] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-13 21:01:38,857 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:01:38] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-13 21:01:49,512 - __main__ - INFO - AI analysis completed in 122.10 seconds
+2025-08-13 21:01:51,539 - __main__ - INFO - Digital detox data saved successfully for user 3
+2025-08-13 21:01:51,543 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:01:51] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-13 21:06:59,671 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-13 21:06:59,672 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-13 21:07:03,357 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:07:03] "GET / HTTP/1.1" 200 -
+2025-08-13 21:07:03,710 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:07:03] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:07:03,747 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:07:03] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:07:03,753 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:07:03] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-13 21:07:03,758 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:07:03] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:07:17,667 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:07:17] "GET /schedule HTTP/1.1" 200 -
+2025-08-13 21:07:17,774 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:07:17] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:07:17,783 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:07:17] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:07:17,793 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:07:17] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:08:00,408 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:08:00] "[32mPOST /schedule HTTP/1.1[0m" 302 -
+2025-08-13 21:08:00,492 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:08:00] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-13 21:08:00,558 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:08:00] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:08:00,562 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:08:00] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:08:00,569 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:08:00] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:08:00,629 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:08:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:08:10,641 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:08:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:08:20,631 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:08:20] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:08:30,629 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:08:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:08:40,639 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:08:40] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:08:50,637 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:08:50] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:09:00,624 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:09:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:09:10,622 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:09:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:09:20,649 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:09:20] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:09:30,631 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:09:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:09:40,639 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:09:40] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:09:50,631 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:09:50] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:10:00,639 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:10:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:10:10,640 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:10:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:10:30,635 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:10:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:11:04,686 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:11:10,618 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:11:17,998 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-13 21:11:17,998 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-13 21:11:20,638 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:20] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:11:25,684 - werkzeug - INFO - 192.168.1.8 - - [13/Aug/2025 21:11:25] "GET / HTTP/1.1" 200 -
+2025-08-13 21:11:25,998 - werkzeug - INFO - 192.168.1.8 - - [13/Aug/2025 21:11:25] "GET /static/images/hero_image.png HTTP/1.1" 200 -
+2025-08-13 21:11:26,013 - werkzeug - INFO - 192.168.1.8 - - [13/Aug/2025 21:11:26] "GET /static/js/scripts.js HTTP/1.1" 200 -
+2025-08-13 21:11:26,017 - werkzeug - INFO - 192.168.1.8 - - [13/Aug/2025 21:11:26] "GET /static/css/styles.css HTTP/1.1" 200 -
+2025-08-13 21:11:26,019 - werkzeug - INFO - 192.168.1.8 - - [13/Aug/2025 21:11:26] "GET /static/css/enhanced.css HTTP/1.1" 200 -
+2025-08-13 21:11:28,072 - werkzeug - INFO - 192.168.1.8 - - [13/Aug/2025 21:11:28] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-13 21:11:30,168 - werkzeug - INFO - 192.168.1.8 - - [13/Aug/2025 21:11:30] "GET /login HTTP/1.1" 200 -
+2025-08-13 21:11:30,218 - werkzeug - INFO - 192.168.1.8 - - [13/Aug/2025 21:11:30] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:11:30,234 - werkzeug - INFO - 192.168.1.8 - - [13/Aug/2025 21:11:30] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:11:30,234 - werkzeug - INFO - 192.168.1.8 - - [13/Aug/2025 21:11:30] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:11:43,304 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:43] "GET / HTTP/1.1" 200 -
+2025-08-13 21:11:43,345 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:43] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:11:43,356 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:43] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-13 21:11:43,358 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:43] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:11:43,385 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:43] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:11:49,419 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:49] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-13 21:11:49,468 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:49] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:11:49,471 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:49] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:11:49,472 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:49] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:11:49,490 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:49] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:11:58,229 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:58] "GET /schedule HTTP/1.1" 200 -
+2025-08-13 21:11:58,299 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:58] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:11:58,302 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:58] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:11:58,306 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:11:58] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:12:05,509 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:12:05] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:12:07,408 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:12:07] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-13 21:12:07,499 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:12:07] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:12:07,529 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:12:07] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:12:07,532 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:12:07] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:12:07,662 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:12:07] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-13 21:12:07,778 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:12:07] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-13 21:12:21,331 - __main__ - INFO - AJAX digital detox submission for user 3
+2025-08-13 21:12:21,352 - __main__ - INFO - AJAX digital detox submission for user 3
+2025-08-13 21:12:22,850 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
+2025-08-13 21:12:22,866 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
