@@ -100,22 +100,18 @@
                 </div>
             </div>
             
-            {% if screen_time_log %}
-                <p class="text-sm text-gray-700">
-                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>{{ suggestion }}
+            <div class="bg-purple-50 p-4 rounded-xl mt-4">
+                <h4 class="font-semibold text-gray-800 mb-2">Academic & Social Analysis</h4>
+                <ul class="text-sm text-gray-700 space-y-2">
+                    <li><i class="fas fa-book-reader text-purple-500 mr-2"></i>Last Academic Score: <span id="current-academic-score" class="font-bold">{{ screen_time_log[-1].academic_score if screen_time_log else 'N/A' }}</span></li>
+                    <li><i class="fas fa-user-friends text-purple-500 mr-2"></i>Last Social Interaction Level: <span id="current-social-level" class="font-bold">{{ (screen_time_log[-1].social_interactions.capitalize() if screen_time_log else 'N/A') }}</span></li>
+                </ul>
+                <p class="text-sm text-gray-600 mt-2">
+                    <i>Note: The full AI analysis of these metrics will be implemented in a future version.</i>
                 </p>
+            </div>
             
-                <div class="bg-purple-50 p-4 rounded-xl mt-4">
-                    <h4 class="font-semibold text-gray-800 mb-2">Academic & Social Analysis</h4>
-                    <ul class="text-sm text-gray-700 space-y-2">
-                        <li><i class="fas fa-book-reader text-purple-500 mr-2"></i>Last Academic Score: <span class="font-bold">{{ screen_time_log[-1].academic_score if screen_time_log else 'N/A' }}</span></li>
-                        <li><i class="fas fa-user-friends text-purple-500 mr-2"></i>Last Social Interaction Level: <span class="font-bold">{{ (screen_time_log[-1].social_interactions.capitalize() if screen_time_log else 'N/A') }}</span></li>
-                    </ul>
-                    <p class="text-sm text-gray-600 mt-2">
-                        <i>Note: The full AI analysis of these metrics will be implemented in a future version.</i>
-                    </p>
-                </div>
-            {% else %}
+            {% if not screen_time_log %}
                 <div class="bg-gray-100 p-8 rounded-lg text-center">
                     <i class="fas fa-star text-gray-400 text-4xl mb-4"></i>
                     <p class="text-gray-600">Enter your daily data to see insights and suggestions here.</p>
@@ -303,17 +299,50 @@ function setupDigitalDetoxForm() {
             const result = await response.json();
 
             if (result.success) {
+                // Update AI analysis display - show only the suggestion text, not JSON
                 aiScoreSpan.textContent = result.ai_analysis.score;
-                aiSuggestionSpan.textContent = result.ai_analysis.suggestion;
+                
+                // Clean up the suggestion text - remove any JSON formatting
+                let suggestionText = result.ai_analysis.suggestion;
+                if (typeof suggestionText === 'object') {
+                    suggestionText = suggestionText.suggestion || JSON.stringify(suggestionText);
+                }
+                // Remove any JSON artifacts that might appear in the text
+                suggestionText = suggestionText.replace(/^.*?"suggestion":\s*"/, '').replace(/".*$/, '').replace(/\\n/g, ' ').replace(/\\"/g, '"');
+                
+                aiSuggestionSpan.textContent = suggestionText;
                 lastAnalysisTimeSpan.textContent = new Date().toLocaleTimeString();
                 
-                // Update flash messages (if any)
+                // Update Academic & Social Analysis section with new data
+                const academicScoreSpan = document.getElementById('current-academic-score');
+                const socialLevelSpan = document.getElementById('current-social-level');
+                
+                if (academicScoreSpan) {
+                    academicScoreSpan.textContent = data.academic_score || 'N/A';
+                }
+                if (socialLevelSpan) {
+                    const socialLevel = data.social_interactions || 'N/A';
+                    socialLevelSpan.textContent = socialLevel.charAt(0).toUpperCase() + socialLevel.slice(1);
+                }
+                
+                // Update charts with new data
+                setTimeout(() => {
+                    initializeScreenTimeChart();
+                    initializeCorrelationChart();
+                }, 500);
+                
+                // Show success message
                 if (result.message) {
-                    // This part would typically involve dynamically adding a flash message to the DOM
-                    // For simplicity, we'll just log it or you can implement a dedicated flash message display
-                    console.log('Flash Message:', result.message);
-                    // You might want to reload the page or re-initialize charts to reflect new data
-                    location.reload(); 
+                    // Create a temporary success message
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                    successMsg.innerHTML = `<i class="fas fa-check mr-2"></i>${result.message}`;
+                    document.body.appendChild(successMsg);
+                    
+                    // Remove after 3 seconds
+                    setTimeout(() => {
+                        successMsg.remove();
+                    }, 3000);
                 }
             } else {
                 alert('Error: ' + result.error);
