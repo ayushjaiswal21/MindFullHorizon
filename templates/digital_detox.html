@@ -9,7 +9,6 @@
         <p class="text-lg text-gray-600">Take control of your digital habits for a healthier mind.</p>
     </div>
 
-    <!-- Screen Time Chart with Chart.js -->
     <div class="card p-6 mb-8">
         <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
             <i class="fas fa-chart-line text-blue-500 mr-3"></i>Screen Time Trends
@@ -23,7 +22,6 @@
         </div>
     </div>
     
-    <!-- Correlation Chart -->
     <div class="card p-6 mb-8">
         <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
             <i class="fas fa-chart-scatter text-purple-500 mr-3"></i>Screen Time vs Academic Performance
@@ -38,7 +36,6 @@
     </div>
     
     <div class="grid lg:grid-cols-2 gap-8">
-        <!-- Input Section -->
         <div class="card p-6">
             <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
                 <i class="fas fa-mobile-alt text-purple-500 mr-3"></i>Daily Digital Check-in
@@ -79,7 +76,6 @@
             </form>
         </div>
 
-        <!-- AI Analysis Section -->
         <div class="card p-6">
             <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
                 <i class="fas fa-robot text-green-500 mr-3"></i>AI Analysis
@@ -203,9 +199,7 @@ async function initializeScreenTimeChart() {
 
 async function initializeCorrelationChart() {
     const ctx = document.getElementById('correlation-chart').getContext('2d');
-    // This data would ideally come from an API endpoint that provides both screen time and academic scores
-    // For now, we'll use the data passed from the server for the latest log and some dummy data for illustration
-    const screenTimeLog = {{ screen_time_log | tojson }}; // Passed from Flask
+    const screenTimeLog = {{ screen_time_log | tojson }}; 
     
     let correlationData = [];
     if (screenTimeLog && screenTimeLog.length > 0) {
@@ -214,7 +208,6 @@ async function initializeCorrelationChart() {
             y: log.academic_score
         }));
     } else {
-        // Dummy data if no logs are available
         correlationData = [
             { x: 3, y: 90 }, { x: 5, y: 85 }, { x: 7, y: 70 }, { x: 4, y: 92 }, { x: 6, y: 78 }
         ];
@@ -279,7 +272,7 @@ function setupDigitalDetoxForm() {
     const lastAnalysisTimeSpan = document.getElementById('last-analysis-time');
 
     form.addEventListener('submit', async function(event) {
-        event.preventDefault(); // Prevent default form submission
+        event.preventDefault(); 
 
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing...';
@@ -299,21 +292,17 @@ function setupDigitalDetoxForm() {
             const result = await response.json();
 
             if (result.success) {
-                // Update AI analysis display - show only the suggestion text, not JSON
                 aiScoreSpan.textContent = result.ai_analysis.score;
                 
-                // Clean up the suggestion text - remove any JSON formatting
                 let suggestionText = result.ai_analysis.suggestion;
                 if (typeof suggestionText === 'object') {
                     suggestionText = suggestionText.suggestion || JSON.stringify(suggestionText);
                 }
-                // Remove any JSON artifacts that might appear in the text
                 suggestionText = suggestionText.replace(/^.*?"suggestion":\s*"/, '').replace(/".*$/, '').replace(/\\n/g, ' ').replace(/\\"/g, '"');
                 
                 aiSuggestionSpan.textContent = suggestionText;
                 lastAnalysisTimeSpan.textContent = new Date().toLocaleTimeString();
                 
-                // Update Academic & Social Analysis section with new data
                 const academicScoreSpan = document.getElementById('current-academic-score');
                 const socialLevelSpan = document.getElementById('current-social-level');
                 
@@ -325,21 +314,17 @@ function setupDigitalDetoxForm() {
                     socialLevelSpan.textContent = socialLevel.charAt(0).toUpperCase() + socialLevel.slice(1);
                 }
                 
-                // Update charts with new data
                 setTimeout(() => {
                     initializeScreenTimeChart();
                     initializeCorrelationChart();
                 }, 500);
                 
-                // Show success message
                 if (result.message) {
-                    // Create a temporary success message
                     const successMsg = document.createElement('div');
                     successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
                     successMsg.innerHTML = `<i class="fas fa-check mr-2"></i>${result.message}`;
                     document.body.appendChild(successMsg);
                     
-                    // Remove after 3 seconds
                     setTimeout(() => {
                         successMsg.remove();
                     }, 3000);

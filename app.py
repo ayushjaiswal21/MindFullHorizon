@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from datetime import datetime, timedelta, date
 import json
 from functools import wraps
-from models import db, User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, get_user_wellness_trend, get_institutional_summary
+from models import db, User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, get_user_wellness_trend, get_institutional_summary
 from ai_service import ai_service
 import os
 import logging
@@ -482,7 +482,8 @@ def api_save_assessment():
 @role_required('patient')
 def progress():
     user_id = session['user_id']
-
+    goals = Goal.query.filter_by(user_id=user_id).all()
+    achievements = [goal.description for goal in goals if goal.status == 'completed']
     # Fetch latest assessment scores
     latest_gad7 = Assessment.query.filter_by(user_id=user_id, assessment_type='GAD-7').order_by(Assessment.created_at.desc()).first()
     latest_phq9 = Assessment.query.filter_by(user_id=user_id, assessment_type='PHQ-9').order_by(Assessment.created_at.desc()).first()
@@ -546,7 +547,9 @@ def progress():
         mood_data=json.dumps(mood_data),
         assessment_chart_labels=json.dumps(assessment_chart_labels),
         assessment_chart_gad7_data=json.dumps(assessment_chart_gad7_data),
-        assessment_chart_phq9_data=json.dumps(assessment_chart_phq9_data)
+        assessment_chart_phq9_data=json.dumps(assessment_chart_phq9_data),
+        goals=goals,
+        achievements=achievements,
     )
 
 @app.route('/digital-detox', methods=['GET', 'POST'])
@@ -1005,6 +1008,156 @@ def api_submit_digital_detox():
             'success': False,
             'error': str(e)
         }), 500
+
+# Goals Management Routes
+@app.route('/goals')
+@login_required
+@role_required('patient')
+def goals():
+    """Display goals management page"""
+    user_id = session['user_id']
+    goals = Goal.query.filter_by(user_id=user_id).order_by(Goal.created_at.desc()).all()
+    return render_template('goals.html', goals=goals)
+
+@app.route('/api/goals', methods=['GET'])
+@login_required
+@role_required('patient')
+def get_goals():
+    """Get all goals for the current user"""
+    user_id = session['user_id']
+    goals = Goal.query.filter_by(user_id=user_id).order_by(Goal.created_at.desc()).all()
+    goals_data = []
+    for goal in goals:
+        goals_data.append({
+            'id': goal.id,
+            'title': goal.title,
+            'description': goal.description,
+            'category': goal.category,
+            'target_value': goal.target_value,
+            'current_value': goal.current_value,
+            'unit': goal.unit,
+            'status': goal.status,
+            'priority': goal.priority,
+            'start_date': goal.start_date.strftime('%Y-%m-%d') if goal.start_date else None,
+            'target_date': goal.target_date.strftime('%Y-%m-%d') if goal.target_date else None,
+            'progress_percentage': goal.progress_percentage,
+            'created_at': goal.created_at.strftime('%Y-%m-%d %H:%M')
+        })
+    return jsonify({'success': True, 'goals': goals_data})
+
+@app.route('/api/goals', methods=['POST'])
+@login_required
+@role_required('patient')
+def add_goal():
+    """Create a new goal"""
+    user_id = session['user_id']
+    data = request.json
+    
+    title = data.get('title', '').strip()
+    description = data.get('description', '').strip()
+    category = data.get('category', 'general')
+    target_value = data.get('target_value')
+    unit = data.get('unit', '').strip()
+    priority = data.get('priority', 'medium')
+    target_date = data.get('target_date')
+    
+    if not title:
+        return jsonify({'success': False, 'message': 'Title is required'})
+    
+    try:
+        new_goal = Goal(
+            user_id=user_id,
+            title=title,
+            description=description,
+            category=category,
+            target_value=float(target_value) if target_value else None,
+            unit=unit if unit else None,
+            priority=priority,
+            start_date=date.today(),
+            target_date=datetime.strptime(target_date, '%Y-%m-%d').date() if target_date else None
+        )
+        
+        db.session.add(new_goal)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Goal created successfully!',
+            'goal': {
+                'id': new_goal.id,
+                'title': new_goal.title,
+                'description': new_goal.description,
+                'category': new_goal.category,
+                'status': new_goal.status,
+                'priority': new_goal.priority,
+                'progress_percentage': new_goal.progress_percentage
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error creating goal: {str(e)}'})
+
+@app.route('/api/goals/<int:goal_id>', methods=['PUT'])
+@login_required
+@role_required('patient')
+def update_goal(goal_id):
+    """Update an existing goal"""
+    goal = Goal.query.get_or_404(goal_id)
+    
+    if goal.user_id != session['user_id']:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    data = request.json
+    
+    try:
+        # Update goal fields
+        if 'current_value' in data:
+            goal.current_value = float(data['current_value'])
+        if 'status' in data:
+            goal.status = data['status']
+            if data['status'] == 'completed' and not goal.completed_date:
+                goal.completed_date = date.today()
+        if 'title' in data:
+            goal.title = data['title']
+        if 'description' in data:
+            goal.description = data['description']
+        if 'priority' in data:
+            goal.priority = data['priority']
+        
+        goal.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Goal updated successfully!',
+            'goal': {
+                'id': goal.id,
+                'progress_percentage': goal.progress_percentage,
+                'status': goal.status
+            }
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error updating goal: {str(e)}'})
+
+@app.route('/api/goals/<int:goal_id>', methods=['DELETE'])
+@login_required
+@role_required('patient')
+def delete_goal(goal_id):
+    """Delete a goal"""
+    goal = Goal.query.get_or_404(goal_id)
+    
+    if goal.user_id != session['user_id']:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    try:
+        db.session.delete(goal)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Goal deleted successfully!'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error deleting goal: {str(e)}'})
+    return jsonify({'success': False, 'message': 'Goal not found'})
 
 @app.route('/api/rpm-data')
 @login_required

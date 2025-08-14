@@ -9,7 +9,6 @@
         <p class="text-gray-600">Track your mental health journey with detailed insights and trends</p>
     </div>
 
-    <!-- Progress Overview Cards -->
     <div class="grid md:grid-cols-3 gap-6 mb-8">
         <div class="card">
             <div class="flex items-center justify-between mb-4">
@@ -26,8 +25,7 @@
                     <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">No Data</span>
                 {% endif %}
                 <span class="ml-2 text-sm text-gray-600">
-                    <!-- Trend analysis would go here -->
-                </span>
+                    </span>
             </div>
         </div>
 
@@ -46,8 +44,7 @@
                     <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">No Data</span>
                 {% endif %}
                 <span class="ml-2 text-sm text-gray-600">
-                    <!-- Trend analysis would go here -->
-                </span>
+                    </span>
             </div>
         </div>
 
@@ -66,15 +63,12 @@
                     <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">No Data</span>
                 {% endif %}
                 <span class="ml-2 text-sm text-gray-600">
-                    <!-- Trend analysis would go here -->
-                </span>
+                    </span>
             </div>
         </div>
     </div>
 
-    <!-- Charts Section -->
     <div class="grid lg:grid-cols-2 gap-8 mb-8">
-        <!-- Mood Trends Chart -->
         <div class="card">
             <h3 class="text-xl font-semibold text-gray-800 mb-4">
                 <i class="fas fa-smile text-yellow-500 mr-2"></i>Mood Trends (Last 30 Days)
@@ -88,7 +82,6 @@
             </div>
         </div>
 
-        <!-- Assessment Scores Chart -->
         <div class="card">
             <h3 class="text-xl font-semibold text-gray-800 mb-4">
                 <i class="fas fa-chart-bar text-blue-500 mr-2"></i>Assessment Score History
@@ -103,7 +96,6 @@
         </div>
     </div>
 
-    <!-- Detailed Progress Analysis -->
     <div class="card mb-8">
         <h3 class="text-xl font-semibold text-gray-800 mb-4">
             <i class="fas fa-robot text-purple-500 mr-2"></i>AI Progress Analysis
@@ -124,61 +116,40 @@
         </div>
     </div>
 
-    <!-- Mental Health Goals -->
     <div class="card mb-8">
         <h3 class="text-xl font-semibold text-gray-800 mb-4">
             <i class="fas fa-target text-red-500 mr-2"></i>Mental Health Goals
         </h3>
-        
-        <div class="grid md:grid-cols-2 gap-6 mb-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-blue-800 mb-2">Current Goals</h4>
-                <ul class="space-y-2 text-sm text-blue-700">
-                    <li class="flex items-center">
-                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
-                        Complete daily mood tracking (7/7 days this week)
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-clock text-yellow-500 mr-2"></i>
-                        Practice mindfulness 10 minutes daily (5/7 days this week)
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-clock text-yellow-500 mr-2"></i>
-                        Maintain sleep schedule (6/7 nights this week)
-                    </li>
-                </ul>
+        <div id="goals-container" class="space-y-2">
+            {% for goal in goals %}
+            <div class="flex items-center p-2 rounded-lg {% if goal.completed %}bg-green-100{% else %}bg-gray-100{% endif %}">
+                <input type="checkbox" data-goal-id="{{ goal.id }}" class="form-checkbox h-5 w-5 text-blue-600" {% if goal.completed %}checked{% endif %}>
+                <span class="ml-3 text-gray-700">{{ goal.description }}</span>
             </div>
-            
-            <div class="bg-green-50 p-4 rounded-lg">
-                <h4 class="font-semibold text-green-800 mb-2">Achievements</h4>
-                <ul class="space-y-2 text-sm text-green-700">
-                    <li class="flex items-center">
-                        <i class="fas fa-trophy text-yellow-500 mr-2"></i>
-                        7-day mood tracking streak
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-star text-yellow-500 mr-2"></i>
-                        Anxiety score improved by 25%
-                    </li>
-                    <li class="flex items-center">
-                        <i class="fas fa-medal text-yellow-500 mr-2"></i>
-                        Completed first month of tracking
-                    </li>
-                </ul>
-            </div>
+            {% endfor %}
         </div>
-        
-        <div class="flex items-center justify-between">
-            <button onclick="setNewGoal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                <i class="fas fa-plus mr-2"></i>Set New Goal
-            </button>
-            <div class="text-sm text-gray-600">
-                <i class="fas fa-info-circle mr-2"></i>Goals help track your progress and maintain motivation
-            </div>
+        <div class="mt-4">
+            <form id="add-goal-form" class="flex items-center">
+                <input type="text" id="new-goal-description" class="input-field flex-grow" placeholder="Add a new goal...">
+                <button type="submit" class="btn-primary ml-2">Add</button>
+            </form>
         </div>
     </div>
 
-    <!-- Action Items -->
+    <div class="card mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-trophy text-yellow-500 mr-2"></i>Achievements
+        </h3>
+        <ul id="achievements-list" class="space-y-2 text-sm text-green-700">
+            {% for achievement in achievements %}
+            <li class="flex items-center">
+                <i class="fas fa-star text-yellow-500 mr-2"></i>
+                {{ achievement }}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
     <div class="grid md:grid-cols-2 gap-6">
         <div class="card">
             <h3 class="text-xl font-semibold text-gray-800 mb-4">
@@ -236,14 +207,92 @@
 document.addEventListener('DOMContentLoaded', function() {
     initializeMoodChart();
     initializeAssessmentChart();
+    initializeGoals();
 });
+
+function initializeGoals() {
+    const addGoalForm = document.getElementById('add-goal-form');
+    addGoalForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const descriptionInput = document.getElementById('new-goal-description');
+        const description = descriptionInput.value;
+        if (description) {
+            const response = await fetch('/api/goals', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ description })
+            });
+            const result = await response.json();
+            if (result.success) {
+                addGoalToDOM(result.goal);
+                descriptionInput.value = '';
+            }
+        }
+    });
+
+    const goalsContainer = document.getElementById('goals-container');
+    goalsContainer.addEventListener('change', async (e) => {
+        if (e.target.type === 'checkbox') {
+            const goalId = e.target.dataset.goalId;
+            const completed = e.target.checked;
+            const response = await fetch(`/api/goals/${goalId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ completed })
+            });
+            const result = await response.json();
+            if (result.success) {
+                updateGoalInDOM(e.target);
+                updateAchievements();
+            }
+        }
+    });
+}
+
+function addGoalToDOM(goal) {
+    const goalsContainer = document.getElementById('goals-container');
+    const goalElement = document.createElement('div');
+    goalElement.className = 'flex items-center p-2 rounded-lg bg-gray-100';
+    goalElement.innerHTML = `
+        <input type="checkbox" data-goal-id="${goal.id}" class="form-checkbox h-5 w-5 text-blue-600">
+        <span class="ml-3 text-gray-700">${goal.description}</span>
+    `;
+    goalsContainer.appendChild(goalElement);
+}
+
+function updateGoalInDOM(checkbox) {
+    const goalElement = checkbox.parentElement;
+    if (checkbox.checked) {
+        goalElement.classList.remove('bg-gray-100');
+        goalElement.classList.add('bg-green-100');
+    } else {
+        goalElement.classList.remove('bg-green-100');
+        goalElement.classList.add('bg-gray-100');
+    }
+}
+
+function updateAchievements() {
+    const achievementsList = document.getElementById('achievements-list');
+    achievementsList.innerHTML = '';
+    const completedGoals = document.querySelectorAll('#goals-container input[type="checkbox"]:checked');
+    completedGoals.forEach(goal => {
+        const achievementElement = document.createElement('li');
+        achievementElement.className = 'flex items-center';
+        achievementElement.innerHTML = `
+            <i class="fas fa-star text-yellow-500 mr-2"></i>
+            ${goal.nextElementSibling.textContent}
+        `;
+        achievementsList.appendChild(achievementElement);
+    });
+}
+
 
 function initializeMoodChart() {
     const canvas = document.getElementById('moodChart');
     const ctx = canvas.getContext('2d');
     
     // Get data from Flask template
-    const moodData = JSON.parse('{{ mood_data }}');
+    const moodData = JSON.parse('{{ mood_data | tojson }}');
     
     if (moodData.length === 0) {
         // Display a message if no data
@@ -260,7 +309,7 @@ function initializeMoodChart() {
         const date = new Date(item.date);
         return (date.getMonth() + 1) + '/' + date.getDate();
     });
-    const scores = moodData.map(item => item.mood_score);
+    const scores = moodData.map(item => item.score);
     
     drawLineChart(ctx, canvas, dates, scores, 'Mood Score', '#F59E0B');
 }
@@ -270,9 +319,9 @@ function initializeAssessmentChart() {
     const ctx = canvas.getContext('2d');
     
     // Get data from Flask template
-    const labels = JSON.parse('{{ assessment_chart_labels }}');
-    const gad7Data = JSON.parse('{{ assessment_chart_gad7_data }}');
-    const phq9Data = JSON.parse('{{ assessment_chart_phq9_data }}');
+    const labels = JSON.parse('{{ assessment_chart_labels | tojson }}');
+    const gad7Data = JSON.parse('{{ assessment_chart_gad7_data | tojson }}');
+    const phq9Data = JSON.parse('{{ assessment_chart_phq9_data | tojson }}');
 
     if (labels.length === 0) {
         // Display a message if no data
