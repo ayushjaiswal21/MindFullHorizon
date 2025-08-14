@@ -2618,3 +2618,5 @@ AttributeError: 'Goal' object has no attribute 'completed'
 2025-08-14 20:58:10,590 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 20:58:10] "GET /api/rpm-data HTTP/1.1" 200 -
 2025-08-14 20:58:20,574 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 20:58:20] "GET /api/rpm-data HTTP/1.1" 200 -
 2025-08-14 20:58:30,598 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 20:58:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 20:58:40,572 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 20:58:40] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 20:58:50,572 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 20:58:50] "GET /api/rpm-data HTTP/1.1" 200 -
