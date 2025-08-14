@@ -31,6 +31,7 @@
             {% endif %}
             <div id="nav-links" class="space-x-4 flex items-center">
                 {% if session.user_email %}
+                    <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
                     <span class="text-sm">Welcome, {{ session.user_name }}</span>
                     <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
                 {% else %}

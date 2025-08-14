@@ -490,7 +490,9 @@ def progress():
 
     # Fetch historical mood data for chart (last 30 days)
     mood_assessments = Assessment.query.filter_by(user_id=user_id, assessment_type='Daily Mood').order_by(Assessment.created_at.asc()).limit(30).all()
-    mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
+    mood_data = []
+    if mood_assessments:
+        mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
 
     # Fetch historical GAD-7 and PHQ-9 data for chart
     gad7_assessments = Assessment.query.filter_by(user_id=user_id, assessment_type='GAD-7').order_by(Assessment.created_at.asc()).all()
@@ -498,17 +500,21 @@ def progress():
 
     # Prepare data for assessment chart (aligning dates)
     assessment_chart_data = {}
+    all_assessment_dates = set()
+
     for a in gad7_assessments:
         date_str = a.created_at.strftime('%Y-%m-%d')
+        all_assessment_dates.add(date_str)
         if date_str not in assessment_chart_data: assessment_chart_data[date_str] = {'gad7': None, 'phq9': None}
         assessment_chart_data[date_str]['gad7'] = a.score
     for a in phq9_assessments:
         date_str = a.created_at.strftime('%Y-%m-%d')
+        all_assessment_dates.add(date_str)
         if date_str not in assessment_chart_data: assessment_chart_data[date_str] = {'gad7': None, 'phq9': None}
         assessment_chart_data[date_str]['phq9'] = a.score
 
     # Sort by date and extract for chart.js
-    sorted_dates = sorted(assessment_chart_data.keys())
+    sorted_dates = sorted(list(all_assessment_dates))
     assessment_chart_labels = sorted_dates
     assessment_chart_gad7_data = [assessment_chart_data[d]['gad7'] for d in sorted_dates]
     assessment_chart_phq9_data = [assessment_chart_data[d]['phq9'] for d in sorted_dates]
@@ -516,15 +522,19 @@ def progress():
     # Overall wellness score (simple average of latest mood, GAD-7, PHQ-9 for now)
     # This could be more sophisticated with AI analysis
     overall_wellness_score = 'N/A'
-    if latest_mood and latest_gad7 and latest_phq9:
-        # Normalize scores to a 1-10 scale for a simple average
-        # GAD-7: 0-21 -> 10-1 (higher score = worse, so invert)
-        # PHQ-9: 0-27 -> 10-1 (higher score = worse, so invert)
-        # Mood: 1-5 -> 1-10 (multiply by 2)
-        normalized_gad7 = 10 - (latest_gad7.score / 21 * 9) # Max 9, min 0, so 10 - (score/21 * 9)
-        normalized_phq9 = 10 - (latest_phq9.score / 27 * 9)
-        normalized_mood = latest_mood.score * 2
-        overall_wellness_score = round((normalized_gad7 + normalized_phq9 + normalized_mood) / 3, 1)
+    scores_to_average = []
+
+    if latest_gad7:
+        scores_to_average.append(10 - (latest_gad7.score / 21 * 9)) # Normalize GAD-7
+    if latest_phq9:
+        scores_to_average.append(10 - (latest_phq9.score / 27 * 9)) # Normalize PHQ-9
+    if latest_mood:
+        scores_to_average.append(latest_mood.score * 2) # Normalize Mood
+
+    if scores_to_average:
+        overall_wellness_score = round(sum(scores_to_average) / len(scores_to_average), 1)
+    else:
+        overall_wellness_score = 'No data'
 
     return render_template(
         'progress.html',
@@ -602,14 +612,17 @@ def digital_detox():
         
         # Update gamification
         gamification = Gamification.query.filter_by(user_id=user_id).first()
+        points_earned = 10
+        badge_earned = None
+        new_badges = []
+        
         if gamification:
-            # Award points for logging
-            gamification.points += 10
+            gamification.points += points_earned
             
             # Update streak
-            if gamification.last_activity == date.today() - timedelta(days=1):
+            if gamification.last_activity and gamification.last_activity == date.today() - timedelta(days=1):
                 gamification.streak += 1
-            elif gamification.last_activity != date.today():
+            elif gamification.last_activity != date.today(): # Reset streak if not consecutive but not already logged today
                 gamification.streak = 1
             
             gamification.last_activity = date.today()
@@ -618,7 +631,34 @@ def digital_detox():
             if ai_analysis.get('score') == 'Excellent' and 'Digital Wellness Master' not in gamification.badges:
                 gamification.badges.append('Digital Wellness Master')
                 gamification.points += 50
-        
+                points_earned += 50
+                new_badges.append('Digital Wellness Master')
+
+            # Award streak badges
+            if gamification.streak >= 7 and '7-Day Streak' not in gamification.badges:
+                gamification.badges.append('7-Day Streak')
+                gamification.points += 25
+                new_badges.append('7-Day Streak')
+            if gamification.streak >= 30 and '30-Day Streak' not in gamification.badges:
+                gamification.badges.append('30-Day Streak')
+                gamification.points += 100
+                new_badges.append('30-Day Streak')
+
+            # Award reduced mobile usage badge
+            # Fetch historical data for comparison (last 14 days for 7-day comparison)
+            past_14_days_logs = DigitalDetoxLog.query.filter(
+                DigitalDetoxLog.user_id == user_id,
+                DigitalDetoxLog.date >= date.today() - timedelta(days=14),
+                DigitalDetoxLog.date < date.today() - timedelta(days=7) # Previous week
+            ).all()
+            
+            if past_14_days_logs:
+                prev_week_avg_screen_time = sum(log.screen_time_hours for log in past_14_days_logs) / len(past_14_days_logs)
+                if screen_time < prev_week_avg_screen_time * 0.9 and 'Screen Time Reducer' not in gamification.badges: # 10% reduction
+                    gamification.badges.append('Screen Time Reducer')
+                    gamification.points += 75
+                    new_badges.append('Screen Time Reducer')
+
         try:
             db.session.commit()
             logger.info(f"Digital detox log saved for user {user_id} with AI score: {ai_analysis.get('score')}")
@@ -629,12 +669,10 @@ def digital_detox():
             return redirect(url_for('digital_detox'))
         
         # Enhanced success message with gamification feedback
-        points_earned = 10
-        if ai_analysis.get('score') == 'Excellent':
-            points_earned += 50
-            flash(f'🎉 Excellent work! You earned {points_earned} points and unlocked the Digital Wellness Master badge!', 'success')
-        else:
-            flash(f'✅ Check-in saved! You earned {points_earned} points. AI analysis: {ai_analysis.get("score", "Completed")}', 'success')
+        flash_message = f'✅ Check-in saved! You earned {points_earned} points.'
+        if new_badges:
+            flash_message += f' 🎉 New badges earned: {", ".join(new_badges)}!'
+        flash(flash_message, 'success')
         
         return redirect(url_for('digital_detox'))
     

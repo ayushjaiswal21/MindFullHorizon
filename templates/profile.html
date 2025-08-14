@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="card p-6 mb-8">
+        <div class="flex items-center space-x-6 mb-6">
+            <div class="flex-shrink-0">
+                <!-- Placeholder for profile picture -->
+                <img class="h-24 w-24 rounded-full object-cover border-4 border-purple-300 shadow-lg"
+                     src="https://via.placeholder.com/150/800080/FFFFFF?text={{ user.name[0] | upper }}"
+                     alt="Profile Picture">
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">{{ user.name }}</h1>
+                <p class="text-lg text-gray-600">{{ user.role | capitalize }}</p>
+                <p class="text-md text-gray-500">{{ user.email }}</p>
+                {% if user.institution %}
+                <p class="text-md text-gray-500">{{ user.institution }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Gamification Summary -->
+            <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                <h3 class="font-semibold text-gray-800 mb-2 flex items-center">
+                    <i class="fas fa-trophy text-purple-500 mr-2"></i>Gamification Summary
+                </h3>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li><strong>Total Points:</strong> {{ gamification.points if gamification else 0 }}</li>
+                    <li><strong>Current Streak:</strong> {{ gamification.streak if gamification else 0 }} days</li>
+                    <li><strong>Last Activity:</strong> {{ gamification.last_activity.strftime('%Y-%m-%d') if gamification and gamification.last_activity else 'N/A' }}</li>
+                </ul>
+            </div>
+
+            <!-- Digital Wellness Snapshot -->
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h3 class="font-semibold text-gray-800 mb-2 flex items-center">
+                    <i class="fas fa-mobile-alt text-blue-500 mr-2"></i>Digital Wellness Snapshot
+                </h3>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li><strong>Avg. Screen Time (Last 7 Days):</strong> {{ avg_screen_time_7_days }} hours</li>
+                    <li><strong>Avg. Screen Time (Last 30 Days):</strong> {{ avg_screen_time_30_days }} hours</li>
+                    <li><strong>Latest AI Score:</strong> {{ digital_detox_logs[0].ai_score if digital_detox_logs else 'N/A' }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Badges Earned Section -->
+    <div class="card p-6 mb-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-medal text-yellow-500 mr-2"></i>Badges Earned
+        </h2>
+        <div class="flex flex-wrap gap-4">
+            {% if gamification and gamification.badges %}
+                {% for badge in gamification.badges %}
+                <span class="badge-item bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-md font-medium shadow-sm">
+                    <i class="fas fa-award mr-2"></i>{{ badge }}
+                </span>
+                {% endfor %}
+            {% else %}
+                <p class="text-gray-600">No badges earned yet. Keep engaging with Mindful Horizon to earn rewards!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Future Enhancements Section -->
+    <div class="card p-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-lightbulb text-green-500 mr-2"></i>Future Enhancements
+        </h2>
+        <ul class="text-gray-600 space-y-2">
+            <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Profile Picture Upload</li>
+            <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Editable Profile Information</li>
+            <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Detailed Digital Detox Trends</li>
+            <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Customizable Goals Display</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

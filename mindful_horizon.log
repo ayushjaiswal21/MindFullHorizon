@@ -1701,3 +1701,610 @@ jinja2.exceptions.UndefinedError: 'current_user' is undefined
 2025-08-13 21:44:58,643 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:44:58] "GET /api/rpm-data HTTP/1.1" 200 -
 2025-08-13 21:45:08,638 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:45:08] "GET /api/rpm-data HTTP/1.1" 200 -
 2025-08-13 21:45:30,650 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:45:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:52:54,236 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-13 21:52:54,236 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-13 21:53:00,551 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:00] "GET / HTTP/1.1" 200 -
+2025-08-13 21:53:00,962 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:00] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:00,965 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:00] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-13 21:53:00,983 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:00] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:01,003 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:01] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:53:03,639 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:03] "GET /profile HTTP/1.1" 200 -
+2025-08-13 21:53:03,719 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:03] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:03,763 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:03] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:03,763 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:03] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:53:18,466 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:18] "GET /profile HTTP/1.1" 200 -
+2025-08-13 21:53:18,597 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:18] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:18,619 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:18] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:53:18,631 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:18] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:21,532 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:21] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-13 21:53:21,578 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:21] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:21,582 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:21] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:21,586 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:21] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:53:21,636 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:21] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:53:30,647 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:53:31,656 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:31] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:53:41,644 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:41] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:53:42,140 - app - ERROR - Exception on /progress [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 103, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 529, in progress
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1084, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1013, in get_template
+    return self._load_template(name, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 972, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\progress.html", line 110, in template
+    {% block title %}Progress Tracking - Mindful Horizon{% endblock %}
+jinja2.exceptions.TemplateAssertionError: block 'title' defined twice
+2025-08-13 21:53:42,240 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:42] "[35m[1mGET /progress HTTP/1.1[0m" 500 -
+2025-08-13 21:53:46,911 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:46] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-13 21:53:47,012 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:47] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:47,036 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:47] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:47,043 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:47] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:53:47,183 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:47] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-13 21:53:47,304 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:47] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-13 21:53:51,644 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:51] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:53:52,465 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:52] "GET /assessment HTTP/1.1" 200 -
+2025-08-13 21:53:52,594 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:52] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:52,603 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:52] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:53:52,605 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:53:52] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:54:04,292 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:04] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-13 21:54:04,372 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:04] "GET /assessment HTTP/1.1" 200 -
+2025-08-13 21:54:04,483 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:04] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:54:04,516 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:04] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:54:04,518 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:04] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:54:22,906 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:22] "GET /assessment HTTP/1.1" 200 -
+2025-08-13 21:54:23,038 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:23] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:54:23,047 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:23] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:54:23,055 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:23] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:54:30,461 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:30] "GET /assessment HTTP/1.1" 200 -
+2025-08-13 21:54:30,576 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:30] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:54:30,582 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:30] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:54:30,595 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:30] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:54:30,654 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:54:39,097 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:39] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:54:41,705 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:41] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:54:51,655 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:54:51] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:55:01,643 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:55:01] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:55:11,650 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:55:11] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:55:21,643 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:55:21] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:55:30,638 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:55:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:55:31,632 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:55:31] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:55:41,644 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:55:41] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:55:51,644 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:55:51] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:56:01,657 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:56:01] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:56:11,647 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:56:11] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:56:21,647 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:56:21] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:56:30,640 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:56:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:56:31,656 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:56:31] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:59:20,832 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-13 21:59:20,832 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-13 21:59:24,411 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:24] "GET / HTTP/1.1" 200 -
+2025-08-13 21:59:24,872 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:24] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:59:24,911 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:24] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-13 21:59:24,914 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:24] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:59:24,928 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:24] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:59:29,497 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:29] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-13 21:59:29,546 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:29] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 21:59:29,552 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:29] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 21:59:29,553 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:29] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 21:59:29,629 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:59:30,645 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:59:30,673 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:59:33,127 - app - ERROR - Exception on /progress [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 103, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 533, in progress
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1084, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1013, in get_template
+    return self._load_template(name, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 972, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\progress.html", line 110, in template
+    {% block title %}Progress Tracking - Mindful Horizon{% endblock %}
+jinja2.exceptions.TemplateAssertionError: block 'title' defined twice
+2025-08-13 21:59:33,147 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:33] "[35m[1mGET /progress HTTP/1.1[0m" 500 -
+2025-08-13 21:59:56,388 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:56] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 21:59:59,637 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 21:59:59] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:00:09,628 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:00:09] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:00:19,631 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:00:19] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:00:29,640 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:00:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:00:30,654 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:00:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:00:30,682 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:00:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:00:39,642 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:00:39] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:00:49,640 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:00:49] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:00:59,642 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:00:59] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:01:09,639 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:09] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:01:19,649 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:19] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:01:27,082 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-13 22:01:27,083 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-13 22:01:29,662 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:01:30,605 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:30] "GET / HTTP/1.1" 200 -
+2025-08-13 22:01:30,645 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:01:30,662 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:01:30,980 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:30] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-13 22:01:30,989 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:30] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 22:01:30,992 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:30] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 22:01:30,997 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:30] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 22:01:34,542 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:34] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-13 22:01:34,668 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:34] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 22:01:34,677 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:34] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 22:01:34,679 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:34] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 22:01:34,778 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:34] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:01:36,696 - app - ERROR - Exception on /progress [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 103, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 539, in progress
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1084, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1013, in get_template
+    return self._load_template(name, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 972, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\progress.html", line 110, in template
+    {% block title %}Progress Tracking - Mindful Horizon{% endblock %}
+jinja2.exceptions.TemplateAssertionError: block 'title' defined twice
+2025-08-13 22:01:36,711 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:36] "[35m[1mGET /progress HTTP/1.1[0m" 500 -
+2025-08-13 22:01:39,730 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:39] "GET /profile HTTP/1.1" 200 -
+2025-08-13 22:01:39,832 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:39] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 22:01:39,870 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:39] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 22:01:39,873 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:39] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 22:01:45,262 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:45] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:01:54,776 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:01:54] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:02:04,780 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:02:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:02:14,766 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:02:14] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:02:24,780 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:02:24] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:02:30,648 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:02:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:02:30,675 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:02:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:02:34,771 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:02:34] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:02:44,786 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:02:44] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:02:54,770 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:02:54] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:03:04,789 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:03:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:03:14,787 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:03:14] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:03:24,782 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:03:24] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:03:30,645 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:03:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:03:30,666 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:03:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:03:34,782 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:03:34] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:03:44,777 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:03:44] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:03:54,782 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:03:54] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:04:04,771 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:04:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:04:14,782 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:04:14] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:04:24,780 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:04:24] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:04:30,640 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:04:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:04:30,656 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:04:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:04:34,778 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:04:34] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:04:44,786 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:04:44] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:04:54,779 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:04:54] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:05:04,779 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:05:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:05:14,778 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:05:14] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:05:24,770 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:05:24] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:05:30,645 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:05:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:05:30,671 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:05:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:05:34,783 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:05:34] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:05:45,647 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:05:45] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:05:55,646 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:05:55] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:06:05,642 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:06:05] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:06:15,637 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:06:15] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:06:25,648 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:06:25] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:06:30,637 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:06:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:06:30,659 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:06:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:06:35,635 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:06:35] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:07:30,643 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:07:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:07:30,668 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:07:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:07:30,693 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:07:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:08:25,505 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-13 22:08:25,505 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-13 22:08:30,041 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:08:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:08:30,653 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:08:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:08:30,674 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:08:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:08:31,493 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:08:31] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-13 22:08:32,003 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:08:32] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 22:08:32,055 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:08:32] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 22:08:32,061 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:08:32] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 22:08:32,242 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:08:32] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:08:34,297 - app - ERROR - Exception on /progress [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 103, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 539, in progress
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1084, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1013, in get_template
+    return self._load_template(name, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 972, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\progress.html", line 110, in template
+    {% block title %}Progress Tracking - Mindful Horizon{% endblock %}
+jinja2.exceptions.TemplateAssertionError: block 'title' defined twice
+2025-08-13 22:08:34,313 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:08:34] "[35m[1mGET /progress HTTP/1.1[0m" 500 -
+2025-08-13 22:08:56,967 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-13 22:08:56,967 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-13 22:09:01,853 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:01] "GET / HTTP/1.1" 200 -
+2025-08-13 22:09:02,604 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:02] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 22:09:02,608 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:02] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 22:09:02,614 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:02] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-13 22:09:02,618 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:02] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 22:09:02,896 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:02] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-13 22:09:04,861 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:04] "GET /login HTTP/1.1" 200 -
+2025-08-13 22:09:04,904 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:04] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 22:09:04,931 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:04] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 22:09:04,937 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:04] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 22:09:10,046 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:10] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-08-13 22:09:10,138 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:10] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-13 22:09:10,195 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:10] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-13 22:09:10,213 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:10] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-13 22:09:10,215 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:10] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-13 22:09:10,289 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:09:15,471 - app - ERROR - Exception on /progress [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 103, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 539, in progress
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1084, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1013, in get_template
+    return self._load_template(name, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 972, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\progress.html", line 110, in template
+    {% block title %}Progress Tracking - Mindful Horizon{% endblock %}
+jinja2.exceptions.TemplateAssertionError: block 'title' defined twice
+2025-08-13 22:09:15,492 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:15] "[35m[1mGET /progress HTTP/1.1[0m" 500 -
+2025-08-13 22:09:20,289 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:20] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:09:30,286 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:09:40,304 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:40] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:09:50,300 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:09:50] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:10:00,292 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:10:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:10:10,297 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:10:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:10:20,292 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:10:20] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:10:30,294 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:10:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:10:40,288 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:10:40] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:10:50,292 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:10:50] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:11:00,295 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:11:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:11:10,296 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:11:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:11:20,649 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:11:20] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:11:30,642 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:11:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:11:40,643 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:11:40] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:11:50,644 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:11:50] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:12:00,645 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:12:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:12:10,639 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:12:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:12:30,643 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:12:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:12:40,641 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:12:40] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:12:50,641 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:12:50] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:13:00,632 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:13:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:13:10,647 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:13:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:13:20,635 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:13:20] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-13 22:13:30,643 - werkzeug - INFO - 127.0.0.1 - - [13/Aug/2025 22:13:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:38:14,119 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-14 09:38:14,120 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-14 09:38:23,677 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:23] "GET / HTTP/1.1" 200 -
+2025-08-14 09:38:24,223 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:24] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:38:24,257 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:24] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:38:24,260 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:24] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:38:24,261 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:24] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-14 09:38:24,518 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:24] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-14 09:38:49,464 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:49] "GET /login HTTP/1.1" 200 -
+2025-08-14 09:38:49,495 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:49] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:38:49,497 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:49] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:38:49,500 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:49] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:38:54,458 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:54] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-08-14 09:38:54,495 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:54] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-14 09:38:54,525 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:54] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:38:54,527 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:54] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:38:54,527 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:54] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:38:54,540 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:38:54] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:39:03,253 - app - ERROR - Exception on /progress [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 103, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 539, in progress
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 149, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1084, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1013, in get_template
+    return self._load_template(name, globals)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 972, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\progress.html", line 110, in template
+    {% block title %}Progress Tracking - Mindful Horizon{% endblock %}
+jinja2.exceptions.TemplateAssertionError: block 'title' defined twice
+2025-08-14 09:39:03,295 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:39:03] "[35m[1mGET /progress HTTP/1.1[0m" 500 -
+2025-08-14 09:39:04,542 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:39:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:39:15,134 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:39:15] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:39:25,145 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:39:25] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:39:35,139 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:39:35] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:39:45,136 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:39:45] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:48:26,802 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-14 09:48:26,802 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-14 09:48:27,145 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:27] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:48:30,308 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:30] "GET / HTTP/1.1" 200 -
+2025-08-14 09:48:30,530 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:30] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:48:30,542 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:30] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:48:30,551 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:30] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-14 09:48:30,553 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:30] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:48:33,696 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:33] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-14 09:48:33,717 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:33] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:48:33,717 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:33] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:48:33,721 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:33] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:48:33,854 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:33] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:48:35,569 - app - ERROR - Exception on /progress [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 103, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 539, in progress
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1304, in render
+    self.environment.handle_exception()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\progress.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\base.html", line 57, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\progress.html", line 246, in block 'content'
+    const moodData = JSON.parse('{{ mood_chart_data | tojson }}');
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\filters.py", line 1714, in do_tojson
+    return htmlsafe_json_dumps(value, dumps=dumps, **kwargs)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\utils.py", line 658, in htmlsafe_json_dumps
+    dumps(obj, **kwargs)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\json\provider.py", line 179, in dumps
+    return json.dumps(obj, **kwargs)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\json\__init__.py", line 238, in dumps
+    **kw).encode(obj)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\json\encoder.py", line 199, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\json\encoder.py", line 257, in iterencode
+    return _iterencode(o, 0)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\json\provider.py", line 121, in _default
+    raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
+TypeError: Object of type Undefined is not JSON serializable
+2025-08-14 09:48:35,620 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:35] "[35m[1mGET /progress HTTP/1.1[0m" 500 -
+2025-08-14 09:48:40,056 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:40] "GET /signup HTTP/1.1" 200 -
+2025-08-14 09:48:40,080 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:40] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:48:40,081 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:40] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:48:40,085 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:40] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:48:45,422 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:45] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-14 09:48:45,449 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:45] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:48:45,449 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:45] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:48:45,452 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:45] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:48:45,464 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:45] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:48:48,333 - app - ERROR - Exception on /progress [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 103, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 539, in progress
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1304, in render
+    self.environment.handle_exception()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\progress.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\base.html", line 57, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\progress.html", line 246, in block 'content'
+    const moodData = JSON.parse('{{ mood_chart_data | tojson }}');
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\filters.py", line 1714, in do_tojson
+    return htmlsafe_json_dumps(value, dumps=dumps, **kwargs)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\utils.py", line 658, in htmlsafe_json_dumps
+    dumps(obj, **kwargs)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\json\provider.py", line 179, in dumps
+    return json.dumps(obj, **kwargs)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\json\__init__.py", line 238, in dumps
+    **kw).encode(obj)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\json\encoder.py", line 199, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\json\encoder.py", line 257, in iterencode
+    return _iterencode(o, 0)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\json\provider.py", line 121, in _default
+    raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
+TypeError: Object of type Undefined is not JSON serializable
+2025-08-14 09:48:48,334 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:48] "[35m[1mGET /progress HTTP/1.1[0m" 500 -
+2025-08-14 09:48:56,129 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:48:56] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:49:06,134 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:49:06] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:49:16,128 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:49:16] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:49:26,129 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:49:26] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:50:14,284 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-14 09:50:14,284 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-14 09:50:17,681 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:17] "GET / HTTP/1.1" 200 -
+2025-08-14 09:50:17,894 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:17] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-14 09:50:17,899 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:17] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:50:17,905 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:17] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:50:17,910 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:17] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:50:20,421 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:20] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-14 09:50:20,446 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:20] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:50:20,448 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:20] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:50:20,449 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:20] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:50:20,516 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:20] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:50:22,394 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:22] "GET /progress HTTP/1.1" 200 -
+2025-08-14 09:50:22,415 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:22] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:50:22,421 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:22] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:50:22,422 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:22] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:50:27,128 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:27] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:50:57,874 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:50:57] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:51:00,491 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:51:02,797 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:02] "GET /assessment HTTP/1.1" 200 -
+2025-08-14 09:51:02,838 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:02] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:51:02,838 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:02] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:51:02,843 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:02] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:51:12,733 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:12] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-14 09:51:12,749 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:12] "GET /assessment HTTP/1.1" 200 -
+2025-08-14 09:51:12,778 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:12] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:51:12,785 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:12] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:51:12,787 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:12] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-14 09:51:27,149 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:27] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-14 09:51:34,171 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:34] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-14 09:51:38,597 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:38] "GET /progress HTTP/1.1" 200 -
+2025-08-14 09:51:38,625 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:38] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-14 09:51:38,628 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:38] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-14 09:51:38,630 - werkzeug - INFO - 127.0.0.1 - - [14/Aug/2025 09:51:38] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
