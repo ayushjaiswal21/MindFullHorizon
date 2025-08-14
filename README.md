@@ -4,6 +4,7 @@ A comprehensive Flask-based web application for mental health management with **
 
 ## 🆕 Latest Enhancements (v2.0)
 
+
 ### AI Integration & User Experience
 - **Explicit AI Interaction Cues**: Visual loading spinners and "Analyzing with Mindwell..." messages during AI processing
 - **AI Debug Mode**: Optional display of raw JSON output from AI analysis for demonstration purposes
