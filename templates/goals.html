@@ -1,0 +1,402 @@
+{% extends "base.html" %}
+
+{% block title %}Goals Management - MindFullHorizon{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">🎯 Goals Management</h1>
+            <p class="text-lg text-gray-600">Set, track, and achieve your wellness goals</p>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div id="message-container" class="hidden mb-6">
+            <div id="message" class="p-4 rounded-lg"></div>
+        </div>
+
+        <!-- Add New Goal Button -->
+        <div class="mb-6 text-center">
+            <button id="add-goal-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 transform hover:scale-105">
+                <i class="fas fa-plus mr-2"></i>Add New Goal
+            </button>
+        </div>
+
+        <!-- Goals Grid -->
+        <div id="goals-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Goals will be loaded here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-12 hidden">
+            <div class="text-gray-400 mb-4">
+                <i class="fas fa-bullseye text-6xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-600 mb-2">No goals yet</h3>
+            <p class="text-gray-500 mb-4">Start by creating your first wellness goal!</p>
+            <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg" onclick="showAddGoalModal()">
+                Create Your First Goal
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Goal Modal -->
+<div id="goal-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-bold text-gray-900 mb-4" id="modal-title">Add New Goal</h3>
+            <form id="goal-form">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-title">
+                        Title *
+                    </label>
+                    <input type="text" id="goal-title" name="title" required
+                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                           placeholder="Enter goal title">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-description">
+                        Description
+                    </label>
+                    <textarea id="goal-description" name="description" rows="3"
+                              class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                              placeholder="Describe your goal"></textarea>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-category">
+                        Category
+                    </label>
+                    <select id="goal-category" name="category"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="mental_health">Mental Health</option>
+                        <option value="physical_health">Physical Health</option>
+                        <option value="digital_wellness">Digital Wellness</option>
+                        <option value="academic">Academic</option>
+                        <option value="social">Social</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+
+                <div class="mb-4 grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-target-value">
+                            Target Value
+                        </label>
+                        <input type="number" id="goal-target-value" name="target_value" step="0.1"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                               placeholder="e.g., 30">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-unit">
+                            Unit
+                        </label>
+                        <input type="text" id="goal-unit" name="unit"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                               placeholder="e.g., minutes">
+                    </div>
+                </div>
+
+                <div class="mb-4 grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-priority">
+                            Priority
+                        </label>
+                        <select id="goal-priority" name="priority"
+                                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-target-date">
+                            Target Date
+                        </label>
+                        <input type="date" id="goal-target-date" name="target_date"
+                               class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <button type="button" onclick="hideGoalModal()"
+                            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Save Goal
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Progress Modal -->
+<div id="progress-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Update Progress</h3>
+            <form id="progress-form">
+                <input type="hidden" id="progress-goal-id">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="current-value">
+                        Current Progress
+                    </label>
+                    <input type="number" id="current-value" name="current_value" step="0.1" required
+                           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="goal-status">
+                        Status
+                    </label>
+                    <select id="goal-status" name="status"
+                            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="active">Active</option>
+                        <option value="completed">Completed</option>
+                        <option value="paused">Paused</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <button type="button" onclick="hideProgressModal()"
+                            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                        Update Progress
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentGoalId = null;
+
+// Load goals on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadGoals();
+    
+    // Add event listeners
+    document.getElementById('add-goal-btn').addEventListener('click', showAddGoalModal);
+    document.getElementById('goal-form').addEventListener('submit', handleGoalSubmit);
+    document.getElementById('progress-form').addEventListener('submit', handleProgressSubmit);
+});
+
+function loadGoals() {
+    fetch('/api/goals')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayGoals(data.goals);
+            } else {
+                showMessage('Error loading goals', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error loading goals', 'error');
+        });
+}
+
+function displayGoals(goals) {
+    const container = document.getElementById('goals-container');
+    const emptyState = document.getElementById('empty-state');
+    
+    if (goals.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+    }
+    
+    emptyState.classList.add('hidden');
+    
+    container.innerHTML = goals.map(goal => `
+        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex-1">
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">${goal.title}</h3>
+                    <p class="text-gray-600 text-sm mb-2">${goal.description || 'No description'}</p>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">${goal.category.replace('_', ' ')}</span>
+                        <span class="px-2 py-1 ${getPriorityColor(goal.priority)} text-xs rounded-full">${goal.priority}</span>
+                        <span class="px-2 py-1 ${getStatusColor(goal.status)} text-xs rounded-full">${goal.status}</span>
+                    </div>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="showProgressModal(${goal.id}, ${goal.current_value}, '${goal.status}')" 
+                            class="text-green-600 hover:text-green-800" title="Update Progress">
+                        <i class="fas fa-chart-line"></i>
+                    </button>
+                    <button onclick="deleteGoal(${goal.id})" 
+                            class="text-red-600 hover:text-red-800" title="Delete Goal">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            
+            ${goal.target_value ? `
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Progress</span>
+                        <span>${goal.current_value}${goal.unit ? ' ' + goal.unit : ''} / ${goal.target_value}${goal.unit ? ' ' + goal.unit : ''}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: ${Math.min(goal.progress_percentage, 100)}%"></div>
+                    </div>
+                    <div class="text-right text-xs text-gray-500 mt-1">${Math.round(goal.progress_percentage)}% complete</div>
+                </div>
+            ` : ''}
+            
+            <div class="text-xs text-gray-500">
+                ${goal.target_date ? `Target: ${formatDate(goal.target_date)}` : 'No target date'} • 
+                Created: ${goal.created_at}
+            </div>
+        </div>
+    `).join('');
+}
+
+function showAddGoalModal() {
+    document.getElementById('modal-title').textContent = 'Add New Goal';
+    document.getElementById('goal-form').reset();
+    currentGoalId = null;
+    document.getElementById('goal-modal').classList.remove('hidden');
+}
+
+function hideGoalModal() {
+    document.getElementById('goal-modal').classList.add('hidden');
+}
+
+function showProgressModal(goalId, currentValue, status) {
+    document.getElementById('progress-goal-id').value = goalId;
+    document.getElementById('current-value').value = currentValue;
+    document.getElementById('goal-status').value = status;
+    document.getElementById('progress-modal').classList.remove('hidden');
+}
+
+function hideProgressModal() {
+    document.getElementById('progress-modal').classList.add('hidden');
+}
+
+function handleGoalSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const goalData = Object.fromEntries(formData.entries());
+    
+    fetch('/api/goals', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(goalData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            hideGoalModal();
+            loadGoals();
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error creating goal', 'error');
+    });
+}
+
+function handleProgressSubmit(e) {
+    e.preventDefault();
+    
+    const goalId = document.getElementById('progress-goal-id').value;
+    const formData = new FormData(e.target);
+    const updateData = Object.fromEntries(formData.entries());
+    
+    fetch(`/api/goals/${goalId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updateData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showMessage(data.message, 'success');
+            hideProgressModal();
+            loadGoals();
+        } else {
+            showMessage(data.message, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('Error updating goal', 'error');
+    });
+}
+
+function deleteGoal(goalId) {
+    if (confirm('Are you sure you want to delete this goal?')) {
+        fetch(`/api/goals/${goalId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showMessage(data.message, 'success');
+                loadGoals();
+            } else {
+                showMessage(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('Error deleting goal', 'error');
+        });
+    }
+}
+
+function showMessage(message, type) {
+    const container = document.getElementById('message-container');
+    const messageDiv = document.getElementById('message');
+    
+    messageDiv.textContent = message;
+    messageDiv.className = `p-4 rounded-lg ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
+    container.classList.remove('hidden');
+    
+    setTimeout(() => {
+        container.classList.add('hidden');
+    }, 5000);
+}
+
+function getPriorityColor(priority) {
+    switch(priority) {
+        case 'high': return 'bg-red-100 text-red-800';
+        case 'medium': return 'bg-yellow-100 text-yellow-800';
+        case 'low': return 'bg-green-100 text-green-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function getStatusColor(status) {
+    switch(status) {
+        case 'completed': return 'bg-green-100 text-green-800';
+        case 'active': return 'bg-blue-100 text-blue-800';
+        case 'paused': return 'bg-gray-100 text-gray-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString();
+}
+</script>
+{% endblock %}

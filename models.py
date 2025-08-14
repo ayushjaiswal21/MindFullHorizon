@@ -108,22 +108,55 @@ class InstitutionalAnalytics(db.Model):
 
 class Appointment(db.Model):
     __tablename__ = 'appointments'
-
+    
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    provider_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True) # Optional, for future
+    provider_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     date = db.Column(db.Date, nullable=False)
-    time = db.Column(db.String(10), nullable=False) # e.g., "09:00"
+    time = db.Column(db.String(10), nullable=False)
     appointment_type = db.Column(db.String(50), nullable=False)
     notes = db.Column(db.Text, nullable=True)
-    status = db.Column(db.String(20), default='booked', nullable=False) # e.g., 'booked', 'completed', 'cancelled'
+    status = db.Column(db.String(20), default='booked', nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
+    
+    # Relationships
     user = db.relationship('User', foreign_keys=[user_id], backref='appointments')
     provider = db.relationship('User', foreign_keys=[provider_id])
-
+    
     def __repr__(self):
-        return f'<Appointment {self.date} {self.time} for User {self.user_id}>'
+        return f'<Appointment {self.id} - {self.user_id} on {self.date} at {self.time}>'
+
+class Goal(db.Model):
+    __tablename__ = 'goals'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    category = db.Column(db.String(50), nullable=False)  # 'mental_health', 'physical_health', 'digital_wellness', etc.
+    target_value = db.Column(db.Float, nullable=True)  # For measurable goals
+    current_value = db.Column(db.Float, default=0.0)
+    unit = db.Column(db.String(20), nullable=True)  # 'minutes', 'hours', 'days', etc.
+    status = db.Column(db.String(20), default='active')  # 'active', 'completed', 'paused'
+    priority = db.Column(db.String(10), default='medium')  # 'low', 'medium', 'high'
+    start_date = db.Column(db.Date, nullable=False)
+    target_date = db.Column(db.Date, nullable=True)
+    completed_date = db.Column(db.Date, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationship
+    user = db.relationship('User', backref='goals')
+    
+    @property
+    def progress_percentage(self):
+        """Calculate progress percentage for measurable goals"""
+        if self.target_value and self.target_value > 0:
+            return min(100, (self.current_value / self.target_value) * 100)
+        return 0
+    
+    def __repr__(self):
+        return f'<Goal {self.id} - {self.title} ({self.status})>'
 
 # Helper functions for analytics
 def get_user_wellness_trend(user_id, days=30):
