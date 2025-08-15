@@ -2717,3 +2717,139 @@ AttributeError: 'Goal' object has no attribute 'completed'
 2025-08-15 11:32:49,125 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:32:49] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
 2025-08-15 11:32:49,126 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:32:49] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
 2025-08-15 11:33:06,693 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:33:06] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-15 11:34:06,698 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:06] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-15 11:34:15,612 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:15] "[32mGET /logout HTTP/1.1[0m" 302 -
+2025-08-15 11:34:15,620 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:15] "GET / HTTP/1.1" 200 -
+2025-08-15 11:34:15,641 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:15] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-15 11:34:15,649 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:15] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-15 11:34:15,650 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:15] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-15 11:34:15,651 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:15] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-15 11:34:20,066 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:20] "GET /login HTTP/1.1" 200 -
+2025-08-15 11:34:20,094 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:20] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-15 11:34:20,098 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:20] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-15 11:34:20,099 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:20] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-15 11:34:36,557 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:36] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-08-15 11:34:36,569 - app - ERROR - Exception on /provider-dashboard [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 103, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 306, in provider_dashboard
+    # Get institutional analytics
+  File "C:\Users\dell\Desktop\MindFullHorizon\models.py", line 196, in get_institutional_summary
+    DigitalDetoxLog.date >= datetime.now().date() - timedelta(days=7)
+NameError: name 'timedelta' is not defined
+2025-08-15 11:34:36,570 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:34:36] "[35m[1mGET /provider-dashboard HTTP/1.1[0m" 500 -
+2025-08-15 11:35:06,702 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:35:06] "[32mGET /api/rpm-data HTTP/1.1[0m" 302 -
+2025-08-15 11:35:06,708 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:35:06] "GET /login HTTP/1.1" 200 -
+2025-08-15 11:36:06,698 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:06] "[32mGET /api/rpm-data HTTP/1.1[0m" 302 -
+2025-08-15 11:36:06,704 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:06] "GET /login HTTP/1.1" 200 -
+2025-08-15 11:36:20,640 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-15 11:36:20,640 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-15 11:36:23,395 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:23] "GET / HTTP/1.1" 200 -
+2025-08-15 11:36:23,425 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:23] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-15 11:36:23,429 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:23] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-15 11:36:23,430 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:23] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-15 11:36:23,456 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:23] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-15 11:36:27,501 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:27] "[32mGET /api/rpm-data HTTP/1.1[0m" 302 -
+2025-08-15 11:36:27,507 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:27] "GET /login HTTP/1.1" 200 -
+2025-08-15 11:36:29,642 - app - ERROR - Exception on /provider-dashboard [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 103, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 306, in provider_dashboard
+    # Get institutional analytics
+  File "C:\Users\dell\Desktop\MindFullHorizon\models.py", line 196, in get_institutional_summary
+    DigitalDetoxLog.date >= datetime.now().date() - timedelta(days=7)
+NameError: name 'timedelta' is not defined
+2025-08-15 11:36:29,646 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:29] "[35m[1mGET /provider-dashboard HTTP/1.1[0m" 500 -
+2025-08-15 11:36:31,573 - app - ERROR - Exception on /provider-dashboard [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 103, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 306, in provider_dashboard
+    # Get institutional analytics
+  File "C:\Users\dell\Desktop\MindFullHorizon\models.py", line 196, in get_institutional_summary
+    DigitalDetoxLog.date >= datetime.now().date() - timedelta(days=7)
+NameError: name 'timedelta' is not defined
+2025-08-15 11:36:31,574 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:31] "[35m[1mGET /provider-dashboard HTTP/1.1[0m" 500 -
+2025-08-15 11:36:36,534 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:36] "GET /profile HTTP/1.1" 200 -
+2025-08-15 11:36:36,555 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:36] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-15 11:36:36,564 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:36] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-15 11:36:36,564 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:36:36] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-15 11:37:22,919 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-15 11:37:22,919 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-15 11:38:01,065 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-15 11:38:01,065 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-15 11:38:07,577 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:38:07] "GET / HTTP/1.1" 200 -
+2025-08-15 11:38:07,852 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:38:07] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-15 11:38:07,887 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:38:07] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-15 11:38:07,889 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:38:07] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-15 11:38:07,892 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:38:07] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-15 11:38:10,767 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:38:10] "GET /provider-dashboard HTTP/1.1" 200 -
+2025-08-15 11:38:10,784 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:38:10] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-15 11:38:10,793 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:38:10] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-15 11:38:10,793 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:38:10] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-15 11:39:00,018 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:00] "[32mGET /logout HTTP/1.1[0m" 302 -
+2025-08-15 11:39:00,027 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:00] "GET / HTTP/1.1" 200 -
+2025-08-15 11:39:00,073 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:00] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-15 11:39:00,086 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:00] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-15 11:39:00,090 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:00] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-15 11:39:00,093 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:00] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-15 11:39:02,631 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:02] "GET /login HTTP/1.1" 200 -
+2025-08-15 11:39:02,668 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:02] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-15 11:39:02,669 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:02] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-15 11:39:02,673 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:02] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-15 11:39:07,989 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:07] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-08-15 11:39:08,032 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:08] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-15 11:39:08,073 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:08] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-15 11:39:08,089 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:08] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-15 11:39:08,091 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:08] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-15 11:39:08,164 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:08] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-15 11:39:11,933 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:11] "GET /progress HTTP/1.1" 200 -
+2025-08-15 11:39:11,965 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:11] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-15 11:39:11,977 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:11] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-15 11:39:11,978 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:11] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-15 11:39:32,212 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:32] "[32mGET /provider-dashboard HTTP/1.1[0m" 302 -
+2025-08-15 11:39:32,229 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:32] "GET /login HTTP/1.1" 200 -
+2025-08-15 11:39:32,272 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:32] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-15 11:39:32,305 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:32] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-15 11:39:32,312 - werkzeug - INFO - 127.0.0.1 - - [15/Aug/2025 11:39:32] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
