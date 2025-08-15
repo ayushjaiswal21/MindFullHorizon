@@ -294,6 +294,7 @@ def provider_dashboard():
                 risk_level = 'Medium'
         
         caseload_data.append({
+            'user_id': patient.id,
             'name': patient.name,
             'email': patient.email,
             'risk_level': risk_level,

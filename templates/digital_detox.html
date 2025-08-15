@@ -99,8 +99,8 @@
             <div class="bg-purple-50 p-4 rounded-xl mt-4">
                 <h4 class="font-semibold text-gray-800 mb-2">Academic & Social Analysis</h4>
                 <ul class="text-sm text-gray-700 space-y-2">
-                    <li><i class="fas fa-book-reader text-purple-500 mr-2"></i>Last Academic Score: <span id="current-academic-score" class="font-bold">{{ screen_time_log[-1].academic_score if screen_time_log else 'N/A' }}</span></li>
-                    <li><i class="fas fa-user-friends text-purple-500 mr-2"></i>Last Social Interaction Level: <span id="current-social-level" class="font-bold">{{ (screen_time_log[-1].social_interactions.capitalize() if screen_time_log else 'N/A') }}</span></li>
+                    <li><i class="fas fa-book-reader text-purple-500 mr-2"></i>Last Academic Score: <span id="current-academic-score" class="font-bold">{{ screen_time_log[-1].academic_score if screen_time_log and screen_time_log|length > 0 else 'N/A' }}</span></li>
+                    <li><i class="fas fa-user-friends text-purple-500 mr-2"></i>Last Social Interaction Level: <span id="current-social-level" class="font-bold">{{ screen_time_log[-1].social_interactions.capitalize() if screen_time_log and screen_time_log|length > 0 else 'N/A' }}</span></li>
                 </ul>
                 <p class="text-sm text-gray-600 mt-2">
                     <i>Note: The full AI analysis of these metrics will be implemented in a future version.</i>
@@ -199,7 +199,7 @@ async function initializeScreenTimeChart() {
 
 async function initializeCorrelationChart() {
     const ctx = document.getElementById('correlation-chart').getContext('2d');
-    const screenTimeLog = {{ screen_time_log | tojson }}; 
+    const screenTimeLog = {{ screen_time_log | tojson | safe }}; 
     
     let correlationData = [];
     if (screenTimeLog && screenTimeLog.length > 0) {

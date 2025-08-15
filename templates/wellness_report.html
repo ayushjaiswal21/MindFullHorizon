@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+
+{% block title %}Wellness Report - {{ patient.name }} - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Wellness Report</h1>
+                <p class="text-lg text-gray-600">Comprehensive analysis for {{ patient.name }}</p>
+                <p class="text-sm text-gray-500 mt-1">{{ patient.email }} • {{ patient.institution }}</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-500">Report Generated</p>
+                <p class="text-lg font-semibold text-gray-800">{{ moment().format('MMMM DD, YYYY') if moment else datetime.now().strftime('%B %d, %Y') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Patient Overview Cards -->
+    <div class="grid lg:grid-cols-4 md:grid-cols-2 gap-6 mb-8">
+        <div class="card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Overall Score</p>
+                    {% set overall_score = ai_analysis.score if ai_analysis else 'No data' %}
+                    {% if overall_score == 'Excellent' %}
+                        <p class="text-2xl font-bold text-green-600">{{ overall_score }}</p>
+                    {% elif overall_score == 'Good' %}
+                        <p class="text-2xl font-bold text-yellow-600">{{ overall_score }}</p>
+                    {% elif overall_score == 'Needs Improvement' %}
+                        <p class="text-2xl font-bold text-red-600">{{ overall_score }}</p>
+                    {% else %}
+                        <p class="text-2xl font-bold text-gray-500">{{ overall_score }}</p>
+                    {% endif %}
+                </div>
+                <div class="p-3 bg-purple-500 rounded-full">
+                    <i class="fas fa-brain text-white text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Total Points</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ gamification.points if gamification else 0 }}</p>
+                </div>
+                <div class="p-3 bg-blue-500 rounded-full">
+                    <i class="fas fa-trophy text-white text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Current Streak</p>
+                    <p class="text-2xl font-bold text-green-600">{{ gamification.streak if gamification else 0 }} days</p>
+                </div>
+                <div class="p-3 bg-green-500 rounded-full">
+                    <i class="fas fa-calendar-check text-white text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Data Points</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ wellness_trend.digital_detox|length + wellness_trend.assessments|length }}</p>
+                </div>
+                <div class="p-3 bg-indigo-500 rounded-full">
+                    <i class="fas fa-chart-bar text-white text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Analysis Section -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-robot text-green-500 mr-3"></i>AI-Powered Analysis
+            <span class="status-indicator status-online ml-2" title="AI Analysis Complete"></span>
+        </h3>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                    <i class="fas fa-microscope text-blue-500 mr-2"></i>Detailed Analysis
+                </h4>
+                <p class="text-gray-700 leading-relaxed">{{ ai_analysis.detailed_analysis if ai_analysis else 'No AI analysis available yet. Patient needs to log more data for comprehensive analysis.' }}</p>
+            </div>
+
+            <div class="bg-gradient-to-r from-green-50 to-yellow-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                    <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>Key Recommendations
+                </h4>
+                {% if ai_analysis and ai_analysis.action_items %}
+                    <ul class="space-y-2">
+                        {% for action in ai_analysis.action_items %}
+                        <li class="text-gray-700 flex items-start">
+                            <i class="fas fa-arrow-right text-green-500 mr-2 mt-1.5 text-xs"></i>{{ action }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-gray-600">No specific recommendations available yet.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+            <h4 class="font-semibold text-gray-800 mb-2 flex items-center">
+                <i class="fas fa-comment-medical text-blue-500 mr-2"></i>Clinical Suggestion
+            </h4>
+            <p class="text-gray-700">{{ ai_analysis.suggestion if ai_analysis else 'Continue monitoring and encourage regular data logging for better insights.' }}</p>
+        </div>
+    </div>
+
+    <!-- Digital Wellness Trends -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-chart-line text-purple-500 mr-3"></i>Digital Wellness Trends (90 Days)
+        </h3>
+        
+        {% if wellness_trend.digital_detox %}
+        <div class="chart-container mb-4">
+            <canvas id="wellness-trends-chart"></canvas>
+        </div>
+        
+        <div class="grid md:grid-cols-3 gap-4 mt-6">
+            {% set latest_log = wellness_trend.digital_detox[-1] %}
+            <div class="bg-red-50 p-4 rounded-lg text-center">
+                <p class="text-sm text-gray-600 mb-1">Latest Screen Time</p>
+                <p class="text-2xl font-bold text-red-600">{{ latest_log.screen_time_hours }}h</p>
+                <p class="text-xs text-gray-500 mt-1">{{ latest_log.date.strftime('%b %d') }}</p>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg text-center">
+                <p class="text-sm text-gray-600 mb-1">Academic Score</p>
+                <p class="text-2xl font-bold text-blue-600">{{ latest_log.academic_score }}%</p>
+                <p class="text-xs text-gray-500 mt-1">{{ latest_log.date.strftime('%b %d') }}</p>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg text-center">
+                <p class="text-sm text-gray-600 mb-1">Social Level</p>
+                <p class="text-2xl font-bold text-green-600">{{ latest_log.social_interactions.title() }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ latest_log.date.strftime('%b %d') }}</p>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <i class="fas fa-chart-line text-gray-400 text-4xl mb-4"></i>
+            <p class="text-gray-500">No digital wellness data available.</p>
+            <p class="text-sm text-gray-400 mt-2">Patient has not started logging digital wellness data yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Assessment History -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-clipboard-list text-indigo-500 mr-3"></i>Assessment History
+        </h3>
+        
+        {% if wellness_trend.assessments %}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assessment Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Severity</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">AI Analysis</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for assessment in wellness_trend.assessments %}
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ assessment.created_at.strftime('%b %d, %Y') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {{ assessment.assessment_type }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {{ assessment.score }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% set severity_info = get_severity_info(assessment.assessment_type, assessment.score) %}
+                            {% if severity_info.color == 'green' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">{{ severity_info.severity }}</span>
+                            {% elif severity_info.color == 'yellow' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">{{ severity_info.severity }}</span>
+                            {% elif severity_info.color == 'orange' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-800">{{ severity_info.severity }}</span>
+                            {% elif severity_info.color == 'red' %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">{{ severity_info.severity }}</span>
+                            {% else %}
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">{{ severity_info.severity }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {% if assessment.ai_analysis %}
+                                <div class="max-w-xs">
+                                    <p class="truncate">{{ assessment.ai_analysis }}</p>
+                                </div>
+                            {% else %}
+                                <span class="text-gray-400">No AI analysis</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <i class="fas fa-clipboard-list text-gray-400 text-4xl mb-4"></i>
+            <p class="text-gray-500">No assessment data available.</p>
+            <p class="text-sm text-gray-400 mt-2">Patient has not completed any mental health assessments yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Clinical Sessions -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-user-md text-teal-500 mr-3"></i>Recent Clinical Sessions
+        </h3>
+        
+        {% if recent_sessions %}
+        <div class="space-y-4">
+            {% for session in recent_sessions %}
+            <div class="border border-gray-200 rounded-lg p-4">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-semibold text-gray-800">Session {{ loop.index }}</h4>
+                    <span class="text-sm text-gray-500">{{ session.session_date.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                </div>
+                {% if session.ai_generated_note %}
+                <div class="bg-gray-50 p-3 rounded text-sm text-gray-700">
+                    <p class="font-medium mb-1">AI-Generated Summary:</p>
+                    <p>{{ session.ai_generated_note[:200] }}{% if session.ai_generated_note|length > 200 %}...{% endif %}</p>
+                </div>
+                {% endif %}
+                {% if session.provider_notes %}
+                <div class="mt-2 bg-blue-50 p-3 rounded text-sm text-gray-700">
+                    <p class="font-medium mb-1">Provider Notes:</p>
+                    <p>{{ session.provider_notes[:200] }}{% if session.provider_notes|length > 200 %}...{% endif %}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-8">
+            <i class="fas fa-user-md text-gray-400 text-4xl mb-4"></i>
+            <p class="text-gray-500">No clinical sessions recorded.</p>
+            <p class="text-sm text-gray-400 mt-2">Patient has not had any documented clinical sessions yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Gamification Status -->
+    {% if gamification %}
+    <div class="card p-6">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+            <i class="fas fa-gamepad text-pink-500 mr-3"></i>Engagement & Gamification
+        </h3>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-800 mb-4">Achievement Status</h4>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Points</span>
+                        <span class="font-semibold text-purple-600">{{ gamification.points }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Current Streak</span>
+                        <span class="font-semibold text-green-600">{{ gamification.streak }} days</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Last Activity</span>
+                        <span class="font-semibold text-gray-600">{{ gamification.last_activity.strftime('%b %d, %Y') if gamification.last_activity else 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-lg">
+                <h4 class="font-semibold text-gray-800 mb-4">Earned Badges</h4>
+                {% if gamification.badges %}
+                <div class="flex flex-wrap gap-2">
+                    {% for badge in gamification.badges %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                        <i class="fas fa-medal mr-1"></i>{{ badge }}
+                    </span>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-500">No badges earned yet.</p>
+                <p class="text-sm text-gray-400 mt-2">Continue logging data to earn achievement badges!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div class="mt-8 flex justify-between items-center">
+        <a href="{{ url_for('provider_dashboard') }}" class="btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+        </a>
+        <div class="flex space-x-4">
+            <button onclick="window.print()" class="btn-primary">
+                <i class="fas fa-print mr-2"></i>Print Report
+            </button>
+            <button onclick="exportReport()" class="btn-primary">
+                <i class="fas fa-download mr-2"></i>Export Data
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeWellnessTrendsChart();
+});
+
+function initializeWellnessTrendsChart() {
+    const ctx = document.getElementById('wellness-trends-chart');
+    if (!ctx) return;
+    
+    const wellnessData = {{ wellness_trend.digital_detox | tojson }};
+    
+    if (!wellnessData || wellnessData.length === 0) return;
+    
+    const dates = wellnessData.map(item => {
+        const date = new Date(item.date);
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    });
+    
+    const screenTime = wellnessData.map(item => item.screen_time_hours);
+    const academicScores = wellnessData.map(item => item.academic_score);
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates,
+            datasets: [
+                {
+                    label: 'Screen Time (Hours)',
+                    data: screenTime,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    yAxisID: 'y',
+                    tension: 0.3
+                },
+                {
+                    label: 'Academic Score',
+                    data: academicScores,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    yAxisID: 'y1',
+                    tension: 0.3
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false,
+            },
+            scales: {
+                x: {
+                    display: true,
+                    title: {
+                        display: true,
+                        text: 'Date'
+                    }
+                },
+                y: {
+                    type: 'linear',
+                    display: true,
+                    position: 'left',
+                    title: {
+                        display: true,
+                        text: 'Screen Time (Hours)'
+                    },
+                },
+                y1: {
+                    type: 'linear',
+                    display: true,
+                    position: 'right',
+                    title: {
+                        display: true,
+                        text: 'Academic Score'
+                    },
+                    grid: {
+                        drawOnChartArea: false,
+                    },
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        afterLabel: function(context) {
+                            if (context.datasetIndex === 0) return 'Hours of screen time';
+                            if (context.datasetIndex === 1) return 'Academic performance score';
+                            return '';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function exportReport() {
+    // Simple CSV export functionality
+    const patientName = "{{ patient.name }}";
+    const reportData = {
+        patient: "{{ patient.name }}",
+        email: "{{ patient.email }}",
+        institution: "{{ patient.institution }}",
+        overallScore: "{{ ai_analysis.score if ai_analysis else 'N/A' }}",
+        totalPoints: "{{ gamification.points if gamification else 0 }}",
+        currentStreak: "{{ gamification.streak if gamification else 0 }}",
+        reportDate: new Date().toLocaleDateString()
+    };
+    
+    const csvContent = "data:text/csv;charset=utf-8," 
+        + "Patient,Email,Institution,Overall Score,Total Points,Current Streak,Report Date\n"
+        + `${reportData.patient},${reportData.email},${reportData.institution},${reportData.overallScore},${reportData.totalPoints},${reportData.currentStreak},${reportData.reportDate}`;
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `wellness_report_${patientName.replace(/\s+/g, '_')}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+</script>
+{% endblock %}
