@@ -806,6 +806,84 @@ def api_institutional_trends():
     
     return jsonify(list(reversed(trends)))  # Return chronological order
 
+@app.route('/api/institutional-mood-trends')
+@login_required
+@role_required('provider')
+def api_institutional_mood_trends():
+    """API endpoint for institutional mood trend data"""
+    institution = session.get('user_institution', 'Sample University')
+    
+    # Get mood trends over the last 30 days
+    mood_trends = []
+    for i in range(30):
+        trend_date = date.today() - timedelta(days=i)
+        
+        # Get daily mood assessments for the institution
+        daily_moods = db.session.query(Assessment).join(User).filter(
+            User.institution == institution,
+            Assessment.assessment_type == 'Daily Mood',
+            func.date(Assessment.created_at) == trend_date
+        ).all()
+        
+        if daily_moods:
+            avg_mood = sum(mood.score for mood in daily_moods) / len(daily_moods)
+            mood_trends.append({
+                'date': trend_date.strftime('%Y-%m-%d'),
+                'avg_mood': round(avg_mood, 1),
+                'mood_count': len(daily_moods)
+            })
+    
+    return jsonify(list(reversed(mood_trends)))  # Return chronological order
+
+@app.route('/api/institutional-assessment-history')
+@login_required
+@role_required('provider')
+def api_institutional_assessment_history():
+    """API endpoint for institutional assessment history data"""
+    institution = session.get('user_institution', 'Sample University')
+    
+    # Get assessment history over the last 12 months
+    assessment_history = []
+    for i in range(12):
+        # Calculate the start and end of each month
+        end_date = date.today().replace(day=1) - timedelta(days=i*30)
+        start_date = end_date.replace(day=1)
+        
+        # Get GAD-7 assessments for the month
+        gad7_assessments = db.session.query(Assessment).join(User).filter(
+            User.institution == institution,
+            Assessment.assessment_type == 'GAD-7',
+            Assessment.created_at >= start_date,
+            Assessment.created_at < end_date + timedelta(days=32)
+        ).all()
+        
+        # Get PHQ-9 assessments for the month
+        phq9_assessments = db.session.query(Assessment).join(User).filter(
+            User.institution == institution,
+            Assessment.assessment_type == 'PHQ-9',
+            Assessment.created_at >= start_date,
+            Assessment.created_at < end_date + timedelta(days=32)
+        ).all()
+        
+        avg_gad7 = None
+        avg_phq9 = None
+        
+        if gad7_assessments:
+            avg_gad7 = round(sum(a.score for a in gad7_assessments) / len(gad7_assessments), 1)
+        
+        if phq9_assessments:
+            avg_phq9 = round(sum(a.score for a in phq9_assessments) / len(phq9_assessments), 1)
+        
+        if avg_gad7 is not None or avg_phq9 is not None:
+            assessment_history.append({
+                'date': start_date.strftime('%Y-%m-%d'),
+                'avg_gad7': avg_gad7,
+                'avg_phq9': avg_phq9,
+                'assessment_count': len(gad7_assessments) + len(phq9_assessments)
+            })
+    
+    return jsonify(list(reversed(assessment_history)))  # Return chronological order
+
 @app.route('/wellness-report/<int:user_id>')
 @login_required
 @role_required('provider')

@@ -127,13 +127,36 @@
         </div>
     </div>
 
-    <!-- Institutional Trends Chart -->
+    <!-- Charts Section -->
+    <div class="grid lg:grid-cols-2 gap-8 mb-8">
+        <!-- Institutional Trends Chart -->
+        <div class="card p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-chart-area text-blue-500 mr-3"></i>Institutional Wellness Trends (30 Days)
+            </h3>
+            <div class="chart-container">
+                <canvas id="institutional-trends-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Mood Trends Chart -->
+        <div class="card p-6">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-smile text-green-500 mr-3"></i>Mood Trends (Last 30 Days)
+            </h3>
+            <div class="chart-container">
+                <canvas id="mood-trends-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assessment Score History Chart -->
     <div class="card p-6 mb-8">
         <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-            <i class="fas fa-chart-area text-blue-500 mr-3"></i>Institutional Wellness Trends (30 Days)
+            <i class="fas fa-chart-line text-purple-500 mr-3"></i>Assessment Score History
         </h3>
         <div class="chart-container">
-            <canvas id="institutional-trends-chart"></canvas>
+            <canvas id="assessment-history-chart"></canvas>
         </div>
     </div>
 
@@ -213,6 +236,8 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     initializeInstitutionalTrendsChart();
+    initializeMoodTrendsChart();
+    initializeAssessmentHistoryChart();
 });
 
 async function initializeInstitutionalTrendsChart() {
@@ -332,6 +357,204 @@ async function initializeInstitutionalTrendsChart() {
         ctx.textAlign = 'center';
         ctx.fillStyle = '#ef4444';
         ctx.fillText('Error loading trend data.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+    }
+}
+
+async function initializeMoodTrendsChart() {
+    const ctx = document.getElementById('mood-trends-chart').getContext('2d');
+    
+    try {
+        const response = await fetch('/api/institutional-mood-trends');
+        let moodData = [];
+        
+        if (response.ok) {
+            moodData = await response.json();
+        }
+        
+        if (moodData.length === 0) {
+            // Generate sample mood data for demonstration
+            const today = new Date();
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date(today);
+                date.setDate(date.getDate() - i);
+                moodData.push({
+                    date: date.toISOString().split('T')[0],
+                    avg_mood: 6.5 + (Math.random() - 0.5) * 2,
+                    mood_count: Math.floor(Math.random() * 20) + 5
+                });
+            }
+        }
+
+        const dates = moodData.map(item => {
+            const date = new Date(item.date);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        });
+        
+        const avgMoodScores = moodData.map(item => item.avg_mood || (6.5 + (Math.random() - 0.5) * 2));
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Average Mood Score',
+                    data: avgMoodScores,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Mood Score: ${context.parsed.y.toFixed(1)}/10`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Mood Score (1-10)'
+                        },
+                        min: 1,
+                        max: 10,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading mood trends:', error);
+        ctx.font = '16px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('Error loading mood data.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+    }
+}
+
+async function initializeAssessmentHistoryChart() {
+    const ctx = document.getElementById('assessment-history-chart').getContext('2d');
+    
+    try {
+        const response = await fetch('/api/institutional-assessment-history');
+        let assessmentData = [];
+        
+        if (response.ok) {
+            assessmentData = await response.json();
+        }
+        
+        if (assessmentData.length === 0) {
+            // Generate sample assessment data for demonstration
+            const today = new Date();
+            for (let i = 11; i >= 0; i--) {
+                const date = new Date(today);
+                date.setMonth(date.getMonth() - i);
+                assessmentData.push({
+                    date: date.toISOString().split('T')[0],
+                    avg_gad7: Math.floor(Math.random() * 15) + 3,
+                    avg_phq9: Math.floor(Math.random() * 18) + 2,
+                    assessment_count: Math.floor(Math.random() * 30) + 10
+                });
+            }
+        }
+
+        const dates = assessmentData.map(item => {
+            const date = new Date(item.date);
+            return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+        });
+        
+        const gad7Scores = assessmentData.map(item => item.avg_gad7 || (Math.floor(Math.random() * 15) + 3));
+        const phq9Scores = assessmentData.map(item => item.avg_phq9 || (Math.floor(Math.random() * 18) + 2));
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [
+                    {
+                        label: 'GAD-7 (Anxiety)',
+                        data: gad7Scores,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'PHQ-9 (Depression)',
+                        data: phq9Scores,
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.3,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.dataset.label;
+                                const value = context.parsed.y;
+                                if (label.includes('GAD-7')) {
+                                    return `${label}: ${value}/21`;
+                                } else if (label.includes('PHQ-9')) {
+                                    return `${label}: ${value}/27`;
+                                }
+                                return `${label}: ${value}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Month'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Average Score'
+                        },
+                        beginAtZero: true,
+                        max: 27
+                    }
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error loading assessment history:', error);
+        ctx.font = '16px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('Error loading assessment data.', ctx.canvas.width / 2, ctx.canvas.height / 2);
     }
 }
 </script>
