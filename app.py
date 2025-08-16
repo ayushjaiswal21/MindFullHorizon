@@ -1,15 +1,18 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
-from datetime import datetime, timedelta, date
-import json
-from functools import wraps
 from models import db, User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, get_user_wellness_trend, get_institutional_summary
-from ai_service import ai_service
-import os
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime, timedelta, date
+from dateutil.relativedelta import relativedelta
+from functools import wraps
+import random
 import logging
+import json
+import os
 import time
+from ai_service import ai_service
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-in-production')
+app.secret_key = 'supersecretkey'  # Replace with a real secret key in production
 
 # Configure logging
 logging.basicConfig(
@@ -482,76 +485,123 @@ def api_save_assessment():
 @login_required
 @role_required('patient')
 def progress():
-    user_id = session['user_id']
-    goals = Goal.query.filter_by(user_id=user_id).all()
-    achievements = [goal.description for goal in goals if goal.status == 'completed']
-    # Fetch latest assessment scores
-    latest_gad7 = Assessment.query.filter_by(user_id=user_id, assessment_type='GAD-7').order_by(Assessment.created_at.desc()).first()
-    latest_phq9 = Assessment.query.filter_by(user_id=user_id, assessment_type='PHQ-9').order_by(Assessment.created_at.desc()).first()
-    latest_mood = Assessment.query.filter_by(user_id=user_id, assessment_type='Daily Mood').order_by(Assessment.created_at.desc()).first()
+    try:
+        user_id = session['user_id']
+        goals = Goal.query.filter_by(user_id=user_id).all() or []
+        achievements = [goal.description for goal in goals if goal.status == 'completed']
+        
+        # Initialize with None values for new users
+        latest_gad7 = None
+        latest_phq9 = None
+        latest_mood = None
+        
+        # Fetch latest assessment scores if they exist
+        assessments = Assessment.query.filter_by(user_id=user_id).all()
+        if assessments:
+            latest_gad7 = next((a for a in assessments if a.assessment_type == 'GAD-7'), None)
+            latest_phq9 = next((a for a in assessments if a.assessment_type == 'PHQ-9'), None)
+            latest_mood = next((a for a in assessments if a.assessment_type == 'Daily Mood'), None)
 
-    # Fetch historical mood data for chart (last 30 days)
-    mood_assessments = Assessment.query.filter_by(user_id=user_id, assessment_type='Daily Mood').order_by(Assessment.created_at.asc()).limit(30).all()
-    mood_data = []
-    if mood_assessments:
-        mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
+        # Initialize empty data structures
+        mood_data = []
+        assessment_chart_data = {}
+        all_assessment_dates = set()
+    
+        # Only process if we have assessments
+        if assessments:
+            # Fetch historical mood data for chart (last 30 days)
+            mood_assessments = [a for a in assessments if a.assessment_type == 'Daily Mood']
+            mood_assessments = sorted(mood_assessments, key=lambda x: x.created_at)[-30:]  # Last 30 entries
+            if mood_assessments:
+                mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
+            
+            # Process GAD-7 and PHQ-9 data for chart
+            gad7_assessments = [a for a in assessments if a.assessment_type == 'GAD-7']
+            phq9_assessments = [a for a in assessments if a.assessment_type == 'PHQ-9']
+            
+            for a in gad7_assessments:
+                date_str = a.created_at.strftime('%Y-%m-%d')
+                all_assessment_dates.add(date_str)
+                if date_str not in assessment_chart_data:
+                    assessment_chart_data[date_str] = {'gad7': None, 'phq9': None}
+                assessment_chart_data[date_str]['gad7'] = a.score
+                
+            for a in phq9_assessments:
+                date_str = a.created_at.strftime('%Y-%m-%d')
+                all_assessment_dates.add(date_str)
+                if date_str not in assessment_chart_data:
+                    assessment_chart_data[date_str] = {'gad7': None, 'phq9': None}
+                assessment_chart_data[date_str]['phq9'] = a.score
 
-    # Fetch historical GAD-7 and PHQ-9 data for chart
-    gad7_assessments = Assessment.query.filter_by(user_id=user_id, assessment_type='GAD-7').order_by(Assessment.created_at.asc()).all()
-    phq9_assessments = Assessment.query.filter_by(user_id=user_id, assessment_type='PHQ-9').order_by(Assessment.created_at.asc()).all()
+        # Prepare chart data with proper null handling
+        if all_assessment_dates:
+            sorted_dates = sorted(list(all_assessment_dates))
+            assessment_chart_labels = sorted_dates
+            assessment_chart_gad7_data = [assessment_chart_data.get(d, {}).get('gad7') for d in sorted_dates]
+            assessment_chart_phq9_data = [assessment_chart_data.get(d, {}).get('phq9') for d in sorted_dates]
+        else:
+            # Empty data for charts when no assessments exist
+            assessment_chart_labels = []
+            assessment_chart_gad7_data = []
+            assessment_chart_phq9_data = []
 
-    # Prepare data for assessment chart (aligning dates)
-    assessment_chart_data = {}
-    all_assessment_dates = set()
-
-    for a in gad7_assessments:
-        date_str = a.created_at.strftime('%Y-%m-%d')
-        all_assessment_dates.add(date_str)
-        if date_str not in assessment_chart_data: assessment_chart_data[date_str] = {'gad7': None, 'phq9': None}
-        assessment_chart_data[date_str]['gad7'] = a.score
-    for a in phq9_assessments:
-        date_str = a.created_at.strftime('%Y-%m-%d')
-        all_assessment_dates.add(date_str)
-        if date_str not in assessment_chart_data: assessment_chart_data[date_str] = {'gad7': None, 'phq9': None}
-        assessment_chart_data[date_str]['phq9'] = a.score
-
-    # Sort by date and extract for chart.js
-    sorted_dates = sorted(list(all_assessment_dates))
-    assessment_chart_labels = sorted_dates
-    assessment_chart_gad7_data = [assessment_chart_data[d]['gad7'] for d in sorted_dates]
-    assessment_chart_phq9_data = [assessment_chart_data[d]['phq9'] for d in sorted_dates]
-
-    # Overall wellness score (simple average of latest mood, GAD-7, PHQ-9 for now)
-    # This could be more sophisticated with AI analysis
-    overall_wellness_score = 'N/A'
-    scores_to_average = []
-
-    if latest_gad7:
-        scores_to_average.append(10 - (latest_gad7.score / 21 * 9)) # Normalize GAD-7
-    if latest_phq9:
-        scores_to_average.append(10 - (latest_phq9.score / 27 * 9)) # Normalize PHQ-9
-    if latest_mood:
-        scores_to_average.append(latest_mood.score * 2) # Normalize Mood
-
-    if scores_to_average:
-        overall_wellness_score = round(sum(scores_to_average) / len(scores_to_average), 1)
-    else:
+        # Calculate overall wellness score only if we have data
         overall_wellness_score = 'No data'
+        scores_to_average = []
 
-    return render_template(
-        'progress.html',
-        user_name=session['user_name'],
-        latest_gad7=latest_gad7,
-        latest_phq9=latest_phq9,
-        latest_mood=latest_mood,
-        overall_wellness_score=overall_wellness_score,
-        mood_data=json.dumps(mood_data),
-        assessment_chart_labels=json.dumps(assessment_chart_labels),
-        assessment_chart_gad7_data=json.dumps(assessment_chart_gad7_data),
-        assessment_chart_phq9_data=json.dumps(assessment_chart_phq9_data),
-        goals=goals,
-        achievements=achievements,
-    )
+        if latest_gad7 and hasattr(latest_gad7, 'score'):
+            try:
+                gad7_score = float(latest_gad7.score) if latest_gad7.score is not None else 0
+                scores_to_average.append(10 - (gad7_score / 21 * 9))  # Normalize GAD-7 (0-21 to 10-1)
+            except (ValueError, TypeError):
+                pass
+                
+        if latest_phq9 and hasattr(latest_phq9, 'score'):
+            try:
+                phq9_score = float(latest_phq9.score) if latest_phq9.score is not None else 0
+                scores_to_average.append(10 - (phq9_score / 27 * 9))  # Normalize PHQ-9 (0-27 to 10-1)
+            except (ValueError, TypeError):
+                pass
+                
+        if latest_mood and hasattr(latest_mood, 'score'):
+            try:
+                mood_score = float(latest_mood.score) if latest_mood.score is not None else 0
+                scores_to_average.append(mood_score * 2)  # Normalize Mood (0-5 to 0-10)
+            except (ValueError, TypeError):
+                pass
+
+        if scores_to_average:
+            overall_wellness_score = round(sum(scores_to_average) / len(scores_to_average), 1)
+
+        # Ensure we have valid data for the template
+        # Ensure user_name is set in session
+        if 'user_name' not in session:
+            user = User.query.get(user_id)
+            if user:
+                # Safely get user's name, defaulting to 'User' if not available
+                user_name = getattr(user, 'name', None) or getattr(user, 'first_name', 'User')
+                session['user_name'] = user_name
+
+        return render_template(
+            'progress.html',
+            user_name=session.get('user_name', 'User'),
+            latest_gad7=latest_gad7,
+            latest_phq9=latest_phq9,
+            latest_mood=latest_mood,
+            overall_wellness_score=overall_wellness_score,
+            mood_data=json.dumps(mood_data or []),
+            assessment_chart_labels=json.dumps(assessment_chart_labels or []),
+            assessment_chart_gad7_data=json.dumps(assessment_chart_gad7_data or []),
+            assessment_chart_phq9_data=json.dumps(assessment_chart_phq9_data or []),
+            goals=goals,
+            achievements=achievements,
+        )
+    except Exception as e:
+        app.logger.error(f"Error in progress route: {str(e)}")
+        # Provide a more user-friendly error message
+        return render_template('error.html', 
+                            error_message="Please complete your first assessment before viewing progress. Click the button below to start your assessment.",
+                            status_code=200)
 
 @app.route('/digital-detox', methods=['GET', 'POST'])
 @login_required
@@ -752,9 +802,10 @@ def analytics():
     
     for patient in patients:
         wellness_trend = get_user_wellness_trend(patient.id, days=30)
-        recent_detox = wellness_trend['digital_detox'][-1] if wellness_trend['digital_detox'] else None
+        recent_detox = wellness_trend['digital_detox'][-1] if wellness_trend.get('digital_detox') else None
         
         patient_analytics.append({
+            'id': patient.id,
             'name': patient.name,
             'email': patient.email,
             'trend_data': [
@@ -845,24 +896,26 @@ def api_institutional_assessment_history():
     # Get assessment history over the last 12 months
     assessment_history = []
     for i in range(12):
-        # Calculate the start and end of each month
-        end_date = date.today().replace(day=1) - timedelta(days=i*30)
-        start_date = end_date.replace(day=1)
-        
+        # Calculate the start and end of each month accurately
+        end_of_month = date.today().replace(day=1) - relativedelta(months=i)
+        start_of_month = end_of_month.replace(day=1)
+        # To get the correct end date for the query, we go to the next month and subtract one day
+        end_of_month_for_query = (start_of_month + relativedelta(months=1)) - timedelta(days=1)
+
         # Get GAD-7 assessments for the month
         gad7_assessments = db.session.query(Assessment).join(User).filter(
             User.institution == institution,
             Assessment.assessment_type == 'GAD-7',
-            Assessment.created_at >= start_date,
-            Assessment.created_at < end_date + timedelta(days=32)
+            Assessment.created_at >= start_of_month,
+            Assessment.created_at <= end_of_month_for_query
         ).all()
-        
+
         # Get PHQ-9 assessments for the month
         phq9_assessments = db.session.query(Assessment).join(User).filter(
             User.institution == institution,
             Assessment.assessment_type == 'PHQ-9',
-            Assessment.created_at >= start_date,
-            Assessment.created_at < end_date + timedelta(days=32)
+            Assessment.created_at >= start_of_month,
+            Assessment.created_at <= end_of_month_for_query
         ).all()
         
         avg_gad7 = None

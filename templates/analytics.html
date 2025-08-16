@@ -214,7 +214,7 @@
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <a href="{{ url_for('wellness_report', user_id=loop.index) }}" class="text-indigo-600 hover:text-indigo-900">View Report</a>
+                            <a href="{{ url_for('wellness_report', user_id=patient.id) }}" class="text-indigo-600 hover:text-indigo-900">View Report</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -372,17 +372,11 @@ async function initializeMoodTrendsChart() {
         }
         
         if (moodData.length === 0) {
-            // Generate sample mood data for demonstration
-            const today = new Date();
-            for (let i = 29; i >= 0; i--) {
-                const date = new Date(today);
-                date.setDate(date.getDate() - i);
-                moodData.push({
-                    date: date.toISOString().split('T')[0],
-                    avg_mood: 6.5 + (Math.random() - 0.5) * 2,
-                    mood_count: Math.floor(Math.random() * 20) + 5
-                });
-            }
+            ctx.font = '16px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#6b7280';
+            ctx.fillText('No mood data available yet.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+            return;
         }
 
         const dates = moodData.map(item => {
@@ -463,18 +457,11 @@ async function initializeAssessmentHistoryChart() {
         }
         
         if (assessmentData.length === 0) {
-            // Generate sample assessment data for demonstration
-            const today = new Date();
-            for (let i = 11; i >= 0; i--) {
-                const date = new Date(today);
-                date.setMonth(date.getMonth() - i);
-                assessmentData.push({
-                    date: date.toISOString().split('T')[0],
-                    avg_gad7: Math.floor(Math.random() * 15) + 3,
-                    avg_phq9: Math.floor(Math.random() * 18) + 2,
-                    assessment_count: Math.floor(Math.random() * 30) + 10
-                });
-            }
+            ctx.font = '16px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#6b7280';
+            ctx.fillText('No assessment data available yet.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+            return;
         }
 
         const dates = assessmentData.map(item => {
