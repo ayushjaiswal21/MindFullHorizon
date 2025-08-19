@@ -10,9 +10,13 @@ import json
 import os
 import time
 from ai_service import ai_service
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'  # Replace with a real secret key in production
+app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')  # Use environment variable or fallback
 
 # Configure logging
 logging.basicConfig(
@@ -1342,24 +1346,19 @@ def api_chat_message():
     
     logger.info(f"Chat message from user {user_id}: {user_message}")
     
-    # Simulate processing time
-    time.sleep(1)
+    # Get user context for AI
+    user_context = {
+        'wellness_score': 'Good',  # Could be fetched from user data
+        'engagement_level': 'Active'
+    }
     
-    # Generate a simple response
-    responses = [
-        "Thank you for sharing. A mental health provider will be with you shortly.",
-        "I understand. Your message has been recorded and will be reviewed by our care team.",
-        "That's important information. We'll make sure to address this in your next session.",
-        "Thank you for reaching out. Your wellbeing is our priority.",
-        "I've noted your message. A provider will follow up with you soon."
-    ]
-    
-    import random
-    bot_response = random.choice(responses)
+    # Generate AI response
+    chat_result = ai_service.generate_chat_response(user_message, user_context)
     
     return jsonify({
         'success': True,
-        'response': bot_response,
+        'response': chat_result['response'],
+        'is_ai_powered': chat_result['is_ai_powered'],
         'timestamp': datetime.now().strftime('%H:%M')
     })
 

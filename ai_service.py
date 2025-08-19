@@ -1,52 +1,73 @@
 import requests
 import json
+import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
+from dotenv import load_dotenv
 
-class OllamaAIService:
-    """Service class for integrating with Ollama ALIENTELLIGENCE/mindwell model"""
+# Ensure environment variables are loaded even if the app didn't load them yet
+load_dotenv()
+
+class CloseRouterAIService:
+    """Service class for integrating with CloseRouter API supporting 150+ AI models"""
     
-    def __init__(self, base_url="http://localhost:11434"):
+    def __init__(self, api_key: str = None, base_url: str = "https://api.closerouter.com/v1"):
         self.base_url = base_url
-        self.model_name = "ALIENTELLIGENCE/mindwell"
+        self.api_key = api_key or os.getenv('CLOSEROUTER_API_KEY')
+        
+        # Model configurations for different use cases
+        self.models = {
+            'primary': 'claude-3-5-sonnet-20241022',  # Best for psychological analysis
+            'fast': 'gpt-4o-mini',                    # Fast responses for frequent checks
+            'reasoning': 'o3-mini-2025-01-31',        # Advanced reasoning for complex analysis
+            'clinical': 'claude-3-5-sonnet-20241022', # Clinical documentation
+            'analytics': 'gpt-4o-2024-11-20'         # Institutional analytics
+        }
+        
+        if not self.api_key:
+            print("Warning: No CloseRouter API key found. Set CLOSEROUTER_API_KEY environment variable.")
     
-    def _make_request(self, prompt: str, system_prompt: str = None) -> Optional[str]:
-        """Make a request to the Ollama API"""
+    def _make_request(self, messages: List[Dict], model: str = None, temperature: float = 0.7, max_tokens: int = 4000) -> Optional[str]:
+        """Make a request to the CloseRouter API"""
+        if not self.api_key:
+            print("Error: No API key available for CloseRouter")
+            return None
+            
         try:
-            payload = {
-                "model": self.model_name,
-                "prompt": prompt,
-                "stream": False
+            headers = {
+                'Authorization': f'Bearer {self.api_key}',
+                'Content-Type': 'application/json'
             }
             
-            if system_prompt:
-                payload["system"] = system_prompt
+            payload = {
+                "model": model or self.models['primary'],
+                "messages": messages,
+                "stream": False,
+                "temperature": temperature,
+                "max_tokens": max_tokens
+            }
             
             response = requests.post(
-                f"{self.base_url}/api/generate",
+                f"{self.base_url}/chat/completions",
+                headers=headers,
                 json=payload,
                 timeout=120
             )
             
             if response.status_code == 200:
                 result = response.json()
-                return result.get("response", "").strip()
+                return result['choices'][0]['message']['content'].strip()
             else:
-                print(f"Ollama API error: {response.status_code}")
+                print(f"CloseRouter API error: {response.status_code} - {response.text}")
                 return None
                 
         except Exception as e:
-            print(f"Error connecting to Ollama: {e}")
+            print(f"Error connecting to CloseRouter: {e}")
             return None
     
     def analyze_digital_wellness(self, screen_time: float, academic_score: int, 
                                social_interactions: str, historical_data: List[Dict] = None) -> Dict:
-        """Analyze digital wellness data and provide insights"""
-        
-        system_prompt = """You are a specialized AI assistant for psychological wellness analysis. 
-        Analyze digital behavior patterns and provide personalized recommendations for college students.
-        Focus on the relationship between screen time, academic performance, and social interactions.
-        Provide a wellness score (Excellent/Good/Needs Improvement) and specific, actionable suggestions."""
+        """Analyze digital wellness data and provide insights using Claude 3.5 Sonnet"""
         
         # Prepare historical context
         history_context = ""
@@ -62,19 +83,37 @@ class OllamaAIService:
             - Trend: {'Improving' if screen_time < avg_screen_time else 'Concerning' if screen_time > avg_screen_time + 1 else 'Stable'}
             """
         
-        prompt = """Analyze this student's digital wellness data and provide a JSON response.
+        messages = [
+            {
+                "role": "system",
+                "content": """You are a specialized AI assistant for psychological wellness analysis in college students. 
+                Analyze digital behavior patterns and provide personalized recommendations focusing on the relationship between screen time, academic performance, and social interactions.
+                
+                Provide a wellness score (Excellent/Good/Needs Improvement) and specific, actionable suggestions.
+                Always respond with valid JSON format."""
+            },
+            {
+                "role": "user",
+                "content": f"""Analyze this student's digital wellness data and provide a JSON response.
 
-        Current:
-        - Screen time: {screen_time}h
-        - Academic: {academic_score}/100
-        - Social: {social_interactions}
+Current Data:
+- Screen time: {screen_time} hours
+- Academic score: {academic_score}/100
+- Social interactions: {social_interactions}
 
-        {history_context}
+{history_context}
 
-        Output JSON: {{"score": "...", "suggestion": "...", "detailed_analysis": "...", "action_items": ["...", "..."]}}
-        """
+Please provide your analysis in this exact JSON format:
+{{
+    "score": "Excellent|Good|Needs Improvement",
+    "suggestion": "Brief actionable suggestion",
+    "detailed_analysis": "Detailed psychological analysis",
+    "action_items": ["specific action 1", "specific action 2", "specific action 3"]
+}}"""
+            }
+        ]
         
-        response = self._make_request(prompt, system_prompt)
+        response = self._make_request(messages, model=self.models['primary'])
         
         if response:
             try:
@@ -89,9 +128,7 @@ class OllamaAIService:
         return self._fallback_analysis(screen_time, academic_score, social_interactions)
     
     def generate_clinical_note(self, transcript: str, patient_info: Dict = None) -> str:
-        """Generate clinical documentation from session transcript"""
-        
-        system_prompt = """You are a mental health clinical documentation assistant. Generate professional, structured, concise clinical notes from therapy session transcripts."""
+        """Generate clinical documentation from session transcript using Claude 3.5 Sonnet"""
         
         patient_context = ""
         if patient_info:
@@ -102,36 +139,72 @@ class OllamaAIService:
             - Engagement level: {patient_info.get('engagement', 'Not available')}
             """
         
-        prompt = f"""Generate a clinical note from the following therapy session transcript. Include: Session Summary, Patient Presentation/Mood, Key Topics, Interventions, Patient Response, Plan, and Risk Assessment (if applicable).
+        messages = [
+            {
+                "role": "system",
+                "content": """You are a mental health clinical documentation assistant. Generate professional, structured, concise clinical notes from therapy session transcripts. 
+
+Include these sections:
+- SESSION SUMMARY
+- PATIENT PRESENTATION/MOOD
+- KEY TOPICS DISCUSSED
+- INTERVENTIONS USED
+- PATIENT RESPONSE
+- ASSESSMENT
+- PLAN
+- RISK ASSESSMENT (if applicable)
+
+Use professional clinical language appropriate for medical records."""
+            },
+            {
+                "role": "user",
+                "content": f"""Generate a comprehensive clinical note from the following therapy session transcript.
 
 {patient_context}
 
-Transcript:
+Session Transcript:
 {transcript}
-"""
+
+Please provide a well-structured clinical note following standard documentation practices."""
+            }
+        ]
         
-        response = self._make_request(prompt, system_prompt)
+        response = self._make_request(messages, model=self.models['clinical'], max_tokens=6000)
         return response if response else self._fallback_clinical_note(transcript)
     
     def analyze_institutional_trends(self, institution_data: Dict) -> Dict:
-        """Analyze institutional-level wellness trends"""
+        """Analyze institutional-level wellness trends using GPT-4o for analytics"""
         
-        system_prompt = """You are an institutional wellness analyst. Analyze aggregated mental health data 
-        for educational institutions and provide insights for administrators and counseling services."""
-        
-        prompt = f"""Analyze the following institutional wellness data and output a JSON response.
+        messages = [
+            {
+                "role": "system",
+                "content": """You are an institutional wellness analyst specializing in educational mental health data. 
+                Analyze aggregated data for educational institutions and provide actionable insights for administrators and counseling services.
+                
+                Always respond with valid JSON format."""
+            },
+            {
+                "role": "user",
+                "content": f"""Analyze the following institutional wellness data and provide insights.
 
-Metrics:
+Institutional Metrics:
 - Total students: {institution_data.get('total_users', 0)}
 - Active users: {institution_data.get('active_users', 0)}
-- Avg screen time: {institution_data.get('avg_screen_time', 0)}h
+- Average screen time: {institution_data.get('avg_screen_time', 0)} hours
 - High-risk students: {institution_data.get('high_risk_users', 0)}
 - Engagement rate: {institution_data.get('engagement_rate', 0)}%
 
-Output JSON: {{"overall_status": "...", "key_insights": ["...", "..."], "recommendations": ["...", "..."], "priority_actions": ["...", "..."]}}
-"""
+Please provide your analysis in this exact JSON format:
+{{
+    "overall_status": "Excellent|Good|Concerning|Critical",
+    "key_insights": ["insight 1", "insight 2", "insight 3"],
+    "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"],
+    "priority_actions": ["action 1", "action 2", "action 3"]
+}}"""
+            }
+        ]
         
-        response = self._make_request(prompt, system_prompt)
+        response = self._make_request(messages, model=self.models['analytics'])
         
         if response:
             try:
@@ -141,6 +214,21 @@ Output JSON: {{"overall_status": "...", "key_insights": ["...", "..."], "recomme
         
         # Fallback analysis
         return self._fallback_institutional_analysis(institution_data)
+    
+    def get_model_info(self) -> Dict:
+        """Get information about currently configured models"""
+        return {
+            "current_models": self.models,
+            "api_status": "Connected" if self.api_key else "No API Key",
+            "base_url": self.base_url
+        }
+    
+    def set_model(self, use_case: str, model_id: str) -> bool:
+        """Update model for specific use case"""
+        if use_case in self.models:
+            self.models[use_case] = model_id
+            return True
+        return False
     
     def _parse_text_response(self, response: str, screen_time: float) -> Dict:
         """Parse non-JSON AI response"""
@@ -183,20 +271,20 @@ Output JSON: {{"overall_status": "...", "key_insights": ["...", "..."], "recomme
         return f"""
         CLINICAL NOTE - {datetime.now().strftime('%Y-%m-%d')}
         
-        Session Summary:
+        SESSION SUMMARY:
         Patient attended scheduled session. Session transcript available for review.
         
-        Key Points:
+        KEY POINTS:
         - Session conducted as planned
         - Patient engagement noted
         - Further analysis recommended
         
-        Plan:
+        PLAN:
         - Continue regular sessions
         - Monitor progress
         - Follow up as needed
         
-        Note: Full AI analysis temporarily unavailable. Manual review of transcript recommended.
+        NOTE: Full AI analysis temporarily unavailable. Manual review of transcript recommended.
         
         Transcript Length: {len(transcript)} characters
         """
@@ -220,6 +308,60 @@ Output JSON: {{"overall_status": "...", "key_insights": ["...", "..."], "recomme
             "recommendations": ["Increase outreach programs", "Enhance digital wellness education"],
             "priority_actions": ["Review high-risk cases", "Improve engagement strategies"]
         }
+    
+    def generate_chat_response(self, user_message: str, user_context: Dict = None) -> Dict:
+        """Generate empathetic chat response with optimized token usage"""
+        
+        # Crisis keywords detection
+        crisis_keywords = ['suicide', 'kill myself', 'end it all', 'hurt myself', 'die', 'hopeless']
+        if any(keyword in user_message.lower() for keyword in crisis_keywords):
+            return {
+                "response": "I'm concerned about you. Please reach out for immediate help: National Suicide Prevention Lifeline: 988 or Crisis Text Line: Text HOME to 741741. You matter.",
+                "is_ai_powered": True,
+                "needs_followup": True
+            }
+        
+        # Build minimal context
+        context = ""
+        if user_context:
+            wellness = user_context.get('wellness_score', 'unknown')
+            engagement = user_context.get('engagement_level', 'unknown')
+            context = f"User wellness: {wellness}, engagement: {engagement}."
+        
+        messages = [
+            {
+                "role": "system", 
+                "content": "You're a supportive mental health chat assistant. Give brief, empathetic responses (2-3 sentences max). Focus on validation and gentle guidance."
+            },
+            {
+                "role": "user",
+                "content": f"{context} User says: '{user_message}'"
+            }
+        ]
+        
+        response = self._make_request(messages, model=self.models['fast'], temperature=0.7, max_tokens=150)
+        
+        if response:
+            return {
+                "response": response,
+                "is_ai_powered": True,
+                "needs_followup": False
+            }
+        
+        # Fallback responses
+        fallback_responses = [
+            "I hear you. Your feelings are valid. Would you like to talk more about what's on your mind?",
+            "Thank you for sharing. It takes courage to reach out. How can I best support you right now?",
+            "I'm here to listen. What you're experiencing matters, and you're not alone in this.",
+            "That sounds challenging. Remember, it's okay to take things one step at a time."
+        ]
+        
+        import random
+        return {
+            "response": random.choice(fallback_responses),
+            "is_ai_powered": False,
+            "needs_followup": True
+        }
 
 # Global AI service instance
-ai_service = OllamaAIService()
+ai_service = CloseRouterAIService()

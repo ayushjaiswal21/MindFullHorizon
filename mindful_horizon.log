@@ -3460,3 +3460,215 @@ NameError: name 'json' is not defined
 2025-08-16 22:25:09,485 - werkzeug - INFO - 127.0.0.1 - - [16/Aug/2025 22:25:09] "GET /api/digital-detox-data HTTP/1.1" 200 -
 2025-08-16 22:25:09,555 - werkzeug - INFO - 127.0.0.1 - - [16/Aug/2025 22:25:09] "GET /api/digital-detox-data HTTP/1.1" 200 -
 2025-08-16 22:25:13,714 - werkzeug - INFO - 127.0.0.1 - - [16/Aug/2025 22:25:13] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:02:08,527 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-19 15:02:08,527 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-19 15:02:14,365 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:14] "GET / HTTP/1.1" 200 -
+2025-08-19 15:02:14,922 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:14] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:14,962 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:14] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-19 15:02:14,970 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:14] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:15,002 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:15] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:02:15,506 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:15] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-19 15:02:18,957 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:18] "GET /login HTTP/1.1" 200 -
+2025-08-19 15:02:19,089 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:19] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:19,094 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:19] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:19,097 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:19] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:02:29,139 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:29] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-08-19 15:02:29,243 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:29] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-19 15:02:29,309 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:29] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:29,330 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:29] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:29,330 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:29] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:02:29,402 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:02:33,191 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:33] "GET /chat HTTP/1.1" 200 -
+2025-08-19 15:02:33,325 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:33] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:33,328 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:33] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:33,334 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:33] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:02:37,913 - __main__ - INFO - Chat message from user 3: hi
+2025-08-19 15:02:38,918 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:38] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:02:42,636 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:42] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:02:47,347 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:47] "GET /progress HTTP/1.1" 200 -
+2025-08-19 15:02:47,725 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:47] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:47,746 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:47] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:47,749 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:47] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:02:53,624 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:53] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:02:55,657 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:55] "GET /assessment HTTP/1.1" 200 -
+2025-08-19 15:02:55,841 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:55] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:55,856 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:55] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:02:55,860 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:02:55] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:03:02,212 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:02] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:03:03,889 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:03] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-19 15:03:03,917 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:03] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:03:03,929 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:03] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:03:03,929 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:03] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:03:03,966 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:03] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-19 15:03:04,007 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:04] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-19 15:03:17,960 - __main__ - INFO - AJAX digital detox submission for user 3
+2025-08-19 15:03:18,010 - __main__ - INFO - AJAX digital detox submission for user 3
+2025-08-19 15:03:19,475 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
+2025-08-19 15:03:19,476 - __main__ - INFO - AI analysis completed in 0.00 seconds
+2025-08-19 15:03:19,525 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
+2025-08-19 15:03:19,527 - __main__ - INFO - AI analysis completed in 0.00 seconds
+2025-08-19 15:03:19,555 - __main__ - INFO - Digital detox data saved successfully for user 3
+2025-08-19 15:03:19,558 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:19] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-19 15:03:19,611 - __main__ - INFO - Digital detox data saved successfully for user 3
+2025-08-19 15:03:19,615 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:19] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-19 15:03:20,161 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:20] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-19 15:03:33,110 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:33] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:03:35,860 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:35] "GET /progress HTTP/1.1" 200 -
+2025-08-19 15:03:35,981 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:35] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:03:35,997 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:35] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:03:36,005 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:36] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:03:43,383 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:43] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:03:47,020 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:47] "GET /goals HTTP/1.1" 200 -
+2025-08-19 15:03:47,128 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:47] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:03:47,176 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:47] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:03:47,180 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:47] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:03:47,306 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:47] "GET /api/goals HTTP/1.1" 200 -
+2025-08-19 15:03:50,355 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:03:50] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:04:00,223 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:04:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:04:10,231 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:04:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:04:20,226 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:04:20] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:04:30,218 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:04:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:04:40,224 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:04:40] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:04:50,236 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:04:50] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:05:04,224 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:05:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:06:04,219 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:06:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:13:16,964 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-19 15:13:17,304 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-19 15:13:25,642 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:25] "GET / HTTP/1.1" 200 -
+2025-08-19 15:13:26,297 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:26] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:13:26,307 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:26] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:13:26,313 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:26] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-19 15:13:26,347 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:26] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:13:30,477 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:30] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-19 15:13:30,520 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:30] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:13:30,543 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:30] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:13:30,547 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:30] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:13:30,630 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:13:32,735 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:32] "GET /chat HTTP/1.1" 200 -
+2025-08-19 15:13:32,827 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:32] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:13:32,860 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:32] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:13:32,862 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:32] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:13:36,165 - __main__ - INFO - Chat message from user 3: hi
+2025-08-19 15:13:37,170 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:37] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:13:48,253 - __main__ - INFO - Chat message from user 3: i want to know about something
+2025-08-19 15:13:49,265 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:49] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:13:56,499 - __main__ - INFO - Chat message from user 3: i am depresed
+2025-08-19 15:13:57,504 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:13:57] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:14:01,426 - __main__ - INFO - Chat message from user 3: ohk
+2025-08-19 15:14:02,427 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:14:02] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:14:04,237 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:14:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:14:13,802 - __main__ - INFO - Chat message from user 3: hi
+2025-08-19 15:14:14,809 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:14:14] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:15:04,235 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:15:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:19:28,561 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-19 15:19:28,561 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-19 15:19:33,018 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:33] "GET / HTTP/1.1" 200 -
+2025-08-19 15:19:33,497 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:33] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:19:33,600 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:33] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:19:33,610 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:33] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-19 15:19:33,614 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:33] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:19:40,016 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:40] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-19 15:19:40,065 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:40] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:19:40,071 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:40] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:19:40,073 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:40] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:19:40,161 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:40] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:19:42,453 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:42] "GET /chat HTTP/1.1" 200 -
+2025-08-19 15:19:42,586 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:42] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:19:42,593 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:42] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:19:42,599 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:42] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:19:45,477 - __main__ - INFO - Chat message from user 3: hi
+2025-08-19 15:19:45,480 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:45] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:19:52,750 - __main__ - INFO - Chat message from user 3: i am depresed
+2025-08-19 15:19:52,752 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:19:52] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:20:02,211 - __main__ - INFO - Chat message from user 3: what is your name
+2025-08-19 15:20:02,212 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:02] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:20:10,099 - __main__ - INFO - Chat message from user 3: i want your support
+2025-08-19 15:20:10,101 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:10] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:20:24,303 - __main__ - INFO - Chat message from user 3: i am depresend and want to contect with a doctor
+2025-08-19 15:20:24,304 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:24] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:20:30,194 - __main__ - INFO - Chat message from user 3: yeh
+2025-08-19 15:20:30,196 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:30] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:20:40,208 - __main__ - INFO - Chat message from user 3: thankyou
+2025-08-19 15:20:40,210 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:40] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:20:47,269 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:47] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:20:49,940 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:49] "GET /assessment HTTP/1.1" 200 -
+2025-08-19 15:20:50,048 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:50] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:20:50,078 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:50] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:20:50,080 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:50] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:20:53,462 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:53] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:20:55,200 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:55] "GET /progress HTTP/1.1" 200 -
+2025-08-19 15:20:55,325 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:55] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:20:55,342 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:55] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:20:55,357 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:20:55] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:21:00,147 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:21:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:21:01,325 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:21:01] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-19 15:21:01,427 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:21:01] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:21:01,457 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:21:01] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:21:01,468 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:21:01] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:21:01,593 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:21:01] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-19 15:21:01,718 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:21:01] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-19 15:21:10,165 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:21:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:23:57,753 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-19 15:23:57,755 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-19 15:24:00,253 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:24:10,229 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:10] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:24:24,987 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:24] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:24:27,818 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:27] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-19 15:24:28,189 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:28] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:24:28,197 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:28] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:24:28,229 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:28] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:24:28,286 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:28] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:24:31,521 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:31] "GET /chat HTTP/1.1" 200 -
+2025-08-19 15:24:31,619 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:31] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:24:31,653 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:31] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:24:31,656 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:31] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:24:34,519 - __main__ - INFO - Chat message from user 3: hi
+2025-08-19 15:24:34,520 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:24:34] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:25:05,611 - __main__ - INFO - Chat message from user 3: i want to tell you something
+2025-08-19 15:25:05,613 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:25:05] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:26:03,241 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.1.8:5000
+2025-08-19 15:26:03,242 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-19 15:26:08,868 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:08] "GET / HTTP/1.1" 200 -
+2025-08-19 15:26:09,242 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:09] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-19 15:26:09,251 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:09] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:26:09,277 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:09] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:26:09,289 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:09] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:26:10,738 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:10] "GET /chat HTTP/1.1" 200 -
+2025-08-19 15:26:10,891 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:10] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:26:10,904 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:10] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:26:10,906 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:10] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:26:14,163 - __main__ - INFO - Chat message from user 3: hi
+2025-08-19 15:26:17,441 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:17] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:26:24,346 - __main__ - INFO - Chat message from user 3: i am feeling depresed
+2025-08-19 15:26:27,378 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:27] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-19 15:26:30,785 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:26:34,820 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:34] "GET /telehealth HTTP/1.1" 200 -
+2025-08-19 15:26:34,907 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:34] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:26:34,960 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:34] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:26:34,965 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:34] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:26:38,297 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:38] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:26:40,516 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:40] "GET /goals HTTP/1.1" 200 -
+2025-08-19 15:26:40,624 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:40] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:26:40,652 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:40] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:26:40,657 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:40] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-19 15:26:40,772 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:40] "GET /api/goals HTTP/1.1" 200 -
+2025-08-19 15:26:48,306 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:48] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-19 15:26:48,752 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:48] "GET /progress HTTP/1.1" 200 -
+2025-08-19 15:26:48,851 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:48] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-19 15:26:48,895 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:48] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-19 15:26:48,897 - werkzeug - INFO - 127.0.0.1 - - [19/Aug/2025 15:26:48] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
