@@ -4669,3 +4669,138 @@ jinja2.exceptions.UndefinedError: 'None' has no attribute 'name'
 2025-08-24 17:26:03,893 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:03] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
 2025-08-24 17:26:03,895 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:03] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
 2025-08-24 17:26:03,902 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:03] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:44:38,196 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 17:44:38,199 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 17:44:42,161 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:44:42] "GET / HTTP/1.1" 200 -
+2025-08-24 17:44:43,011 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:44:43] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:44:43,011 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:44:43] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:44:43,022 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:44:43] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-24 17:44:43,024 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:44:43] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:44:43,301 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:44:43] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-24 17:44:52,288 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:44:52] "GET /login HTTP/1.1" 200 -
+2025-08-24 17:44:56,697 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:44:56] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-08-24 17:44:56,771 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:44:56] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 17:44:56,826 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:44:56] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:45:01,480 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:45:01] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 17:45:05,032 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:45:05] "GET /progress HTTP/1.1" 200 -
+2025-08-24 17:45:11,192 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:45:11] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:45:12,551 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:45:12] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-24 17:45:12,747 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:45:12] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 17:45:12,881 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:45:12] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 17:45:18,421 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:45:18] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:45:22,481 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:45:22] "GET /chat HTTP/1.1" 200 -
+2025-08-24 17:45:25,403 - __main__ - INFO - Chat message from user 1: hi
+2025-08-24 17:45:25,407 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:45:25] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-24 17:47:21,733 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 17:47:21,733 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 17:47:22,881 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:47:22] "GET /chat HTTP/1.1" 200 -
+2025-08-24 17:47:23,600 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:47:23] "GET /static/js/scripts.js HTTP/1.1" 200 -
+2025-08-24 17:47:23,604 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:47:23] "GET /static/css/enhanced.css HTTP/1.1" 200 -
+2025-08-24 17:47:23,617 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:47:23] "GET /static/css/styles.css HTTP/1.1" 200 -
+2025-08-24 17:47:24,841 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:47:24] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-24 17:47:26,955 - __main__ - INFO - Chat message from user 1: hi
+2025-08-24 17:47:31,329 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:47:31] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-24 17:50:31,457 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 17:50:31,457 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 17:50:35,389 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:50:35] "GET /chat HTTP/1.1" 200 -
+2025-08-24 17:50:35,808 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:50:35] "GET /static/css/enhanced.css HTTP/1.1" 200 -
+2025-08-24 17:50:35,831 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:50:35] "GET /static/css/styles.css HTTP/1.1" 200 -
+2025-08-24 17:50:35,851 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:50:35] "GET /static/js/scripts.js HTTP/1.1" 200 -
+2025-08-24 17:50:36,600 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:50:36] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-24 17:50:38,353 - __main__ - INFO - Chat message from user 1: hi
+2025-08-24 17:50:46,792 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:50:46] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-24 17:51:10,550 - __main__ - INFO - Chat message from user 1: i am sad
+2025-08-24 17:51:18,397 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:51:18] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-24 17:52:58,674 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 17:52:58,674 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 17:53:02,738 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:53:02] "GET / HTTP/1.1" 200 -
+2025-08-24 17:53:08,793 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:53:08] "GET /chat HTTP/1.1" 200 -
+2025-08-24 17:53:09,599 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:53:09] "GET /static/css/enhanced.css HTTP/1.1" 200 -
+2025-08-24 17:53:09,606 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:53:09] "GET /static/css/styles.css HTTP/1.1" 200 -
+2025-08-24 17:53:09,624 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:53:09] "GET /static/js/scripts.js HTTP/1.1" 200 -
+2025-08-24 17:53:10,805 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:53:10] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-24 17:53:12,339 - __main__ - INFO - Chat message from user 1: hi
+2025-08-24 17:59:19,300 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 17:59:19,301 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 17:59:26,335 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:59:26] "GET /chat HTTP/1.1" 200 -
+2025-08-24 17:59:26,845 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:59:26] "GET /static/js/scripts.js HTTP/1.1" 200 -
+2025-08-24 17:59:26,864 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:59:26] "GET /static/css/enhanced.css HTTP/1.1" 200 -
+2025-08-24 17:59:26,869 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:59:26] "GET /static/css/styles.css HTTP/1.1" 200 -
+2025-08-24 17:59:28,023 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:59:28] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-24 17:59:29,866 - __main__ - INFO - Chat message from user 1: hi
+2025-08-24 17:59:58,254 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:59:58] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-24 18:01:08,431 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 18:01:08,431 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 18:01:14,633 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:01:14] "GET /chat HTTP/1.1" 200 -
+2025-08-24 18:01:15,254 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:01:15] "GET /static/css/enhanced.css HTTP/1.1" 200 -
+2025-08-24 18:01:15,273 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:01:15] "GET /static/js/scripts.js HTTP/1.1" 200 -
+2025-08-24 18:01:15,280 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:01:15] "GET /static/css/styles.css HTTP/1.1" 200 -
+2025-08-24 18:01:16,184 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:01:16] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-24 18:01:17,393 - __main__ - INFO - Chat message from user 1: hi
+2025-08-24 18:01:44,618 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:01:44] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-24 18:02:34,158 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:02:34] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 18:03:03,010 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:03:03] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 18:03:05,981 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:03:05] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-24 18:03:06,065 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:03:06] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 18:03:09,110 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:03:09] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-24 18:03:11,015 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:03:11] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 18:03:21,175 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:03:21] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 18:04:17,427 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 18:04:17,427 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 18:04:26,395 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:04:26] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 18:04:31,028 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:04:31] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 18:04:33,559 - __main__ - INFO - Chat message from user 1: hi
+2025-08-24 18:04:48,970 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:04:48] "GET /progress HTTP/1.1" 200 -
+2025-08-24 18:04:58,823 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:04:58] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-24 18:05:35,473 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 18:05:35,473 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 18:05:38,543 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:05:38] "GET /chat HTTP/1.1" 200 -
+2025-08-24 18:05:41,243 - __main__ - INFO - Chat message from user 1: hi
+2025-08-24 18:05:45,494 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:05:45] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-24 18:09:13,675 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 18:09:13,676 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 18:09:34,111 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:34] "GET / HTTP/1.1" 200 -
+2025-08-24 18:09:35,047 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:35] "GET /static/css/enhanced.css HTTP/1.1" 200 -
+2025-08-24 18:09:35,082 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:35] "GET /static/images/hero_image.png HTTP/1.1" 200 -
+2025-08-24 18:09:35,082 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:35] "GET /static/js/scripts.js HTTP/1.1" 200 -
+2025-08-24 18:09:35,085 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:35] "GET /static/css/styles.css HTTP/1.1" 200 -
+2025-08-24 18:09:35,831 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:35] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-24 18:09:37,565 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:37] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 18:09:37,603 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:37] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 18:09:40,299 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:40] "GET /chat HTTP/1.1" 200 -
+2025-08-24 18:09:40,431 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:40] "GET /static/css/styles.css HTTP/1.1" 200 -
+2025-08-24 18:09:40,431 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:40] "GET /static/css/enhanced.css HTTP/1.1" 200 -
+2025-08-24 18:09:40,448 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:40] "GET /static/js/scripts.js HTTP/1.1" 200 -
+2025-08-24 18:09:41,034 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:41] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-24 18:09:43,282 - __main__ - INFO - Chat message from user 1: hi
+2025-08-24 18:09:47,453 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:47] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-24 18:09:48,176 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:48] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 18:09:58,173 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:09:58] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 18:10:08,170 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 18:10:08] "GET /api/rpm-data HTTP/1.1" 200 -

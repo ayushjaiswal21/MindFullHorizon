@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask_compress import Compress
 from flask_migrate import Migrate
 from models import db, User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, get_user_wellness_trend, get_institutional_summary
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -30,6 +31,13 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Enable gzip compression and static caching for low-bandwidth optimization
+app.config['COMPRESS_ALGORITHM'] = ['gzip']
+app.config['COMPRESS_LEVEL'] = 6
+app.config['COMPRESS_MIN_SIZE'] = 500  # Only compress responses > 500 bytes
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(days=30)  # Cache static assets for 30 days
+compress = Compress(app)
+
 # Database configuration
 basedir = os.path.abspath(os.path.dirname(__file__))
 # Ensure instance folder exists
@@ -40,6 +48,14 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize database and migrations
 db.init_app(app)
 migrate = Migrate(app, db)
+
+# Light HTML caching (10 minutes) to reduce repeat downloads on slow connections
+@app.after_request
+def add_cache_headers(response):
+    content_type = response.headers.get('Content-Type', '')
+    if 'text/html' in content_type:
+        response.headers['Cache-Control'] = 'public, max-age=600'
+    return response
 
 def init_database():
     """Initialize database with sample data"""

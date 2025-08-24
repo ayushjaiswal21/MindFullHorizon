@@ -8,6 +8,7 @@ blinker==1.8.2
 Flask-SQLAlchemy==3.1.1
 SQLAlchemy==2.0.35
 Flask-Migrate==4.0.7
+Flask-Compress==1.15
 requests==2.32.3
 python-dateutil==2.9.0
 gunicorn==22.0.0
