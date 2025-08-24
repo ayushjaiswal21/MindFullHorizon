@@ -122,9 +122,9 @@
         </h3>
         <div id="goals-container" class="space-y-2">
             {% for goal in goals %}
-            <div class="flex items-center p-2 rounded-lg {% if goal.completed %}bg-green-100{% else %}bg-gray-100{% endif %}">
-                <input type="checkbox" data-goal-id="{{ goal.id }}" class="form-checkbox h-5 w-5 text-blue-600" {% if goal.completed %}checked{% endif %}>
-                <span class="ml-3 text-gray-700">{{ goal.description }}</span>
+            <div class="flex items-center p-2 rounded-lg {% if goal.status == 'completed' %}bg-green-100{% else %}bg-gray-100{% endif %}">
+                <input type="checkbox" data-goal-id="{{ goal.id }}" class="form-checkbox h-5 w-5 text-blue-600" {% if goal.status == 'completed' %}checked{% endif %}>
+                <span class="ml-3 text-gray-700">{{ goal.title }}</span>
             </div>
             {% endfor %}
         </div>
@@ -156,27 +156,15 @@
                 <i class="fas fa-tasks text-orange-500 mr-2"></i>Recommended Actions
             </h3>
             <div class="space-y-3">
-                <div class="flex items-start p-3 bg-orange-50 rounded-lg">
-                    <i class="fas fa-exclamation-triangle text-orange-500 mr-3 mt-1"></i>
+                {% for action in ai_recommendations.actions %}
+                <div class="flex items-start p-3 {% if action.priority == 'high' %}bg-red-50{% elif action.priority == 'medium' %}bg-orange-50{% else %}bg-blue-50{% endif %} rounded-lg">
+                    <i class="fas {% if action.priority == 'high' %}fa-exclamation-triangle text-red-500{% elif action.priority == 'medium' %}fa-lightbulb text-orange-500{% else %}fa-info-circle text-blue-500{% endif %} mr-3 mt-1"></i>
                     <div>
-                        <div class="font-medium text-orange-800">Schedule Check-in</div>
-                        <div class="text-sm text-orange-700">Your last provider session was 2 weeks ago</div>
+                        <div class="font-medium {% if action.priority == 'high' %}text-red-800{% elif action.priority == 'medium' %}text-orange-800{% else %}text-blue-800{% endif %}">{{ action.title }}</div>
+                        <div class="text-sm {% if action.priority == 'high' %}text-red-700{% elif action.priority == 'medium' %}text-orange-700{% else %}text-blue-700{% endif %}">{{ action.desc }}</div>
                     </div>
                 </div>
-                <div class="flex items-start p-3 bg-blue-50 rounded-lg">
-                    <i class="fas fa-book text-blue-500 mr-3 mt-1"></i>
-                    <div>
-                        <div class="font-medium text-blue-800">Complete Assessment</div>
-                        <div class="text-sm text-blue-700">Monthly GAD-7 and PHQ-9 due in 3 days</div>
-                    </div>
-                </div>
-                <div class="flex items-start p-3 bg-green-50 rounded-lg">
-                    <i class="fas fa-heart text-green-500 mr-3 mt-1"></i>
-                    <div>
-                        <div class="font-medium text-green-800">Self-Care Reminder</div>
-                        <div class="text-sm text-green-700">Try the new breathing exercise in your toolkit</div>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
 
@@ -185,18 +173,14 @@
                 <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>Insights & Tips
             </h3>
             <div class="space-y-4">
-                <div class="p-3 bg-yellow-50 rounded-lg">
-                    <div class="font-medium text-yellow-800 mb-2">Sleep Pattern Insight</div>
-                    <div class="text-sm text-yellow-700">Your mood scores are 15% higher on days when you sleep 7+ hours. Consider maintaining a consistent bedtime routine.</div>
+                {% set insight_colors = ['yellow', 'purple', 'indigo', 'green', 'blue'] %}
+                {% for insight in ai_recommendations.insights %}
+                {% set color = insight_colors[loop.index0 % insight_colors|length] %}
+                <div class="p-3 bg-{{ color }}-50 rounded-lg">
+                    <div class="font-medium text-{{ color }}-800 mb-2">{{ insight.title }}</div>
+                    <div class="text-sm text-{{ color }}-700">{{ insight.desc }}</div>
                 </div>
-                <div class="p-3 bg-purple-50 rounded-lg">
-                    <div class="font-medium text-purple-800 mb-2">Activity Correlation</div>
-                    <div class="text-sm text-purple-700">Physical activity days correlate with improved mood. Try to maintain your current exercise routine.</div>
-                </div>
-                <div class="p-3 bg-indigo-50 rounded-lg">
-                    <div class="font-medium text-indigo-800 mb-2">Social Connection</div>
-                    <div class="text-sm text-indigo-700">Your wellness scores improve after social interactions. Consider scheduling regular social activities.</div>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
