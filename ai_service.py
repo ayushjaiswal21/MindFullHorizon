@@ -363,5 +363,127 @@ Please provide your analysis in this exact JSON format:
             "needs_followup": True
         }
 
+    def generate_progress_recommendations(self, user_data: Dict) -> Dict:
+        """Generate personalized mental health recommendations with minimal token usage"""
+        
+        # Extract key metrics
+        gad7_score = user_data.get('gad7_score', 'N/A')
+        phq9_score = user_data.get('phq9_score', 'N/A')
+        wellness_score = user_data.get('wellness_score', 'N/A')
+        goals_completed = user_data.get('completed_goals', 0)
+        total_goals = user_data.get('total_goals', 0)
+        last_assessment = user_data.get('days_since_assessment', 'N/A')
+        
+        messages = [
+            {
+                "role": "system",
+                "content": "Mental health assistant. Generate 3 brief action recommendations and 3 insights for college student wellness. Focus on anxiety, depression, and goal achievement. Be concise."
+            },
+            {
+                "role": "user", 
+                "content": f"Student data: GAD-7:{gad7_score}, PHQ-9:{phq9_score}, Wellness:{wellness_score}, Goals:{goals_completed}/{total_goals}, Last assessment:{last_assessment} days. Generate JSON: {{\"actions\":[{{\"title\":\"...\",\"desc\":\"...\",\"priority\":\"high/medium/low\"}}], \"insights\":[{{\"title\":\"...\",\"desc\":\"...\"}}]}}"
+            }
+        ]
+        
+        response = self._make_request(messages, model=self.models['fast'], temperature=0.3, max_tokens=400)
+        
+        if response:
+            try:
+                return json.loads(response)
+            except json.JSONDecodeError:
+                pass
+        
+        # Fallback recommendations
+        return self._fallback_progress_recommendations(user_data)
+    
+    def _fallback_progress_recommendations(self, user_data: Dict) -> Dict:
+        """Fallback recommendations when AI is unavailable"""
+        gad7 = user_data.get('gad7_score')
+        phq9 = user_data.get('phq9_score')
+        goals_completed = user_data.get('completed_goals', 0)
+        
+        actions = [
+            {"title": "Complete Assessment", "desc": "Take your monthly mental health assessment", "priority": "high"},
+            {"title": "Practice Mindfulness", "desc": "Try 10 minutes of daily meditation", "priority": "medium"},
+            {"title": "Set New Goals", "desc": "Add achievable wellness goals", "priority": "medium"}
+        ]
+        
+        insights = [
+            {"title": "Goal Progress", "desc": f"You've completed {goals_completed} goals. Keep building momentum!"},
+            {"title": "Regular Check-ins", "desc": "Consistent self-assessment helps track your mental health journey"},
+            {"title": "Small Steps", "desc": "Focus on small, daily habits that support your wellbeing"}
+        ]
+        
+        if gad7 and isinstance(gad7, (int, float)) and gad7 > 10:
+            actions[0] = {"title": "Anxiety Support", "desc": "Consider speaking with a counselor about anxiety management", "priority": "high"}
+            insights[0] = {"title": "Anxiety Management", "desc": "Your recent scores suggest focusing on stress reduction techniques"}
+        
+        return {"actions": actions, "insights": insights}
+
+    def generate_assessment_insights(self, assessment_type: str, score: int, responses: dict) -> dict:
+        """Generate AI-powered insights for assessment results.
+        
+        Args:
+            assessment_type: Type of assessment (e.g., 'GAD-7', 'PHQ-9')
+            score: Assessment score
+            responses: Dictionary of question-answer pairs
+            
+        Returns:
+            dict: Contains 'summary', 'recommendations', and 'resources' keys
+        """
+        # Use the clinical model for more sensitive analysis
+        model = self.models['clinical']
+        
+        # Build the prompt
+        prompt = f"""You are a compassionate mental health assistant. Provide a concise (2-3 sentences) analysis of these {assessment_type} results:
+        
+        Score: {score}
+        
+        Responses: {json.dumps(responses, indent=2)}
+        
+        Focus on:
+        1. Brief interpretation of score
+        2. One key insight
+        3. One actionable suggestion
+        
+        Keep it supportive and non-alarming. Use simple language."""
+        
+        messages = [
+            {"role": "system", "content": "You are a supportive mental health professional. Provide clear, empathetic, and actionable insights about assessment results."},
+            {"role": "user", "content": prompt}
+        ]
+        
+        try:
+            response = self._make_request(messages, model=model, temperature=0.5, max_tokens=200)
+            if response:
+                return {
+                    'summary': response.strip(),
+                    'recommendations': [
+                        'Consider discussing these results with a healthcare provider',
+                        'Practice self-care activities that help you relax'
+                    ],
+                    'resources': [
+                        'Mindfulness exercises',
+                        'Breathing techniques',
+                        'Local mental health support groups'
+                    ]
+                }
+        except Exception as e:
+            print(f"Error generating assessment insights: {e}")
+        
+        # Fallback response if AI call fails
+        return {
+            'summary': f"Your {assessment_type} score is {score}. This suggests you may benefit from additional support.",
+            'recommendations': [
+                'Consider discussing these results with a healthcare provider',
+                'Practice self-care activities that help you relax'
+            ],
+            'resources': [
+                'Mindfulness exercises',
+                'Breathing techniques',
+                'Local mental health support groups'
+            ]
+        }
+
 # Global AI service instance
 ai_service = CloseRouterAIService()
