@@ -4650,3 +4650,22 @@ jinja2.exceptions.UndefinedError: 'None' has no attribute 'name'
 2025-08-24 17:19:45,176 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:19:45] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
 2025-08-24 17:20:04,056 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:20:04] "POST /api/save-assessment HTTP/1.1" 200 -
 2025-08-24 17:20:16,226 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:20:16] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:25:52,826 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 17:25:52,826 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 17:25:57,295 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:25:57] "GET / HTTP/1.1" 200 -
+2025-08-24 17:25:57,926 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:25:57] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:25:57,948 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:25:57] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:25:57,966 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:25:57] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:25:57,972 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:25:57] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-24 17:26:01,816 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:01] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 17:26:01,849 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:01] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:26:01,866 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:01] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:26:01,866 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:01] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:26:01,947 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:01] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:26:03,782 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:03] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 17:26:03,893 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:03] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:26:03,895 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:03] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:26:03,902 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:26:03] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
