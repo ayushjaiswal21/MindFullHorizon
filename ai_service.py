@@ -8,29 +8,28 @@ from dotenv import load_dotenv
 # Ensure environment variables are loaded even if the app didn't load them yet
 load_dotenv()
 
-class OpenRouterAIService:
-    """Service class for integrating with OpenRouter API"""
+class CloseRouterAIService:
+    """Service class for integrating with CloseRouter API supporting 150+ AI models"""
     
-    def __init__(self, api_key: str = None, base_url: str = "https://openrouter.ai/api/v1"):
+    def __init__(self, api_key: str = None, base_url: str = "https://api.closerouter.com/v1"):
         self.base_url = base_url
-        # Support both OPENROUTER_API_KEY and legacy CLOSEROUTER_API_KEY, preferring OpenRouter
-        self.api_key = api_key or os.getenv('OPENROUTER_API_KEY')
+        self.api_key = api_key or os.getenv('CLOSEROUTER_API_KEY')
         # Kill-switch: disable external calls unless explicitly enabled
         # Set AI_EXTERNAL_CALLS_ENABLED=true in .env to allow outbound requests
         self.external_enabled = (os.getenv('AI_EXTERNAL_CALLS_ENABLED', 'false').lower() == 'true')
         
-        # Model configurations for different use cases (restricted to allowed list; OpenRouter ID prefixes)
+        # Model configurations for different use cases
         self.models = {
-            'primary': 'anthropic/claude-3-haiku-20240307',        # Allowed
-            'fast': 'google/gemini-flash-1.5',                     # Allowed
-            'reasoning': 'anthropic/claude-3-sonnet-20240229',     # Allowed
-            'clinical': 'anthropic/claude-3-haiku-20240307',       # Allowed
-            'analytics': 'google/gemini-flash-1.5'                 # Allowed
+            # All model IDs below are from the user's approved access list
+            'primary': 'claude-3-5-sonnet-20241022',        # Anthropic Claude 3.5 Sonnet (Oct 22, 2024)
+            'fast': 'gpt-4o-mini-2024-07-18',               # OpenAI GPT-4o Mini (2024-07-18)
+            'reasoning': 'o3-mini-2025-01-31',              # OpenAI o3 Mini (2025-01-31)
+            'clinical': 'claude-3-5-sonnet-20241022',       # Use same as primary for clinical docs
+            'analytics': 'gpt-4o-2024-11-20'                # OpenAI GPT-4o (2024-11-20)
         }
         
-        # Only require API key when external calls are enabled
-        if self.external_enabled and not self.api_key:
-            raise ValueError("Critical: No OpenRouter/CloseRouter API key found. Set OPENROUTER_API_KEY (preferred) or CLOSEROUTER_API_KEY, or disable external calls via AI_EXTERNAL_CALLS_ENABLED=false.")
+        if not self.api_key:
+            print("Warning: No CloseRouter API key found. Set CLOSEROUTER_API_KEY environment variable.")
     
     def _make_request(self, messages: List[Dict], model: str = None, temperature: float = 0.7, max_tokens: int = 4000) -> Optional[str]:
         """Make a request to the OpenRouter API (OpenAI-compatible Chat Completions)."""
