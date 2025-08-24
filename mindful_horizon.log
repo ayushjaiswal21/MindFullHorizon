@@ -3798,3 +3798,847 @@ NameError: name 'json' is not defined
 2025-08-24 16:12:47,784 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:12:47] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
 2025-08-24 16:12:47,803 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:12:47] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
 2025-08-24 16:12:47,803 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:12:47] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:17:02,977 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 16:17:02,977 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 16:17:07,092 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:07] "GET / HTTP/1.1" 200 -
+2025-08-24 16:17:07,708 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:07] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:07,778 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:07] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:07,791 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:07] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:17:07,800 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:07] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-24 16:17:13,486 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:13] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:17:13,583 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:13] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:13,586 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:13] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:13,589 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:13] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:17:17,565 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:17] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:17:20,596 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:20] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 16:17:20,661 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:20] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:20,663 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:20] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:20,666 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:20] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:17:20,725 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:20] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:17:22,850 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:22] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:17:22,929 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:22] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:22,959 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:22] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:22,963 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:22] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:17:30,729 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:30] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:17:34,039 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:34] "GET /progress HTTP/1.1" 200 -
+2025-08-24 16:17:34,126 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:34] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:34,157 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:34] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:34,159 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:34] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:17:48,499 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:48] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:17:50,729 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:50] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:17:50,948 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:50] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:17:51,045 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:51] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:51,084 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:51] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:17:51,089 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:17:51] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:19:34,950 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:19:34] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:19:35,032 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:19:35] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:19:35,065 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:19:35] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:19:35,072 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:19:35] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:19:38,526 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:19:38] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:19:38,616 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:19:38] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:19:38,647 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:19:38] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:19:38,650 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:19:38] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:19:51,976 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 16:19:51,976 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 16:20:04,814 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:20:04] "GET / HTTP/1.1" 200 -
+2025-08-24 16:20:05,600 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:20:05] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:20:05,607 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:20:05] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-24 16:20:05,608 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:20:05] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:20:05,608 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:20:05] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:20:32,952 - __main__ - ERROR - Error saving assessment for user 3: 'ai_insights' is an invalid keyword argument for Assessment
+2025-08-24 16:20:32,958 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:20:32] "[35m[1mPOST /api/save-assessment HTTP/1.1[0m" 500 -
+2025-08-24 16:20:35,302 - __main__ - ERROR - Error saving assessment for user 3: 'ai_insights' is an invalid keyword argument for Assessment
+2025-08-24 16:20:35,306 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:20:35] "[35m[1mPOST /api/save-assessment HTTP/1.1[0m" 500 -
+2025-08-24 16:21:58,665 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 16:21:58,666 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 16:22:01,690 - app - ERROR - Exception on /assessment [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+sqlite3.OperationalError: no such column: assessments.ai_insights
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 110, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 120, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 461, in assessment
+    assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\query.py", line 2704, in all
+    return self._iter().all()  # type: ignore
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2365, in execute
+    return self._execute_internal(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: assessments.ai_insights
+[SQL: SELECT assessments.id AS assessments_id, assessments.user_id AS assessments_user_id, assessments.assessment_type AS assessments_assessment_type, assessments.score AS assessments_score, assessments.responses AS assessments_responses, assessments.ai_insights AS assessments_ai_insights, assessments.created_at AS assessments_created_at 
+FROM assessments 
+WHERE assessments.user_id = ? ORDER BY assessments.created_at DESC]
+[parameters: (3,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-24 16:22:01,938 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:22:01] "[35m[1mGET /assessment HTTP/1.1[0m" 500 -
+2025-08-24 16:22:03,265 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:22:03] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:22:04,913 - app - ERROR - Exception on /assessment [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+sqlite3.OperationalError: no such column: assessments.ai_insights
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 110, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 120, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 461, in assessment
+    assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\query.py", line 2704, in all
+    return self._iter().all()  # type: ignore
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2365, in execute
+    return self._execute_internal(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: assessments.ai_insights
+[SQL: SELECT assessments.id AS assessments_id, assessments.user_id AS assessments_user_id, assessments.assessment_type AS assessments_assessment_type, assessments.score AS assessments_score, assessments.responses AS assessments_responses, assessments.ai_insights AS assessments_ai_insights, assessments.created_at AS assessments_created_at 
+FROM assessments 
+WHERE assessments.user_id = ? ORDER BY assessments.created_at DESC]
+[parameters: (3,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-24 16:22:04,927 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:22:04] "[35m[1mGET /assessment HTTP/1.1[0m" 500 -
+2025-08-24 16:25:50,272 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 16:25:50,273 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 16:25:50,399 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:25:50] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:25:50,727 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:25:50] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:25:52,739 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:25:52] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 16:25:53,208 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:25:53] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:25:53,249 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:25:53] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:25:53,259 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:25:53] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:25:53,379 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:25:53] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:25:55,026 - app - ERROR - Exception on /assessment [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+sqlite3.OperationalError: no such column: assessments.ai_insights
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 113, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 123, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 464, in assessment
+    assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\query.py", line 2704, in all
+    return self._iter().all()  # type: ignore
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\query.py", line 2857, in _iter
+    result: Union[ScalarResult[_T], Result[_T]] = self.session.execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2365, in execute
+    return self._execute_internal(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\session.py", line 2251, in _execute_internal
+    result: Result[Any] = compile_state_cls.orm_execute_statement(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\orm\context.py", line 306, in orm_execute_statement
+    result = conn.execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1419, in execute
+    return meth(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\sql\elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1641, in _execute_clauseelement
+    ret = self._execute_context(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1846, in _execute_context
+    return self._exec_single_context(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1986, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 2355, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\base.py", line 1967, in _exec_single_context
+    self.dialect.do_execute(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\sqlalchemy\engine\default.py", line 951, in do_execute
+    cursor.execute(statement, parameters)
+sqlalchemy.exc.OperationalError: (sqlite3.OperationalError) no such column: assessments.ai_insights
+[SQL: SELECT assessments.id AS assessments_id, assessments.user_id AS assessments_user_id, assessments.assessment_type AS assessments_assessment_type, assessments.score AS assessments_score, assessments.responses AS assessments_responses, assessments.ai_insights AS assessments_ai_insights, assessments.created_at AS assessments_created_at 
+FROM assessments 
+WHERE assessments.user_id = ? ORDER BY assessments.created_at DESC]
+[parameters: (3,)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-08-24 16:25:55,084 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:25:55] "[35m[1mGET /assessment HTTP/1.1[0m" 500 -
+2025-08-24 16:26:04,192 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:26:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:26:14,171 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:26:14] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:26:24,176 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:26:24] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:27:13,676 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 16:27:13,678 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 16:27:25,776 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:27:25] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:27:26,906 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 16:27:26,906 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 16:27:27,108 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:27:27] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 16:27:27,613 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:27:27] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:27:27,676 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:27:27] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:27:27,679 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:27:27] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:27:27,778 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:27:27] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:27:32,807 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:27:32] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:27:32,876 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:27:32] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:27:32,913 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:27:32] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:27:32,916 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:27:32] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:28:09,176 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:28:09] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-24 16:28:14,536 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:28:14] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:28:14,638 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:28:14] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:28:14,667 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:28:14] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:28:14,672 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:28:14] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:28:52,690 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:28:52] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-24 16:28:55,861 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:28:55] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:28:55,973 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:28:55] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:28:55,976 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:28:55] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:28:55,981 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:28:55] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:29:11,009 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:11] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-24 16:29:11,072 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:11] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:29:11,190 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:11] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:29:11,192 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:11] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:29:11,198 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:11] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:29:12,297 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:12] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-24 16:29:14,939 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:14] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:29:17,790 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:17] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:29:19,727 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:19] "GET /progress HTTP/1.1" 200 -
+2025-08-24 16:29:19,825 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:19] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:29:19,840 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:19] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:29:19,851 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:19] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:29:38,817 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:38] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:29:41,716 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:41] "GET /goals HTTP/1.1" 200 -
+2025-08-24 16:29:41,799 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:41] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:29:41,831 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:41] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:29:41,832 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:41] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:29:41,922 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:41] "GET /api/goals HTTP/1.1" 200 -
+2025-08-24 16:29:46,449 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:46] "GET /chat HTTP/1.1" 200 -
+2025-08-24 16:29:46,540 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:46] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:29:46,563 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:46] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:29:46,566 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:46] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:29:50,911 - __main__ - INFO - Chat message from user 3: hi
+2025-08-24 16:29:53,790 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:53] "POST /api/chat-message HTTP/1.1" 200 -
+2025-08-24 16:29:58,295 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:29:58] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:30:00,979 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:30:00] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:30:01,078 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:30:01] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:30:01,113 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:30:01] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:30:01,119 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:30:01] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:34:03,539 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 16:34:03,540 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 16:34:15,872 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:15] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:34:15,967 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:15] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:15,996 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:15] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:15,997 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:15] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:34:19,123 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:19] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:34:19,207 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:19] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:19,229 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:19] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:19,238 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:19] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:34:19,331 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:19] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:34:19,465 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:19] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:19,467 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:19] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:34:19,471 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:19] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:20,818 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:20] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:34:24,492 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:24] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 16:34:24,569 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:24] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:24,602 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:24] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:24,605 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:24] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:34:24,721 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:24] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:34:29,376 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:29] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:34:29,462 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:29] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:29,476 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:29] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:29,480 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:29] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:34:43,354 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:43] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:34:44,715 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:44] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:34:47,243 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:47] "GET /progress HTTP/1.1" 200 -
+2025-08-24 16:34:47,345 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:47] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:47,370 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:47] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:47,374 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:47] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:34:51,152 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:51] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-24 16:34:51,237 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:51] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:51,269 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:51] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:34:51,272 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:51] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:34:51,466 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:51] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 16:34:51,582 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:34:51] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 16:35:00,359 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:35:00] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:35:01,920 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:35:01] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:35:02,405 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:35:02] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:35:02,433 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:35:02] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:35:02,439 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:35:02] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:36:34,110 - app - ERROR - Exception on /profile [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 115, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 1122, in profile
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1304, in render
+    self.environment.handle_exception()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\base.html", line 57, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 12, in block 'content'
+    src="https://via.placeholder.com/150/800080/FFFFFF?text={{ user.name[0] | upper }}"
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 468, in getitem
+    return obj[argument]
+jinja2.exceptions.UndefinedError: 'None' has no attribute 'name'
+2025-08-24 16:36:34,130 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:34] "[35m[1mGET /profile HTTP/1.1[0m" 500 -
+2025-08-24 16:36:36,777 - app - ERROR - Exception on /profile [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 115, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 1122, in profile
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1304, in render
+    self.environment.handle_exception()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\base.html", line 57, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 12, in block 'content'
+    src="https://via.placeholder.com/150/800080/FFFFFF?text={{ user.name[0] | upper }}"
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 468, in getitem
+    return obj[argument]
+jinja2.exceptions.UndefinedError: 'None' has no attribute 'name'
+2025-08-24 16:36:36,785 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:36] "[35m[1mGET /profile HTTP/1.1[0m" 500 -
+2025-08-24 16:36:43,102 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:43] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:36:44,720 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:44] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:36:45,234 - app - ERROR - Exception on /profile [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 115, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 1122, in profile
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1304, in render
+    self.environment.handle_exception()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\base.html", line 57, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 12, in block 'content'
+    src="https://via.placeholder.com/150/800080/FFFFFF?text={{ user.name[0] | upper }}"
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 468, in getitem
+    return obj[argument]
+jinja2.exceptions.UndefinedError: 'None' has no attribute 'name'
+2025-08-24 16:36:45,249 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:45] "[35m[1mGET /profile HTTP/1.1[0m" 500 -
+2025-08-24 16:36:49,750 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:49] "GET /goals HTTP/1.1" 200 -
+2025-08-24 16:36:49,840 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:49] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:36:49,868 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:49] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:36:49,868 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:49] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:36:49,946 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:49] "GET /api/goals HTTP/1.1" 200 -
+2025-08-24 16:36:52,735 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:52] "GET /chat HTTP/1.1" 200 -
+2025-08-24 16:36:52,829 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:52] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:36:52,851 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:52] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:36:52,857 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:52] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:36:54,603 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:54] "GET /telehealth HTTP/1.1" 200 -
+2025-08-24 16:36:54,710 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:54] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:36:54,738 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:54] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:36:54,740 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:54] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:36:55,468 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:55] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:36:56,514 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:56] "GET /schedule HTTP/1.1" 200 -
+2025-08-24 16:36:56,597 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:56] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:36:56,626 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:56] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:36:56,626 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:36:56] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:37:03,522 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:03] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-24 16:37:03,621 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:03] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:37:03,652 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:03] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:37:03,654 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:03] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:37:03,745 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:03] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 16:37:03,790 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:03] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 16:37:06,400 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:06] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:37:08,617 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:08] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-24 16:37:08,702 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:08] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:37:08,733 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:08] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:37:08,739 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:08] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:37:08,827 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:08] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 16:37:08,872 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:08] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 16:37:29,741 - __main__ - INFO - AJAX digital detox submission for user 3
+2025-08-24 16:37:29,790 - __main__ - INFO - AJAX digital detox submission for user 3
+2025-08-24 16:37:31,250 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
+2025-08-24 16:37:31,312 - __main__ - INFO - Starting AI analysis for user 3 via AJAX
+2025-08-24 16:37:34,497 - __main__ - INFO - AI analysis completed in 3.18 seconds
+2025-08-24 16:37:34,499 - __main__ - INFO - AI analysis completed in 3.25 seconds
+2025-08-24 16:37:34,562 - __main__ - INFO - Digital detox data saved successfully for user 3
+2025-08-24 16:37:34,563 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:34] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-24 16:37:34,600 - __main__ - INFO - Digital detox data saved successfully for user 3
+2025-08-24 16:37:34,604 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:34] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-24 16:37:35,190 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:35] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 16:37:47,416 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:47] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:37:54,251 - app - ERROR - Exception on /profile [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 115, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 1122, in profile
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1304, in render
+    self.environment.handle_exception()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\base.html", line 57, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 12, in block 'content'
+    src="https://via.placeholder.com/150/800080/FFFFFF?text={{ user.name[0] | upper }}"
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 468, in getitem
+    return obj[argument]
+jinja2.exceptions.UndefinedError: 'None' has no attribute 'name'
+2025-08-24 16:37:54,259 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:54] "[35m[1mGET /profile HTTP/1.1[0m" 500 -
+2025-08-24 16:37:55,295 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:37:55] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:38:04,728 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:38:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:38:15,172 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:38:15] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:38:25,182 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:38:25] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:38:35,175 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:38:35] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:38:45,180 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:38:45] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:38:55,189 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:38:55] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:39:05,174 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:05] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:39:13,558 - app - ERROR - Exception on /profile [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 115, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 1122, in profile
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1304, in render
+    self.environment.handle_exception()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\base.html", line 57, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 12, in block 'content'
+    src="https://via.placeholder.com/150/800080/FFFFFF?text={{ user.name[0] | upper }}"
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 468, in getitem
+    return obj[argument]
+jinja2.exceptions.UndefinedError: 'None' has no attribute 'name'
+2025-08-24 16:39:13,569 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:13] "[35m[1mGET /profile HTTP/1.1[0m" 500 -
+2025-08-24 16:39:14,716 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:14] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:39:15,494 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:15] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 16:39:15,595 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:15] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:39:15,597 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:15] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:39:15,598 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:15] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:39:15,714 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:15] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:39:17,260 - app - ERROR - Exception on /profile [GET]
+Traceback (most recent call last):
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 1473, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 882, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 880, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\app.py", line 865, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 115, in decorated_function
+    return f(*args, **kwargs)
+  File "C:\Users\dell\Desktop\MindFullHorizon\app.py", line 1122, in profile
+    return render_template(
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 1304, in render
+    self.environment.handle_exception()
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 939, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\base.html", line 57, in top-level template code
+    {% block content %}{% endblock %}
+  File "C:\Users\dell\Desktop\MindFullHorizon\templates\profile.html", line 12, in block 'content'
+    src="https://via.placeholder.com/150/800080/FFFFFF?text={{ user.name[0] | upper }}"
+  File "C:\Users\dell\AppData\Local\Programs\Python\Python310\lib\site-packages\jinja2\environment.py", line 468, in getitem
+    return obj[argument]
+jinja2.exceptions.UndefinedError: 'None' has no attribute 'name'
+2025-08-24 16:39:17,269 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:17] "[35m[1mGET /profile HTTP/1.1[0m" 500 -
+2025-08-24 16:39:37,473 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:37] "GET / HTTP/1.1" 200 -
+2025-08-24 16:39:37,871 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:37] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:39:37,877 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:37] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-24 16:39:37,878 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:37] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:39:37,892 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:37] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:39:38,222 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:38] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-24 16:39:40,314 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:40] "GET /login HTTP/1.1" 200 -
+2025-08-24 16:39:40,384 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:40] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:39:40,415 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:40] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:39:40,417 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:40] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:39:44,851 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:44] "POST /login HTTP/1.1" 200 -
+2025-08-24 16:39:44,966 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:44] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:39:44,978 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:44] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:39:44,982 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:39:44] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:40:04,699 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:04] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-08-24 16:40:04,713 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:04] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 16:40:04,752 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:04] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:40:04,771 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:04] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:40:04,772 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:04] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:40:04,823 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:04] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:40:10,850 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:10] "GET /profile HTTP/1.1" 200 -
+2025-08-24 16:40:10,925 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:10] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:40:10,958 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:10] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:40:10,962 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:10] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:40:14,835 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:14] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:40:19,451 - app - ERROR - Error in progress route: '>=' not supported between instances of 'str' and 'int'
+2025-08-24 16:40:19,458 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:19] "GET /progress HTTP/1.1" 200 -
+2025-08-24 16:40:21,238 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:21] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 16:40:21,334 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:21] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:40:21,340 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:21] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:40:21,344 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:21] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:40:21,422 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:21] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:40:23,133 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:23] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-24 16:40:23,212 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:23] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:40:23,241 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:23] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:40:23,243 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:23] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:40:23,359 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:23] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 16:40:23,476 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:23] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 16:40:29,422 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:29] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:40:29,503 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:29] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:40:29,534 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:29] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:40:29,534 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:29] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:40:38,106 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:38] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:40:42,174 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:42] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:40:52,178 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:40:52] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:41:02,163 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:41:02] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:41:12,183 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:41:12] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:41:22,184 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:41:22] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:41:32,172 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:41:32] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:42:29,183 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:42:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:43:29,172 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:43:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:44:29,178 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:44:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:45:29,164 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:45:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:45:58,891 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:45:58] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:46:02,169 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:46:02] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:46:12,168 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:46:12] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:46:22,175 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:46:22] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:46:32,169 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:46:32] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:46:42,179 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:46:42] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:46:52,163 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:46:52] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:47:29,175 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:47:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:47:56,269 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:47:56] "GET /login HTTP/1.1" 200 -
+2025-08-24 16:47:56,549 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:47:56] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-08-24 16:47:56,563 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:47:56] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 16:47:59,019 - app - ERROR - Error in progress route: '>=' not supported between instances of 'str' and 'int'
+2025-08-24 16:47:59,025 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:47:59] "GET /progress HTTP/1.1" 200 -
+2025-08-24 16:48:23,156 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 16:48:23,156 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 16:48:29,177 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:48:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:49:29,175 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:49:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:50:29,178 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:50:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:51:29,176 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:51:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:51:51,903 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:51:51] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:52:02,184 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:52:02] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:52:12,178 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:52:12] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:52:22,180 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:52:22] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:52:32,172 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:52:32] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:52:42,171 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:52:42] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:52:52,187 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:52:52] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:53:05,979 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:53:05] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:53:12,172 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:53:12] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:53:22,176 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:53:22] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:53:32,178 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:53:32] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:53:42,178 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:53:42] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:53:52,166 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:53:52] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:54:02,184 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:54:02] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:54:29,176 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:54:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:55:27,080 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 16:55:27,080 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 16:55:29,179 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:55:29] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:56:01,181 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:01] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:56:02,357 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:02] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 16:56:02,602 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:02] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:56:02,604 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:02] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:56:02,604 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:02] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:56:02,666 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:02] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:56:04,445 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:04] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 16:56:04,517 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:04] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:56:04,545 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:04] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:56:04,549 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:04] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:56:12,676 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:12] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:56:13,983 - app - ERROR - Error in progress route: '>=' not supported between instances of 'str' and 'int'
+2025-08-24 16:56:14,007 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:14] "GET /progress HTTP/1.1" 200 -
+2025-08-24 16:56:16,286 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:16] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-24 16:56:16,326 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:16] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 16:56:16,342 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:16] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 16:56:16,345 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:16] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 16:56:16,392 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:16] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 16:56:16,448 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:16] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 16:56:22,702 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:22] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 16:56:33,179 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 16:56:33] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:03:59,371 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 17:03:59,372 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 17:04:02,631 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:02] "GET / HTTP/1.1" 200 -
+2025-08-24 17:04:03,202 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:03] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:04:03,258 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:03] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:04:03,262 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:03] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-24 17:04:03,272 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:03] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:04:07,182 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:07] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 17:04:07,229 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:07] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:04:07,248 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:07] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:04:07,250 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:07] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:04:07,359 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:07] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:04:09,417 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:09] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 17:04:09,495 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:09] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:04:09,527 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:09] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:04:09,527 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:04:09] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:05:12,451 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:12] "[32mGET /logout HTTP/1.1[0m" 302 -
+2025-08-24 17:05:12,472 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:12] "GET / HTTP/1.1" 200 -
+2025-08-24 17:05:12,594 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:12] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-24 17:05:12,595 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:12] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:12,599 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:12] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:05:12,603 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:12] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:13,851 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:13] "GET /login HTTP/1.1" 200 -
+2025-08-24 17:05:13,952 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:13] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:13,963 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:13] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:13,968 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:13] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:05:27,193 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:27] "POST /login HTTP/1.1" 200 -
+2025-08-24 17:05:27,277 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:27] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:27,303 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:27] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:27,308 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:27] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:05:29,813 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:29] "GET /login HTTP/1.1" 200 -
+2025-08-24 17:05:34,576 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:34] "POST /login HTTP/1.1" 200 -
+2025-08-24 17:05:34,602 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:34] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:34,613 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:34] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:34,613 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:34] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:05:35,997 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:35] "GET /login HTTP/1.1" 200 -
+2025-08-24 17:05:38,503 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:38] "GET /login HTTP/1.1" 200 -
+2025-08-24 17:05:38,582 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:38] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:38,586 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:38] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:38,588 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:38] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:05:43,417 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:43] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-08-24 17:05:43,430 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:43] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 17:05:43,463 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:43] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:43,476 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:43] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:43,476 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:43] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:05:43,508 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:43] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:05:45,422 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:45] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 17:05:45,508 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:45] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:05:45,531 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:45] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:05:45,536 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:05:45] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:06:05,698 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:06:05] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-24 17:06:05,763 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:06:05] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 17:06:05,866 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:06:05] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:06:05,869 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:06:05] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:06:05,872 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:06:05] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:06:33,628 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:06:33] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-24 17:06:33,699 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:06:33] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 17:06:33,792 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:06:33] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:06:33,813 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:06:33] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:06:33,817 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:06:33] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:07:31,144 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:31] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:07:32,740 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:32] "GET /progress HTTP/1.1" 200 -
+2025-08-24 17:07:32,831 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:32] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:07:32,869 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:32] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:07:32,872 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:32] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:07:41,441 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:41] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:07:42,810 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:42] "GET /digital-detox HTTP/1.1" 200 -
+2025-08-24 17:07:42,898 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:42] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:07:42,936 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:42] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:07:42,940 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:42] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:07:43,011 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:43] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 17:07:43,067 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:43] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 17:07:55,786 - __main__ - INFO - AJAX digital detox submission for user 1
+2025-08-24 17:07:55,830 - __main__ - INFO - AJAX digital detox submission for user 1
+2025-08-24 17:07:57,303 - __main__ - INFO - Starting AI analysis for user 1 via AJAX
+2025-08-24 17:07:57,306 - __main__ - INFO - AI analysis completed in 0.00 seconds
+2025-08-24 17:07:57,355 - __main__ - INFO - Starting AI analysis for user 1 via AJAX
+2025-08-24 17:07:57,358 - __main__ - INFO - AI analysis completed in 0.00 seconds
+2025-08-24 17:07:57,365 - __main__ - INFO - Digital detox data saved successfully for user 1
+2025-08-24 17:07:57,366 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:57] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-24 17:07:57,419 - __main__ - INFO - Digital detox data saved successfully for user 1
+2025-08-24 17:07:57,423 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:57] "POST /api/submit-digital-detox HTTP/1.1" 200 -
+2025-08-24 17:07:57,990 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:07:57] "GET /api/digital-detox-data HTTP/1.1" 200 -
+2025-08-24 17:14:17,913 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 17:14:17,913 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 17:14:29,200 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:29] "GET / HTTP/1.1" 200 -
+2025-08-24 17:14:29,756 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:29] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:14:29,782 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:29] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:14:29,793 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:29] "[36mGET /static/images/hero_image.png HTTP/1.1[0m" 304 -
+2025-08-24 17:14:29,803 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:29] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:14:34,608 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:34] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-24 17:14:34,662 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:34] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:14:34,663 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:34] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:14:34,666 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:34] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:14:34,748 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:34] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:14:38,413 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:38] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 17:14:38,495 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:38] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:14:38,527 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:38] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:14:38,532 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:14:38] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:16:59,375 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.138.249.110:5000
+2025-08-24 17:16:59,376 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-24 17:17:05,427 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:05] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 17:17:05,751 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:05] "GET /static/css/styles.css HTTP/1.1" 200 -
+2025-08-24 17:17:05,768 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:05] "GET /static/js/scripts.js HTTP/1.1" 200 -
+2025-08-24 17:17:05,771 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:05] "GET /static/css/enhanced.css HTTP/1.1" 200 -
+2025-08-24 17:17:06,492 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:06] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-24 17:17:27,427 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:27] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-24 17:17:41,302 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:41] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 17:17:41,399 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:41] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:17:41,407 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:41] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:17:41,410 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:41] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:18:08,013 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:18:08] "POST /api/save-assessment HTTP/1.1" 200 -
