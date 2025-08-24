@@ -67,11 +67,11 @@ class CloseRouterAIService:
                 result = response.json()
                 return result['choices'][0]['message']['content'].strip()
             else:
-                print(f"OpenRouter API error: {response.status_code} - {response.text}")
+                print(f"CloseRouter API error: {response.status_code} - {response.text}")
                 return None
                 
         except Exception as e:
-            print(f"Error connecting to OpenRouter: {e}")
+            print(f"Error connecting to CloseRouter: {e}")
             return None
     
     def analyze_digital_wellness(self, screen_time: float, academic_score: int, 
@@ -496,4 +496,4 @@ Please provide your analysis in this exact JSON format:
         }
 
 # Global AI service instance
-ai_service = OpenRouterAIService()
+ai_service = CloseRouterAIService()
