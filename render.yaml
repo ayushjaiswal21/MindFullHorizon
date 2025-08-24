@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: mindful-horizon
+    env: python
+    plan: free
+    buildCommand: ./build.sh
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.14
+      - key: FLASK_ENV
+        value: production
+      - key: AI_EXTERNAL_CALLS_ENABLED
+        value: "false"   # set to "true" in Render if enabling live AI
+      - key: CLOSEROUTER_API_KEY
+        sync: false      # set this securely in Render Dashboard if AI is enabled
+      - key: SKIP_DB_INIT
+        value: "true"    # skip local SQLite init on Render (recommended)
+    healthCheckPath: /
+    autoDeploy: true
