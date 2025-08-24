@@ -4642,3 +4642,11 @@ jinja2.exceptions.UndefinedError: 'None' has no attribute 'name'
 2025-08-24 17:17:41,407 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:41] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
 2025-08-24 17:17:41,410 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:17:41] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
 2025-08-24 17:18:08,013 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:18:08] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-24 17:19:38,882 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:19:38] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:19:44,760 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:19:44] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-24 17:19:45,069 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:19:45] "GET /assessment HTTP/1.1" 200 -
+2025-08-24 17:19:45,174 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:19:45] "[36mGET /static/css/styles.css HTTP/1.1[0m" 304 -
+2025-08-24 17:19:45,176 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:19:45] "[36mGET /static/css/enhanced.css HTTP/1.1[0m" 304 -
+2025-08-24 17:19:45,176 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:19:45] "[36mGET /static/js/scripts.js HTTP/1.1[0m" 304 -
+2025-08-24 17:20:04,056 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:20:04] "POST /api/save-assessment HTTP/1.1" 200 -
+2025-08-24 17:20:16,226 - werkzeug - INFO - 127.0.0.1 - - [24/Aug/2025 17:20:16] "GET /api/rpm-data HTTP/1.1" 200 -
