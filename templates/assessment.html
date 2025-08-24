@@ -119,13 +119,62 @@
             </table>
         </div>
         
-        <div class="mt-4 p-4 bg-blue-50 rounded-lg">
-            <h4 class="font-semibold text-gray-800 mb-2">
-                <i class="fas fa-lightbulb text-blue-500 mr-2"></i>AI Insights (Coming Soon)
+        <!-- AI Insights Section -->
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                <i class="fas fa-robot text-blue-500 mr-2"></i> AI-Powered Insights
             </h4>
-            <p class="text-sm text-gray-600">
-                Our AI will analyze your assessment patterns and provide personalized recommendations for improving your mental well-being.
-            </p>
+            
+            <!-- Loading State (hidden by default; shown when generating insights) -->
+            <div id="aiInsightsLoading" class="hidden text-center py-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <p class="text-gray-600">Analyzing your responses...</p>
+            </div>
+            
+            <!-- Coming Soon Message (Hidden by default) -->
+            <div id="aiInsightsComingSoon" class="hidden p-4 bg-blue-50 rounded-lg">
+                <p class="text-sm text-gray-600">
+                    AI insights are being generated. Please wait...
+                </p>
+            </div>
+            
+            <!-- AI Insights Content -->
+            <div id="aiInsightsContent" class="hidden space-y-4">
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                        <i class="fas fa-comment-alt text-blue-500 mr-2"></i> Summary
+                    </h5>
+                    <p id="aiSummary" class="text-gray-700"></p>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Recommendations
+                    </h5>
+                    <ul id="aiRecommendations" class="space-y-2">
+                        <li class="flex items-start">
+                            <div class="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="animate-pulse bg-gray-200 h-4 w-2/3 rounded"></div>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-4 rounded-lg border border-gray-200">
+                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+                        <i class="fas fa-book-open text-green-500 mr-2"></i> Resources
+                    </h5>
+                    <ul id="aiResources" class="space-y-2">
+                        <li class="flex items-start">
+                            <div class="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
+                        </li>
+                        <li class="flex items-start">
+                            <div class="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -292,9 +341,18 @@ async function completeAssessment() {
         alert('Please select an answer before completing the assessment.');
         return;
     }
-    
+
     const totalScore = assessmentAnswers.reduce((sum, score) => sum + score, 0);
     const maxScore = currentAssessment.questions.length * 3;
+
+    // Show loading state for AI insights
+    const aiInsightsSection = document.getElementById('aiInsightsContent');
+    const aiLoadingSection = document.getElementById('aiInsightsLoading');
+    const aiComingSoonSection = document.getElementById('aiInsightsComingSoon');
+
+    if (aiInsightsSection) aiInsightsSection.classList.add('hidden');
+    if (aiLoadingSection) aiLoadingSection.classList.remove('hidden');
+    if (aiComingSoonSection) aiComingSoonSection.classList.add('hidden');
 
     // Save assessment to backend
     try {
@@ -313,92 +371,120 @@ async function completeAssessment() {
         const data = await response.json();
         if (data.success) {
             showNotification('Assessment saved successfully!', 'success');
+            showAssessmentResults(totalScore, maxScore, data.insights);
         } else {
             showNotification(`Error saving assessment: ${data.message}`, 'error');
+            if (aiComingSoonSection) {
+                aiComingSoonSection.classList.remove('hidden');
+                aiComingSoonSection.innerHTML = '<p class="text-sm text-gray-600">We\'re having trouble generating AI insights right now. Please try again later.</p>';
+            }
+            if (aiLoadingSection) aiLoadingSection.classList.add('hidden');
         }
     } catch (error) {
         console.error('Error saving assessment:', error);
         showNotification('An error occurred while saving the assessment.', 'error');
+        if (aiComingSoonSection) {
+            aiComingSoonSection.classList.remove('hidden');
+            aiComingSoonSection.innerHTML = '<p class="text-sm text-gray-600">We\'re having trouble generating AI insights right now. Please try again later.</p>';
+        }
+        if (aiLoadingSection) aiLoadingSection.classList.add('hidden');
     }
-    
-    // Show results
-    showAssessmentResults(totalScore, maxScore);
 }
 
-function showAssessmentResults(score, maxScore) {
-    let severity, color, recommendations;
-    
-    if (currentAssessment.title.includes('GAD-7')) {
-        if (score <= 4) {
-            severity = 'Minimal';
-            color = 'green';
-            recommendations = 'Your anxiety levels appear to be minimal. Continue with healthy lifestyle practices.';
-        } else if (score <= 9) {
-            severity = 'Mild';
-            color = 'yellow';
-            recommendations = 'You may be experiencing mild anxiety. Consider stress management techniques and monitor your symptoms.';
-        } else if (score <= 14) {
-            severity = 'Moderate';
-            color = 'orange';
-            recommendations = 'Moderate anxiety detected. Consider speaking with a mental health professional for support.';
+function showAssessmentResults(score, maxScore, insights) {
+    const assessmentType = currentAssessment.type;
+    const assessmentTypeDisplay = assessmentType === 'anxiety' ? 'GAD-7' : 'PHQ-9';
+    const scoreText = `${score} out of ${maxScore}`;
+
+    // Get severity info based on score and assessment type
+    let severity, severityClass;
+
+    if (assessmentType === 'anxiety') {
+        if (score >= 15) {
+            severity = 'Severe Anxiety';
+            severityClass = 'bg-red-100 text-red-800';
+        } else if (score >= 10) {
+            severity = 'Moderate Anxiety';
+            severityClass = 'bg-orange-100 text-orange-800';
+        } else if (score >= 5) {
+            severity = 'Mild Anxiety';
+            severityClass = 'bg-yellow-100 text-yellow-800';
         } else {
-            severity = 'Severe';
-            color = 'red';
-            recommendations = 'Severe anxiety symptoms detected. We strongly recommend consulting with a mental health professional.';
+            severity = 'Minimal or None';
+            severityClass = 'bg-green-100 text-green-800';
         }
-    } else {
-        if (score <= 4) {
-            severity = 'Minimal';
-            color = 'green';
-            recommendations = 'Your depression screening shows minimal symptoms. Keep up with healthy habits.';
-        } else if (score <= 9) {
-            severity = 'Mild';
-            color = 'yellow';
-            recommendations = 'Mild depression symptoms detected. Consider lifestyle changes and monitor your mood.';
-        } else if (score <= 14) {
-            severity = 'Moderate';
-            color = 'orange';
-            recommendations = 'Moderate depression symptoms. Consider professional support and treatment options.';
+    } else if (assessmentType === 'depression') {
+        if (score >= 20) {
+            severity = 'Severe Depression';
+            severityClass = 'bg-red-100 text-red-800';
+        } else if (score >= 15) {
+            severity = 'Moderately Severe Depression';
+            severityClass = 'bg-orange-100 text-orange-800';
+        } else if (score >= 10) {
+            severity = 'Moderate Depression';
+            severityClass = 'bg-yellow-100 text-yellow-800';
+        } else if (score >= 5) {
+            severity = 'Mild Depression';
+            severityClass = 'bg-blue-100 text-blue-800';
         } else {
-            severity = 'Severe';
-            color = 'red';
-            recommendations = 'Severe depression symptoms detected. Please seek professional help immediately.';
+            severity = 'Minimal or None';
+            severityClass = 'bg-green-100 text-green-800';
         }
     }
-    
-    const content = document.getElementById('assessmentContent');
-    content.innerHTML = `
-        <div class="text-center">
-            <div class="mb-6">
-                <div class="bg-${color}-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-chart-bar text-${color}-600 text-3xl"></i>
-                </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">Assessment Complete</h3>
-                <p class="text-gray-600">Your results have been recorded and will help track your progress over time.</p>
-            </div>
-            
-            <div class="bg-gray-50 p-6 rounded-lg mb-6">
-                <div class="text-3xl font-bold text-${color}-600 mb-2">${score}/${maxScore}</div>
-                <div class="text-lg font-semibold text-gray-800 mb-2">${severity} Symptoms</div>
-                <p class="text-gray-600 text-sm">${recommendations}</p>
-            </div>
-            
-            <div class="space-y-3">
-                <button onclick="scheduleFollowUp()" class="btn-primary w-full">
-                    <i class="fas fa-calendar mr-2"></i>Schedule Follow-up
-                </button>
-                <button onclick="viewProgress()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-full w-full">
-                    <i class="fas fa-chart-line mr-2"></i>View Progress Trends
-                </button>
-                <button onclick="closeAssessment()" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-full w-full">
-                    <i class="fas fa-home mr-2"></i>Back to Dashboard
-                </button>
-            </div>
-        </div>
-    `;
-    
+
+    // Update the UI with the AI insights
+    const aiInsightsSection = document.getElementById('aiInsightsContent');
+    const aiLoadingSection = document.getElementById('aiInsightsLoading');
+    const aiComingSoonSection = document.getElementById('aiInsightsComingSoon');
+
+    if (insights) {
+        const summaryEl = document.getElementById('aiSummary');
+        const recommendationsEl = document.getElementById('aiRecommendations');
+        const resourcesEl = document.getElementById('aiResources');
+
+        if (summaryEl) {
+            summaryEl.textContent = insights.summary || 'No summary available.';
+        }
+
+        if (recommendationsEl && insights.recommendations) {
+            recommendationsEl.innerHTML = insights.recommendations
+                .map(rec => '<li class="flex items-start"><i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i><span>' + rec + '</span></li>')
+                .join('');
+        }
+
+        if (resourcesEl && insights.resources) {
+            resourcesEl.innerHTML = insights.resources
+                .map(res => '<li class="flex items-start"><i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i><span>' + res + '</span></li>')
+                .join('');
+        }
+
+        // Show the AI insights section
+        if (aiInsightsSection) aiInsightsSection.classList.remove('hidden');
+        if (aiLoadingSection) aiLoadingSection.classList.add('hidden');
+    } else {
+        // If no insights, show a message
+        if (aiComingSoonSection) {
+            aiComingSoonSection.classList.remove('hidden');
+            aiComingSoonSection.innerHTML = '<p class="text-sm text-gray-600">AI insights are being generated. Please refresh the page in a moment to see your personalized insights.</p>';
+        }
+        if (aiLoadingSection) aiLoadingSection.classList.add('hidden');
+    }
+
+    // Show the results in the assessment page
+    var resultsElement = document.getElementById('assessmentResults');
+    if (resultsElement) {
+        resultsElement.scrollIntoView({
+            behavior: 'smooth'
+        });
+    }
+
     // Hide navigation buttons
-    document.querySelector('.flex.justify-between.mt-6').style.display = 'none';
+    const navButtons = document.querySelector('.flex.justify-between.mt-6');
+    if (navButtons) {
+        navButtons.style.display = 'none';
+    }
+    // Close the modal but DO NOT reload the page; keep insights visible
+    document.getElementById('assessmentModal').classList.add('hidden')
 }
 
 function closeAssessment() {

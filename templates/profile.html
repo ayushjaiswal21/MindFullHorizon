@@ -41,9 +41,9 @@
                     <i class="fas fa-mobile-alt text-blue-500 mr-2"></i>Digital Wellness Snapshot
                 </h3>
                 <ul class="text-sm text-gray-700 space-y-1">
-                    <li><strong>Avg. Screen Time (Last 7 Days):</strong> {{ avg_screen_time_7_days }} hours</li>
-                    <li><strong>Avg. Screen Time (Last 30 Days):</strong> {{ avg_screen_time_30_days }} hours</li>
-                    <li><strong>Latest AI Score:</strong> {{ digital_detox_logs[0].ai_score if digital_detox_logs else 'N/A' }}</li>
+                    <li><strong>Avg. Screen Time (Last 7 Days):</strong> {{ '%.1f'|format(avg_screen_time_7_days) if avg_screen_time_7_days is not none else '0.0' }} hours</li>
+                    <li><strong>Avg. Screen Time (Last 30 Days):</strong> {{ '%.1f'|format(avg_screen_time_30_days) if avg_screen_time_30_days is not none else '0.0' }} hours</li>
+                    <li><strong>Latest AI Score:</strong> {{ digital_detox_logs[0].ai_score if digital_detox_logs and digital_detox_logs[0].ai_score else 'N/A' }}</li>
                 </ul>
             </div>
         </div>

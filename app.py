@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask_migrate import Migrate
 from models import db, User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, get_user_wellness_trend, get_institutional_summary
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta, date
@@ -31,14 +32,18 @@ logger = logging.getLogger(__name__)
 
 # Database configuration
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(basedir, "mindful_horizon.db")}'
+# Ensure instance folder exists
+os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(basedir, "instance", "mindful_horizon.db")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Initialize database
+# Initialize database and migrations
 db.init_app(app)
+migrate = Migrate(app, db)
 
 def init_database():
     """Initialize database with sample data"""
+    # Create all database tables
     with app.app_context():
         db.create_all()
         
@@ -459,6 +464,15 @@ def telehealth():
 def assessment():
     user_id = session['user_id']
     assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+    
+    # Convert ai_insights from JSON string to dict for the template
+    for assessment in assessments:
+        if assessment.ai_insights and isinstance(assessment.ai_insights, str):
+            try:
+                assessment.ai_insights = json.loads(assessment.ai_insights)
+            except json.JSONDecodeError:
+                assessment.ai_insights = {}
+    
     return render_template('assessment.html', user_name=session['user_name'], assessments=assessments)
 
 @app.route('/api/save-assessment', methods=['POST'])
@@ -466,23 +480,64 @@ def assessment():
 @role_required('patient')
 def api_save_assessment():
     user_id = session['user_id']
-    assessment_type = request.json.get('assessment_type')
-    score = request.json.get('score')
-    responses = request.json.get('responses')
+    data = request.json
+    
+    # Extract data from request
+    assessment_type = data.get('assessment_type')
+    score = data.get('score')
+    responses = data.get('responses', {})
+    
+    if not all([assessment_type, score is not None]):
+        return jsonify({
+            'success': False,
+            'message': 'Missing required fields: assessment_type and score are required'
+        }), 400
 
+    # Generate AI insights
+    ai_insights = {}
     try:
-        new_assessment = Assessment(
-            user_id=user_id,
+        ai_insights = ai_service.generate_assessment_insights(
             assessment_type=assessment_type,
             score=score,
             responses=responses
         )
+    except Exception as e:
+        logger.error(f"Error generating AI insights: {e}")
+        ai_insights = {
+            'summary': 'Your assessment has been recorded.',
+            'recommendations': ['Check back later for personalized insights.'],
+            'resources': []
+        }
+
+    try:
+        # Create new assessment with AI insights
+        new_assessment = Assessment(
+            user_id=user_id,
+            assessment_type=assessment_type,
+            score=score,
+            responses=responses,
+            ai_insights=json.dumps(ai_insights) if ai_insights else None  # Convert dict to JSON string
+        )
+        
         db.session.add(new_assessment)
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Assessment saved successfully!'}), 200
+        
+        return jsonify({
+            'success': True, 
+            'message': 'Assessment saved successfully!',
+            'insights': json.loads(new_assessment.ai_insights) if new_assessment.ai_insights else {}
+        }), 200
+        
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error saving assessment for user {user_id}: {e}")
+        logger.error(f"Error saving assessment for user {user_id}: {str(e)}")
+        
+        # Return the insights even if save fails
+        return jsonify({
+            'success': False,
+            'message': 'Failed to save assessment, but here are your insights.',
+            'insights': ai_insights
+        }), 500
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/progress')

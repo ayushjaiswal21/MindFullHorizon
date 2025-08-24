@@ -41,7 +41,7 @@ class Assessment(db.Model):
     assessment_type = db.Column(db.String(50), nullable=False)  # 'GAD-7', 'PHQ-9', 'mood'
     score = db.Column(db.Integer, nullable=False)
     responses = db.Column(db.JSON, nullable=True)  # Store individual question responses
-    ai_analysis = db.Column(db.Text, nullable=True)  # AI-generated insights
+    ai_insights = db.Column(db.Text, nullable=True)  # AI-generated insights (stored as JSON string)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class DigitalDetoxLog(db.Model):

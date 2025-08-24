@@ -18,7 +18,7 @@ from ai_service import ai_service
 def test_chat_responses():
     """Test various chat scenarios"""
     
-    print("🤖 Testing Optimized AI Chat Responses")
+    print("Testing Optimized AI Chat Responses")
     print("=" * 50)
     
     # Test cases
@@ -41,17 +41,17 @@ def test_chat_responses():
         try:
             result = ai_service.generate_chat_response(message, user_context)
             
-            status = "🤖 AI" if result['is_ai_powered'] else "💬 Fallback"
+            status = "AI" if result['is_ai_powered'] else "Fallback"
             print(f"   {status}: {result['response']}")
             
             if result.get('needs_followup'):
-                print("   ⚠️  Needs follow-up")
+                print("   Needs follow-up")
                 
         except Exception as e:
-            print(f"   ❌ Error: {e}")
+            print(f"   Error: {e}")
     
     # Test crisis detection
-    print(f"\n🚨 Testing Crisis Detection")
+    print(f"\nTesting Crisis Detection")
     print("-" * 30)
     
     crisis_message = "I feel hopeless and want to hurt myself"
@@ -59,10 +59,10 @@ def test_chat_responses():
     
     try:
         result = ai_service.generate_chat_response(crisis_message, user_context)
-        print(f"🚨 Crisis Response: {result['response']}")
+        print(f"Crisis Response: {result['response']}")
         print(f"   Follow-up needed: {result.get('needs_followup', False)}")
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     test_chat_responses()
