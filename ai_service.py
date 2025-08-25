@@ -2,235 +2,99 @@ import requests
 import json
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
 
-# Ensure environment variables are loaded even if the app didn't load them yet
 load_dotenv()
 
 class CloseRouterAIService:
-    """Service class for integrating with CloseRouter API supporting 150+ AI models"""
-    
+    """Service class for integrating with CloseRouter API"""
+
     def __init__(self, api_key: str = None, base_url: str = "https://api.closerouter.com/v1"):
         self.base_url = base_url
         self.api_key = api_key or os.getenv('CLOSEROUTER_API_KEY')
-        # Kill-switch: disable external calls unless explicitly enabled
-        # Set AI_EXTERNAL_CALLS_ENABLED=true in .env to allow outbound requests
-        self.external_enabled = (os.getenv('AI_EXTERNAL_CALLS_ENABLED', 'false').lower() == 'true')
-        
-        # Allowed model IDs (subset of the provided list via unified API)
-        # Prefer OpenAI family for broad availability; keep Anthropic as optional alternative.
-        # Sensible defaults from the provided model list; can be overridden via env
+        self.external_enabled = (os.getenv('AI_EXTERNAL_CALLS_ENABLED', 'true').lower() == 'true')
+
+        # Optimized model selection
         self.models = {
-            # Primary general: latest stable GPT‑4o
-            'primary': os.getenv('AI_MODEL_PRIMARY', 'gpt-4o-2024-11-20'),
-            # Fast chat: 4o Mini dated release
-            'fast': os.getenv('AI_MODEL_FAST', 'gpt-4o-mini-2024-07-18'),
-            # Compact reasoning: o3 Mini dated release
-            'reasoning': os.getenv('AI_MODEL_REASONING', 'o3-mini-2025-01-31'),
-            # Clinical notes: 4.1 Mini dated release
-            'clinical': os.getenv('AI_MODEL_CLINICAL', 'gpt-4.1-mini-2025-04-14'),
-            # Analytics/BI: 4o latest stable
-            'analytics': os.getenv('AI_MODEL_ANALYTICS', 'gpt-4o-2024-11-20')
+            'primary': os.getenv('AI_MODEL_PRIMARY', 'gpt-4o'),
+            'fast': os.getenv('AI_MODEL_FAST', 'gpt-4o-mini'),
+            'reasoning': os.getenv('AI_MODEL_REASONING', 'o3-mini'),
+            'clinical': os.getenv('AI_MODEL_CLINICAL', 'claude-3-5-sonnet-20240620'),
+            'analytics': os.getenv('AI_MODEL_ANALYTICS', 'gpt-4o')
         }
 
-        # Fallback chains per use case (only allowed models)
         self.model_fallbacks = {
-            'primary': [
-                'gpt-4o-2024-11-20',
-                'gpt-4o-2024-08-06',
-                'gpt-4o',
-                'gpt-4.5-preview-2025-02-27',
-                'gpt-4.5-preview',
-                'gpt-4-turbo-2024-04-09',
-                'gpt-4-turbo'
-            ],
-            'fast': [
-                'gpt-4o-mini-2024-07-18',
-                'gpt-4o-mini',
-                'gpt-4o-2024-11-20',
-                'gpt-4o-2024-08-06',
-                'gpt-4o',
-                'gpt-4-turbo-2024-04-09',
-                'gpt-3.5-turbo-1106',
-                'gpt-3.5-turbo'
-            ],
-            'reasoning': [
-                'o3-mini-2025-01-31',
-                'o3-mini',
-                'o1-mini-2024-09-12',
-                'o1-mini'
-            ],
-            'clinical': [
-                'gpt-4.1-mini-2025-04-14',
-                'gpt-4.1-mini',
-                'gpt-4.1-2025-04-14',
-                'gpt-4.1'
-            ],
-            'analytics': [
-                'gpt-4o-2024-11-20',
-                'gpt-4o-2024-08-06',
-                'gpt-4o'
-            ]
+            'primary': ['gpt-4o', 'gpt-4-turbo'],
+            'fast': ['gpt-4o-mini', 'gpt-3.5-turbo'],
+            'reasoning': ['o3-mini', 'gpt-4-turbo'],
+            'clinical': ['claude-3-5-sonnet-20240620', 'gpt-4.1-mini'],
+            'analytics': ['gpt-4o', 'gpt-4-turbo']
         }
-        
+
         if not self.api_key:
-            print("Warning: No CloseRouter API key found. Set CLOSEROUTER_API_KEY environment variable.")
-        
-        # Build allowed set from fallbacks and defaults
-        allowed = set()
-        for chain in self.model_fallbacks.values():
-            allowed.update(chain)
-        allowed.update(self.models.values())
-        self.allowed_models = allowed
-        
-        # Validate env-configured models are allowed; otherwise reset to nearest default
-        for key, model_id in list(self.models.items()):
-            if model_id not in self.allowed_models:
-                print(f"Configured model '{model_id}' for '{key}' is not in allowed list. Falling back to default.")
-                if key == 'primary':
-                    self.models[key] = 'gpt-4o-2024-08-06'
-                elif key == 'fast':
-                    self.models[key] = 'gpt-4o-mini-2024-07-18'
-                elif key == 'reasoning':
-                    self.models[key] = 'o3-mini-2025-01-31'
-                elif key == 'clinical':
-                    self.models[key] = 'gpt-4.1-mini'
-                elif key == 'analytics':
-                    self.models[key] = 'gpt-4o-2024-08-06'
-        # Cache for discovered models
-        self._models_cache = {"ids": set(), "fetched_at": None}
+            print("Warning: No CloseRouter API key found.")
 
-    def _list_available_models(self) -> set:
-        """Query CloseRouter for available model IDs on this account and cache them for 10 minutes."""
-        try:
-            now = datetime.utcnow()
-            if self._models_cache["fetched_at"] and (now - self._models_cache["fetched_at"]) < timedelta(minutes=10):
-                return self._models_cache["ids"]
-
-            headers = {
-                'Authorization': f'Bearer {self.api_key}',
-                'Content-Type': 'application/json'
-            }
-            resp = requests.get(f"{self.base_url}/models", headers=headers, timeout=30)
-            if resp.status_code == 200:
-                data = resp.json()
-                # Accept common shapes: {"data":[{"id":"..."}, ...]} or [{"id":"..."}, ...]
-                items = data.get("data", data)
-                ids = set()
-                if isinstance(items, list):
-                    for item in items:
-                        mid = item.get("id") if isinstance(item, dict) else None
-                        if mid:
-                            ids.add(mid)
-                self._models_cache = {"ids": ids, "fetched_at": now}
-                if not ids:
-                    print("CloseRouter /models returned empty list. Check account/model access.")
-                return ids
-            else:
-                print(f"CloseRouter /models error: {resp.status_code} - {resp.text}")
-        except Exception as e:
-            print(f"CloseRouter /models exception: {e}")
-        return set()
-    
-    def _qualify_model_id(self, model_id: str) -> str:
-        """Optionally add provider prefix if explicitly requested.
-        CloseRouter examples accept bare IDs (e.g., 'gpt-4o').
-        Set CLOSEROUTER_FORCE_PROVIDER=true to prefix with CLOSEROUTER_DEFAULT_PROVIDER (default 'openai')."""
-        if not model_id:
-            return model_id
-        force = os.getenv('CLOSEROUTER_FORCE_PROVIDER', 'false').lower() == 'true'
-        if not force:
-            return model_id
-        if "/" in model_id:
-            return model_id
-        provider = os.getenv('CLOSEROUTER_DEFAULT_PROVIDER', 'openai')
-        return f"{provider}/{model_id}"
-    
     def _make_request(self, messages: List[Dict], model: str = None, temperature: float = 0.7, max_tokens: int = 512) -> Optional[str]:
-        """Make a request to the CloseRouter API (OpenAI-compatible Chat Completions)."""
-        # Short-circuit if external calls are disabled
         if not self.external_enabled:
-            print("AI external calls are disabled (AI_EXTERNAL_CALLS_ENABLED=false). Skipping API request.")
+            print("AI external calls are disabled.")
             return None
-        
         if not self.api_key:
-            print("Error: No API key available for CloseRouter")
+            print("Error: No API key for CloseRouter.")
             return None
-            
+
         try:
             headers = {
                 'Authorization': f'Bearer {self.api_key}',
                 'Content-Type': 'application/json'
             }
 
-            selected_model = model or self.models['primary']
-            # Control fallbacks to avoid waste
-            allow_fallbacks = os.getenv('AI_ALLOW_FALLBACKS', 'false').lower() == 'true'
-            max_tries = int(os.getenv('AI_MAX_FALLBACK_TRIES', '1'))  # total candidates to try
-            use_case_key = next((k for k, v in self.models.items() if v == selected_model), 'primary')
-            full_candidates = [selected_model] + [m for m in self.model_fallbacks.get(use_case_key, []) if m != selected_model]
-            candidates = full_candidates[:max_tries] if allow_fallbacks else [selected_model]
+            selected_model = model or self.models['fast']
+            use_case_key = next((k for k, v in self.models.items() if v == selected_model), 'fast')
+            candidates = [selected_model] + [m for m in self.model_fallbacks.get(use_case_key, []) if m != selected_model]
 
-            # Filter candidates by what CloseRouter says is available
-            available = self._list_available_models()
-            if available:
-                filtered = [c for c in candidates if c in available]
-                if not filtered:
-                    print(f"No candidate models are available on this account. Candidates: {candidates}. Available: {sorted(list(available))[:10]}...")
-                    return None
-                else:
-                    candidates = filtered
-            else:
-                print("Proceeding without model filtering (couldn't fetch /models or empty).")
+            # --- Corrected API Endpoint as per Documentation ---
+            url = f"{self.base_url}/chat/completions"
 
             last_error = None
             for candidate in candidates:
-                qualified = self._qualify_model_id(candidate)
+                # --- Model is sent in the payload ---
                 payload = {
-                    "model": qualified,
+                    "model": candidate,
                     "messages": messages,
                     "stream": False,
                     "temperature": temperature,
                     "max_tokens": max_tokens
                 }
 
-                response = requests.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=headers,
-                    json=payload,
-                    timeout=60
-                )
+                response = requests.post(url, headers=headers, json=payload, timeout=60)
 
                 if response.status_code == 200:
                     result = response.json()
-                    print(f"AI model selected: {qualified} (from {candidate}), tokens cap: {max_tokens}")
+                    print(f"AI model selected: {candidate}")
                     return result['choices'][0]['message']['content'].strip()
 
-                # If model not found or 5xx, try next candidate
-                last_error = f"CloseRouter API error for {qualified}: {response.status_code} - {response.text}"
+                last_error = f"CloseRouter API error for {candidate}: {response.status_code} - {response.text}"
                 print(last_error)
-                if response.status_code in (404, 409, 422, 429, 500, 503):
-                    # If it's a record-not-found style 500 or 404, don't backoff long and move on quickly
-                    text = (response.text or '').lower()
-                    if 'record not found' in text or response.status_code in (404, 422):
-                        continue
-                    # Simple backoff on rate limits / transient errors
-                    if response.status_code in (429, 500, 503):
-                        time.sleep(0.25)
+
+                if response.status_code in [404, 429, 500, 503]:
+                    time.sleep(0.25)
                     continue
                 else:
                     break
 
-            # Exhausted candidates
             print(last_error or "CloseRouter API unknown error")
             return None
 
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             print(f"Error connecting to CloseRouter: {e}")
             return None
-    
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return None
+            
+    # --- The rest of your file remains the same ---
     def analyze_digital_wellness(self, screen_time: float, academic_score: int, 
                                social_interactions: str, historical_data: List[Dict] = None) -> Dict:
         """Analyze digital wellness data and provide insights using Claude 3.5 Sonnet"""
@@ -493,7 +357,7 @@ Please provide your analysis in this exact JSON format:
         # Build minimal context
         context = ""
         if user_context:
-            wellness = user_context.get('wellness_score', 'unknown')
+            wellness = user_context.get('wellness_.env', 'unknown')
             engagement = user_context.get('engagement_level', 'unknown')
             context = f"User wellness: {wellness}, engagement: {engagement}."
         
@@ -653,6 +517,5 @@ Please provide your analysis in this exact JSON format:
                 'Local mental health support groups'
             ]
         }
-
 # Global AI service instance
 ai_service = CloseRouterAIService()
