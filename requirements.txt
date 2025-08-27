@@ -13,3 +13,4 @@ requests==2.32.3
 python-dateutil==2.9.0
 gunicorn==22.0.0
 python-dotenv==1.0.1
+openai==1.35.13

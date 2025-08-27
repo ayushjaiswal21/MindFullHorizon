@@ -4944,3 +4944,24 @@ jinja2.exceptions.UndefinedError: 'None' has no attribute 'name'
 2025-08-25 10:56:05,778 - werkzeug - INFO - 127.0.0.1 - - [25/Aug/2025 10:56:05] "GET /progress HTTP/1.1" 200 -
 2025-08-25 10:56:17,548 - werkzeug - INFO - 127.0.0.1 - - [25/Aug/2025 10:56:17] "GET /api/rpm-data HTTP/1.1" 200 -
 2025-08-25 10:56:19,102 - werkzeug - INFO - 127.0.0.1 - - [25/Aug/2025 10:56:19] "GET /assessment HTTP/1.1" 200 -
+2025-08-27 10:24:49,917 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://10.29.120.110:5000
+2025-08-27 10:24:49,917 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-08-27 10:24:55,868 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:24:55] "GET / HTTP/1.1" 200 -
+2025-08-27 10:24:56,767 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:24:56] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-08-27 10:25:00,684 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:25:00] "GET /login HTTP/1.1" 200 -
+2025-08-27 10:25:05,753 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:25:05] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-08-27 10:25:05,823 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:25:05] "GET /patient-dashboard HTTP/1.1" 200 -
+2025-08-27 10:25:05,874 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:25:05] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-27 10:25:15,874 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:25:15] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-27 10:25:25,873 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:25:25] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-27 10:25:35,874 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:25:35] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-27 10:25:46,618 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:25:46] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-27 10:25:56,624 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:25:56] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-27 10:26:06,628 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:26:06] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-27 10:26:16,614 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:26:16] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-27 10:26:26,621 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:26:26] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-27 10:26:36,627 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:26:36] "GET /api/rpm-data HTTP/1.1" 200 -
+2025-08-27 10:27:20,638 - werkzeug - INFO - 127.0.0.1 - - [27/Aug/2025 10:27:20] "GET /api/rpm-data HTTP/1.1" 200 -

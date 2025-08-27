@@ -1,20 +1,30 @@
-import requests
 import json
 import os
 import time
 from datetime import datetime
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
+from openai import OpenAI, APIError, RateLimitError, APITimeoutError
 
 load_dotenv()
 
 class CloseRouterAIService:
-    """Service class for integrating with CloseRouter API"""
+    """Service class for integrating with CloseRouter API using the OpenAI SDK."""
 
     def __init__(self, api_key: str = None, base_url: str = "https://api.closerouter.com/v1"):
         self.base_url = base_url
         self.api_key = api_key or os.getenv('CLOSEROUTER_API_KEY')
         self.external_enabled = (os.getenv('AI_EXTERNAL_CALLS_ENABLED', 'true').lower() == 'true')
+        self.client = None
+
+        if self.api_key:
+            self.client = OpenAI(
+                base_url=self.base_url,
+                api_key=self.api_key,
+                timeout=60.0
+            )
+        else:
+            print("Warning: No CloseRouter API key found. AI service will be disabled.")
 
         # Optimized model selection
         self.models = {
@@ -33,66 +43,51 @@ class CloseRouterAIService:
             'analytics': ['gpt-4o', 'gpt-4-turbo']
         }
 
-        if not self.api_key:
-            print("Warning: No CloseRouter API key found.")
-
     def _make_request(self, messages: List[Dict], model: str = None, temperature: float = 0.7, max_tokens: int = 512) -> Optional[str]:
-        if not self.external_enabled:
-            print("AI external calls are disabled.")
-            return None
-        if not self.api_key:
-            print("Error: No API key for CloseRouter.")
+        if not self.external_enabled or not self.client:
+            print("AI external calls are disabled or client not initialized.")
             return None
 
-        try:
-            headers = {
-                'Authorization': f'Bearer {self.api_key}',
-                'Content-Type': 'application/json'
-            }
+        selected_model = model or self.models['fast']
+        use_case_key = next((k for k, v in self.models.items() if v == selected_model), 'fast')
+        candidates = [selected_model] + [m for m in self.model_fallbacks.get(use_case_key, []) if m != selected_model]
 
-            selected_model = model or self.models['fast']
-            use_case_key = next((k for k, v in self.models.items() if v == selected_model), 'fast')
-            candidates = [selected_model] + [m for m in self.model_fallbacks.get(use_case_key, []) if m != selected_model]
-
-            # --- Corrected API Endpoint as per Documentation ---
-            url = f"{self.base_url}/chat/completions"
-
-            last_error = None
-            for candidate in candidates:
-                # --- Model is sent in the payload ---
-                payload = {
-                    "model": candidate,
-                    "messages": messages,
-                    "stream": False,
-                    "temperature": temperature,
-                    "max_tokens": max_tokens
-                }
-
-                response = requests.post(url, headers=headers, json=payload, timeout=60)
-
-                if response.status_code == 200:
-                    result = response.json()
-                    print(f"AI model selected: {candidate}")
-                    return result['choices'][0]['message']['content'].strip()
-
-                last_error = f"CloseRouter API error for {candidate}: {response.status_code} - {response.text}"
+        last_error = None
+        for candidate in candidates:
+            try:
+                response = self.client.chat.completions.create(
+                    model=candidate,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    stream=False
+                )
+                print(f"AI model selected: {candidate}")
+                return response.choices[0].message.content.strip()
+            except (RateLimitError, APITimeoutError) as e:
+                last_error = f"CloseRouter API temporary error for {candidate}: {e.__class__.__name__}. Retrying..."
                 print(last_error)
-
-                if response.status_code in [404, 429, 500, 503]:
+                time.sleep(0.5)  # Wait longer for rate limit or timeout
+                continue
+            except APIError as e:
+                # Handles 500, 404, 401 etc.
+                last_error = f"CloseRouter API error for {candidate}: {e.status_code} - {e.response.text}"
+                print(last_error)
+                # Stop retrying on critical errors like invalid key or model not found
+                if e.status_code in [401, 404]:
+                    break
+                # Retry on server errors
+                if e.status_code in [500, 502, 503]:
                     time.sleep(0.25)
                     continue
-                else:
-                    break
+                break # Break for other client-side errors
+            except Exception as e:
+                last_error = f"An unexpected error occurred with {candidate}: {e}"
+                print(last_error)
+                break # Stop on unknown errors
 
-            print(last_error or "CloseRouter API unknown error")
-            return None
-
-        except requests.exceptions.RequestException as e:
-            print(f"Error connecting to CloseRouter: {e}")
-            return None
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
-            return None
+        print(last_error or "CloseRouter API unknown error after all retries.")
+        return None
             
     # --- The rest of your file remains the same ---
     def analyze_digital_wellness(self, screen_time: float, academic_score: int, 
