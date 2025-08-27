@@ -311,10 +311,10 @@ function initializeRealTimeFeatures() {
 
 function startRPMUpdates() {
     // Update RPM data every 10 seconds
-    rpmUpdateInterval = setInterval(updateRPMData, 10000);
+    // rpmUpdateInterval = setInterval(updateRPMData, 10000); // Disabled to prevent excessive API calls
     
     // Initial update
-    updateRPMData();
+    // updateRPMData(); // Also disabling the initial call on page load
 }
 
 function updateRPMData() {
