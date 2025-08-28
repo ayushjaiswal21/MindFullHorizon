@@ -13,7 +13,7 @@
             </div>
             <div class="text-right">
                 <p class="text-sm text-gray-500">Report Generated</p>
-                <p class="text-lg font-semibold text-gray-800">{{ moment().format('MMMM DD, YYYY') if moment else datetime.now().strftime('%B %d, %Y') }}</p>
+                <p class="text-lg font-semibold text-gray-800">{{ datetime.now().strftime('%B %d, %Y') }}</p>
             </div>
         </div>
     </div>
@@ -135,17 +135,17 @@
             <div class="bg-red-50 p-4 rounded-lg text-center">
                 <p class="text-sm text-gray-600 mb-1">Latest Screen Time</p>
                 <p class="text-2xl font-bold text-red-600">{{ latest_log.screen_time_hours }}h</p>
-                <p class="text-xs text-gray-500 mt-1">{{ latest_log.date.strftime('%b %d') }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ latest_log.date }}</p>
             </div>
             <div class="bg-blue-50 p-4 rounded-lg text-center">
                 <p class="text-sm text-gray-600 mb-1">Academic Score</p>
                 <p class="text-2xl font-bold text-blue-600">{{ latest_log.academic_score }}%</p>
-                <p class="text-xs text-gray-500 mt-1">{{ latest_log.date.strftime('%b %d') }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ latest_log.date }}</p>
             </div>
             <div class="bg-green-50 p-4 rounded-lg text-center">
                 <p class="text-sm text-gray-600 mb-1">Social Level</p>
                 <p class="text-2xl font-bold text-green-600">{{ latest_log.social_interactions.title() }}</p>
-                <p class="text-xs text-gray-500 mt-1">{{ latest_log.date.strftime('%b %d') }}</p>
+                <p class="text-xs text-gray-500 mt-1">{{ latest_log.date }}</p>
             </div>
         </div>
         {% else %}
@@ -179,7 +179,7 @@
                     {% for assessment in wellness_trend.assessments %}
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ assessment.created_at.strftime('%b %d, %Y') }}
+                            {{ assessment.created_at }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {{ assessment.assessment_type }}

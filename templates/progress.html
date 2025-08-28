@@ -121,12 +121,47 @@
             <i class="fas fa-target text-red-500 mr-2"></i>Mental Health Goals
         </h3>
         <div id="goals-container" class="space-y-2">
-            {% for goal in goals %}
-            <div class="flex items-center p-2 rounded-lg {% if goal.status == 'completed' %}bg-green-100{% else %}bg-gray-100{% endif %}">
-                <input type="checkbox" data-goal-id="{{ goal.id }}" class="form-checkbox h-5 w-5 text-blue-600" {% if goal.status == 'completed' %}checked{% endif %}>
-                <span class="ml-3 text-gray-700">{{ goal.title }}</span>
-            </div>
-            {% endfor %}
+            {% if goals %}
+                {% for goal in goals %}
+                <div class="flex items-center justify-between p-3 rounded-lg {% if goal.status == 'completed' %}bg-green-100{% else %}bg-gray-100{% endif %} hover:shadow-md transition-shadow">
+                    <div class="flex items-center">
+                        <input type="checkbox" data-goal-id="{{ goal.id }}" class="goal-checkbox form-checkbox h-5 w-5 text-blue-600" {% if goal.status == 'completed' %}checked{% endif %}>
+                        <div class="ml-3">
+                            <span class="text-gray-800 font-medium">{{ goal.title }}</span>
+                            {% if goal.description %}
+                            <p class="text-sm text-gray-600">{{ goal.description }}</p>
+                            {% endif %}
+                            {% if goal.target_value %}
+                            <div class="text-xs text-gray-500 mt-1">
+                                Progress: {{ goal.current_value }}{{ goal.unit if goal.unit else '' }} / {{ goal.target_value }}{{ goal.unit if goal.unit else '' }} 
+                                ({{ "%.0f"|format(goal.progress_percentage) }}%)
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-1 text-xs rounded-full 
+                            {% if goal.priority == 'high' %}bg-red-100 text-red-800
+                            {% elif goal.priority == 'medium' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-green-100 text-green-800{% endif %}">
+                            {{ goal.priority }}
+                        </span>
+                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                            {{ goal.category.replace('_', ' ') }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-bullseye text-4xl mb-3"></i>
+                    <p class="text-lg mb-2">No goals yet</p>
+                    <p class="text-sm mb-4">Start by creating your first mental health goal!</p>
+                    <a href="{{ url_for('goals') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                        <i class="fas fa-plus mr-2"></i>Create Goal
+                    </a>
+                </div>
+            {% endif %}
         </div>
         <div class="mt-4">
             <form id="add-goal-form" class="flex items-center">
@@ -487,9 +522,102 @@ function drawDataLine(ctx, padding, width, height, data, minY, yRange, color) {
     ctx.stroke();
 }
 
+// Add goal completion functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle goal checkbox changes
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('goal-checkbox')) {
+            const goalId = e.target.getAttribute('data-goal-id');
+            const isCompleted = e.target.checked;
+            
+            updateGoalStatus(goalId, isCompleted);
+        }
+    });
+    
+    // Handle add goal form submission
+    const addGoalForm = document.getElementById('add-goal-form');
+    if (addGoalForm) {
+        addGoalForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const description = document.getElementById('new-goal-description').value.trim();
+            if (description) {
+                addNewGoal(description);
+            }
+        });
+    }
+});
+
+function updateGoalStatus(goalId, isCompleted) {
+    fetch(`/api/goals/${goalId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            completed: isCompleted
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Goal updated successfully!', 'success');
+            // Update the goal container background
+            const goalContainer = document.querySelector(`input[data-goal-id="${goalId}"]`).closest('div');
+            if (isCompleted) {
+                goalContainer.classList.remove('bg-gray-100');
+                goalContainer.classList.add('bg-green-100');
+            } else {
+                goalContainer.classList.remove('bg-green-100');
+                goalContainer.classList.add('bg-gray-100');
+            }
+        } else {
+            showNotification(data.message || 'Failed to update goal', 'error');
+            // Revert checkbox state
+            document.querySelector(`input[data-goal-id="${goalId}"]`).checked = !isCompleted;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error updating goal', 'error');
+        // Revert checkbox state
+        document.querySelector(`input[data-goal-id="${goalId}"]`).checked = !isCompleted;
+    });
+}
+
+function addNewGoal(description) {
+    fetch('/api/goals', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            title: description,
+            category: 'mental_health',
+            priority: 'medium'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message || 'Goal added successfully!', 'success');
+            document.getElementById('new-goal-description').value = '';
+            // Reload the page to show the new goal
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            showNotification(data.message || 'Failed to add goal', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error adding goal', 'error');
+    });
+}
+
 function setNewGoal() {
-    // This would typically open a modal or redirect to a goal-setting page
-    showNotification('Goal setting feature coming soon!', 'info');
+    // Redirect to goals management page
+    window.location.href = '/goals';
 }
 
 function showNotification(message, type) {

@@ -21,6 +21,7 @@
                 <div class="bg-blue-50 p-3 rounded-lg">
                     <span class="text-sm text-blue-700">⏱️ Takes 3-5 minutes</span>
                 </div>
+                <button class="mt-3 btn-primary w-full">Start Assessment</button>
             </div>
         </div>
 
@@ -34,6 +35,7 @@
                 <div class="bg-purple-50 p-3 rounded-lg">
                     <span class="text-sm text-purple-700">⏱️ Takes 5-7 minutes</span>
                 </div>
+                <button class="mt-3 btn-primary w-full">Start Assessment</button>
             </div>
         </div>
     </div>
@@ -104,7 +106,7 @@
                                 <span class="px-2 py-1 rounded-full text-xs font-medium bg-{{ severity_info.color }}-100 text-{{ severity_info.color }}-800">{{ severity_info.severity }}</span>
                             </td>
                             <td class="px-4 py-3 text-sm">
-                                <button class="text-blue-600 hover:text-blue-800 mr-2" onclick="viewAssessmentDetails({{ assessment.id }})">
+                                <button class="text-blue-600 hover:text-blue-800 mr-2" onclick="viewAssessmentDetails('{{ assessment.id }}')">
                                     <i class="fas fa-eye"></i> View
                                 </button>
                             </td>
@@ -371,7 +373,12 @@ async function completeAssessment() {
         const data = await response.json();
         if (data.success) {
             showNotification('Assessment saved successfully!', 'success');
-            showAssessmentResults(totalScore, maxScore, data.insights);
+            // Close modal after successful save
+            setTimeout(() => {
+                closeAssessment();
+                // Reload page to show updated assessment history
+                location.reload();
+            }, 1500);
         } else {
             showNotification(`Error saving assessment: ${data.message}`, 'error');
             if (aiComingSoonSection) {
@@ -562,41 +569,6 @@ function showNotification(message, type) {
     alert(message); // Fallback for immediate feedback
 }
 
-// Helper function to determine severity info for history table
-function get_severity_info(assessment_type, score) {
-    let severity, color;
-    if (assessment_type.includes('GAD-7')) {
-        if (score <= 4) { severity = 'Minimal'; color = 'green'; }
-        else if (score <= 9) { severity = 'Mild'; color = 'yellow'; }
-        else if (score <= 14) { severity = 'Moderate'; color = 'orange'; }
-        else { severity = 'Severe'; color = 'red'; }
-    } else if (assessment_type.includes('PHQ-9')) {
-        if (score <= 4) { severity = 'Minimal'; color = 'green'; }
-        else if (score <= 9) { severity = 'Mild'; color = 'yellow'; }
-        else if (score <= 14) { severity = 'Moderate'; color = 'orange'; }
-        else { severity = 'Severe'; color = 'red'; }
-    } else if (assessment_type.includes('Daily Mood')) {
-        if (score >= 4) { severity = 'Positive'; color = 'green'; }
-        else if (score >= 3) { severity = 'Neutral'; color = 'yellow'; }
-        else { severity = 'Negative'; color = 'red'; }
-    } else {
-        severity = 'N/A'; color = 'gray';
-    }
-    return { severity: severity, color: color };
-}
-
-// Make get_severity_info available in Jinja2 context
-// This requires a custom filter or context processor in Flask, 
-// but for direct JS usage, we can define it here and call it from Jinja if needed.
-// For now, we'll assume Jinja can call it directly or we'll pass it from Flask.
-// Given the current setup, it's better to calculate severity in Flask and pass it.
-// However, for the purpose of fixing the HTML, I'll define it here for completeness.
-
-// This part is a bit tricky. Jinja2 cannot directly call JavaScript functions.
-// The `get_severity_info` function needs to be available in the Flask context.
-// I will add a custom filter in app.py for this.
-// For now, I'll keep the JS function as a reference for how it would work client-side.
-
 // Function to view assessment details (placeholder for now)
 function viewAssessmentDetails(assessmentId) {
     alert(`Viewing details for assessment ID: ${assessmentId}`);
@@ -604,16 +576,5 @@ function viewAssessmentDetails(assessmentId) {
 }
 
 </script>
-
-<style>
-.mood-option:hover {
-    transform: scale(1.05);
-    transition: transform 0.2s;
-}
-
-.mood-option.selected {
-    background-color: #dbeafe;
-    border: 2px solid #3b82f6;
-}
-</style>
 {% endblock %}
+

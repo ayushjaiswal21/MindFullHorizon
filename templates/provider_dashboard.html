@@ -72,7 +72,6 @@
                     {% for patient in caseload %}
                     <tr class="hover:bg-gray-50">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ patient.name }}</td>
-                        <td class="px-4 py-3 text-sm text-gray-700">{{ patient.age }}</td>
                         <td class="px-4 py-3 text-sm">
                             <span class="px-2 py-1 rounded-full text-xs font-medium
                                 {% if patient.risk_level == 'High' %}bg-red-100 text-red-800
