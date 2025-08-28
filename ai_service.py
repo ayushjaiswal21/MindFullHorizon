@@ -17,14 +17,19 @@ class CloseRouterAIService:
         self.external_enabled = (os.getenv('AI_EXTERNAL_CALLS_ENABLED', 'true').lower() == 'true')
         self.client = None
 
-        if self.api_key:
-            self.client = OpenAI(
-                base_url=self.base_url,
-                api_key=self.api_key,
-                timeout=60.0
-            )
+        if self.api_key and self.external_enabled:
+            try:
+                self.client = OpenAI(
+                    base_url=self.base_url,
+                    api_key=self.api_key,
+                    timeout=60.0
+                )
+            except Exception as e:
+                print(f"Warning: Failed to initialize AI client: {e}")
+                self.client = None
+                self.external_enabled = False
         else:
-            print("Warning: No CloseRouter API key found. AI service will be disabled.")
+            print("Warning: AI service disabled - no API key or external calls disabled.")
 
         # Optimized model selection
         self.models = {
@@ -512,5 +517,32 @@ Please provide your analysis in this exact JSON format:
                 'Local mental health support groups'
             ]
         }
-# Global AI service instance
-ai_service = CloseRouterAIService()
+# Global AI service instance - initialize with error handling for deployment
+try:
+    ai_service = CloseRouterAIService()
+except Exception as e:
+    print(f"Warning: AI service initialization failed: {e}")
+    # Create a minimal fallback service
+    class FallbackAIService:
+        def __init__(self):
+            self.external_enabled = False
+            self.client = None
+        
+        def analyze_assessment(self, *args, **kwargs):
+            return {
+                'score': 'No AI analysis available',
+                'detailed_analysis': 'AI service is currently unavailable.',
+                'action_items': ['Continue monitoring symptoms'],
+                'suggestion': 'Please consult with your healthcare provider.'
+            }
+        
+        def generate_clinical_note(self, *args, **kwargs):
+            return "AI documentation service is currently unavailable."
+        
+        def analyze_digital_wellness(self, *args, **kwargs):
+            return {
+                'ai_score': 'Unavailable',
+                'recommendations': ['Continue logging your digital wellness data']
+            }
+    
+    ai_service = FallbackAIService()
