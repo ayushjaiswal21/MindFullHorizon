@@ -866,3 +866,53 @@ function drawLineChart(ctx, canvas, xLabels, yData, label, color) {
     ctx.restore();
 }
 
+
+// Breathing Exercise Visualizer
+let breathingInterval;
+
+function startBreathing(type) {
+    clearInterval(breathingInterval);
+
+    const visualizer = document.getElementById('breathing-visualizer');
+    const circle = document.getElementById('breathing-circle');
+    const instruction = document.getElementById('breathing-instruction');
+
+    if (!visualizer || !circle || !instruction) {
+        console.error('Breathing visualizer elements not found.');
+        return;
+    }
+
+    const animations = {
+        box: [
+            { instruction: 'Breathe In (4s)', duration: 4000, scale: 1.5 },
+            { instruction: 'Hold (4s)', duration: 4000, scale: 1.5 },
+            { instruction: 'Breathe Out (4s)', duration: 4000, scale: 1 },
+            { instruction: 'Hold (4s)', duration: 4000, scale: 1 },
+        ],
+        '478': [
+            { instruction: 'Breathe In (4s)', duration: 4000, scale: 1.5 },
+            { instruction: 'Hold (7s)', duration: 7000, scale: 1.5 },
+            { instruction: 'Breathe Out (8s)', duration: 8000, scale: 1 },
+        ],
+    };
+
+    const sequence = animations[type];
+    let currentStep = 0;
+
+    function runStep() {
+        const step = sequence[currentStep];
+        instruction.textContent = step.instruction;
+        
+        circle.style.transitionDuration = `${step.duration}ms`;
+        circle.style.transform = `scale(${step.scale})`;
+        
+        breathingInterval = setTimeout(() => {
+            currentStep = (currentStep + 1) % sequence.length;
+            runStep();
+        }, step.duration);
+    }
+
+    clearTimeout(breathingInterval);
+    runStep();
+}
+

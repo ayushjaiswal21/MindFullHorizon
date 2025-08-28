@@ -1,18 +1,17 @@
+import json
+import logging
+import os
+from datetime import datetime, timedelta, date
+from functools import wraps
+
+from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_compress import Compress
 from flask_migrate import Migrate
-from models import db, User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, get_user_wellness_trend, get_institutional_summary
-from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta, date
-from dateutil.relativedelta import relativedelta
-from functools import wraps
-import random
-import logging
-import json
-import os
-import time
+
 from ai_service import ai_service
-from dotenv import load_dotenv
+from database import db
+from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, get_user_wellness_trend, get_institutional_summary
 
 # Load environment variables from .env file
 load_dotenv()
@@ -30,6 +29,7 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+logger.info("--- SCRIPT START: app.py is being executed ---")
 
 # Enable gzip compression and static caching for low-bandwidth optimization
 app.config['COMPRESS_ALGORITHM'] = ['gzip']
@@ -57,15 +57,12 @@ def add_cache_headers(response):
         response.headers['Cache-Control'] = 'public, max-age=600'
     return response
 
-def init_database():
+def init_database(app_instance):
     """Initialize database with sample data"""
-    # Create all database tables
-    with app.app_context():
+    with app_instance.app_context():
         db.create_all()
         
-        # Check if users already exist
         if User.query.first() is None:
-            # Create sample users
             patient = User(
                 email='patient@example.com',
                 name='John Doe',
@@ -86,7 +83,6 @@ def init_database():
             db.session.add(provider)
             db.session.commit()
             
-            # Create sample gamification data
             gamification = Gamification(
                 user_id=patient.id,
                 points=1250,
@@ -95,7 +91,6 @@ def init_database():
                 last_activity=date.today()
             )
             
-            # Create sample RPM data
             rpm_data = RPMData(
                 user_id=patient.id,
                 date=date.today(),
@@ -105,7 +100,6 @@ def init_database():
                 mood_score=8
             )
             
-            # Create sample digital detox data
             for i in range(7):
                 detox_log = DigitalDetoxLog(
                     user_id=patient.id,
@@ -121,7 +115,7 @@ def init_database():
             db.session.commit()
 
 # Initialize database on startup
-init_database()
+# init_database()
 
 def login_required(f):
     @wraps(f)
@@ -229,7 +223,7 @@ def signup():
             flash('Registration successful! Please login with your credentials.', 'success')
             return redirect(url_for('login'))
             
-        except Exception as e:
+        except Exception:
             db.session.rollback()
             flash('Registration failed. Please try again.', 'error')
             return render_template('signup.html')
@@ -251,9 +245,10 @@ def patient_dashboard():
     # Get user data from database
     gamification = Gamification.query.filter_by(user_id=user_id).first()
     rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.desc()).first()
+    print(f"gamification: {gamification}")
+    print(f"rpm_data: {rpm_data}")
 
     # Get appointments
-    today = date.today()
     all_appointments = Appointment.query.filter_by(user_id=user_id).order_by(Appointment.date.asc(), Appointment.time.asc()).all()
 
     upcoming_appointments = []
@@ -316,9 +311,9 @@ def provider_dashboard():
         # Determine risk level based on AI score and screen time
         risk_level = 'Low'
         if latest_detox:
-            if latest_detox.screen_time_hours > 8 or latest_detox.ai_score == 'Needs Improvement':
+            if latest_detox.screen_time_hours > 8 or (latest_detox.ai_score and latest_detox.ai_score == 'Needs Improvement'):
                 risk_level = 'High'
-            elif latest_detox.screen_time_hours > 6 or latest_detox.ai_score == 'Good':
+            elif latest_detox.screen_time_hours > 6 or (latest_detox.ai_score and latest_detox.ai_score == 'Good'):
                 risk_level = 'Medium'
         
         caseload_data.append({
@@ -332,7 +327,7 @@ def provider_dashboard():
         })
     
     # Get institutional analytics
-    institutional_data = get_institutional_summary(institution)
+    institutional_data = get_institutional_summary(institution, db)
     
     # Enhanced BI data with real calculations
     bi_data = {
@@ -439,40 +434,376 @@ def ai_documentation():
     
     return render_template('ai_documentation.html', user_name=session['user_name'])
 
-def generate_clinical_note(transcript):
-    """Simulate AI-powered clinical note generation"""
-    return f"""
-CLINICAL NOTE - Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}
+@app.route('/medication', methods=['GET', 'POST'])
+@login_required
+@role_required('patient')
+def medication():
+    user_id = session['user_id']
+    
+    if request.method == 'POST':
+        name = request.form.get('name')
+        dosage = request.form.get('dosage')
+        frequency = request.form.get('frequency')
+        time_of_day = request.form.get('time_of_day')
 
-PATIENT PRESENTATION:
-Based on the session transcript, the patient presented with concerns related to their mental health status.
+        if not name or not dosage or not frequency:
+            flash('Medication name, dosage, and frequency are required.', 'error')
+        else:
+            new_medication = Medication(
+                user_id=user_id,
+                name=name,
+                dosage=dosage,
+                frequency=frequency,
+                time_of_day=time_of_day
+            )
+            db.session.add(new_medication)
+            db.session.commit()
+            flash(f'{name} has been added to your tracker.', 'success')
+        return redirect(url_for('medication'))
 
-KEY OBSERVATIONS:
-- Patient engagement level: High
-- Emotional state: Stable with some areas of concern
-- Treatment compliance: Good
+    # Fetch all active medications for the user
+    medications = Medication.query.filter_by(user_id=user_id, is_active=True).all()
+    
+    # Get today's medication logs
+    today_start = datetime.combine(date.today(), datetime.min.time())
+    today_end = datetime.combine(date.today(), datetime.max.time())
+    
+    todays_logs = MedicationLog.query.filter(
+        MedicationLog.user_id == user_id,
+        MedicationLog.taken_at >= today_start,
+        MedicationLog.taken_at <= today_end
+    ).all()
+    
+    # Create a set of medication IDs that have been logged today
+    logged_med_ids = {log.medication_id for log in todays_logs}
+    
+    today = date.today()
+    return render_template('medication.html', 
+                         user_name=session['user_name'], 
+                         medications=medications,
+                         logged_med_ids=logged_med_ids,
+                         moment=datetime,
+                         today=today)
 
-ASSESSMENT:
-The patient demonstrates good insight into their condition and shows willingness to engage in therapeutic interventions.
+@app.route('/log-medication', methods=['POST'])
+@login_required
+@role_required('patient')
+def log_medication():
+    user_id = session['user_id']
+    medication_id = request.form.get('medication_id')
+    
+    if medication_id:
+        # Check if already logged today
+        today_start = datetime.combine(date.today(), datetime.min.time())
+        existing_log = MedicationLog.query.filter(
+            MedicationLog.medication_id == medication_id,
+            MedicationLog.user_id == user_id,
+            MedicationLog.taken_at >= today_start
+        ).first()
 
-PLAN:
-1. Continue current therapeutic approach
-2. Monitor progress in next session
-3. Consider additional resources if needed
+        if not existing_log:
+            new_log = MedicationLog(user_id=user_id, medication_id=medication_id)
+            db.session.add(new_log)
+            db.session.commit()
+            flash('Medication logged successfully!', 'success')
+        else:
+            flash('Medication already logged for today.', 'info')
+            
+    return redirect(url_for('medication'))
 
-SESSION SUMMARY:
-{transcript[:200]}{'...' if len(transcript) > 200 else ''}
+@app.route('/breathing', methods=['GET', 'POST'])
+@login_required
+@role_required('patient')
+def breathing():
+    user_id = session['user_id']
 
-Next appointment recommended within 1-2 weeks.
+    if request.method == 'POST':
+        exercise_name = request.form.get('exercise_name')
+        duration_minutes = request.form.get('duration_minutes')
 
-Dr. {session.get('user_name', 'Provider')}
-Licensed Mental Health Professional
-"""
+        if not exercise_name or not duration_minutes:
+            flash('Exercise name and duration are required.', 'error')
+        else:
+            try:
+                new_log = BreathingExerciseLog(
+                    user_id=user_id,
+                    exercise_name=exercise_name,
+                    duration_minutes=int(duration_minutes),
+                    created_at=datetime.utcnow()
+                )
+                db.session.add(new_log)
+                db.session.commit()
+                flash(f'Your {exercise_name} session has been logged!', 'success')
+            except ValueError:
+                flash('Invalid duration. Please enter a number.', 'error')
+        return redirect(url_for('breathing'))
+
+    # Fetch recent breathing logs for the user
+    recent_logs = BreathingExerciseLog.query.filter_by(user_id=user_id).order_by(BreathingExerciseLog.created_at.desc()).limit(10).all()
+    
+    return render_template('breathing.html', 
+                         user_name=session['user_name'],
+                         recent_logs=recent_logs)
+
+@app.route('/yoga', methods=['GET', 'POST'])
+@login_required
+@role_required('patient')
+def yoga():
+    user_id = session['user_id']
+
+    if request.method == 'POST':
+        session_name = request.form.get('session_name')
+        duration_minutes = request.form.get('duration_minutes')
+
+        if not session_name or not duration_minutes:
+            flash('Session name and duration are required.', 'error')
+        else:
+            try:
+                new_log = YogaLog(
+                    user_id=user_id,
+                    session_name=session_name,
+                    duration_minutes=int(duration_minutes),
+                    created_at=datetime.utcnow()
+                )
+                db.session.add(new_log)
+                db.session.commit()
+                flash(f'Your {session_name} session has been logged!', 'success')
+            except ValueError:
+                flash('Invalid duration. Please enter a number.', 'error')
+        return redirect(url_for('yoga'))
+
+    # Fetch recent yoga logs for the user
+    recent_logs = YogaLog.query.filter_by(user_id=user_id).order_by(YogaLog.created_at.desc()).limit(10).all()
+    
+    return render_template('yoga.html', 
+                         user_name=session['user_name'],
+                         recent_logs=recent_logs)
 
 @app.route('/telehealth')
 @login_required
 def telehealth():
     return render_template('telehealth.html', user_name=session['user_name'])
+
+@app.route('/digital-detox')
+@login_required
+@role_required('patient')
+def digital_detox():
+    user_id = session['user_id']
+    
+    # Get digital detox logs for the user
+    screen_time_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
+    
+    # Convert to list of dictionaries for JSON serialization
+    screen_time_log = []
+    for log in screen_time_logs:
+        screen_time_log.append({
+            'date': log.date.strftime('%Y-%m-%d'),
+            'hours': log.screen_time_hours,
+            'academic_score': log.academic_score,
+            'social_interactions': log.social_interactions,
+            'ai_score': log.ai_score
+        })
+    
+    # Calculate average screen time
+    avg_screen_time = 0
+    if screen_time_log:
+        total_hours = sum(log['hours'] for log in screen_time_log)
+        avg_screen_time = round(total_hours / len(screen_time_log), 1)
+    
+    return render_template('digital_detox.html', 
+                         user_name=session['user_name'],
+                         screen_time_log=screen_time_log,
+                         avg_screen_time=avg_screen_time)
+
+@app.route('/analytics')
+@login_required
+@role_required('provider')
+def analytics():
+    return render_template('analytics.html', user_name=session['user_name'])
+
+@app.route('/wellness-report/<int:user_id>')
+@login_required
+@role_required('provider')
+def wellness_report(user_id):
+    from datetime import datetime
+    
+    patient = User.query.get_or_404(user_id)
+    
+    # Get gamification data
+    gamification = Gamification.query.filter_by(user_id=user_id).first()
+    
+    # Get AI analysis data
+    ai_analysis = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).first()
+    
+    # Get wellness trend data (last 90 days)
+    digital_detox_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(90).all()
+    assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).limit(20).all()
+    
+    # Convert digital detox logs to JSON serializable format
+    digital_detox_data = []
+    for log in digital_detox_logs:
+        digital_detox_data.append({
+            'date': log.date.strftime('%Y-%m-%d'),
+            'screen_time_hours': log.screen_time_hours,
+            'academic_score': log.academic_score,
+            'social_interactions': log.social_interactions,
+            'ai_score': log.ai_score
+        })
+    
+    # Convert assessments to JSON serializable format
+    assessment_data = []
+    for assessment in assessments:
+        assessment_data.append({
+            'id': assessment.id,
+            'assessment_type': assessment.assessment_type,
+            'score': assessment.score,
+            'created_at': assessment.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'ai_analysis': assessment.ai_insights
+        })
+    
+    wellness_trend = {
+        'digital_detox': digital_detox_data,
+        'assessments': assessment_data
+    }
+    
+    # Get recent clinical sessions (mock data for now)
+    recent_sessions = []
+    
+    return render_template('wellness_report.html', 
+                         user_name=session['user_name'], 
+                         patient=patient,
+                         gamification=gamification,
+                         ai_analysis=ai_analysis,
+                         wellness_trend=wellness_trend,
+                         recent_sessions=recent_sessions,
+                         datetime=datetime)
+
+@app.route('/profile')
+@login_required
+def profile():
+    user_id = session['user_id']
+    user = User.query.filter_by(email=session['user_email']).first()
+    
+    # Get gamification data
+    gamification = Gamification.query.filter_by(user_id=user_id).first()
+    
+    # Get digital detox data for averages
+    digital_detox_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).all()
+    
+    # Calculate screen time averages
+    avg_screen_time_7_days = None
+    avg_screen_time_30_days = None
+    
+    if digital_detox_logs:
+        # Last 7 days
+        recent_7_days = digital_detox_logs[:7]
+        if recent_7_days:
+            avg_screen_time_7_days = sum(log.screen_time_hours for log in recent_7_days) / len(recent_7_days)
+        
+        # Last 30 days
+        recent_30_days = digital_detox_logs[:30]
+        if recent_30_days:
+            avg_screen_time_30_days = sum(log.screen_time_hours for log in recent_30_days) / len(recent_30_days)
+    
+    return render_template('profile.html', 
+                         user_name=session['user_name'], 
+                         user=user,
+                         gamification=gamification,
+                         digital_detox_logs=digital_detox_logs,
+                         avg_screen_time_7_days=avg_screen_time_7_days,
+                         avg_screen_time_30_days=avg_screen_time_30_days)
+
+@app.route('/api/institutional-trends')
+@login_required
+@role_required('provider')
+def institutional_trends():
+    return jsonify([])
+
+@app.route('/api/institutional-mood-trends')
+@login_required
+@role_required('provider')
+def institutional_mood_trends():
+    return jsonify([])
+
+@app.route('/api/institutional-assessment-history')
+@login_required
+@role_required('provider')
+def institutional_assessment_history():
+    return jsonify([])
+
+@app.route('/api/digital-detox-data')
+@login_required
+@role_required('patient')
+def digital_detox_data():
+    user_id = session['user_id']
+    
+    # Get digital detox logs for the user
+    screen_time_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
+    
+    # Convert to list of dictionaries for JSON response
+    data = []
+    for log in screen_time_logs:
+        data.append({
+            'date': log.date.strftime('%Y-%m-%d'),
+            'hours': log.screen_time_hours,
+            'academic_score': log.academic_score,
+            'social_interactions': log.social_interactions,
+            'ai_score': log.ai_score
+        })
+    
+    return jsonify(data)
+
+@app.route('/api/submit-digital-detox', methods=['POST'])
+@login_required
+@role_required('patient')
+def submit_digital_detox():
+    try:
+        user_id = session['user_id']
+        data = request.json
+        
+        screen_time = float(data.get('screen_time', 0))
+        academic_score = int(data.get('academic_score', 0))
+        social_interactions = data.get('social_interactions', 'medium')
+        
+        # Create new digital detox log entry
+        new_log = DigitalDetoxLog(
+            user_id=user_id,
+            date=date.today(),
+            screen_time_hours=screen_time,
+            academic_score=academic_score,
+            social_interactions=social_interactions
+        )
+        
+        # Check if entry for today already exists
+        existing_log = DigitalDetoxLog.query.filter_by(
+            user_id=user_id,
+            date=date.today()
+        ).first()
+        
+        if existing_log:
+            # Update existing entry
+            existing_log.screen_time_hours = screen_time
+            existing_log.academic_score = academic_score
+            existing_log.social_interactions = social_interactions
+        else:
+            # Add new entry
+            db.session.add(new_log)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Digital wellness data saved successfully!'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error saving digital detox data for user {session.get('user_id')}: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Failed to save data. Please try again.'
+        }), 500
+
 
 @app.route('/assessment')
 @login_required
@@ -548,13 +879,17 @@ def api_save_assessment():
         db.session.rollback()
         logger.error(f"Error saving assessment for user {user_id}: {str(e)}")
         
-        # Return the insights even if save fails
         return jsonify({
             'success': False,
             'message': 'Failed to save assessment, but here are your insights.',
             'insights': ai_insights
         }), 500
-        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/goals')
+@login_required
+@role_required('patient')
+def goals():
+    return render_template('goals.html', user_name=session['user_name'])
 
 @app.route('/progress')
 @login_required
@@ -562,732 +897,82 @@ def api_save_assessment():
 def progress():
     try:
         user_id = session['user_id']
-        goals = Goal.query.filter_by(user_id=user_id).all() or []
-        
-        # Create some default goals if none exist
-        if not goals:
-            default_goals = [
-                Goal(user_id=user_id, title="Practice daily meditation for 10 minutes", category="mental_health", status="active", start_date=datetime.now().date()),
-                Goal(user_id=user_id, title="Complete weekly mood assessments", category="mental_health", status="active", start_date=datetime.now().date()),
-                Goal(user_id=user_id, title="Limit screen time to 6 hours per day", category="digital_wellness", status="active", start_date=datetime.now().date())
-            ]
-            for goal in default_goals:
-                db.session.add(goal)
-            try:
-                db.session.commit()
-                goals = default_goals
-            except Exception as e:
-                db.session.rollback()
-                app.logger.error(f"Error creating default goals: {e}")
-                goals = []
+        goals = Goal.query.filter_by(user_id=user_id).all()
         
         achievements = [goal.title for goal in goals if goal.status == 'completed']
         
-        # Initialize with None values for new users
-        latest_gad7 = None
-        latest_phq9 = None
-        latest_mood = None
+        assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
         
-        # Fetch latest assessment scores if they exist
-        assessments = Assessment.query.filter_by(user_id=user_id).all()
-        if assessments:
-            latest_gad7 = next((a for a in assessments if a.assessment_type == 'GAD-7'), None)
-            latest_phq9 = next((a for a in assessments if a.assessment_type == 'PHQ-9'), None)
-            latest_mood = next((a for a in assessments if a.assessment_type == 'Daily Mood'), None)
+        latest_gad7 = next((a for a in assessments if a.assessment_type == 'GAD-7'), None)
+        latest_phq9 = next((a for a in assessments if a.assessment_type == 'PHQ-9'), None)
+        latest_mood = next((a for a in assessments if a.assessment_type == 'Daily Mood'), None)
 
-        # Initialize with mock data for better user experience
-        mood_data = [
-            {'date': (datetime.now() - timedelta(days=29)).strftime('%Y-%m-%d'), 'score': 6},
-            {'date': (datetime.now() - timedelta(days=25)).strftime('%Y-%m-%d'), 'score': 7},
-            {'date': (datetime.now() - timedelta(days=20)).strftime('%Y-%m-%d'), 'score': 5},
-            {'date': (datetime.now() - timedelta(days=15)).strftime('%Y-%m-%d'), 'score': 8},
-            {'date': (datetime.now() - timedelta(days=10)).strftime('%Y-%m-%d'), 'score': 7},
-            {'date': (datetime.now() - timedelta(days=5)).strftime('%Y-%m-%d'), 'score': 8},
-            {'date': datetime.now().strftime('%Y-%m-%d'), 'score': 8}
-        ]
+        mood_assessments = sorted([a for a in assessments if a.assessment_type == 'Daily Mood'], key=lambda x: x.created_at)[-30:]
+        mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
         
-        # Mock assessment chart data
-        assessment_chart_labels = [
-            (datetime.now() - timedelta(days=30)).strftime('%Y-%m-%d'),
-            (datetime.now() - timedelta(days=20)).strftime('%Y-%m-%d'),
-            (datetime.now() - timedelta(days=10)).strftime('%Y-%m-%d'),
-            datetime.now().strftime('%Y-%m-%d')
-        ]
-        assessment_chart_gad7_data = [12, 8, 6, 4]
-        assessment_chart_phq9_data = [15, 11, 8, 7]
-        
-        assessment_chart_data = {}
-        all_assessment_dates = set()
-    
-        # Process real assessments if they exist, otherwise use mock data
-        if assessments:
-            # Fetch historical mood data for chart (last 30 days)
-            mood_assessments = [a for a in assessments if a.assessment_type == 'Daily Mood']
-            mood_assessments = sorted(mood_assessments, key=lambda x: x.created_at)[-30:]  # Last 30 entries
-            if mood_assessments:
-                mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
-            
-            # Process GAD-7 and PHQ-9 data for chart
-            gad7_assessments = [a for a in assessments if a.assessment_type == 'GAD-7']
-            phq9_assessments = [a for a in assessments if a.assessment_type == 'PHQ-9']
-            
-            for a in gad7_assessments:
-                date_str = a.created_at.strftime('%Y-%m-%d')
-                all_assessment_dates.add(date_str)
-                if date_str not in assessment_chart_data:
-                    assessment_chart_data[date_str] = {'gad7': None, 'phq9': None}
-                assessment_chart_data[date_str]['gad7'] = a.score
-                
-            for a in phq9_assessments:
-                date_str = a.created_at.strftime('%Y-%m-%d')
-                all_assessment_dates.add(date_str)
-                if date_str not in assessment_chart_data:
-                    assessment_chart_data[date_str] = {'gad7': None, 'phq9': None}
-                assessment_chart_data[date_str]['phq9'] = a.score
+        gad7_assessments = sorted([a for a in assessments if a.assessment_type == 'GAD-7'], key=lambda x: x.created_at)
+        phq9_assessments = sorted([a for a in assessments if a.assessment_type == 'PHQ-9'], key=lambda x: x.created_at)
 
-            # Use real data if available
-            if all_assessment_dates:
-                sorted_dates = sorted(list(all_assessment_dates))
-                assessment_chart_labels = sorted_dates
-                assessment_chart_gad7_data = [assessment_chart_data.get(d, {}).get('gad7') for d in sorted_dates]
-                assessment_chart_phq9_data = [assessment_chart_data.get(d, {}).get('phq9') for d in sorted_dates]
+        assessment_chart_labels = sorted(list(set([a.created_at.strftime('%Y-%m-%d') for a in gad7_assessments + phq9_assessments])))
+        assessment_chart_gad7_data = [next((a.score for a in gad7_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
+        assessment_chart_phq9_data = [next((a.score for a in phq9_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
 
-        # Prepare user data for AI recommendations
-        
-        # Calculate days since last assessment
-        days_since_assessment = 'N/A'
-        if assessments:
-            latest_assessment = max(assessments, key=lambda x: x.created_at)
-            days_since_assessment = (datetime.now() - latest_assessment.created_at).days
+        days_since_assessment = (datetime.now() - assessments[0].created_at).days if assessments else 'N/A'
         
         user_data_for_ai = {
             'gad7_score': latest_gad7.score if latest_gad7 else 'N/A',
             'phq9_score': latest_phq9.score if latest_phq9 else 'N/A',
-            'wellness_score': 'calculating...',  # Will update below
-            'completed_goals': len([g for g in goals if g.status == 'completed']),
+            'wellness_score': 'calculating...',
+            'completed_goals': len(achievements),
             'total_goals': len(goals),
             'days_since_assessment': days_since_assessment
         }
         
-        # Generate AI recommendations
-        ai_recommendations = ai_service.generate_progress_recommendations(user_data_for_ai)
-        
-        # Calculate overall wellness score only if we have data
-        overall_wellness_score = 'No data'
-        scores_to_average = []
-
-        if latest_gad7 and hasattr(latest_gad7, 'score'):
-            try:
-                gad7_score = float(latest_gad7.score) if latest_gad7.score is not None else 0
-                scores_to_average.append(10 - (gad7_score / 21 * 9))  # Normalize GAD-7 (0-21 to 10-1)
-            except (ValueError, TypeError):
-                pass
-                
-        if latest_phq9 and hasattr(latest_phq9, 'score'):
-            try:
-                phq9_score = float(latest_phq9.score) if latest_phq9.score is not None else 0
-                scores_to_average.append(10 - (phq9_score / 27 * 9))  # Normalize PHQ-9 (0-27 to 10-1)
-            except (ValueError, TypeError):
-                pass
-                
-        if latest_mood and hasattr(latest_mood, 'score'):
-            try:
-                mood_score = float(latest_mood.score) if latest_mood.score is not None else 0
-                scores_to_average.append(mood_score * 2)  # Normalize Mood (0-5 to 0-10)
-            except (ValueError, TypeError):
-                pass
-
-        if scores_to_average:
-            overall_wellness_score = round(sum(scores_to_average) / len(scores_to_average), 1)
-            # Update AI data with calculated wellness score
-            user_data_for_ai['wellness_score'] = overall_wellness_score
-
-        # Ensure we have valid data for the template
-        # Ensure user_name is set in session
-        if 'user_name' not in session:
-            user = User.query.get(user_id)
-            if user:
-                # Safely get user's name, defaulting to 'User' if not available
-                user_name = getattr(user, 'name', None) or getattr(user, 'first_name', 'User')
-                session['user_name'] = user_name
-
-        return render_template(
-            'progress.html',
-            user_name=session.get('user_name', 'User'),
-            latest_gad7=latest_gad7,
-            latest_phq9=latest_phq9,
-            latest_mood=latest_mood,
-            overall_wellness_score=overall_wellness_score,
-            mood_data=json.dumps(mood_data or []),
-            assessment_chart_labels=json.dumps(assessment_chart_labels or []),
-            assessment_chart_gad7_data=json.dumps(assessment_chart_gad7_data or []),
-            assessment_chart_phq9_data=json.dumps(assessment_chart_phq9_data or []),
-            goals=goals,
-            achievements=achievements,
-            ai_recommendations=ai_recommendations,
-        )
-    except Exception as e:
-        app.logger.error(f"Error in progress route: {str(e)}")
-        # Provide a more user-friendly error message
-        return render_template('error.html', 
-                            error_message="Please complete your first assessment before viewing progress. Click the button below to start your assessment.",
-                            status_code=200)
-
-@app.route('/digital-detox', methods=['GET', 'POST'])
-@login_required
-@role_required('patient')
-def digital_detox():
-    user_id = session['user_id']
-    
-    if request.method == 'POST':
-        # Handle form submission - save to database
-        screen_time = float(request.form.get('screen_time', 0))
-        academic_score = int(request.form.get('academic_score', 0))
-        social_interactions = request.form.get('social_interactions', '')
-        
-        # Get historical data for AI analysis
-        historical_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
-        historical_data = [
-            {
-                'screen_time_hours': log.screen_time_hours,
-                'academic_score': log.academic_score,
-                'social_interactions': log.social_interactions,
-                'date': log.date.strftime('%Y-%m-%d')
-            } for log in historical_logs
-        ]
-        
-        # Use AI service for analysis with logging
-        logger.info(f"Starting AI analysis for user {user_id} - screen_time: {screen_time}h, academic_score: {academic_score}")
-        start_time = time.time()
-        
-        ai_analysis = ai_service.analyze_digital_wellness(
-            screen_time=screen_time,
-            academic_score=academic_score,
-            social_interactions=social_interactions,
-            historical_data=historical_data
-        )
-        
-        analysis_time = time.time() - start_time
-        logger.info(f"AI analysis completed in {analysis_time:.2f} seconds for user {user_id}")
-        logger.debug(f"AI analysis result: {ai_analysis}")
-        
-        # Save to database with AI insights
-        new_log = DigitalDetoxLog(
-            user_id=user_id,
-            date=date.today(),
-            screen_time_hours=screen_time,
-            academic_score=academic_score,
-            social_interactions=social_interactions,
-            ai_score=ai_analysis.get('score'),
-            ai_suggestion=ai_analysis.get('suggestion')
-        )
-        
-        # Check if entry for today already exists
-        existing_log = DigitalDetoxLog.query.filter_by(user_id=user_id, date=date.today()).first()
-        if existing_log:
-            # Update existing entry
-            existing_log.screen_time_hours = screen_time
-            existing_log.academic_score = academic_score
-            existing_log.social_interactions = social_interactions
-            existing_log.ai_score = ai_analysis.get('score')
-            existing_log.ai_suggestion = ai_analysis.get('suggestion')
-        else:
-            db.session.add(new_log)
-        
-        # Update gamification
-        gamification = Gamification.query.filter_by(user_id=user_id).first()
-        points_earned = 10
-        badge_earned = None
-        new_badges = []
-        
-        if gamification:
-            gamification.points += points_earned
-            
-            # Update streak
-            if gamification.last_activity and gamification.last_activity == date.today() - timedelta(days=1):
-                gamification.streak += 1
-            elif gamification.last_activity != date.today(): # Reset streak if not consecutive but not already logged today
-                gamification.streak = 1
-            
-            gamification.last_activity = date.today()
-            
-            # Award badges based on AI score
-            if ai_analysis.get('score') == 'Excellent' and 'Digital Wellness Master' not in gamification.badges:
-                gamification.badges.append('Digital Wellness Master')
-                gamification.points += 50
-                points_earned += 50
-                new_badges.append('Digital Wellness Master')
-
-            # Award streak badges
-            if gamification.streak >= 7 and '7-Day Streak' not in gamification.badges:
-                gamification.badges.append('7-Day Streak')
-                gamification.points += 25
-                new_badges.append('7-Day Streak')
-            if gamification.streak >= 30 and '30-Day Streak' not in gamification.badges:
-                gamification.badges.append('30-Day Streak')
-                gamification.points += 100
-                new_badges.append('30-Day Streak')
-
-            # Award reduced mobile usage badge
-            # Fetch historical data for comparison (last 14 days for 7-day comparison)
-            past_14_days_logs = DigitalDetoxLog.query.filter(
-                DigitalDetoxLog.user_id == user_id,
-                DigitalDetoxLog.date >= date.today() - timedelta(days=14),
-                DigitalDetoxLog.date < date.today() - timedelta(days=7) # Previous week
-            ).all()
-            
-            if past_14_days_logs:
-                prev_week_avg_screen_time = sum(log.screen_time_hours for log in past_14_days_logs) / len(past_14_days_logs)
-                if screen_time < prev_week_avg_screen_time * 0.9 and 'Screen Time Reducer' not in gamification.badges: # 10% reduction
-                    gamification.badges.append('Screen Time Reducer')
-                    gamification.points += 75
-                    new_badges.append('Screen Time Reducer')
-
         try:
-            db.session.commit()
-            logger.info(f"Digital detox log saved for user {user_id} with AI score: {ai_analysis.get('score')}")
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f"Error saving digital detox log for user {user_id}: {e}")
-            flash('An error occurred while saving your data. Please try again.', 'error')
-            return redirect(url_for('digital_detox'))
-        
-        # Enhanced success message with gamification feedback
-        flash_message = f'✅ Check-in saved! You earned {points_earned} points.'
-        if new_badges:
-            flash_message += f' 🎉 New badges earned: {", ".join(new_badges)}!'
-        flash(flash_message, 'success')
-        
-        return redirect(url_for('digital_detox'))
-    
-    # Get data from database
-    screen_time_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
-    
-    # Prepare data for template
-    screen_time_log = [
-        {
-            'date': log.date.strftime('%Y-%m-%d'),
-            'hours': log.screen_time_hours,
-            'academic_score': log.academic_score,
-            'social_interactions': log.social_interactions
-        } for log in screen_time_logs
-    ]
-    
-    # Calculate average screen time
-    avg_screen_time = round(sum(log.screen_time_hours for log in screen_time_logs) / len(screen_time_logs), 1) if screen_time_logs else 0
-    
-    # Get latest AI analysis
-    latest_log = screen_time_logs[0] if screen_time_logs else None
-    score = latest_log.ai_score if latest_log and latest_log.ai_score else 'No data yet'
-    suggestion = latest_log.ai_suggestion if latest_log and latest_log.ai_suggestion else 'Log your daily data to receive AI-powered insights!'
-    
-    return render_template('digital_detox.html', 
-                         user_name=session['user_name'],
-                         screen_time_log=screen_time_log,
-                         avg_screen_time=avg_screen_time,
-                         score=score,
-                         suggestion=suggestion)
+            ai_recommendations = ai_service.generate_progress_recommendations(user_data_for_ai)
+        except Exception as ai_error:
+            logger.error(f"AI service error in progress page: {ai_error}")
+            ai_recommendations = {
+                'summary': 'Your progress data has been recorded.',
+                'recommendations': ['Continue with your current mental health routine.'],
+                'priority_actions': []
+            }
 
-@app.route('/api/digital-detox-data')
-@login_required
-def api_digital_detox_data():
-    user_id = session['user_id']
-    
-    # Get data from database
-    logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
-    
-    screen_time_data = [
-        {
-            'date': log.date.strftime('%Y-%m-%d'),
-            'hours': log.screen_time_hours
-        } for log in reversed(logs)  # Reverse to show chronological order
-    ]
-    
-    return jsonify(screen_time_data)
+        scores_to_average = []
+        if latest_gad7 and latest_gad7.score is not None:
+            scores_to_average.append(10 - (latest_gad7.score / 21 * 9))
+        if latest_phq9 and latest_phq9.score is not None:
+            scores_to_average.append(10 - (latest_phq9.score / 27 * 9))
+        if latest_mood and latest_mood.score is not None:
+            scores_to_average.append(latest_mood.score)
 
-@app.route('/analytics')
-@login_required
-@role_required('provider')
-def analytics():
-    """Advanced analytics dashboard for providers"""
-    institution = session.get('user_institution', 'Sample University')
-    
-    # Get institutional data and AI analysis
-    institutional_data = get_institutional_summary(institution)
-    
-    if institutional_data:
-        # Use AI service for institutional analysis
-        ai_insights = ai_service.analyze_institutional_trends(institutional_data)
-    else:
-        ai_insights = {
-            'overall_status': 'No Data',
-            'key_insights': ['No data available yet'],
-            'recommendations': ['Encourage student participation'],
-            'priority_actions': ['Set up data collection']
-        }
-    
-    # Get detailed patient analytics
-    patients = User.query.filter_by(role='patient', institution=institution).all()
-    patient_analytics = []
-    
-    for patient in patients:
-        wellness_trend = get_user_wellness_trend(patient.id, days=30)
-        recent_detox = wellness_trend['digital_detox'][-1] if wellness_trend.get('digital_detox') else None
-        
-        patient_analytics.append({
-            'id': patient.id,
-            'name': patient.name,
-            'email': patient.email,
-            'trend_data': [
-                {
-                    'date': log.date.strftime('%Y-%m-%d'),
-                    'screen_time': log.screen_time_hours,
-                    'academic_score': log.academic_score,
-                    'ai_score': log.ai_score
-                } for log in wellness_trend['digital_detox'][-14:]  # Last 14 days
-            ],
-            'current_status': recent_detox.ai_score if recent_detox and recent_detox.ai_score else 'No data'
-        })
-    
-    return render_template('analytics.html',
-                         user_name=session['user_name'],
-                         institution=institution,
-                         institutional_data=institutional_data,
-                         ai_insights=ai_insights,
-                         patient_analytics=patient_analytics)
+        overall_wellness_score = round(sum(scores_to_average) / len(scores_to_average), 1) if scores_to_average else 0
+        user_data_for_ai['wellness_score'] = overall_wellness_score
 
-@app.route('/api/institutional-trends')
-@login_required
-@role_required('provider')
-def api_institutional_trends():
-    """API endpoint for institutional trend data"""
-    institution = session.get('user_institution', 'Sample University')
-    
-    # Get trends over the last 30 days
-    trends = []
-    for i in range(30):
-        trend_date = date.today() - timedelta(days=i)
-        
-        # Get daily institutional metrics (this would be more sophisticated in production)
-        daily_logs = db.session.query(DigitalDetoxLog).join(User).filter(
-            User.institution == institution,
-            DigitalDetoxLog.date == trend_date
-        ).all()
-        
-        if daily_logs:
-            avg_screen_time = sum(log.screen_time_hours for log in daily_logs) / len(daily_logs)
-            avg_academic = sum(log.academic_score for log in daily_logs if log.academic_score) / max(1, len([log for log in daily_logs if log.academic_score]))
-            
-            trends.append({
-                'date': trend_date.strftime('%Y-%m-%d'),
-                'avg_screen_time': round(avg_screen_time, 1),
-                'avg_academic_score': round(avg_academic, 1),
-                'active_users': len(daily_logs)
-            })
-    
-    return jsonify(list(reversed(trends)))  # Return chronological order
-
-@app.route('/api/institutional-mood-trends')
-@login_required
-@role_required('provider')
-def api_institutional_mood_trends():
-    """API endpoint for institutional mood trend data"""
-    institution = session.get('user_institution', 'Sample University')
-    
-    # Get mood trends over the last 30 days
-    mood_trends = []
-    for i in range(30):
-        trend_date = date.today() - timedelta(days=i)
-        
-        # Get daily mood assessments for the institution
-        daily_moods = db.session.query(Assessment).join(User).filter(
-            User.institution == institution,
-            Assessment.assessment_type == 'Daily Mood',
-            func.date(Assessment.created_at) == trend_date
-        ).all()
-        
-        if daily_moods:
-            avg_mood = sum(mood.score for mood in daily_moods) / len(daily_moods)
-            mood_trends.append({
-                'date': trend_date.strftime('%Y-%m-%d'),
-                'avg_mood': round(avg_mood, 1),
-                'mood_count': len(daily_moods)
-            })
-    
-    return jsonify(list(reversed(mood_trends)))  # Return chronological order
-
-@app.route('/api/institutional-assessment-history')
-@login_required
-@role_required('provider')
-def api_institutional_assessment_history():
-    """API endpoint for institutional assessment history data"""
-    institution = session.get('user_institution', 'Sample University')
-    
-    # Get assessment history over the last 12 months
-    assessment_history = []
-    for i in range(12):
-        # Calculate the start and end of each month accurately
-        end_of_month = date.today().replace(day=1) - relativedelta(months=i)
-        start_of_month = end_of_month.replace(day=1)
-        # To get the correct end date for the query, we go to the next month and subtract one day
-        end_of_month_for_query = (start_of_month + relativedelta(months=1)) - timedelta(days=1)
-
-        # Get GAD-7 assessments for the month
-        gad7_assessments = db.session.query(Assessment).join(User).filter(
-            User.institution == institution,
-            Assessment.assessment_type == 'GAD-7',
-            Assessment.created_at >= start_of_month,
-            Assessment.created_at <= end_of_month_for_query
-        ).all()
-
-        # Get PHQ-9 assessments for the month
-        phq9_assessments = db.session.query(Assessment).join(User).filter(
-            User.institution == institution,
-            Assessment.assessment_type == 'PHQ-9',
-            Assessment.created_at >= start_of_month,
-            Assessment.created_at <= end_of_month_for_query
-        ).all()
-        
-        avg_gad7 = None
-        avg_phq9 = None
-        
-        if gad7_assessments:
-            avg_gad7 = round(sum(a.score for a in gad7_assessments) / len(gad7_assessments), 1)
-        
-        if phq9_assessments:
-            avg_phq9 = round(sum(a.score for a in phq9_assessments) / len(phq9_assessments), 1)
-        
-        if avg_gad7 is not None or avg_phq9 is not None:
-            assessment_history.append({
-                'date': start_date.strftime('%Y-%m-%d'),
-                'avg_gad7': avg_gad7,
-                'avg_phq9': avg_phq9,
-                'assessment_count': len(gad7_assessments) + len(phq9_assessments)
-            })
-    
-    return jsonify(list(reversed(assessment_history)))  # Return chronological order
-
-@app.route('/wellness-report/<int:user_id>')
-@login_required
-@role_required('provider')
-def wellness_report(user_id):
-    """Generate comprehensive wellness report for a specific patient"""
-    patient = User.query.get_or_404(user_id)
-    
-    # Ensure provider can only access patients from their institution
-    if patient.institution != session.get('user_institution'):
-        flash('Access denied. Patient not in your institution.', 'error')
-        return redirect(url_for('provider_dashboard'))
-    
-    # Get comprehensive wellness data
-    wellness_trend = get_user_wellness_trend(user_id, days=90)  # 3 months
-    gamification = Gamification.query.filter_by(user_id=user_id).first()
-    recent_sessions = ClinicalNote.query.filter_by(patient_id=user_id).order_by(ClinicalNote.session_date.desc()).limit(5).all()
-    
-    # Generate AI-powered wellness summary
-    if wellness_trend['digital_detox']:
-        historical_data = [
-            {
-                'screen_time_hours': log.screen_time_hours,
-                'academic_score': log.academic_score,
-                'social_interactions': log.social_interactions,
-                'date': log.date.strftime('%Y-%m-%d')
-            } for log in wellness_trend['digital_detox']
-        ]
-        
-        # Use AI for comprehensive analysis
-        latest_log = wellness_trend['digital_detox'][-1]
-        ai_analysis = ai_service.analyze_digital_wellness(
-            screen_time=latest_log.screen_time_hours,
-            academic_score=latest_log.academic_score,
-            social_interactions=latest_log.social_interactions,
-            historical_data=historical_data
-        )
-    else:
-        ai_analysis = {
-            'score': 'No data',
-            'suggestion': 'Patient has not logged any digital wellness data yet.',
-            'detailed_analysis': 'No historical data available for analysis.',
-            'action_items': ['Encourage patient to start logging daily data']
-        }
-    
-    return render_template('wellness_report.html',
-                         patient=patient,
-                         wellness_trend=wellness_trend,
-                         gamification=gamification,
-                         recent_sessions=recent_sessions,
-                         ai_analysis=ai_analysis,
-                         user_name=session['user_name'])
-
-@app.route('/profile')
-@login_required
-def profile():
-    user_id = session['user_id']
-    user = User.query.get(user_id)
-    gamification = Gamification.query.filter_by(user_id=user_id).first()
-    digital_detox_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
-
-    # Calculate average screen time for last 7 and 30 days
-    today = date.today()
-    last_7_days_logs = [log for log in digital_detox_logs if log.date >= today - timedelta(days=7)]
-    last_30_days_logs = [log for log in digital_detox_logs if log.date >= today - timedelta(days=30)]
-
-    avg_screen_time_7_days = round(sum(log.screen_time_hours for log in last_7_days_logs) / len(last_7_days_logs), 1) if last_7_days_logs else 0
-    avg_screen_time_30_days = round(sum(log.screen_time_hours for log in last_30_days_logs) / len(last_30_days_logs), 1) if last_30_days_logs else 0
-
-    return render_template(
-        'profile.html',
-        user=user,
-        gamification=gamification,
-        digital_detox_logs=digital_detox_logs,
-        avg_screen_time_7_days=avg_screen_time_7_days,
-        avg_screen_time_30_days=avg_screen_time_30_days
-    )
-
-# Helper function for Jinja2 to get assessment severity info
-def get_severity_info(assessment_type, score):
-    severity, color = 'N/A', 'gray'
-    if assessment_type == 'GAD-7':
-        if score <= 4: severity, color = 'Minimal', 'green'
-        elif score <= 9: severity, color = 'Mild', 'yellow'
-        elif score <= 14: severity, color = 'Moderate', 'orange'
-        else: severity, color = 'Severe', 'red'
-    elif assessment_type == 'PHQ-9':
-        if score <= 4: severity, color = 'Minimal', 'green'
-        elif score <= 9: severity, color = 'Mild', 'yellow'
-        elif score <= 14: severity, color = 'Moderate', 'orange'
-        else: severity, color = 'Severe', 'red'
-    elif assessment_type == 'Daily Mood':
-        if score >= 4: severity, color = 'Positive', 'green'
-        elif score >= 3: severity, color = 'Neutral', 'yellow'
-        else: severity, color = 'Negative', 'red'
-    return {'severity': severity, 'color': color}
-
-app.jinja_env.globals.update(get_severity_info=get_severity_info)
-
-# AJAX API endpoints for enhanced user experience
-@app.route('/api/submit-digital-detox', methods=['POST'])
-@login_required
-@role_required('patient')
-def api_submit_digital_detox():
-    """AJAX endpoint for digital detox submission with AI analysis"""
-    user_id = session['user_id']
-    
-    try:
-        # Get form data
-        screen_time = float(request.json.get('screen_time', 0))
-        academic_score = int(request.json.get('academic_score', 0))
-        social_interactions = request.json.get('social_interactions', '')
-        
-        logger.info(f"AJAX digital detox submission for user {user_id}")
-        
-        # Get historical data for AI analysis
-        historical_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
-        historical_data = [
-            {
-                'screen_time_hours': log.screen_time_hours,
-                'academic_score': log.academic_score,
-                'social_interactions': log.social_interactions,
-                'date': log.date.strftime('%Y-%m-%d')
-            } for log in historical_logs
-        ]
-        
-        # Simulate AI processing time for demo effect
-        time.sleep(1.5)
-        
-        # Use AI service for analysis
-        logger.info(f"Starting AI analysis for user {user_id} via AJAX")
-        start_time = time.time()
-        
-        ai_analysis = ai_service.analyze_digital_wellness(
-            screen_time=screen_time,
-            academic_score=academic_score,
-            social_interactions=social_interactions,
-            historical_data=historical_data
-        )
-        
-        analysis_time = time.time() - start_time
-        logger.info(f"AI analysis completed in {analysis_time:.2f} seconds")
-        
-        # Save to database
-        existing_log = DigitalDetoxLog.query.filter_by(user_id=user_id, date=date.today()).first()
-        if existing_log:
-            existing_log.screen_time_hours = screen_time
-            existing_log.academic_score = academic_score
-            existing_log.social_interactions = social_interactions
-            existing_log.ai_score = ai_analysis.get('score')
-            existing_log.ai_suggestion = ai_analysis.get('suggestion')
-        else:
-            new_log = DigitalDetoxLog(
-                user_id=user_id,
-                date=date.today(),
-                screen_time_hours=screen_time,
-                academic_score=academic_score,
-                social_interactions=social_interactions,
-                ai_score=ai_analysis.get('score'),
-                ai_suggestion=ai_analysis.get('suggestion')
-            )
-            db.session.add(new_log)
-        
-        # Update gamification
-        gamification = Gamification.query.filter_by(user_id=user_id).first()
-        points_earned = 10
-        badge_earned = None
-        
-        if gamification:
-            gamification.points += points_earned
-            
-            # Update streak
-            if gamification.last_activity == date.today() - timedelta(days=1):
-                gamification.streak += 1
-            elif gamification.last_activity != date.today():
-                gamification.streak = 1
-            
-            gamification.last_activity = date.today()
-            
-            # Award badges based on AI score
-            if ai_analysis.get('score') == 'Excellent' and 'Digital Wellness Master' not in gamification.badges:
-                gamification.badges.append('Digital Wellness Master')
-                gamification.points += 50
-                points_earned += 50
-                badge_earned = 'Digital Wellness Master'
-        
-        db.session.commit()
-        logger.info(f"Digital detox data saved successfully for user {user_id}")
-        
-        return jsonify({
-            'success': True,
-            'ai_analysis': ai_analysis,
-            'points_earned': points_earned,
-            'badge_earned': badge_earned,
-            'analysis_time': round(analysis_time, 2),
-            'message': 'Digital detox check-in completed successfully!'
-        })
-        
+        return render_template('progress.html', 
+                             user_name=session['user_name'], 
+                             goals=goals, 
+                             achievements=achievements,
+                             latest_gad7=latest_gad7,
+                             latest_phq9=latest_phq9,
+                             overall_wellness_score=overall_wellness_score,
+                             mood_data=mood_data,
+                             assessment_chart_labels=assessment_chart_labels,
+                             assessment_chart_gad7_data=assessment_chart_gad7_data,
+                             assessment_chart_phq9_data=assessment_chart_phq9_data,
+                             ai_recommendations=ai_recommendations)
     except Exception as e:
-        logger.error(f"Error in AJAX digital detox submission: {str(e)}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-# Goals Management Routes
-@app.route('/goals')
-@login_required
-@role_required('patient')
-def goals():
-    """Display goals management page"""
-    user_id = session['user_id']
-    goals = Goal.query.filter_by(user_id=user_id).order_by(Goal.created_at.desc()).all()
-    return render_template('goals.html', goals=goals)
+        logger.error(f"Error loading progress page for user {session.get('user_id')}: {e}")
+        flash('An error occurred while loading your progress page. Please try again later.', 'error')
+        return redirect(url_for('patient_dashboard'))
 
 @app.route('/api/goals', methods=['GET'])
 @login_required
 @role_required('patient')
 def get_goals():
-    """Get all goals for the current user"""
     user_id = session['user_id']
-    goals = Goal.query.filter_by(user_id=user_id).order_by(Goal.created_at.desc()).all()
+    goals = Goal.query.filter_by(user_id=user_id).all()
+    
     goals_data = []
     for goal in goals:
         goals_data.append({
@@ -1295,96 +980,94 @@ def get_goals():
             'title': goal.title,
             'description': goal.description,
             'category': goal.category,
+            'status': goal.status,
+            'priority': goal.priority,
             'target_value': goal.target_value,
             'current_value': goal.current_value,
             'unit': goal.unit,
-            'status': goal.status,
-            'priority': goal.priority,
-            'start_date': goal.start_date.strftime('%Y-%m-%d') if goal.start_date else None,
             'target_date': goal.target_date.strftime('%Y-%m-%d') if goal.target_date else None,
             'progress_percentage': goal.progress_percentage,
-            'created_at': goal.created_at.strftime('%Y-%m-%d %H:%M')
+            'created_at': goal.created_at.strftime('%Y-%m-%d') if goal.created_at else None
         })
+    
     return jsonify({'success': True, 'goals': goals_data})
 
 @app.route('/api/goals', methods=['POST'])
 @login_required
 @role_required('patient')
 def add_goal():
-    """Create a new goal"""
     user_id = session['user_id']
     data = request.json
     
-    title = data.get('title', '').strip()
-    description = data.get('description', '').strip()
-    category = data.get('category', 'general')
-    target_value = data.get('target_value')
-    unit = data.get('unit', '').strip()
+    title = data.get('title')
+    description = data.get('description', '')
+    category = data.get('category', 'mental_health')
     priority = data.get('priority', 'medium')
+    target_value = data.get('target_value')
+    unit = data.get('unit', '')
     target_date = data.get('target_date')
-    
+
     if not title:
-        return jsonify({'success': False, 'message': 'Title is required'})
-    
+        return jsonify({'success': False, 'message': 'Goal title is required.'}), 400
+
     try:
+        # Parse target_date if provided
+        parsed_target_date = None
+        if target_date:
+            parsed_target_date = datetime.strptime(target_date, '%Y-%m-%d').date()
+
         new_goal = Goal(
             user_id=user_id,
             title=title,
             description=description,
             category=category,
-            target_value=float(target_value) if target_value else None,
-            unit=unit if unit else None,
             priority=priority,
-            start_date=date.today(),
-            target_date=datetime.strptime(target_date, '%Y-%m-%d').date() if target_date else None
+            status='active',
+            target_value=float(target_value) if target_value else None,
+            current_value=0.0,
+            unit=unit,
+            target_date=parsed_target_date,
+            start_date=datetime.utcnow().date()
         )
-        
         db.session.add(new_goal)
         db.session.commit()
-        
+
         return jsonify({
-            'success': True, 
+            'success': True,
             'message': 'Goal created successfully!',
             'goal': {
                 'id': new_goal.id,
                 'title': new_goal.title,
-                'description': new_goal.description,
-                'category': new_goal.category,
-                'status': new_goal.status,
-                'priority': new_goal.priority,
-                'progress_percentage': new_goal.progress_percentage
+                'description': new_goal.description
             }
-        })
+        }), 201
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': f'Error creating goal: {str(e)}'})
+        logger.error(f"Error adding goal for user {user_id}: {e}")
+        return jsonify({'success': False, 'message': 'Failed to create goal.'}), 500
 
 @app.route('/api/goals/<int:goal_id>', methods=['PUT'])
 @login_required
 @role_required('patient')
 def update_goal(goal_id):
-    """Update an existing goal"""
-    goal = Goal.query.get_or_404(goal_id)
-    
-    if goal.user_id != session['user_id']:
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-    
+    user_id = session['user_id']
+    goal = Goal.query.filter_by(id=goal_id, user_id=user_id).first()
+
+    if not goal:
+        return jsonify({'success': False, 'message': 'Goal not found.'}), 404
+
     data = request.json
-    
+    completed = data.get('completed')
+    if 'priority' in data:
+        goal.priority = data['priority']
+
     try:
-        # Update goal fields
-        if 'current_value' in data:
-            goal.current_value = float(data['current_value'])
-        if 'status' in data:
-            goal.status = data['status']
-            if data['status'] == 'completed' and not goal.completed_date:
-                goal.completed_date = date.today()
-        if 'title' in data:
-            goal.title = data['title']
-        if 'description' in data:
-            goal.description = data['description']
-        if 'priority' in data:
-            goal.priority = data['priority']
+        if completed:
+            goal.status = 'completed'
+            goal.completed_date = datetime.utcnow().date()
+        else:
+            goal.status = 'active'
+            goal.completed_date = None
         
         goal.updated_at = datetime.utcnow()
         db.session.commit()
@@ -1394,8 +1077,12 @@ def update_goal(goal_id):
             'message': 'Goal updated successfully!',
             'goal': {
                 'id': goal.id,
-                'progress_percentage': goal.progress_percentage,
-                'status': goal.status
+                'title': goal.title,
+                'description': goal.description,
+                'category': goal.category,
+                'status': goal.status,
+                'priority': goal.priority,
+                'progress_percentage': goal.progress_percentage
             }
         })
     except Exception as e:
@@ -1419,76 +1106,104 @@ def delete_goal(goal_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error deleting goal: {str(e)}'})
-    return jsonify({'success': False, 'message': 'Goal not found'})
-
-@app.route('/api/rpm-data')
-@login_required
-@role_required('patient')
-def api_rpm_data():
-    """API endpoint for real-time RPM data simulation"""
-    user_id = session['user_id']
-    
-    # Get latest RPM data or create simulated data
-    rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.created_at.desc()).first()
-    
-    if not rpm_data:
-        # Create initial RPM data
-        rpm_data = RPMData(
-            user_id=user_id,
-            date=date.today(),
-            heart_rate=72,
-            sleep_duration=7.5,
-            steps=8500,
-            mood_score=7
-        )
-        db.session.add(rpm_data)
-        db.session.commit()
-    
-    # Simulate real-time variations
-    import random
-    current_time = datetime.now()
-    
-    # Generate realistic variations
-    heart_rate = max(60, min(100, rpm_data.heart_rate + random.randint(-5, 5)))
-    sleep_duration = max(4, min(12, rpm_data.sleep_duration + random.uniform(-0.5, 0.5)))
-    steps = max(0, rpm_data.steps + random.randint(-200, 300))
-    mood_score = max(1, min(10, rpm_data.mood_score + random.uniform(-0.5, 0.5)))
-    
-    return jsonify({
-        'heart_rate': heart_rate,
-        'sleep_duration': round(sleep_duration, 1),
-        'steps': steps,
-        'mood_score': round(mood_score, 1),
-        'timestamp': current_time.strftime('%H:%M:%S'),
-        'alerts': []
-    })
 
 @app.route('/api/chat-message', methods=['POST'])
 @login_required
 def api_chat_message():
-    """AJAX endpoint for chat functionality"""
-    user_message = request.json.get('message', '')
     user_id = session['user_id']
-    
-    logger.info(f"Chat message from user {user_id}: {user_message}")
-    
+    user_message = request.json.get('message')
+
+    if not user_message:
+        return jsonify({'reply': 'No message received.'})
+
+    # Check for crisis keywords
+    crisis_keywords = ['suicide', 'kill myself', 'hopeless', 'end it all', 'self-harm']
+    if any(keyword in user_message.lower() for keyword in crisis_keywords):
+        return jsonify({
+            'reply': 'It sounds like you are going through a difficult time. Please reach out for immediate help. You can call the National Suicide Prevention Lifeline at 988 or visit their website. You are not alone.',
+            'is_crisis': True
+        })
+
     # Get user context for AI
-    user_context = {
-        'wellness_score': 'Good',  # Could be fetched from user data
-        'engagement_level': 'Active'
+    gamification = Gamification.query.filter_by(user_id=user_id).first()
+    wellness_trend = get_user_wellness_trend(user_id)
+
+    context = {
+        'wellness_score': wellness_trend.get('current_score', 'N/A'),
+        'engagement_level': f"{gamification.points} points, {gamification.streak} day streak" if gamification else 'Low'
     }
-    
-    # Generate AI response
-    chat_result = ai_service.generate_chat_response(user_message, user_context)
-    
-    return jsonify({
-        'success': True,
-        'response': chat_result['response'],
-        'is_ai_powered': chat_result['is_ai_powered'],
-        'timestamp': datetime.now().strftime('%H:%M')
-    })
+
+    try:
+        # Generate AI chat response
+        ai_reply = ai_service.generate_chat_response(user_message, context)
+        return jsonify({'reply': ai_reply, 'is_crisis': False})
+    except Exception as e:
+        logger.error(f"Error in AI chat for user {user_id}: {e}")
+        return jsonify({'reply': 'I am having trouble connecting right now. Please know that your feelings are valid.'}), 500
+
+
+@app.route('/api/institutional-analytics')
+@login_required
+@role_required('provider')
+def api_institutional_analytics():
+    institution = session.get('user_institution')
+    if not institution:
+        return jsonify({'error': 'Institution not found for user'}), 404
+
+    summary = get_institutional_summary(institution)
+    return jsonify(summary)
+
+def get_severity_info(assessment_type, score):
+    if score is None:
+        return {'severity': 'N/A', 'color': 'gray'}
+    score = float(score)
+    if assessment_type == 'GAD-7':
+        if score <= 4:
+            return {'severity': 'Minimal', 'color': 'green'}
+        elif score <= 9:
+            return {'severity': 'Mild', 'color': 'yellow'}
+        elif score <= 14:
+            return {'severity': 'Moderate', 'color': 'orange'}
+        else:
+            return {'severity': 'Severe', 'color': 'red'}
+    elif assessment_type == 'PHQ-9':
+        if score <= 4:
+            return {'severity': 'Minimal', 'color': 'green'}
+        elif score <= 9:
+            return {'severity': 'Mild', 'color': 'yellow'}
+        elif score <= 14:
+            return {'severity': 'Moderate', 'color': 'orange'}
+        else:
+            return {'severity': 'Severe', 'color': 'red'}
+    elif assessment_type == 'Daily Mood':
+        if score >= 4:
+            return {'severity': 'Positive', 'color': 'green'}
+        elif score >= 3:
+            return {'severity': 'Neutral', 'color': 'yellow'}
+        else:
+            return {'severity': 'Negative', 'color': 'red'}
+    else:
+        return {'severity': 'N/A', 'color': 'gray'}
+
+@app.context_processor
+def utility_processor():
+    return dict(get_severity_info=get_severity_info)
 
 if __name__ == '__main__':
-    init_database()
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=False)
+    # Create an app context for database initialization
+    with app.app_context():
+        try:
+            # Create all database tables
+            db.create_all()
+            
+            # Check if database needs initialization
+            if User.query.first() is None:
+                print("Initializing database with sample data...")
+                init_database(app)
+                print("Database initialized successfully!")
+            
+            # Start the Flask development server
+            app.run(debug=True, port=5000, use_reloader=False)
+            
+        except Exception as e:
+            print(f"Error initializing or running app: {str(e)}")

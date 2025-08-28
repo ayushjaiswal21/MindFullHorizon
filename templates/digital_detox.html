@@ -36,44 +36,44 @@
     </div>
     
     <div class="grid lg:grid-cols-2 gap-8">
+        <!-- Data Entry Form -->
         <div class="card p-6">
             <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                <i class="fas fa-mobile-alt text-purple-500 mr-3"></i>Daily Digital Check-in
+                <i class="fas fa-plus-circle text-blue-500 mr-3"></i>Log Today's Data
             </h3>
             
-            <form method="POST" id="digital-detox-form" class="enhanced-form">
-                <div class="space-y-4">
-                    <div>
-                        <label for="screen_time" class="block text-gray-700 font-medium mb-2">
-                            Daily Screen Time (in hours):
-                        </label>
-                        <input type="number" id="screen_time" name="screen_time" class="input-field" 
-                            placeholder="e.g., 5.5" min="0" step="0.1" required>
-                    </div>
-                    <div>
-                        <label for="academic_score" class="block text-gray-700 font-medium mb-2">
-                            Academic Score (last assignment/exam, out of 100):
-                        </label>
-                        <input type="number" id="academic_score" name="academic_score" class="input-field" 
-                            placeholder="e.g., 85" min="0" max="100" required>
-                    </div>
-                    <div>
-                        <label for="social_interactions" class="block text-gray-700 font-medium mb-2">
-                            Social Interactions Today:
-                        </label>
-                        <select id="social_interactions" name="social_interactions" class="input-field" required>
-                            <option value="" disabled selected>Select an option</option>
-                            <option value="high">High (e.g., met with friends/family)</option>
-                            <option value="medium">Medium (e.g., online chats)</option>
-                            <option value="low">Low (e.g., very little interaction)</option>
-                        </select>
-                    </div>
+            <form id="digital-detox-form" class="space-y-4">
+                <div>
+                    <label for="screen_time" class="block text-sm font-medium text-gray-700 mb-1">Screen Time (hours)</label>
+                    <input type="number" id="screen_time" name="screen_time" step="0.5" min="0" max="24" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           placeholder="e.g., 6.5" required>
                 </div>
                 
-                <button type="submit" class="btn-ai w-full" id="submit-btn">
-                    <i class="fas fa-brain mr-2"></i>Analyze with AI
+                <div>
+                    <label for="academic_score" class="block text-sm font-medium text-gray-700 mb-1">Academic Performance Score (0-100)</label>
+                    <input type="number" id="academic_score" name="academic_score" min="0" max="100" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           placeholder="e.g., 85" required>
+                </div>
+                
+                <div>
+                    <label for="social_interactions" class="block text-sm font-medium text-gray-700 mb-1">Social Interactions Level</label>
+                    <select id="social_interactions" name="social_interactions" 
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                        <option value="">Select level</option>
+                        <option value="low">Low (0-2 interactions)</option>
+                        <option value="medium">Medium (3-5 interactions)</option>
+                        <option value="high">High (6+ interactions)</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                    <i class="fas fa-save mr-2"></i>Save Today's Data
                 </button>
             </form>
+            
+            <div id="form-message" class="mt-4 hidden"></div>
         </div>
 
         <div class="card p-6">
@@ -134,19 +134,35 @@ function formatDate(dateString) {
 
 async function initializeScreenTimeChart() {
     const ctx = document.getElementById('screen-time-chart').getContext('2d');
-    const response = await fetch('/api/digital-detox-data');
-    const screenTimeData = await response.json();
+    
+    try {
+        const response = await fetch('/api/digital-detox-data');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const screenTimeData = await response.json();
+        
+        console.log('Screen time data received:', screenTimeData);
 
-    if (screenTimeData.length === 0) {
+        if (!screenTimeData || screenTimeData.length === 0) {
+            ctx.font = '16px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#6b7280';
+            ctx.fillText('No screen time data available yet.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+            ctx.fillText('Add data using the form below to see your trends.', ctx.canvas.width / 2, ctx.canvas.height / 2 + 25);
+            return;
+        }
+
+        const dates = screenTimeData.map(item => formatDate(item.date));
+        const hours = screenTimeData.map(item => item.hours);
+    } catch (error) {
+        console.error('Error fetching screen time data:', error);
         ctx.font = '16px Inter';
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#6b7280';
-        ctx.fillText('No screen time data available yet.', ctx.canvas.width / 2, ctx.canvas.height / 2);
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('Error loading chart data.', ctx.canvas.width / 2, ctx.canvas.height / 2);
         return;
     }
-
-    const dates = screenTimeData.map(item => formatDate(item.date));
-    const hours = screenTimeData.map(item => item.hours);
 
     new Chart(ctx, {
         type: 'line',
@@ -268,16 +284,14 @@ async function initializeCorrelationChart() {
 
 function setupDigitalDetoxForm() {
     const form = document.getElementById('digital-detox-form');
-    const submitBtn = document.getElementById('submit-btn');
-    const aiScoreSpan = document.getElementById('ai-score');
-    const aiSuggestionSpan = document.getElementById('ai-suggestion');
-    const lastAnalysisTimeSpan = document.getElementById('last-analysis-time');
+    const messageDiv = document.getElementById('form-message');
 
     form.addEventListener('submit', async function(event) {
         event.preventDefault(); 
 
+        const submitBtn = form.querySelector('button[type="submit"]');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Analyzing...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
 
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
@@ -294,52 +308,29 @@ function setupDigitalDetoxForm() {
             const result = await response.json();
 
             if (result.success) {
-                aiScoreSpan.textContent = result.ai_analysis.score;
+                messageDiv.className = 'mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded';
+                messageDiv.textContent = 'Data saved successfully! Your digital wellness data has been recorded.';
+                messageDiv.classList.remove('hidden');
                 
-                let suggestionText = result.ai_analysis.suggestion;
-                if (typeof suggestionText === 'object') {
-                    suggestionText = suggestionText.suggestion || JSON.stringify(suggestionText);
-                }
-                suggestionText = suggestionText.replace(/^.*?"suggestion":\s*"/, '').replace(/".*$/, '').replace(/\\n/g, ' ').replace(/\\"/g, '"');
+                // Reset form
+                form.reset();
                 
-                aiSuggestionSpan.textContent = suggestionText;
-                lastAnalysisTimeSpan.textContent = new Date().toLocaleTimeString();
-                
-                const academicScoreSpan = document.getElementById('current-academic-score');
-                const socialLevelSpan = document.getElementById('current-social-level');
-                
-                if (academicScoreSpan) {
-                    academicScoreSpan.textContent = data.academic_score || 'N/A';
-                }
-                if (socialLevelSpan) {
-                    const socialLevel = data.social_interactions || 'N/A';
-                    socialLevelSpan.textContent = socialLevel.charAt(0).toUpperCase() + socialLevel.slice(1);
-                }
-                
+                // Refresh charts after a short delay
                 setTimeout(() => {
-                    initializeScreenTimeChart();
-                    initializeCorrelationChart();
-                }, 500);
-                
-                if (result.message) {
-                    const successMsg = document.createElement('div');
-                    successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-                    successMsg.innerHTML = `<i class="fas fa-check mr-2"></i>${result.message}`;
-                    document.body.appendChild(successMsg);
-                    
-                    setTimeout(() => {
-                        successMsg.remove();
-                    }, 3000);
-                }
+                    location.reload();
+                }, 1500);
             } else {
-                alert('Error: ' + result.error);
+                messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+                messageDiv.textContent = result.message || 'Failed to save data. Please try again.';
+                messageDiv.classList.remove('hidden');
             }
         } catch (error) {
-            console.error('Error submitting digital detox data:', error);
-            alert('An error occurred while submitting data.');
+            messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+            messageDiv.textContent = 'Network error. Please check your connection and try again.';
+            messageDiv.classList.remove('hidden');
         } finally {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-brain mr-2"></i>Analyze with AI';
+            submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Today\'s Data';
         }
     });
 }

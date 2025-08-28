@@ -6,10 +6,10 @@ set -o errexit
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# Initialize the database unless explicitly skipped (e.g., on Render with Postgres)
+# Initialize the database unless explicitly skipped
 if [ "${SKIP_DB_INIT}" != "true" ]; then
-  echo "Running init_database() (override with SKIP_DB_INIT=true)"
-  python -c "from app import init_database; init_database()"
+  echo "Running database initialization..."
+  python -c "from app import app, init_database; init_database(app)"
 else
   echo "Skipping database initialization (SKIP_DB_INIT=true)"
 fi

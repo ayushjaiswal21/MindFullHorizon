@@ -1,11 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
+"""Database models for the Mindful Horizon application."""
+from database import db
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
 
-db = SQLAlchemy()
-
 class User(db.Model):
+    """User model for both patients and providers."""
     __tablename__ = 'users'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -21,6 +22,10 @@ class User(db.Model):
     digital_detox_logs = db.relationship('DigitalDetoxLog', backref='user', lazy=True)
     rpm_data = db.relationship('RPMData', backref='user', lazy=True)
     gamification = db.relationship('Gamification', backref='user', uselist=False)
+    medications = db.relationship('Medication', backref='user', lazy=True)
+    medication_logs = db.relationship('MedicationLog', backref='user', lazy=True)
+    breathing_logs = db.relationship('BreathingExerciseLog', backref='user', lazy=True)
+    yoga_logs = db.relationship('YogaLog', backref='user', lazy=True)
     
     def set_password(self, password):
         """Hash and set password"""
@@ -34,6 +39,7 @@ class User(db.Model):
         return f'<User {self.email}>'
 
 class Assessment(db.Model):
+    """Assessment model for storing user assessments."""
     __tablename__ = 'assessments'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -45,6 +51,7 @@ class Assessment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class DigitalDetoxLog(db.Model):
+    """Digital detox log model for storing user screen time and other digital wellness data."""
     __tablename__ = 'digital_detox_logs'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -58,6 +65,7 @@ class DigitalDetoxLog(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class RPMData(db.Model):
+    """RPM data model for storing user remote patient monitoring data."""
     __tablename__ = 'rpm_data'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -70,6 +78,7 @@ class RPMData(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Gamification(db.Model):
+    """Gamification model for storing user gamification data."""
     __tablename__ = 'gamification'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -81,6 +90,7 @@ class Gamification(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class ClinicalNote(db.Model):
+    """Clinical note model for storing provider notes."""
     __tablename__ = 'clinical_notes'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -93,6 +103,7 @@ class ClinicalNote(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class InstitutionalAnalytics(db.Model):
+    """Institutional analytics model for storing institutional data."""
     __tablename__ = 'institutional_analytics'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -107,6 +118,7 @@ class InstitutionalAnalytics(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Appointment(db.Model):
+    """Appointment model for storing user appointments."""
     __tablename__ = 'appointments'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -127,6 +139,7 @@ class Appointment(db.Model):
         return f'<Appointment {self.id} - {self.user_id} on {self.date} at {self.time}>'
 
 class Goal(db.Model):
+    """Goal model for storing user goals."""
     __tablename__ = 'goals'
     
     id = db.Column(db.Integer, primary_key=True)
@@ -150,19 +163,66 @@ class Goal(db.Model):
     
     @property
     def progress_percentage(self):
-        """Calculate progress percentage for measurable goals"""
+        """Calculate progress percentage based on current and target values."""
         if self.target_value and self.target_value > 0:
-            return min(100, (self.current_value / self.target_value) * 100)
+            return min((self.current_value / self.target_value) * 100, 100)
         return 0
-    
+
+class Medication(db.Model):
+    """Medication model for storing user medications."""
+    __tablename__ = 'medications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    dosage = db.Column(db.String(50), nullable=True)
+    frequency = db.Column(db.String(50), nullable=True)
+    time_of_day = db.Column(db.String(50), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    logs = db.relationship('MedicationLog', backref='medication', lazy=True, cascade="all, delete-orphan")
+
     def __repr__(self):
-        return f'<Goal {self.id} - {self.title} ({self.status})>'
+        return f'<Medication {self.name}>'
+
+class MedicationLog(db.Model):
+    """Medication log model for storing user medication logs."""
+    __tablename__ = 'medication_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    medication_id = db.Column(db.Integer, db.ForeignKey('medications.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    taken_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<MedicationLog {self.id}>'
+
+class BreathingExerciseLog(db.Model):
+    """Breathing exercise log model for storing user breathing exercise logs."""
+    __tablename__ = 'breathing_exercise_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    exercise_name = db.Column(db.String(100), nullable=False)
+    duration_minutes = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<BreathingExerciseLog {self.exercise_name}>'
+
+class YogaLog(db.Model):
+    """Yoga log model for storing user yoga logs."""
+    __tablename__ = 'yoga_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    session_name = db.Column(db.String(100), nullable=False)
+    duration_minutes = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<YogaLog {self.session_name}>'
 
 # Helper functions for analytics
 def get_user_wellness_trend(user_id, days=30):
     """Get wellness trend for a specific user over the last N days"""
-    from datetime import datetime, timedelta
-    
     end_date = datetime.now().date()
     start_date = end_date - timedelta(days=days)
     
@@ -182,7 +242,7 @@ def get_user_wellness_trend(user_id, days=30):
         'assessments': assessments
     }
 
-def get_institutional_summary(institution):
+def get_institutional_summary(institution, db):
     """Get summary statistics for an institution"""
     users = User.query.filter_by(institution=institution, role='patient').all()
     user_ids = [u.id for u in users]

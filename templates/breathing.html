@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Breathing Exercises - MindFull Horizon{% endblock %}
+
+{% block content %}
+<div class="container mx-auto mt-10 p-6">
+    <h1 class="text-4xl font-bold text-gray-800 mb-8 text-center">Mindful Breathing</h1>
+
+    <!-- Interactive Breathing Visualizer -->
+    <div class="bg-white p-8 rounded-lg shadow-lg mb-10 max-w-2xl mx-auto text-center">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Breathing Guide</h2>
+        <p id="breathing-instruction" class="text-xl text-indigo-600 font-medium mb-4">Select an exercise to begin</p>
+        <div id="breathing-visualizer" class="relative w-48 h-48 mx-auto bg-blue-100 rounded-full transition-transform duration-2000 ease-in-out flex items-center justify-center">
+            <div id="breathing-circle" class="w-24 h-24 bg-blue-400 rounded-full transition-all duration-2000 ease-in-out"></div>
+        </div>
+        <div class="mt-6 flex justify-center space-x-4">
+            <button onclick="startBreathing('box')" class="bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600">Box Breathing (4s)</button>
+            <button onclick="startBreathing('478')" class="bg-teal-500 text-white py-2 px-4 rounded-md hover:bg-teal-600">4-7-8 Breathing</button>
+        </div>
+    </div>
+
+    <!-- Log a Session Manually -->
+    <div class="bg-white p-8 rounded-lg shadow-lg mb-10 max-w-2xl mx-auto">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-6">Log a Breathing Session</h2>
+        <form action="{{ url_for('breathing') }}" method="POST" class="space-y-4">
+            <div>
+                <label for="exercise_name" class="block text-sm font-medium text-gray-600">Exercise Name</label>
+                <input type="text" id="exercise_name" name="exercise_name" required placeholder="e.g., Box Breathing" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label for="duration_minutes" class="block text-sm font-medium text-gray-600">Duration (minutes)</label>
+                <input type="number" id="duration_minutes" name="duration_minutes" required min="1" placeholder="e.g., 5" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Log Session</button>
+        </form>
+    </div>
+
+    <!-- Recent Breathing Logs -->
+    <div class="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto">
+        <h2 class="text-2xl font-semibold text-gray-700 mb-6">Recent Sessions</h2>
+        {% if recent_logs %}
+            <ul class="space-y-3">
+                {% for log in recent_logs %}
+                    <li class="p-4 bg-gray-50 rounded-lg border border-gray-200 flex justify-between items-center">
+                        <p class="font-medium text-gray-800">{{ log.exercise_name }} - {{ log.duration_minutes }} min</p>
+                        <p class="text-sm text-gray-500">{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-center text-gray-500">You have no logged breathing sessions yet.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+{% endblock %}
