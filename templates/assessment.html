@@ -78,8 +78,12 @@
             </div>
         </div>
         
-        <div class="flex justify-center">
-            <button id="saveMoodBtn" class="btn-primary" onclick="saveDailyMood()" disabled>
+        <div class="flex flex-col items-center">
+            <div id="mood-notes-container" class="w-full mb-4 hidden">
+                <label for="mood-notes" class="block text-sm font-medium text-gray-700 mb-1">Add a note (optional):</label>
+                <textarea id="mood-notes" class="w-full p-2 border rounded-lg" rows="2" placeholder="How are you feeling today?"></textarea>
+            </div>
+            <button id="save-mood-btn" class="btn-primary" onclick="saveDailyMood()" disabled>
                 <i class="fas fa-save mr-2"></i>Save Today's Mood
             </button>
         </div>
@@ -580,8 +584,14 @@ function selectMood(mood) {
         selectedOption.classList.add('selected');
         selectedMood = selectedOption;  // Store the selected element
         
+        // Show notes container
+        const notesContainer = document.getElementById('mood-notes-container');
+        if (notesContainer) {
+            notesContainer.classList.remove('hidden');
+        }
+        
         // Enable save button
-        const saveButton = document.getElementById('saveMoodBtn') || document.getElementById('save-mood-btn');
+        const saveButton = document.getElementById('save-mood-btn');
         if (saveButton) {
             saveButton.disabled = false;
         }
