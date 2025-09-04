@@ -77,10 +77,24 @@
         </div>
     </div>
 
-    <!-- Assessment History -->
+    <!-- Assessment History Chart -->
+    <div class="card mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-chart-line text-green-500 mr-2"></i>Assessment Score Trends
+        </h3>
+        <div class="assessment-chart-container">
+            <canvas id="assessment-history-chart"></canvas>
+        </div>
+        <div class="text-sm text-gray-600 mt-2">
+            <i class="fas fa-info-circle mr-2"></i>
+            Track your mental health scores over time to see your progress.
+        </div>
+    </div>
+
+    <!-- Assessment History Table -->
     <div class="card">
         <h3 class="text-xl font-semibold text-gray-800 mb-4">
-            <i class="fas fa-chart-line text-green-500 mr-2"></i>Your Assessment History
+            <i class="fas fa-history text-blue-500 mr-2"></i>Assessment History
         </h3>
         
         <div class="overflow-x-auto">
@@ -568,6 +582,151 @@ function showNotification(message, type) {
     // Example: document.getElementById('notification-area').innerHTML = `<div class="alert alert-${type}">${message}</div>`;
     alert(message); // Fallback for immediate feedback
 }
+
+// Initialize assessment history chart
+function initializeAssessmentHistoryChart() {
+    const ctx = document.getElementById('assessment-history-chart');
+    if (!ctx) return;
+
+    // Get assessment data from Jinja template
+    const assessments = {{ assessments|tojson|safe if assessments else '[]' }};
+    
+    if (assessments.length === 0) {
+        // Show placeholder chart with sample data
+        const sampleData = [
+            { date: '2025-08-25', type: 'GAD-7', score: 8 },
+            { date: '2025-08-26', type: 'PHQ-9', score: 6 },
+            { date: '2025-08-27', type: 'Daily Mood', score: 4 },
+            { date: '2025-08-28', type: 'GAD-7', score: 5 },
+            { date: '2025-08-29', type: 'Daily Mood', score: 5 }
+        ];
+        
+        const labels = sampleData.map(item => item.date);
+        const scores = sampleData.map(item => item.score);
+        const colors = sampleData.map(item => {
+            if (item.type === 'GAD-7') return '#3b82f6';
+            if (item.type === 'PHQ-9') return '#8b5cf6';
+            return '#10b981';
+        });
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Assessment Scores',
+                    data: scores,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    pointBackgroundColor: colors,
+                    pointBorderColor: colors,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Your Mental Health Journey (Sample Data)'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const assessment = sampleData[context.dataIndex];
+                                return `${assessment.type}: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Score'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        // Use real assessment data
+        const labels = assessments.map(assessment => assessment.date.strftime('%Y-%m-%d') if assessment.date else 'Unknown');
+        const scores = assessments.map(assessment => assessment.score);
+        const colors = assessments.map(assessment => {
+            if 'anxiety' in assessment.assessment_type.lower(): return '#3b82f6';
+            if 'depression' in assessment.assessment_type.lower(): return '#8b5cf6';
+            if 'mood' in assessment.assessment_type.lower(): return '#10b981';
+            return '#6b7280';
+        });
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Assessment Scores',
+                    data: scores,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    pointBackgroundColor: colors,
+                    pointBorderColor: colors,
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Your Mental Health Journey'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const assessment = assessments[context.dataIndex];
+                                return `${assessment.assessment_type}: ${context.parsed.y}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Score'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    }
+                }
+            }
+        });
+    }
+}
+
+// Initialize charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAssessmentHistoryChart();
+});
 
 // Function to view assessment details (placeholder for now)
 function viewAssessmentDetails(assessmentId) {
