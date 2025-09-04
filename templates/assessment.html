@@ -3,6 +3,14 @@
 {% block title %}Mental Health Assessment - Mindful Horizon{% endblock %}
 
 {% block content %}
+<!-- Assessment data will be passed via data attribute -->
+<div id="assessment-data" data-assessments='{{ assessments|tojson|safe if assessments else "[]" }}'></div>
+
+<script type="text/javascript">
+    // Get assessment data from data attribute
+    const assessmentData = JSON.parse(document.getElementById('assessment-data').dataset.assessments || '[]');
+</script>
+
 <div class="max-w-4xl mx-auto">
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-800 mb-2">Mental Health Assessment</h1>
@@ -14,14 +22,14 @@
         <div class="card cursor-pointer hover:shadow-xl transition-all duration-300" onclick="startAssessment('anxiety')">
             <div class="text-center">
                 <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-heart text-blue-600 text-2xl"></i>
+                    <i class="fas fa-heartbeat text-blue-600 text-2xl"></i>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">Anxiety Assessment (GAD-7)</h3>
-                <p class="text-gray-600 text-sm mb-4">7-question screening for generalized anxiety disorder</p>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Anxiety Screening (GAD-7)</h3>
+                <p class="text-gray-600 text-sm mb-4">7-question assessment for anxiety symptoms</p>
                 <div class="bg-blue-50 p-3 rounded-lg">
-                    <span class="text-sm text-blue-700">⏱️ Takes 3-5 minutes</span>
+                    <span class="text-sm text-blue-700">⏱️ Takes 2-3 minutes</span>
                 </div>
-                <button class="mt-3 btn-primary w-full">Start Assessment</button>
+                <button class="mt-3 btn-primary w-full" onclick="startAssessment('anxiety')">Start Assessment</button>
             </div>
         </div>
 
@@ -35,7 +43,7 @@
                 <div class="bg-purple-50 p-3 rounded-lg">
                     <span class="text-sm text-purple-700">⏱️ Takes 5-7 minutes</span>
                 </div>
-                <button class="mt-3 btn-primary w-full">Start Assessment</button>
+                <button class="mt-3 btn-primary w-full" onclick="startAssessment('depression')">Start Assessment</button>
             </div>
         </div>
     </div>
@@ -112,7 +120,7 @@
                     {% if assessments %}
                         {% for assessment in assessments %}
                         <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">{{ assessment.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ assessment.created_at }}</td>
                             <td class="px-4 py-3 text-sm text-gray-700">{{ assessment.assessment_type }}</td>
                             <td class="px-4 py-3 text-sm font-semibold text-blue-600">{{ assessment.score }}</td>
                             <td class="px-4 py-3 text-sm">
@@ -354,61 +362,104 @@ function previousQuestion() {
 
 async function completeAssessment() {
     if (assessmentAnswers[currentQuestion] === undefined) {
-        alert('Please select an answer before completing the assessment.');
+        showNotification('Please select an answer before completing the assessment.', 'error');
         return;
     }
 
     const totalScore = assessmentAnswers.reduce((sum, score) => sum + score, 0);
     const maxScore = currentAssessment.questions.length * 3;
+    const questionContainer = document.getElementById('question-container');
 
-    // Show loading state for AI insights
-    const aiInsightsSection = document.getElementById('aiInsightsContent');
-    const aiLoadingSection = document.getElementById('aiInsightsLoading');
-    const aiComingSoonSection = document.getElementById('aiInsightsComingSoon');
+    // Show loading state
+    questionContainer.innerHTML = `
+        <div class="text-center py-8">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">Processing your assessment...</p>
+        </div>
+    `;
 
-    if (aiInsightsSection) aiInsightsSection.classList.add('hidden');
-    if (aiLoadingSection) aiLoadingSection.classList.remove('hidden');
-    if (aiComingSoonSection) aiComingSoonSection.classList.add('hidden');
-
-    // Save assessment to backend
     try {
+        // Save assessment to backend
         const response = await fetch('/api/save-assessment', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
                 assessment_type: currentAssessment.type,
                 score: totalScore,
                 responses: assessmentAnswers
-            }),
+            })
         });
 
         const data = await response.json();
-        if (data.success) {
-            showNotification('Assessment saved successfully!', 'success');
-            // Close modal after successful save
+        
+        if (response.ok) {
+            // Show results with score and feedback
+            questionContainer.innerHTML = `
+                <div class="text-center py-6">
+                    <div class="text-6xl text-green-500 mb-4">✓</div>
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Assessment Complete!</h2>
+                    <p class="text-gray-600 mb-2">Your score: <span class="font-bold">${totalScore}/${maxScore}</span></p>
+                    ${data.points_earned ? 
+                        `<p class="text-green-600 mb-2">+${data.points_earned} points earned!</p>` : ''}
+                    
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 mt-4 text-left rounded">
+                        <p class="text-gray-800">${getAssessmentFeedback(currentAssessment.type, totalScore, maxScore)}</p>
+                        ${data.ai_insights ? 
+                            `<div class="mt-3 p-3 bg-white rounded border border-blue-100">
+                                <p class="text-sm text-gray-700">${data.ai_insights}</p>
+                            </div>` : ''}
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 mt-6">
+                        <button onclick="closeAssessment()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                            Close
+                        </button>
+                        <button onclick="viewProgress()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition">
+                            View Progress
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Update points display if it exists
+            if (data.points_earned) {
+                const pointsElement = document.getElementById('user-points');
+                if (pointsElement) {
+                    const currentPoints = parseInt(pointsElement.textContent) || 0;
+                    pointsElement.textContent = currentPoints + data.points_earned;
+                }
+            }
+            
+            // Close modal after delay
             setTimeout(() => {
                 closeAssessment();
-                // Reload page to show updated assessment history
-                location.reload();
-            }, 1500);
+                location.reload(); // Reload to show updated history
+            }, 5000);
+            
         } else {
-            showNotification(`Error saving assessment: ${data.message}`, 'error');
-            if (aiComingSoonSection) {
-                aiComingSoonSection.classList.remove('hidden');
-                aiComingSoonSection.innerHTML = '<p class="text-sm text-gray-600">We\'re having trouble generating AI insights right now. Please try again later.</p>';
-            }
-            if (aiLoadingSection) aiLoadingSection.classList.add('hidden');
+            throw new Error(data.message || 'Failed to save assessment');
         }
+        
     } catch (error) {
         console.error('Error saving assessment:', error);
-        showNotification('An error occurred while saving the assessment.', 'error');
-        if (aiComingSoonSection) {
-            aiComingSoonSection.classList.remove('hidden');
-            aiComingSoonSection.innerHTML = '<p class="text-sm text-gray-600">We\'re having trouble generating AI insights right now. Please try again later.</p>';
-        }
-        if (aiLoadingSection) aiLoadingSection.classList.add('hidden');
+        questionContainer.innerHTML = `
+            <div class="text-center py-6">
+                <div class="text-6xl text-red-500 mb-4">✗</div>
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Something went wrong</h2>
+                <p class="text-gray-600 mb-6">${error.message || 'An error occurred while saving your assessment.'}</p>
+                <div class="flex flex-col sm:flex-row justify-center gap-3">
+                    <button onclick="closeAssessment()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                        Close
+                    </button>
+                    <button onclick="completeAssessment()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition">
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        `;
     }
 }
 
@@ -518,50 +569,98 @@ function closeAssessment() {
 }
 
 function selectMood(mood) {
-    selectedMood = mood;
-    
-    // Remove previous selection
+    // Remove selected class from all mood options
     document.querySelectorAll('.mood-option').forEach(option => {
-        option.classList.remove('bg-blue-100', 'border-blue-500', 'border-2');
+        option.classList.remove('selected');
     });
     
-    // Add selection to clicked mood
-    const selectedOption = document.querySelector(`[data-mood="${mood}"]`);
-    selectedOption.classList.add('bg-blue-100', 'border-blue-500', 'border-2');
-    
-    // Enable save button
-    document.getElementById('saveMoodBtn').disabled = false;
+    // Add selected class to clicked option
+    const selectedOption = document.querySelector(`.mood-option[data-mood="${mood}"]`);
+    if (selectedOption) {
+        selectedOption.classList.add('selected');
+        selectedMood = selectedOption;  // Store the selected element
+        
+        // Enable save button
+        const saveButton = document.getElementById('saveMoodBtn') || document.getElementById('save-mood-btn');
+        if (saveButton) {
+            saveButton.disabled = false;
+        }
+    }
 }
 
 async function saveDailyMood() {
-    if (selectedMood) {
-        try {
-            const response = await fetch('/api/save-assessment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    assessment_type: 'Daily Mood',
-                    score: selectedMood,
-                    responses: { mood: selectedMood }
-                }),
-            });
+    if (!selectedMood) {
+        showNotification('Please select a mood before saving.', 'error');
+        return;
+    }
 
-            const data = await response.json();
-            if (data.success) {
-                showNotification(`Daily mood saved! You selected ${selectedMood}/5`, 'success');
-                document.getElementById('saveMoodBtn').disabled = true;
-                document.getElementById('saveMoodBtn').innerHTML = '<i class="fas fa-check mr-2"></i>Mood Saved for Today';
-                // Reload the page to show updated history
-                location.reload();
-            } else {
-                showNotification(`Error saving mood: ${data.message}`, 'error');
+    const mood = parseInt(selectedMood.getAttribute('data-mood'));
+    const notes = document.getElementById('mood-notes').value;
+    const saveButton = document.getElementById('save-mood-btn');
+    
+    // Disable button and show loading state
+    saveButton.disabled = true;
+    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+
+    try {
+        const response = await fetch('/api/save-mood', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'  // For CSRF protection
+            },
+            body: JSON.stringify({
+                mood: mood,
+                notes: notes
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification('Mood saved successfully!', 'success');
+            
+            // Reset form
+            document.querySelectorAll('.mood-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.getElementById('mood-notes').value = '';
+            
+            // Close the mood modal if it's open
+            const moodModal = document.getElementById('moodModal');
+            if (moodModal) {
+                moodModal.classList.add('hidden');
             }
-        } catch (error) {
-            console.error('Error saving daily mood:', error);
-            showNotification('An error occurred while saving your mood.', 'error');
+            
+            // Update points and streak display if they exist
+            if (data.points !== undefined) {
+                const pointsElement = document.getElementById('user-points');
+                if (pointsElement) {
+                    pointsElement.textContent = data.points;
+                }
+            }
+            
+            if (data.streak !== undefined) {
+                const streakElement = document.getElementById('user-streak');
+                if (streakElement) {
+                    streakElement.textContent = `${data.streak} day${data.streak !== 1 ? 's' : ''}`;
+                }
+            }
+            
+            // Reload the page to show updated data
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            throw new Error(data.message || 'Failed to save mood');
         }
+    } catch (error) {
+        console.error('Error saving mood:', error);
+        showNotification(error.message || 'An error occurred while saving your mood', 'error');
+    } finally {
+        // Re-enable button
+        saveButton.disabled = false;
+        saveButton.textContent = 'Save Mood';
     }
 }
 
@@ -588,17 +687,14 @@ function initializeAssessmentHistoryChart() {
     const ctx = document.getElementById('assessment-history-chart');
     if (!ctx) return;
 
-    // Get assessment data from Jinja template
-    const assessments = {{ assessments|tojson|safe if assessments else '[]' }};
-    
-    if (assessments.length === 0) {
-        // Show placeholder chart with sample data
+    if (!assessmentData || assessmentData.length === 0) {
+        // Show placeholder chart with sample data if no assessments exist
         const sampleData = [
             { date: '2025-08-25', type: 'GAD-7', score: 8 },
             { date: '2025-08-26', type: 'PHQ-9', score: 6 },
-            { date: '2025-08-27', type: 'Daily Mood', score: 4 },
+            { date: '2025-08-27', type: 'Mood', score: 4 },
             { date: '2025-08-28', type: 'GAD-7', score: 5 },
-            { date: '2025-08-29', type: 'Daily Mood', score: 5 }
+            { date: '2025-08-29', type: 'Mood', score: 5 }
         ];
         
         const labels = sampleData.map(item => item.date);
@@ -606,38 +702,31 @@ function initializeAssessmentHistoryChart() {
         const colors = sampleData.map(item => {
             if (item.type === 'GAD-7') return '#3b82f6';
             if (item.type === 'PHQ-9') return '#8b5cf6';
-            return '#10b981';
+            return '#10b981'; // Default color for mood
         });
-
+        
         new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Assessment Scores',
+                    label: 'Assessment Score',
                     data: scores,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    pointBackgroundColor: colors,
-                    pointBorderColor: colors,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
+                    backgroundColor: colors,
+                    borderColor: '#9ca3af',
+                    borderWidth: 1,
+                    tension: 0.3,
+                    fill: false
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
                 plugins: {
-                    title: {
-                        display: true,
-                        text: 'Your Mental Health Journey (Sample Data)'
-                    },
+                    legend: { display: false },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                const assessment = sampleData[context.dataIndex];
-                                return `${assessment.type}: ${context.parsed.y}`;
+                                return `${sampleData[context.dataIndex].type}: ${context.raw}`;
                             }
                         }
                     }
@@ -645,82 +734,132 @@ function initializeAssessmentHistoryChart() {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Score'
-                        }
+                        max: 27, // Max score for GAD-7 (21) + some padding
+                        title: { display: true, text: 'Score' }
                     },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    }
+                    x: { title: { display: true, text: 'Date' } }
                 }
             }
         });
-    } else {
-        // Use real assessment data
-        const labels = assessments.map(assessment => assessment.date.strftime('%Y-%m-%d') if assessment.date else 'Unknown');
-        const scores = assessments.map(assessment => assessment.score);
-        const colors = assessments.map(assessment => {
-            if 'anxiety' in assessment.assessment_type.lower(): return '#3b82f6';
-            if 'depression' in assessment.assessment_type.lower(): return '#8b5cf6';
-            if 'mood' in assessment.assessment_type.lower(): return '#10b981';
-            return '#6b7280';
-        });
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Assessment Scores',
-                    data: scores,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    pointBackgroundColor: colors,
-                    pointBorderColor: colors,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Your Mental Health Journey'
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                const assessment = assessments[context.dataIndex];
-                                return `${assessment.assessment_type}: ${context.parsed.y}`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Score'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    }
-                }
-            }
-        });
+        return;
     }
+    
+    // Process real assessment data
+    const sortedAssessments = [...assessmentData].sort((a, b) => 
+        new Date(a.created_at) - new Date(b.created_at)
+    );
+    
+    const labels = sortedAssessments.map(assessment => {
+        const date = new Date(assessment.created_at);
+        return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    });
+    
+    const scores = sortedAssessments.map(assessment => assessment.score);
+    
+    const colors = sortedAssessments.map(assessment => {
+        if (assessment.assessment_type === 'anxiety') return '#3b82f6'; // Blue for anxiety
+        if (assessment.assessment_type === 'depression') return '#8b5cf6'; // Purple for depression
+        if (assessment.assessment_type === 'mood') return '#10b981'; // Green for mood
+        return '#9ca3af'; // Gray for unknown types
+    });
+    
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Assessment Score',
+                data: scores,
+                backgroundColor: colors,
+                borderColor: '#9ca3af',
+                borderWidth: 1,
+                pointBackgroundColor: colors,
+                pointBorderColor: '#fff',
+                pointHoverBackgroundColor: '#fff',
+                pointHoverBorderColor: colors,
+                tension: 0.3,
+                fill: false
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const assessment = sortedAssessments[context.dataIndex];
+                            const type = assessment.assessment_type === 'anxiety' ? 'GAD-7' : 
+                                        assessment.assessment_type === 'depression' ? 'PHQ-9' : 
+                                        'Mood';
+                            return `${type}: ${context.raw}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 27, // Max score for GAD-7 (21) + some padding
+                    title: { display: true, text: 'Score' },
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                },
+                x: { 
+                    title: { display: true, text: 'Date' },
+                    grid: { display: false }
+                }
+            },
+            elements: {
+                line: { borderWidth: 2 },
+                point: { radius: 4, hoverRadius: 6 }
+            }
+        }
+    });
+}
+
+// Get feedback based on assessment type and score
+function getAssessmentFeedback(assessmentType, score, maxScore) {
+    if (assessmentType === 'anxiety') {
+        if (score >= 15) {
+            return 'Your score suggests severe anxiety. We strongly recommend speaking with a mental health professional as soon as possible. Consider reaching out to your healthcare provider or a therapist for support.';
+        } else if (score >= 10) {
+            return 'Your score suggests moderate anxiety. You might benefit from speaking with a mental health professional to discuss your symptoms and explore treatment options.';
+        } else if (score >= 5) {
+            return 'Your score suggests mild anxiety. While your symptoms are not severe, you might find it helpful to practice stress-reduction techniques or speak with a healthcare provider if symptoms persist.';
+        } else {
+            return 'Your score suggests minimal to no anxiety. Continue practicing good mental health habits to maintain your well-being.';
+        }
+    } else if (assessmentType === 'depression') {
+        if (score >= 20) {
+            return 'Your score suggests severe depression. We strongly encourage you to seek help from a mental health professional as soon as possible. You are not alone, and support is available.';
+        } else if (score >= 15) {
+            return 'Your score suggests moderately severe depression. It would be beneficial to consult with a mental health professional to discuss your symptoms and treatment options.';
+        } else if (score >= 10) {
+            return 'Your score suggests moderate depression. Consider speaking with a healthcare provider about how you\'ve been feeling. Early intervention can be very helpful.';
+        } else if (score >= 5) {
+            return 'Your score suggests mild depression. While your symptoms are not severe, it may be helpful to monitor your mood and consider reaching out for support if symptoms persist or worsen.';
+        } else {
+            return 'Your score suggests minimal to no depression. Continue to engage in activities that support your mental well-being.';
+        }
+    } else if (assessmentType === 'mood') {
+        const percentage = (score / maxScore) * 100;
+        if (percentage >= 80) {
+            return 'You\'re feeling great! Keep up whatever is working for you. Consider sharing your positive energy with others.';
+        } else if (percentage >= 60) {
+            return 'You\'re in a good place. Continue with your current routine and consider trying new activities that bring you joy.';
+        } else if (percentage >= 40) {
+            return 'You might be feeling a bit down today. Consider reaching out to a friend or engaging in an activity you enjoy.';
+        } else if (percentage >= 20) {
+            return 'You seem to be having a tough time. Consider talking to someone you trust about how you\'re feeling.';
+        } else {
+            return 'We\'re sorry to hear you\'re feeling this way. Please know that support is available, and you don\'t have to go through this alone.';
+        }
+    }
+    return 'Thank you for completing the assessment. Your responses have been recorded.';
 }
 
 // Initialize charts when page loads

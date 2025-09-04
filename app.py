@@ -11,7 +11,7 @@ from flask_migrate import Migrate
 
 from ai_service import ai_service
 from database import db
-from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, get_user_wellness_trend, get_institutional_summary
+from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, MoodLog, get_user_wellness_trend, get_institutional_summary
 
 # Load environment variables from .env file
 try:
@@ -1032,15 +1032,32 @@ def submit_digital_detox():
 @role_required('patient')
 def assessment():
     user_id = session['user_id']
-    assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+    assessment_objects = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
     
-    # Convert ai_insights from JSON string to dict for the template
-    for assessment in assessments:
-        if assessment.ai_insights and isinstance(assessment.ai_insights, str):
-            try:
-                assessment.ai_insights = json.loads(assessment.ai_insights)
-            except json.JSONDecodeError:
-                assessment.ai_insights = {}
+    # Convert SQLAlchemy objects to a list of dictionaries
+    assessments = []
+    for assessment in assessment_objects:
+        assessment_dict = {
+            'id': assessment.id,
+            'user_id': assessment.user_id,
+            'assessment_type': assessment.assessment_type,
+            'score': assessment.score,
+            'responses': assessment.responses,
+            'created_at': assessment.created_at.isoformat() if assessment.created_at else None,
+            'ai_insights': {}
+        }
+        
+        # Parse ai_insights if it exists
+        if assessment.ai_insights:
+            if isinstance(assessment.ai_insights, str):
+                try:
+                    assessment_dict['ai_insights'] = json.loads(assessment.ai_insights)
+                except json.JSONDecodeError:
+                    assessment_dict['ai_insights'] = {}
+            else:
+                assessment_dict['ai_insights'] = assessment.ai_insights
+        
+        assessments.append(assessment_dict)
     
     return render_template('assessment.html', user_name=session['user_name'], assessments=assessments)
 
@@ -1080,22 +1097,30 @@ def api_save_assessment():
 
     try:
         # Create new assessment with AI insights
+        logger.info(f"Responses type: {type(responses)}")
+        logger.info(f"Responses content: {responses}")
+
         new_assessment = Assessment(
             user_id=user_id,
             assessment_type=assessment_type,
             score=score,
-            responses=responses,
+            responses=json.dumps(responses),
             ai_insights=json.dumps(ai_insights) if ai_insights else None  # Convert dict to JSON string
         )
         
         db.session.add(new_assessment)
         db.session.commit()
         
-        return jsonify({
-            'success': True, 
-            'message': 'Assessment saved successfully!',
-            'insights': json.loads(new_assessment.ai_insights) if new_assessment.ai_insights else {}
-        }), 200
+        try:
+            return jsonify({
+                'success': True, 
+                'message': 'Assessment saved successfully!',
+                'insights': json.loads(new_assessment.ai_insights) if new_assessment.ai_insights else {}
+            }), 200
+        except TypeError as e:
+            logger.error(f"TypeError during jsonify: {e}")
+            logger.error(f"Data causing error: {new_assessment.ai_insights}")
+            return jsonify({'success': False, 'message': 'Error serializing response.'}), 500
         
     except Exception as e:
         db.session.rollback()
@@ -1460,6 +1485,63 @@ def get_severity_info(assessment_type, score):
 @app.context_processor
 def utility_processor():
     return dict(get_severity_info=get_severity_info)
+
+@app.route('/api/save-mood', methods=['POST'])
+@login_required
+@role_required('patient')
+def save_mood():
+    user_id = session['user_id']
+    data = request.json
+    
+    try:
+        mood = int(data.get('mood'))
+        if not (1 <= mood <= 5):
+            return jsonify({'success': False, 'message': 'Mood must be between 1 and 5'}), 400
+            
+        # Create new mood log
+        mood_log = MoodLog(
+            user_id=user_id,
+            mood_score=mood,
+            notes=data.get('notes', '')
+        )
+        
+        db.session.add(mood_log)
+        
+        # Also update RPM data for dashboard
+        today = datetime.utcnow().date()
+        rpm_data = RPMData.query.filter_by(user_id=user_id, date=today).first()
+        if not rpm_data:
+            rpm_data = RPMData(user_id=user_id, date=today, mood_score=mood)
+            db.session.add(rpm_data)
+        else:
+            rpm_data.mood_score = mood
+        
+        # Update gamification points
+        gamification = Gamification.query.filter_by(user_id=user_id).first()
+        if gamification:
+            # Add points for mood check-in
+            gamification.points += 10
+            
+            # Check for streak
+            if gamification.last_activity and gamification.last_activity == today - timedelta(days=1):
+                gamification.streak += 1
+            elif not gamification.last_activity or gamification.last_activity < today - timedelta(days=1):
+                gamification.streak = 1
+            
+            gamification.last_activity = today
+        
+        db.session.commit()
+        return jsonify({
+            'success': True,
+            'message': 'Mood saved successfully',
+            'points': gamification.points if gamification else 0,
+            'streak': gamification.streak if gamification else 0
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error saving mood: {str(e)}')
+        return jsonify({'success': False, 'message': 'An error occurred while saving your mood'}), 500
 
 if __name__ == '__main__':
     # Create an app context for database initialization

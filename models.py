@@ -218,7 +218,19 @@ class YogaLog(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f'<YogaLog {self.session_name}>'
+        return f'<YogaLog {self.session_name} - {self.duration_minutes} minutes>'
+
+class MoodLog(db.Model):
+    """Mood log model for storing user mood data."""
+    __tablename__ = 'mood_logs'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    mood_score = db.Column(db.Integer, nullable=False)  # 1-5 scale
+    notes = db.Column(db.Text, nullable=True)  # Optional notes about mood
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<MoodLog {self.mood_score}/5 - {self.created_at}>'
 
 # Helper functions for analytics
 def get_user_wellness_trend(user_id, days=30):
