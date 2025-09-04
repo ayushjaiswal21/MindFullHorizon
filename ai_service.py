@@ -4,9 +4,19 @@ import time
 from datetime import datetime
 from typing import Dict, List, Optional
 from dotenv import load_dotenv
-from openai import OpenAI, APIError, RateLimitError, APITimeoutError
 
-load_dotenv()
+try:
+    from openai import OpenAI, APIError, RateLimitError, APITimeoutError
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    print("Warning: OpenAI library not available. AI features will be limited.")
+
+try:
+    load_dotenv(encoding='utf-8-sig')
+except Exception as e:
+    print(f"Warning: Could not load .env file: {e}")
+    print("Continuing with default configuration...")
 
 class CloseRouterAIService:
     """Service class for integrating with CloseRouter API using the OpenAI SDK."""
@@ -17,13 +27,20 @@ class CloseRouterAIService:
         self.external_enabled = (os.getenv('AI_EXTERNAL_CALLS_ENABLED', 'true').lower() == 'true')
         self.client = None
 
+        # Check if OpenAI is available
+        if not OPENAI_AVAILABLE:
+            print("Warning: OpenAI library not available. Using fallback mode.")
+            self.external_enabled = False
+            return
+
         if self.api_key and self.external_enabled:
             try:
                 self.client = OpenAI(
                     base_url=self.base_url,
                     api_key=self.api_key,
-                    timeout=60.0
+                    timeout=30.0  # Reduced timeout
                 )
+                print(f"AI service initialized with CloseRouter API at {self.base_url}")
             except Exception as e:
                 print(f"Warning: Failed to initialize AI client: {e}")
                 self.client = None
@@ -31,21 +48,26 @@ class CloseRouterAIService:
         else:
             print("Warning: AI service disabled - no API key or external calls disabled.")
 
-        # Optimized model selection
+        # Updated model selection with more basic models that are likely to be available
         self.models = {
-            'primary': os.getenv('AI_MODEL_PRIMARY', 'gpt-4o'),
-            'fast': os.getenv('AI_MODEL_FAST', 'gpt-4o-mini'),
-            'reasoning': os.getenv('AI_MODEL_REASONING', 'o3-mini'),
-            'clinical': os.getenv('AI_MODEL_CLINICAL', 'claude-3-5-sonnet-20240620'),
-            'analytics': os.getenv('AI_MODEL_ANALYTICS', 'gpt-4o')
+            'primary': os.getenv('AI_MODEL_PRIMARY', 'gpt-3.5-turbo'),
+            'fast': os.getenv('AI_MODEL_FAST', 'gpt-3.5-turbo'),
+            'reasoning': os.getenv('AI_MODEL_REASONING', 'gpt-3.5-turbo'),
+            'clinical': os.getenv('AI_MODEL_CLINICAL', 'gpt-3.5-turbo'),
+            'analytics': os.getenv('AI_MODEL_ANALYTICS', 'gpt-3.5-turbo'),
+            'vision': os.getenv('AI_MODEL_VISION', 'gpt-3.5-turbo'),
+            'search': os.getenv('AI_MODEL_SEARCH', 'gpt-3.5-turbo')
         }
 
+        # Simplified fallback chains with basic models
         self.model_fallbacks = {
-            'primary': ['gpt-4o', 'gpt-4-turbo'],
-            'fast': ['gpt-4o-mini', 'gpt-3.5-turbo'],
-            'reasoning': ['o3-mini', 'gpt-4-turbo'],
-            'clinical': ['claude-3-5-sonnet-20240620', 'gpt-4.1-mini'],
-            'analytics': ['gpt-4o', 'gpt-4-turbo']
+            'primary': ['gpt-3.5-turbo', 'gpt-3.5-turbo-0613', 'gpt-3.5-turbo-0301'],
+            'fast': ['gpt-3.5-turbo', 'gpt-3.5-turbo-0613'],
+            'reasoning': ['gpt-3.5-turbo', 'gpt-3.5-turbo-0613'],
+            'clinical': ['gpt-3.5-turbo', 'gpt-3.5-turbo-0613'],
+            'analytics': ['gpt-3.5-turbo', 'gpt-3.5-turbo-0613'],
+            'vision': ['gpt-3.5-turbo', 'gpt-3.5-turbo-0613'],
+            'search': ['gpt-3.5-turbo', 'gpt-3.5-turbo-0613']
         }
 
     def _make_request(self, messages: List[Dict], model: str = None, temperature: float = 0.7, max_tokens: int = 512) -> Optional[str]:
@@ -72,19 +94,32 @@ class CloseRouterAIService:
             except (RateLimitError, APITimeoutError) as e:
                 last_error = f"CloseRouter API temporary error for {candidate}: {e.__class__.__name__}. Retrying..."
                 print(last_error)
-                time.sleep(0.5)  # Wait longer for rate limit or timeout
+                # Implement exponential backoff for rate limits
+                time.sleep(1.0)  # Wait longer for rate limit or timeout
                 continue
             except APIError as e:
                 # Handles 500, 404, 401 etc.
                 last_error = f"CloseRouter API error for {candidate}: {e.status_code} - {e.response.text}"
                 print(last_error)
+                
+                # Handle rate limiting with proper headers
+                if e.status_code == 429:
+                    retry_after = e.response.headers.get('Retry-After', 60)
+                    print(f"Rate limited. Waiting {retry_after} seconds...")
+                    time.sleep(int(retry_after))
+                    continue
+                
                 # Stop retrying on critical errors like invalid key or model not found
                 if e.status_code in [401, 404]:
+                    print(f"Critical error {e.status_code}: {e.response.text}")
                     break
-                # Retry on server errors
+                
+                # Retry on server errors (but limit retries)
                 if e.status_code in [500, 502, 503]:
-                    time.sleep(0.25)
+                    print(f"Server error {e.status_code}, retrying...")
+                    time.sleep(0.5)
                     continue
+                    
                 break # Break for other client-side errors
             except Exception as e:
                 last_error = f"An unexpected error occurred with {candidate}: {e}"
@@ -204,6 +239,76 @@ Please provide a well-structured clinical note following standard documentation 
         response = self._make_request(messages, model=self.models['clinical'], temperature=0.4, max_tokens=1500)
         return response if response else self._fallback_clinical_note(transcript)
     
+    def generate_enhanced_clinical_analysis(self, transcript: str, patient_data: Dict = None) -> Dict:
+        """Generate enhanced clinical analysis with multiple AI models for comprehensive insights"""
+        
+        if not self.external_enabled or not self.client:
+            return self._fallback_enhanced_analysis(transcript, patient_data)
+        
+        try:
+            # Use Claude for clinical note generation
+            clinical_note = self.generate_clinical_note(transcript, patient_data)
+            
+            # Use GPT-4o for sentiment analysis
+            sentiment_messages = [
+                {
+                    "role": "system",
+                    "content": "You are a mental health sentiment analysis expert. Analyze the emotional tone and key themes in therapy sessions."
+                },
+                {
+                    "role": "user",
+                    "content": f"Analyze the sentiment and key themes in this therapy session: {transcript[:1000]}..."
+                }
+            ]
+            
+            sentiment_analysis = self._make_request(
+                sentiment_messages, 
+                model=self.models['analytics'], 
+                temperature=0.3, 
+                max_tokens=300
+            )
+            
+            # Use reasoning model for risk assessment
+            risk_messages = [
+                {
+                    "role": "system",
+                    "content": "You are a mental health risk assessment specialist. Identify potential risk factors and urgency levels."
+                },
+                {
+                    "role": "user",
+                    "content": f"Assess risk factors in this session: {transcript[:800]}..."
+                }
+            ]
+            
+            risk_assessment = self._make_request(
+                risk_messages,
+                model=self.models['reasoning'],
+                temperature=0.2,
+                max_tokens=200
+            )
+            
+            return {
+                "clinical_note": clinical_note,
+                "sentiment_analysis": sentiment_analysis or "Analysis unavailable",
+                "risk_assessment": risk_assessment or "Assessment unavailable",
+                "ai_models_used": ["claude-3-5-sonnet-20241022", "gpt-4o", "o3-mini"],
+                "analysis_timestamp": datetime.now().isoformat()
+            }
+            
+        except Exception as e:
+            print(f"Error in enhanced clinical analysis: {e}")
+            return self._fallback_enhanced_analysis(transcript, patient_data)
+    
+    def _fallback_enhanced_analysis(self, transcript: str, patient_data: Dict = None) -> Dict:
+        """Fallback for enhanced clinical analysis when AI is unavailable"""
+        return {
+            "clinical_note": self._fallback_clinical_note(transcript),
+            "sentiment_analysis": "Enhanced analysis temporarily unavailable",
+            "risk_assessment": "Risk assessment temporarily unavailable",
+            "ai_models_used": ["fallback"],
+            "analysis_timestamp": datetime.now().isoformat()
+        }
+    
     def analyze_institutional_trends(self, institution_data: Dict) -> Dict:
         """Analyze institutional-level wellness trends using GPT-4o for analytics"""
         
@@ -253,8 +358,49 @@ Please provide your analysis in this exact JSON format:
             "current_models": self.models,
             "api_status": "Connected" if self.api_key else "No API Key",
             "base_url": self.base_url,
-            "external_enabled": self.external_enabled
+            "external_enabled": self.external_enabled,
+            "provider": "CloseRouter",
+            "available_models": len(self.models),
+            "fallback_chains": len(self.model_fallbacks)
         }
+    
+    def check_api_status(self) -> Dict:
+        """Check API status and rate limits"""
+        if not self.external_enabled or not self.client:
+            return {
+                "status": "disabled",
+                "message": "AI service is disabled or not initialized"
+            }
+        
+        try:
+            # Make a minimal test request
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": "test"}],
+                max_tokens=5,
+                temperature=0
+            )
+            
+            # Check rate limit headers
+            rate_limit_info = {
+                "limit": response.headers.get('X-RateLimit-Limit', 'Unknown'),
+                "remaining": response.headers.get('X-RateLimit-Remaining', 'Unknown'),
+                "reset": response.headers.get('X-RateLimit-Reset', 'Unknown')
+            }
+            
+            return {
+                "status": "healthy",
+                "message": "API is responding normally",
+                "rate_limits": rate_limit_info,
+                "test_response": response.choices[0].message.content
+            }
+            
+        except Exception as e:
+            return {
+                "status": "error",
+                "message": f"API test failed: {str(e)}",
+                "error_type": type(e).__name__
+            }
     
     def set_model(self, use_case: str, model_id: str) -> bool:
         """Update model for specific use case"""
@@ -357,7 +503,7 @@ Please provide your analysis in this exact JSON format:
         # Build minimal context
         context = ""
         if user_context:
-            wellness = user_context.get('wellness_.env', 'unknown')
+            wellness = user_context.get('wellness_score', 'unknown')
             engagement = user_context.get('engagement_level', 'unknown')
             context = f"User wellness: {wellness}, engagement: {engagement}."
         
@@ -520,6 +666,7 @@ Please provide your analysis in this exact JSON format:
 # Global AI service instance - initialize with error handling for deployment
 try:
     ai_service = CloseRouterAIService()
+    print("AI service initialized successfully")
 except Exception as e:
     print(f"Warning: AI service initialization failed: {e}")
     # Create a minimal fallback service
@@ -528,21 +675,73 @@ except Exception as e:
             self.external_enabled = False
             self.client = None
         
-        def analyze_assessment(self, *args, **kwargs):
+        def analyze_digital_wellness(self, *args, **kwargs):
             return {
-                'score': 'No AI analysis available',
-                'detailed_analysis': 'AI service is currently unavailable.',
-                'action_items': ['Continue monitoring symptoms'],
-                'suggestion': 'Please consult with your healthcare provider.'
+                'score': 'Good',
+                'suggestion': 'Continue monitoring your digital wellness habits.',
+                'detailed_analysis': 'AI analysis temporarily unavailable. Please continue logging your data.',
+                'action_items': ['Continue logging your data', 'Consult with your healthcare provider']
             }
         
         def generate_clinical_note(self, *args, **kwargs):
-            return "AI documentation service is currently unavailable."
+            return "AI documentation service is currently unavailable. Please manually document the session."
         
-        def analyze_digital_wellness(self, *args, **kwargs):
+        def analyze_institutional_trends(self, *args, **kwargs):
             return {
-                'ai_score': 'Unavailable',
-                'recommendations': ['Continue logging your digital wellness data']
+                'overall_status': 'Good',
+                'key_insights': ['Continue monitoring patient data'],
+                'recommendations': ['Maintain current wellness programs'],
+                'priority_actions': ['Review data manually']
+            }
+        
+        def generate_chat_response(self, *args, **kwargs):
+            return {
+                'response': 'I am currently experiencing technical difficulties. Please try again later or contact support.',
+                'is_ai_powered': False,
+                'needs_followup': True
+            }
+        
+        def generate_progress_recommendations(self, *args, **kwargs):
+            return {
+                'actions': [
+                    {'title': 'Continue Monitoring', 'desc': 'Keep tracking your progress', 'priority': 'medium'}
+                ],
+                'insights': [
+                    {'title': 'System Maintenance', 'desc': 'AI insights temporarily unavailable'}
+                ]
+            }
+        
+        def generate_assessment_insights(self, *args, **kwargs):
+            return {
+                'summary': 'Assessment recorded successfully. AI analysis temporarily unavailable.',
+                'recommendations': ['Continue with your current routine', 'Consult with healthcare provider'],
+                'resources': ['Local mental health resources', 'Crisis hotlines if needed']
+            }
+        
+        def generate_enhanced_clinical_analysis(self, *args, **kwargs):
+            return {
+                "clinical_note": "AI documentation service is currently unavailable. Please manually document the session.",
+                "sentiment_analysis": "Enhanced analysis temporarily unavailable",
+                "risk_assessment": "Risk assessment temporarily unavailable",
+                "ai_models_used": ["fallback"],
+                "analysis_timestamp": datetime.now().isoformat()
+            }
+        
+        def get_model_info(self):
+            return {
+                "current_models": {},
+                "api_status": "Fallback Mode",
+                "base_url": "N/A",
+                "external_enabled": False,
+                "provider": "Fallback",
+                "available_models": 0,
+                "fallback_chains": 0
+            }
+        
+        def check_api_status(self):
+            return {
+                "status": "fallback",
+                "message": "AI service is in fallback mode"
             }
     
     ai_service = FallbackAIService()

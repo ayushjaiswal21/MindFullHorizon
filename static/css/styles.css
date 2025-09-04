@@ -98,6 +98,28 @@ body {
 }
 
 .progress-fill {
+    @apply bg-blue-600 h-full transition-all duration-300;
+}
+
+/* Chart containers */
+.chart-container {
+    position: relative;
+    height: 400px;
+    width: 100%;
+    margin: 20px 0;
+}
+
+.chart-container canvas {
+    max-height: 400px !important;
+}
+
+/* Assessment history chart */
+.assessment-chart-container {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    margin: 15px 0;
+}
     @apply bg-blue-600 h-full transition-all duration-500 ease-out;
 }
 

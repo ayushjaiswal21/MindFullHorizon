@@ -122,9 +122,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    initializeScreenTimeChart();
-    initializeCorrelationChart();
-    setupDigitalDetoxForm();
+    // Wait a bit for the DOM to be fully ready
+    setTimeout(() => {
+        initializeScreenTimeChart();
+        initializeCorrelationChart();
+        setupDigitalDetoxForm();
+    }, 100);
 });
 
 function formatDate(dateString) {

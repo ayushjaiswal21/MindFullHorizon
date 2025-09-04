@@ -3,57 +3,449 @@
 {% block title %}Breathing Exercises - MindFull Horizon{% endblock %}
 
 {% block content %}
-<div class="container mx-auto mt-10 p-6">
-    <h1 class="text-4xl font-bold text-gray-800 mb-8 text-center">Mindful Breathing</h1>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="mb-8 text-center">
+        <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Mindful Breathing</h1>
+        <p class="text-lg text-gray-600">Master the art of conscious breathing for stress relief and mental clarity</p>
+    </div>
 
     <!-- Interactive Breathing Visualizer -->
-    <div class="bg-white p-8 rounded-lg shadow-lg mb-10 max-w-2xl mx-auto text-center">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-4">Breathing Guide</h2>
-        <p id="breathing-instruction" class="text-xl text-indigo-600 font-medium mb-4">Select an exercise to begin</p>
-        <div id="breathing-visualizer" class="relative w-48 h-48 mx-auto bg-blue-100 rounded-full transition-transform duration-2000 ease-in-out flex items-center justify-center">
-            <div id="breathing-circle" class="w-24 h-24 bg-blue-400 rounded-full transition-all duration-2000 ease-in-out"></div>
+    <div class="card p-8 mb-8">
+        <div class="text-center mb-6">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-2">Breathing Guide</h2>
+            <p id="breathing-instruction" class="text-xl text-indigo-600 font-medium">Select an exercise to begin</p>
         </div>
-        <div class="mt-6 flex justify-center space-x-4">
-            <button onclick="startBreathing('box')" class="bg-indigo-500 text-white py-2 px-4 rounded-md hover:bg-indigo-600">Box Breathing (4s)</button>
-            <button onclick="startBreathing('478')" class="bg-teal-500 text-white py-2 px-4 rounded-md hover:bg-teal-600">4-7-8 Breathing</button>
+        
+        <!-- Breathing Circle Visualizer -->
+        <div class="flex justify-center mb-8">
+            <div id="breathing-visualizer" class="relative w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full transition-all duration-1000 ease-in-out flex items-center justify-center shadow-lg">
+                <div id="breathing-circle" class="w-32 h-32 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full transition-all duration-1000 ease-in-out shadow-xl"></div>
+                <div id="breathing-text" class="absolute text-white font-bold text-lg">Breathe</div>
+            </div>
+        </div>
+
+        <!-- Exercise Controls -->
+        <div class="flex flex-wrap justify-center gap-4 mb-6">
+            <button onclick="startBreathing('box')" class="breathing-btn bg-indigo-500 hover:bg-indigo-600">
+                <i class="fas fa-square mr-2"></i>Box Breathing (4-4-4-4)
+            </button>
+            <button onclick="startBreathing('478')" class="breathing-btn bg-teal-500 hover:bg-teal-600">
+                <i class="fas fa-leaf mr-2"></i>4-7-8 Breathing
+            </button>
+            <button onclick="startBreathing('triangle')" class="breathing-btn bg-purple-500 hover:bg-purple-600">
+                <i class="fas fa-play mr-2"></i>Triangle Breathing (3-3-3)
+            </button>
+            <button onclick="startBreathing('coherence')" class="breathing-btn bg-green-500 hover:bg-green-600">
+                <i class="fas fa-heart mr-2"></i>Coherence Breathing (5-5)
+            </button>
+        </div>
+
+        <!-- Timer and Controls -->
+        <div class="text-center">
+            <div id="timer-display" class="text-3xl font-bold text-gray-800 mb-4 hidden">00:00</div>
+            <div class="flex justify-center gap-4">
+                <button id="start-btn" onclick="startSession()" class="btn-primary">
+                    <i class="fas fa-play mr-2"></i>Start Session
+                </button>
+                <button id="pause-btn" onclick="pauseSession()" class="btn-secondary hidden">
+                    <i class="fas fa-pause mr-2"></i>Pause
+                </button>
+                <button id="stop-btn" onclick="stopSession()" class="btn-danger hidden">
+                    <i class="fas fa-stop mr-2"></i>Stop
+                </button>
+            </div>
         </div>
     </div>
 
-    <!-- Log a Session Manually -->
-    <div class="bg-white p-8 rounded-lg shadow-lg mb-10 max-w-2xl mx-auto">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-6">Log a Breathing Session</h2>
-        <form action="{{ url_for('breathing') }}" method="POST" class="space-y-4">
-            <div>
-                <label for="exercise_name" class="block text-sm font-medium text-gray-600">Exercise Name</label>
-                <input type="text" id="exercise_name" name="exercise_name" required placeholder="e.g., Box Breathing" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            </div>
-            <div>
-                <label for="duration_minutes" class="block text-sm font-medium text-gray-600">Duration (minutes)</label>
-                <input type="number" id="duration_minutes" name="duration_minutes" required min="1" placeholder="e.g., 5" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-            </div>
-            <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Log Session</button>
-        </form>
+    <!-- Session Statistics -->
+    <div class="grid md:grid-cols-3 gap-6 mb-8">
+        <div class="card p-6 text-center">
+            <div class="text-3xl font-bold text-blue-600 mb-2">{{ stats.total_sessions or 0 }}</div>
+            <div class="text-gray-600">Total Sessions</div>
+        </div>
+        <div class="card p-6 text-center">
+            <div class="text-3xl font-bold text-green-600 mb-2">{{ stats.total_minutes or 0 }}</div>
+            <div class="text-gray-600">Total Minutes</div>
+        </div>
+        <div class="card p-6 text-center">
+            <div class="text-3xl font-bold text-purple-600 mb-2">{{ stats.streak or 0 }}</div>
+            <div class="text-gray-600">Day Streak</div>
+        </div>
     </div>
 
-    <!-- Recent Breathing Logs -->
-    <div class="bg-white p-8 rounded-lg shadow-lg max-w-4xl mx-auto">
-        <h2 class="text-2xl font-semibold text-gray-700 mb-6">Recent Sessions</h2>
-        {% if recent_logs %}
-            <ul class="space-y-3">
-                {% for log in recent_logs %}
-                    <li class="p-4 bg-gray-50 rounded-lg border border-gray-200 flex justify-between items-center">
-                        <p class="font-medium text-gray-800">{{ log.exercise_name }} - {{ log.duration_minutes }} min</p>
-                        <p class="text-sm text-gray-500">{{ log.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="text-center text-gray-500">You have no logged breathing sessions yet.</p>
-        {% endif %}
+    <!-- Guided Sessions -->
+    <div class="card p-6 mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-headphones text-blue-500 mr-2"></i>Guided Breathing Sessions
+        </h3>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg cursor-pointer hover:shadow-md transition-shadow" onclick="startGuidedSession('morning', 5)">
+                <h4 class="font-semibold text-blue-800 mb-2">Morning Wake-Up</h4>
+                <p class="text-sm text-blue-600 mb-2">5 minutes • Energizing</p>
+                <div class="text-xs text-blue-500">Perfect to start your day</div>
+            </div>
+            <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg cursor-pointer hover:shadow-md transition-shadow" onclick="startGuidedSession('stress', 10)">
+                <h4 class="font-semibold text-green-800 mb-2">Stress Relief</h4>
+                <p class="text-sm text-green-600 mb-2">10 minutes • Calming</p>
+                <div class="text-xs text-green-500">Release tension and anxiety</div>
+            </div>
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg cursor-pointer hover:shadow-md transition-shadow" onclick="startGuidedSession('sleep', 8)">
+                <h4 class="font-semibold text-purple-800 mb-2">Sleep Preparation</h4>
+                <p class="text-sm text-purple-600 mb-2">8 minutes • Relaxing</p>
+                <div class="text-xs text-purple-500">Prepare for restful sleep</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Session Logging -->
+    <div class="grid lg:grid-cols-2 gap-8">
+        <div class="card p-6">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-plus-circle text-blue-500 mr-2"></i>Log a Session
+            </h3>
+            
+            <form id="breathing-log-form" class="space-y-4">
+                <div>
+                    <label for="exercise_name" class="block text-sm font-medium text-gray-700 mb-1">Exercise Type</label>
+                    <select id="exercise_name" name="exercise_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select exercise type</option>
+                        <option value="Box Breathing">Box Breathing</option>
+                        <option value="4-7-8 Breathing">4-7-8 Breathing</option>
+                        <option value="Triangle Breathing">Triangle Breathing</option>
+                        <option value="Coherence Breathing">Coherence Breathing</option>
+                        <option value="Guided Session">Guided Session</option>
+                        <option value="Custom">Custom</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="duration_minutes" class="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+                    <input type="number" id="duration_minutes" name="duration_minutes" required min="1" max="60" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                           placeholder="e.g., 10">
+                </div>
+                
+                <div>
+                    <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
+                    <textarea id="notes" name="notes" rows="3" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                              placeholder="How did you feel during this session?"></textarea>
+                </div>
+                
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                    <i class="fas fa-save mr-2"></i>Log Session
+                </button>
+            </form>
+            
+            <div id="form-message" class="mt-4 hidden"></div>
+        </div>
+
+        <!-- Recent Sessions -->
+        <div class="card p-6">
+            <h3 class="text-xl font-semibold mb-4 text-gray-800">
+                <i class="fas fa-history text-green-500 mr-2"></i>Recent Sessions
+            </h3>
+            
+            {% if recent_logs %}
+                <div class="space-y-3 max-h-80 overflow-y-auto">
+                    {% for log in recent_logs %}
+                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium text-gray-800">{{ log.exercise_name }}</p>
+                                    <p class="text-sm text-gray-600">{{ log.duration_minutes }} minutes</p>
+                                    {% if log.notes %}
+                                        <p class="text-xs text-gray-500 mt-1">{{ log.notes }}</p>
+                                    {% endif %}
+                                </div>
+                                <p class="text-xs text-gray-500">{{ log.created_at.strftime('%m/%d %H:%M') }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-wind text-gray-300 text-4xl mb-4"></i>
+                    <p class="text-gray-500">No breathing sessions logged yet.</p>
+                    <p class="text-sm text-gray-400 mt-2">Start your first session to see your progress here.</p>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+<script>
+let currentBreathingType = null;
+let breathingInterval = null;
+let sessionTimer = null;
+let sessionStartTime = null;
+let isSessionActive = false;
+let currentPhase = 'inhale';
+let phaseTimer = null;
+
+const breathingPatterns = {
+    'box': { inhale: 4, hold1: 4, exhale: 4, hold2: 4, name: 'Box Breathing' },
+    '478': { inhale: 4, hold1: 7, exhale: 8, hold2: 0, name: '4-7-8 Breathing' },
+    'triangle': { inhale: 3, hold1: 3, exhale: 3, hold2: 0, name: 'Triangle Breathing' },
+    'coherence': { inhale: 5, hold1: 0, exhale: 5, hold2: 0, name: 'Coherence Breathing' }
+};
+
+function startBreathing(type) {
+    if (breathingInterval) {
+        clearInterval(breathingInterval);
+    }
+    
+    currentBreathingType = type;
+    const pattern = breathingPatterns[type];
+    const instruction = document.getElementById('breathing-instruction');
+    const circle = document.getElementById('breathing-circle');
+    const text = document.getElementById('breathing-text');
+    
+    instruction.textContent = `Follow the ${pattern.name} pattern`;
+    
+    let phase = 'inhale';
+    let count = 0;
+    
+    function updateBreathing() {
+        const visualizer = document.getElementById('breathing-visualizer');
+        
+        switch(phase) {
+            case 'inhale':
+                visualizer.style.transform = 'scale(1.2)';
+                circle.style.transform = 'scale(1.3)';
+                text.textContent = 'Inhale';
+                count++;
+                if (count >= pattern.inhale) {
+                    phase = pattern.hold1 > 0 ? 'hold1' : 'exhale';
+                    count = 0;
+                }
+                break;
+            case 'hold1':
+                text.textContent = 'Hold';
+                count++;
+                if (count >= pattern.hold1) {
+                    phase = 'exhale';
+                    count = 0;
+                }
+                break;
+            case 'exhale':
+                visualizer.style.transform = 'scale(1)';
+                circle.style.transform = 'scale(1)';
+                text.textContent = 'Exhale';
+                count++;
+                if (count >= pattern.exhale) {
+                    phase = pattern.hold2 > 0 ? 'hold2' : 'inhale';
+                    count = 0;
+                }
+                break;
+            case 'hold2':
+                text.textContent = 'Hold';
+                count++;
+                if (count >= pattern.hold2) {
+                    phase = 'inhale';
+                    count = 0;
+                }
+                break;
+        }
+    }
+    
+    updateBreathing();
+    breathingInterval = setInterval(updateBreathing, 1000);
+}
+
+function startSession() {
+    if (!currentBreathingType) {
+        alert('Please select a breathing exercise first.');
+        return;
+    }
+    
+    isSessionActive = true;
+    sessionStartTime = Date.now();
+    
+    document.getElementById('start-btn').classList.add('hidden');
+    document.getElementById('pause-btn').classList.remove('hidden');
+    document.getElementById('stop-btn').classList.remove('hidden');
+    document.getElementById('timer-display').classList.remove('hidden');
+    
+    updateTimer();
+    sessionTimer = setInterval(updateTimer, 1000);
+}
+
+function pauseSession() {
+    if (sessionTimer) {
+        clearInterval(sessionTimer);
+        sessionTimer = null;
+    }
+    if (breathingInterval) {
+        clearInterval(breathingInterval);
+        breathingInterval = null;
+    }
+    
+    document.getElementById('pause-btn').classList.add('hidden');
+    document.getElementById('start-btn').classList.remove('hidden');
+    document.getElementById('start-btn').innerHTML = '<i class="fas fa-play mr-2"></i>Resume';
+}
+
+function stopSession() {
+    if (sessionTimer) {
+        clearInterval(sessionTimer);
+        sessionTimer = null;
+    }
+    if (breathingInterval) {
+        clearInterval(breathingInterval);
+        breathingInterval = null;
+    }
+    
+    isSessionActive = false;
+    
+    document.getElementById('start-btn').classList.remove('hidden');
+    document.getElementById('pause-btn').classList.add('hidden');
+    document.getElementById('stop-btn').classList.add('hidden');
+    document.getElementById('timer-display').classList.add('hidden');
+    
+    document.getElementById('start-btn').innerHTML = '<i class="fas fa-play mr-2"></i>Start Session';
+    
+    // Auto-log the session
+    const duration = Math.round((Date.now() - sessionStartTime) / 60000);
+    if (duration > 0) {
+        autoLogSession(duration);
+    }
+}
+
+function updateTimer() {
+    if (!sessionStartTime) return;
+    
+    const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    
+    document.getElementById('timer-display').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function startGuidedSession(type, duration) {
+    const sessionTypes = {
+        'morning': { name: 'Morning Wake-Up', pattern: 'coherence' },
+        'stress': { name: 'Stress Relief', pattern: '478' },
+        'sleep': { name: 'Sleep Preparation', pattern: 'box' }
+    };
+    
+    const session = sessionTypes[type];
+    if (session) {
+        startBreathing(session.pattern);
+        document.getElementById('exercise_name').value = session.name;
+        document.getElementById('duration_minutes').value = duration;
+        
+        // Auto-start session
+        setTimeout(() => {
+            startSession();
+        }, 1000);
+    }
+}
+
+async function autoLogSession(duration) {
+    const formData = {
+        exercise_name: currentBreathingType ? breathingPatterns[currentBreathingType].name : 'Custom Session',
+        duration_minutes: duration,
+        notes: 'Session completed via interactive timer'
+    };
+    
+    try {
+        const response = await fetch('/api/log-breathing-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            showNotification('Session logged successfully!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        }
+    } catch (error) {
+        console.error('Error logging session:', error);
+    }
+}
+
+// Form submission
+document.getElementById('breathing-log-form').addEventListener('submit', async function(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const messageDiv = document.getElementById('form-message');
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+    
+    try {
+        const response = await fetch('/api/log-breathing-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            messageDiv.className = 'mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded';
+            messageDiv.textContent = 'Session logged successfully!';
+            messageDiv.classList.remove('hidden');
+            
+            this.reset();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+            messageDiv.textContent = result.message || 'Failed to log session.';
+            messageDiv.classList.remove('hidden');
+        }
+    } catch (error) {
+        messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+        messageDiv.textContent = 'Network error. Please try again.';
+        messageDiv.classList.remove('hidden');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Log Session';
+    }
+});
+
+function showNotification(message, type) {
+    // Simple notification - you can enhance this
+    alert(message);
+}
+</script>
+
+<style>
+.breathing-btn {
+    @apply px-4 py-2 text-white rounded-md transition-colors duration-200 font-medium;
+}
+
+.btn-primary {
+    @apply bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors;
+}
+
+.btn-secondary {
+    @apply bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors;
+}
+
+.btn-danger {
+    @apply bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors;
+}
+
+#breathing-visualizer {
+    transition: transform 4s ease-in-out;
+}
+
+#breathing-circle {
+    transition: transform 4s ease-in-out;
+}
+</style>
 {% endblock %}

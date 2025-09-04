@@ -130,6 +130,30 @@
             <i class="fas fa-heart-pulse text-teal-500 mr-2"></i>Wellness Toolkit
         </h3>
         <p class="text-gray-600 mb-4">Engage with tools designed to support your daily well-being and mindfulness practices.</p>
+        
+        <!-- Progress Overview -->
+        <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
+            <h4 class="font-semibold text-gray-800 mb-3">This Week's Progress</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ data.streak or 0 }}</div>
+                    <div class="text-sm text-gray-600">Day Streak</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ data.points or 0 }}</div>
+                    <div class="text-sm text-gray-600">Total Points</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600">{{ (data.badges or [])|length }}</div>
+                    <div class="text-sm text-gray-600">Badges Earned</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-orange-600">{{ data.rpm_data.mood_score or 7 }}/10</div>
+                    <div class="text-sm text-gray-600">Avg Mood</div>
+                </div>
+            </div>
+        </div>
+        
         <div class="grid md:grid-cols-3 gap-4">
             <!-- Medication Card -->
             <a href="{{ url_for('medication') }}" class="block p-4 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition duration-200">

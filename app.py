@@ -14,7 +14,11 @@ from database import db
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, get_user_wellness_trend, get_institutional_summary
 
 # Load environment variables from .env file
-load_dotenv()
+try:
+    load_dotenv(encoding='utf-8-sig')
+except Exception as e:
+    print(f"Warning: Could not load .env file: {e}")
+    print("Continuing with default configuration...")
 
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')  # Use environment variable or fallback
@@ -243,47 +247,76 @@ def patient_dashboard():
     user_id = session['user_id']
     
     # Get user data from database
-    gamification = Gamification.query.filter_by(user_id=user_id).first()
-    rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.desc()).first()
-    print(f"gamification: {gamification}")
-    print(f"rpm_data: {rpm_data}")
+    try:
+        gamification = Gamification.query.filter_by(user_id=user_id).first()
+        rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.desc()).first()
+        logger.info(f"Loaded gamification data for user {user_id}: {gamification}")
+        logger.info(f"Loaded RPM data for user {user_id}: {rpm_data}")
 
-    # Get appointments
-    all_appointments = Appointment.query.filter_by(user_id=user_id).order_by(Appointment.date.asc(), Appointment.time.asc()).all()
+        # Get appointments
+        all_appointments = Appointment.query.filter_by(user_id=user_id).order_by(Appointment.date.asc(), Appointment.time.asc()).all()
+    except Exception as e:
+        logger.error(f"Error loading user data for {user_id}: {e}")
+        gamification = None
+        rpm_data = None
+        all_appointments = []
 
     upcoming_appointments = []
     past_appointments = []
 
     for appt in all_appointments:
-        appt_datetime_str = f"{appt.date} {appt.time}"
-        appt_datetime = datetime.strptime(appt_datetime_str, '%Y-%m-%d %H:%M')
-        if appt_datetime >= datetime.now():
-            upcoming_appointments.append(appt)
-        else:
-            past_appointments.append(appt)
+        try:
+            appt_datetime_str = f"{appt.date} {appt.time}"
+            appt_datetime = datetime.strptime(appt_datetime_str, '%Y-%m-%d %H:%M')
+            if appt_datetime >= datetime.now():
+                upcoming_appointments.append(appt)
+            else:
+                past_appointments.append(appt)
+        except Exception as e:
+            logger.error(f"Error processing appointment {appt.id}: {e}")
+            # Skip malformed appointments
+            continue
 
     # Prepare data structure
-    data = {
-        'points': gamification.points if gamification else 0,
-        'streak': gamification.streak if gamification else 0,
-        'badges': gamification.badges if gamification else [],
-        'rpm_data': {
-            'heart_rate': rpm_data.heart_rate if rpm_data else 72,
-            'sleep_duration': rpm_data.sleep_duration if rpm_data else 7.5,
-            'steps': rpm_data.steps if rpm_data else 8500,
-            'mood_score': rpm_data.mood_score if rpm_data else 8
+    try:
+        data = {
+            'points': gamification.points if gamification else 0,
+            'streak': gamification.streak if gamification else 0,
+            'badges': gamification.badges if gamification else [],
+            'rpm_data': {
+                'heart_rate': rpm_data.heart_rate if rpm_data else 72,
+                'sleep_duration': rpm_data.sleep_duration if rpm_data else 7.5,
+                'steps': rpm_data.steps if rpm_data else 8500,
+                'mood_score': rpm_data.mood_score if rpm_data else 8
+            }
         }
-    }
+    except Exception as e:
+        logger.error(f"Error preparing data structure: {e}")
+        data = {
+            'points': 0,
+            'streak': 0,
+            'badges': [],
+            'rpm_data': {
+                'heart_rate': 72,
+                'sleep_duration': 7.5,
+                'steps': 8500,
+                'mood_score': 8
+            }
+        }
 
     # Check for RPM alerts
     alerts = []
-    if rpm_data:
-        if rpm_data.heart_rate and rpm_data.heart_rate > 100:
-            alerts.append('High heart rate detected')
-        if rpm_data.sleep_duration and rpm_data.sleep_duration < 6:
-            alerts.append('Insufficient sleep detected')
-        if rpm_data.mood_score and rpm_data.mood_score < 4:
-            alerts.append('Low mood score detected')
+    try:
+        if rpm_data:
+            if rpm_data.heart_rate and rpm_data.heart_rate > 100:
+                alerts.append('High heart rate detected')
+            if rpm_data.sleep_duration and rpm_data.sleep_duration < 6:
+                alerts.append('Insufficient sleep detected')
+            if rpm_data.mood_score and rpm_data.mood_score < 4:
+                alerts.append('Low mood score detected')
+    except Exception as e:
+        logger.error(f"Error checking RPM alerts: {e}")
+        alerts = []
 
     return render_template('patient_dashboard.html', 
                          user_name=session['user_name'], 
@@ -304,30 +337,47 @@ def provider_dashboard():
     # Build caseload data with real database information
     caseload_data = []
     for patient in patients:
-        # Get latest digital detox data for risk assessment
-        latest_detox = DigitalDetoxLog.query.filter_by(user_id=patient.id).order_by(DigitalDetoxLog.date.desc()).first()
-        latest_session = ClinicalNote.query.filter_by(patient_id=patient.id).order_by(ClinicalNote.session_date.desc()).first()
-        
-        # Determine risk level based on AI score and screen time
-        risk_level = 'Low'
-        if latest_detox:
-            if latest_detox.screen_time_hours > 8 or (latest_detox.ai_score and latest_detox.ai_score == 'Needs Improvement'):
-                risk_level = 'High'
-            elif latest_detox.screen_time_hours > 6 or (latest_detox.ai_score and latest_detox.ai_score == 'Good'):
-                risk_level = 'Medium'
-        
-        caseload_data.append({
-            'user_id': patient.id,
-            'name': patient.name,
-            'email': patient.email,
-            'risk_level': risk_level,
-            'last_session': latest_session.session_date.strftime('%Y-%m-%d') if latest_session else 'No sessions',
-            'status': 'Active' if latest_detox and latest_detox.date >= date.today() - timedelta(days=7) else 'Inactive',
-            'digital_score': latest_detox.ai_score if latest_detox and latest_detox.ai_score else 'No data'
-        })
+        try:
+            # Get latest digital detox data for risk assessment
+            latest_detox = DigitalDetoxLog.query.filter_by(user_id=patient.id).order_by(DigitalDetoxLog.date.desc()).first()
+            latest_session = ClinicalNote.query.filter_by(patient_id=patient.id).order_by(ClinicalNote.session_date.desc()).first()
+            
+            # Determine risk level based on AI score and screen time
+            risk_level = 'Low'
+            if latest_detox:
+                if latest_detox.screen_time_hours > 8 or (latest_detox.ai_score and latest_detox.ai_score == 'Needs Improvement'):
+                    risk_level = 'High'
+                elif latest_detox.screen_time_hours > 6 or (latest_detox.ai_score and latest_detox.ai_score == 'Good'):
+                    risk_level = 'Medium'
+            
+            caseload_data.append({
+                'user_id': patient.id,
+                'name': patient.name,
+                'email': patient.email,
+                'risk_level': risk_level,
+                'last_session': latest_session.session_date.strftime('%Y-%m-%d') if latest_session else 'No sessions',
+                'status': 'Active' if latest_detox and latest_detox.date >= date.today() - timedelta(days=7) else 'Inactive',
+                'digital_score': latest_detox.ai_score if latest_detox and latest_detox.ai_score else 'No data'
+            })
+        except Exception as e:
+            logger.error(f"Error processing patient {patient.id}: {e}")
+            # Add patient with default values if there's an error
+            caseload_data.append({
+                'user_id': patient.id,
+                'name': patient.name,
+                'email': patient.email,
+                'risk_level': 'Unknown',
+                'last_session': 'No sessions',
+                'status': 'Unknown',
+                'digital_score': 'No data'
+            })
     
     # Get institutional analytics
-    institutional_data = get_institutional_summary(institution, db)
+    try:
+        institutional_data = get_institutional_summary(institution, db)
+    except Exception as e:
+        logger.error(f"Error getting institutional data: {e}")
+        institutional_data = None
     
     # Enhanced BI data with real calculations
     bi_data = {
@@ -541,9 +591,32 @@ def breathing():
     # Fetch recent breathing logs for the user
     recent_logs = BreathingExerciseLog.query.filter_by(user_id=user_id).order_by(BreathingExerciseLog.created_at.desc()).limit(10).all()
     
+    # Calculate statistics
+    all_logs = BreathingExerciseLog.query.filter_by(user_id=user_id).all()
+    total_sessions = len(all_logs)
+    total_minutes = sum(log.duration_minutes for log in all_logs)
+    
+    # Calculate streak (consecutive days with sessions)
+    streak = 0
+    if all_logs:
+        dates = sorted([log.created_at.date() for log in all_logs], reverse=True)
+        current_date = date.today()
+        for i, log_date in enumerate(dates):
+            if log_date == current_date - timedelta(days=i):
+                streak += 1
+            else:
+                break
+    
+    stats = {
+        'total_sessions': total_sessions,
+        'total_minutes': total_minutes,
+        'streak': streak
+    }
+    
     return render_template('breathing.html', 
                          user_name=session['user_name'],
-                         recent_logs=recent_logs)
+                         recent_logs=recent_logs,
+                         stats=stats)
 
 @app.route('/yoga', methods=['GET', 'POST'])
 @login_required
@@ -575,9 +648,34 @@ def yoga():
     # Fetch recent yoga logs for the user
     recent_logs = YogaLog.query.filter_by(user_id=user_id).order_by(YogaLog.created_at.desc()).limit(10).all()
     
+    # Calculate statistics
+    all_logs = YogaLog.query.filter_by(user_id=user_id).all()
+    total_sessions = len(all_logs)
+    total_minutes = sum(log.duration_minutes for log in all_logs)
+    avg_duration = round(total_minutes / total_sessions, 1) if total_sessions > 0 else 0
+    
+    # Calculate streak (consecutive days with sessions)
+    streak = 0
+    if all_logs:
+        dates = sorted([log.created_at.date() for log in all_logs], reverse=True)
+        current_date = date.today()
+        for i, log_date in enumerate(dates):
+            if log_date == current_date - timedelta(days=i):
+                streak += 1
+            else:
+                break
+    
+    stats = {
+        'total_sessions': total_sessions,
+        'total_minutes': total_minutes,
+        'streak': streak,
+        'avg_duration': avg_duration
+    }
+    
     return render_template('yoga.html', 
                          user_name=session['user_name'],
-                         recent_logs=recent_logs)
+                         recent_logs=recent_logs,
+                         stats=stats)
 
 @app.route('/telehealth')
 @login_required
@@ -753,6 +851,104 @@ def digital_detox_data():
     
     return jsonify(data)
 
+@app.route('/api/log-breathing-session', methods=['POST'])
+@login_required
+def log_breathing_session():
+    """Log a breathing exercise session"""
+    try:
+        data = request.json
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': 'No data provided.'
+            }), 400
+        
+        exercise_name = data.get('exercise_name', 'Custom Session')
+        duration_minutes = int(data.get('duration_minutes', 0))
+        notes = data.get('notes', '')
+        
+        # Validate data
+        if duration_minutes <= 0 or duration_minutes > 120:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid duration. Must be between 1-120 minutes.'
+            }), 400
+        
+        # Create new breathing log entry
+        new_log = BreathingExerciseLog(
+            user_id=session.get('user_id'),
+            exercise_name=exercise_name,
+            duration_minutes=duration_minutes,
+            notes=notes,
+            created_at=datetime.now()
+        )
+        
+        db.session.add(new_log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Breathing session logged successfully!'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error logging breathing session for user {session.get('user_id')}: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Failed to log session. Please try again.'
+        }), 500
+
+@app.route('/api/log-yoga-session', methods=['POST'])
+@login_required
+def log_yoga_session():
+    """Log a yoga session"""
+    try:
+        data = request.json
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': 'No data provided.'
+            }), 400
+        
+        session_name = data.get('session_name', 'Custom Session')
+        duration_minutes = int(data.get('duration_minutes', 0))
+        difficulty_level = data.get('difficulty_level', 'Beginner')
+        notes = data.get('notes', '')
+        
+        # Validate data
+        if duration_minutes <= 0 or duration_minutes > 120:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid duration. Must be between 1-120 minutes.'
+            }), 400
+        
+        # Create new yoga log entry
+        new_log = YogaLog(
+            user_id=session.get('user_id'),
+            session_name=session_name,
+            duration_minutes=duration_minutes,
+            difficulty_level=difficulty_level,
+            notes=notes,
+            created_at=datetime.now()
+        )
+        
+        db.session.add(new_log)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Yoga session logged successfully!'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error logging yoga session for user {session.get('user_id')}: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Failed to log session. Please try again.'
+        }), 500
+
 @app.route('/api/submit-digital-detox', methods=['POST'])
 @login_required
 @role_required('patient')
@@ -761,9 +957,28 @@ def submit_digital_detox():
         user_id = session['user_id']
         data = request.json
         
+        if not data:
+            return jsonify({
+                'success': False,
+                'message': 'No data provided.'
+            }), 400
+        
         screen_time = float(data.get('screen_time', 0))
         academic_score = int(data.get('academic_score', 0))
         social_interactions = data.get('social_interactions', 'medium')
+        
+        # Validate data
+        if screen_time < 0 or screen_time > 24:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid screen time value.'
+            }), 400
+        
+        if academic_score < 0 or academic_score > 100:
+            return jsonify({
+                'success': False,
+                'message': 'Invalid academic score value.'
+            }), 400
         
         # Create new digital detox log entry
         new_log = DigitalDetoxLog(
@@ -796,6 +1011,13 @@ def submit_digital_detox():
             'message': 'Digital wellness data saved successfully!'
         })
         
+    except ValueError as e:
+        db.session.rollback()
+        logger.error(f"Validation error in digital detox data for user {session.get('user_id')}: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Invalid data format. Please check your input.'
+        }), 400
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error saving digital detox data for user {session.get('user_id')}: {e}")
@@ -851,9 +1073,9 @@ def api_save_assessment():
     except Exception as e:
         logger.error(f"Error generating AI insights: {e}")
         ai_insights = {
-            'summary': 'Your assessment has been recorded.',
-            'recommendations': ['Check back later for personalized insights.'],
-            'resources': []
+            'summary': 'Your assessment has been recorded successfully.',
+            'recommendations': ['Continue with your current mental health routine.', 'Consider discussing results with a healthcare provider.'],
+            'resources': ['Local mental health resources', 'Crisis hotlines if needed']
         }
 
     try:
@@ -1153,6 +1375,56 @@ def api_institutional_analytics():
     summary = get_institutional_summary(institution)
     return jsonify(summary)
 
+@app.route('/api/ai-status')
+@login_required
+@role_required('provider')
+def api_ai_status():
+    """Check AI service status and rate limits"""
+    try:
+        status = ai_service.check_api_status()
+        model_info = ai_service.get_model_info()
+        
+        return jsonify({
+            'status': status,
+            'model_info': model_info,
+            'timestamp': datetime.now().isoformat()
+        })
+    except Exception as e:
+        logger.error(f"Error checking AI status: {e}")
+        return jsonify({
+            'status': {'status': 'error', 'message': str(e)},
+            'model_info': ai_service.get_model_info(),
+            'timestamp': datetime.now().isoformat()
+        })
+
+@app.route('/api/enhanced-clinical-analysis', methods=['POST'])
+@login_required
+@role_required('provider')
+def api_enhanced_clinical_analysis():
+    """Generate enhanced clinical analysis using multiple AI models"""
+    try:
+        data = request.json
+        transcript = data.get('transcript', '')
+        patient_data = data.get('patient_data', {})
+        
+        if not transcript:
+            return jsonify({'error': 'Transcript is required'}), 400
+        
+        # Generate enhanced analysis
+        analysis = ai_service.generate_enhanced_clinical_analysis(transcript, patient_data)
+        
+        return jsonify({
+            'success': True,
+            'analysis': analysis
+        })
+        
+    except Exception as e:
+        logger.error(f"Error in enhanced clinical analysis: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 def get_severity_info(assessment_type, score):
     if score is None:
         return {'severity': 'N/A', 'color': 'gray'}
@@ -1192,18 +1464,14 @@ def utility_processor():
 if __name__ == '__main__':
     # Create an app context for database initialization
     with app.app_context():
-        try:
-            # Create all database tables
-            db.create_all()
-            
-            # Check if database needs initialization
-            if User.query.first() is None:
-                print("Initializing database with sample data...")
-                init_database(app)
-                print("Database initialized successfully!")
-            
-            # Start the Flask development server
-            app.run(debug=True, port=5000, use_reloader=False)
-            
-        except Exception as e:
-            print(f"Error initializing or running app: {str(e)}")
+        # Create all database tables
+        db.create_all()
+        
+        # Check if database needs initialization
+        if User.query.first() is None:
+            print("Initializing database with sample data...")
+            init_database(app)
+            print("Database initialized successfully!")
+    
+    # Start the Flask development server
+    app.run(debug=True, port=5000, use_reloader=False)
