@@ -632,21 +632,32 @@ Please provide your analysis in this exact JSON format:
             {"role": "user", "content": prompt}
         ]
         
+        # Default fallback response in case of any errors
+        fallback_response = {
+            'summary': f'Your {assessment_type} assessment has been recorded with a score of {score}.',
+            'recommendations': [
+                'Consider discussing these results with a healthcare provider',
+                'Practice self-care activities that help you relax'
+            ],
+            'resources': [
+                'Mindfulness exercises',
+                'Breathing techniques',
+                'Local mental health support groups'
+            ]
+        }
+        
+        if not self.client or not self.external_enabled:
+            return fallback_response
+            
         try:
             response = self._make_request(messages, model=model, temperature=0.5, max_tokens=200)
-            if response:
+            if response and isinstance(response, str):
                 return {
                     'summary': response.strip(),
-                    'recommendations': [
-                        'Consider discussing these results with a healthcare provider',
-                        'Practice self-care activities that help you relax'
-                    ],
-                    'resources': [
-                        'Mindfulness exercises',
-                        'Breathing techniques',
-                        'Local mental health support groups'
-                    ]
+                    'recommendations': fallback_response['recommendations'],
+                    'resources': fallback_response['resources']
                 }
+            return fallback_response
         except Exception as e:
             print(f"Error generating assessment insights: {e}")
         

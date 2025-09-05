@@ -365,14 +365,21 @@ function previousQuestion() {
 }
 
 async function completeAssessment() {
+    // Ensure an answer is selected for the current question
     if (assessmentAnswers[currentQuestion] === undefined) {
         showNotification('Please select an answer before completing the assessment.', 'error');
         return;
     }
 
-    const totalScore = assessmentAnswers.reduce((sum, score) => sum + score, 0);
+    // Calculate total score
+    const totalScore = assessmentAnswers.reduce((sum, score) => sum + (score || 0), 0);
     const maxScore = currentAssessment.questions.length * 3;
     const questionContainer = document.getElementById('question-container');
+    const nextBtn = document.getElementById('nextBtn');
+    const modal = document.getElementById('assessmentModal');
+    
+    // Disable the complete button to prevent multiple submissions
+    if (nextBtn) nextBtn.disabled = true;
 
     // Show loading state
     questionContainer.innerHTML = `
@@ -388,46 +395,29 @@ async function completeAssessment() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
             },
             body: JSON.stringify({
                 assessment_type: currentAssessment.type,
                 score: totalScore,
-                responses: assessmentAnswers
+                responses: assessmentAnswers,
+                _csrf: document.querySelector('meta[name="csrf-token"]')?.content || ''
             })
         });
 
+        if (!response.ok) {
+            throw new Error('Failed to save assessment. Please try again.');
+        }
+
         const data = await response.json();
         
+        // If there's an error in the response
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        
         if (response.ok) {
-            // Show results with score and feedback
-            questionContainer.innerHTML = `
-                <div class="text-center py-6">
-                    <div class="text-6xl text-green-500 mb-4">✓</div>
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Assessment Complete!</h2>
-                    <p class="text-gray-600 mb-2">Your score: <span class="font-bold">${totalScore}/${maxScore}</span></p>
-                    ${data.points_earned ? 
-                        `<p class="text-green-600 mb-2">+${data.points_earned} points earned!</p>` : ''}
-                    
-                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 mt-4 text-left rounded">
-                        <p class="text-gray-800">${getAssessmentFeedback(currentAssessment.type, totalScore, maxScore)}</p>
-                        ${data.ai_insights ? 
-                            `<div class="mt-3 p-3 bg-white rounded border border-blue-100">
-                                <p class="text-sm text-gray-700">${data.ai_insights}</p>
-                            </div>` : ''}
-                    </div>
-                    
-                    <div class="flex flex-col sm:flex-row justify-center gap-3 mt-6">
-                        <button onclick="closeAssessment()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
-                            Close
-                        </button>
-                        <button onclick="viewProgress()" class="bg-gray-200 text-gray-800 px-6 py-2 rounded-lg hover:bg-gray-300 transition">
-                            View Progress
-                        </button>
-                    </div>
-                </div>
-            `;
-            
             // Update points display if it exists
             if (data.points_earned) {
                 const pointsElement = document.getElementById('user-points');
@@ -437,11 +427,18 @@ async function completeAssessment() {
                 }
             }
             
-            // Close modal after delay
+            // Show success notification
+            showNotification('Assessment submitted successfully!', 'success');
+            
+            // Close the modal immediately
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+            
+            // Reload the page to show updated data
             setTimeout(() => {
-                closeAssessment();
-                location.reload(); // Reload to show updated history
-            }, 5000);
+                location.reload();
+            }, 500);
             
         } else {
             throw new Error(data.message || 'Failed to save assessment');
