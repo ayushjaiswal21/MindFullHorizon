@@ -163,12 +163,7 @@
                 </div>
             {% endif %}
         </div>
-        <div class="mt-4">
-            <form id="add-goal-form" class="flex items-center">
-                <input type="text" id="new-goal-description" class="input-field flex-grow" placeholder="Add a new goal...">
-                <button type="submit" class="btn-primary ml-2">Add</button>
-            </form>
-        </div>
+        
     </div>
 
     <div class="card mb-8">
@@ -226,84 +221,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     initializeMoodChart();
     initializeAssessmentChart();
-    initializeGoals();
 });
 
-function initializeGoals() {
-    const addGoalForm = document.getElementById('add-goal-form');
-    addGoalForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const descriptionInput = document.getElementById('new-goal-description');
-        const description = descriptionInput.value;
-        if (description) {
-            const response = await fetch('/api/goals', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ description })
-            });
-            const result = await response.json();
-            if (result.success) {
-                addGoalToDOM(result.goal);
-                descriptionInput.value = '';
-            }
-        }
-    });
 
-    const goalsContainer = document.getElementById('goals-container');
-    goalsContainer.addEventListener('change', async (e) => {
-        if (e.target.type === 'checkbox') {
-            const goalId = e.target.dataset.goalId;
-            const completed = e.target.checked;
-            const response = await fetch(`/api/goals/${goalId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ completed })
-            });
-            const result = await response.json();
-            if (result.success) {
-                updateGoalInDOM(e.target);
-                updateAchievements();
-            }
-        }
-    });
-}
 
-function addGoalToDOM(goal) {
-    const goalsContainer = document.getElementById('goals-container');
-    const goalElement = document.createElement('div');
-    goalElement.className = 'flex items-center p-2 rounded-lg bg-gray-100';
-    goalElement.innerHTML = `
-        <input type="checkbox" data-goal-id="${goal.id}" class="form-checkbox h-5 w-5 text-blue-600">
-        <span class="ml-3 text-gray-700">${goal.description}</span>
-    `;
-    goalsContainer.appendChild(goalElement);
-}
 
-function updateGoalInDOM(checkbox) {
-    const goalElement = checkbox.parentElement;
-    if (checkbox.checked) {
-        goalElement.classList.remove('bg-gray-100');
-        goalElement.classList.add('bg-green-100');
-    } else {
-        goalElement.classList.remove('bg-green-100');
-        goalElement.classList.add('bg-gray-100');
-    }
-}
-
-function updateAchievements() {
-    const achievementsList = document.getElementById('achievements-list');
-    achievementsList.innerHTML = '';
-    const completedGoals = document.querySelectorAll('#goals-container input[type="checkbox"]:checked');
-    completedGoals.forEach(goal => {
-        const achievementElement = document.createElement('li');
-        achievementElement.className = 'flex items-center';
-        achievementElement.innerHTML = `
-            <i class="fas fa-star text-yellow-500 mr-2"></i>
-            ${goal.nextElementSibling.textContent}
-        `;
-        achievementsList.appendChild(achievementElement);
-    });
-}
 
 
 function initializeMoodChart() {
@@ -413,7 +335,7 @@ function drawLineChart(ctx, canvas, xData, yData, label, color) {
     }
     
     // Draw data line
-    drawDataLine(ctx, padding, width, height, yData, minY, yRange, color);
+    drawDataLine(ctx, canvas, padding, width, height, yData, minY, yRange, color);
 }
 
 function drawDualLineChart(ctx, canvas, xLabels, data1, data2) {
@@ -475,8 +397,8 @@ function drawDualLineChart(ctx, canvas, xLabels, data1, data2) {
     }
     
     // Draw both data lines
-    drawDataLine(ctx, padding, width, height, data1, minY, yRange, '#3B82F6'); // Blue for GAD-7
-    drawDataLine(ctx, padding, width, height, data2, minY, yRange, '#8B5CF6'); // Purple for PHQ-9
+    drawDataLine(ctx, canvas, padding, width, height, data1, minY, yRange, '#3B82F6'); // Blue for GAD-7
+    drawDataLine(ctx, canvas, padding, width, height, data2, minY, yRange, '#8B5CF6'); // Purple for PHQ-9
     
     // Draw legend
     ctx.font = '12px Inter';
@@ -495,7 +417,7 @@ function drawDualLineChart(ctx, canvas, xLabels, data1, data2) {
     ctx.fillText('PHQ-9 (Depression)', canvas.width - 130, 45);
 }
 
-function drawDataLine(ctx, padding, width, height, data, minY, yRange, color) {
+function drawDataLine(ctx, canvas, padding, width, height, data, minY, yRange, color) {
     if (data.length === 0) return;
     
     ctx.strokeStyle = color;

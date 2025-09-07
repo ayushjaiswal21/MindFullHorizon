@@ -4,6 +4,38 @@
 let rpmUpdateInterval;
 let aiProcessingModal;
 
+// Global variables for breathing exercises
+let currentBreathingType = null;
+let breathingInterval = null;
+let sessionTimer = null;
+let sessionStartTime = null;
+let isSessionActive = false;
+let currentPhase = 'inhale';
+let phaseTimer = null;
+
+const breathingPatterns = {
+    'box': { inhale: 4, hold1: 4, exhale: 4, hold2: 4, name: 'Box Breathing' },
+    '478': { inhale: 4, hold1: 7, exhale: 8, hold2: 0, name: '4-7-8 Breathing' },
+    'triangle': { inhale: 3, hold1: 3, exhale: 3, hold2: 0, name: 'Triangle Breathing' },
+    'coherence': { inhale: 5, hold1: 0, exhale: 5, hold2: 0, name: 'Coherence Breathing' }
+};
+
+// Global variables for yoga exercises
+let yogaSessionTimer = null;
+let yogaSessionStartTime = null;
+let yogaSessionDuration = 0;
+let isYogaSessionActive = false;
+let currentYogaSessionName = '';
+
+const guidedYogaSessions = { // Renamed to avoid conflict with breathing guidedSessions
+    'morning': { name: 'Morning Energy Flow', duration: 15, difficulty: 'Beginner' },
+    'desk': { name: 'Desk Worker\'s Relief', duration: 10, difficulty: 'All Levels' },
+    'evening': { name: 'Evening Wind-Down', duration: 20, difficulty: 'Beginner' },
+    'stress': { name: 'Stress Relief Flow', duration: 12, difficulty: 'All Levels' },
+    'focus': { name: 'Focus & Clarity', duration: 18, difficulty: 'Intermediate' },
+    'flexibility': { name: 'Flexibility Flow', duration: 25, difficulty: 'All Levels' }
+};
+
 // Auto-hide flash messages after 5 seconds
 document.addEventListener('DOMContentLoaded', function() {
     const alerts = document.querySelectorAll('.alert-success, .alert-error');
@@ -768,6 +800,419 @@ function initializeCorrelationChart() {
     });
 }
 
+// Breathing Exercise Visualizer functions (moved from breathing.html)
+function startBreathing(type) {
+    if (breathingInterval) {
+        clearInterval(breathingInterval);
+    }
+    
+    currentBreathingType = type;
+    const pattern = breathingPatterns[type];
+    const instruction = document.getElementById('breathing-instruction');
+    const circle = document.getElementById('breathing-circle');
+    const text = document.getElementById('breathing-text');
+    
+    instruction.textContent = `Follow the ${pattern.name} pattern`;
+    
+    let phase = 'inhale';
+    let count = 0;
+    
+    function updateBreathing() {
+        const visualizer = document.getElementById('breathing-visualizer');
+        
+        switch(phase) {
+            case 'inhale':
+                visualizer.style.transform = 'scale(1.2)';
+                circle.style.transform = 'scale(1.3)';
+                text.textContent = 'Inhale';
+                count++;
+                if (count >= pattern.inhale) {
+                    phase = pattern.hold1 > 0 ? 'hold1' : 'exhale';
+                    count = 0;
+                }
+                break;
+            case 'hold1':
+                text.textContent = 'Hold';
+                count++;
+                if (count >= pattern.hold1) {
+                    phase = 'exhale';
+                    count = 0;
+                }
+                break;
+            case 'exhale':
+                visualizer.style.transform = 'scale(1)';
+                circle.style.transform = 'scale(1)';
+                text.textContent = 'Exhale';
+                count++;
+                if (count >= pattern.exhale) {
+                    phase = pattern.hold2 > 0 ? 'hold2' : 'inhale';
+                    count = 0;
+                }
+                break;
+            case 'hold2':
+                text.textContent = 'Hold';
+                count++;
+                if (count >= pattern.hold2) {
+                    phase = 'inhale';
+                    count = 0;
+                }
+                break;
+        }
+    }
+    
+    updateBreathing();
+    breathingInterval = setInterval(updateBreathing, 1000);
+}
+
+function startSession() {
+    if (!currentBreathingType) {
+        showNotification('Please select a breathing exercise first.', 'error'); // Use global showNotification
+        return;
+    }
+    
+    isSessionActive = true;
+    sessionStartTime = Date.now();
+    
+    document.getElementById('start-btn').classList.add('hidden');
+    document.getElementById('pause-btn').classList.remove('hidden');
+    document.getElementById('stop-btn').classList.remove('hidden');
+    document.getElementById('timer-display').classList.remove('hidden');
+    
+    updateTimer();
+    sessionTimer = setInterval(updateTimer, 1000);
+}
+
+function pauseSession() {
+    if (sessionTimer) {
+        clearInterval(sessionTimer);
+        sessionTimer = null;
+    }
+    if (breathingInterval) {
+        clearInterval(breathingInterval);
+        breathingInterval = null;
+    }
+    
+    document.getElementById('pause-btn').classList.add('hidden');
+    document.getElementById('start-btn').classList.remove('hidden');
+    document.getElementById('start-btn').innerHTML = '<i class="fas fa-play mr-2"></i>Resume';
+}
+
+function stopSession() {
+    if (sessionTimer) {
+        clearInterval(sessionTimer);
+        sessionTimer = null;
+    }
+    if (breathingInterval) {
+        clearInterval(breathingInterval);
+        breathingInterval = null;
+    }
+    
+    isSessionActive = false;
+    
+    document.getElementById('start-btn').classList.remove('hidden');
+    document.getElementById('pause-btn').classList.add('hidden');
+    document.getElementById('stop-btn').classList.add('hidden');
+    document.getElementById('timer-display').classList.add('hidden');
+    
+    document.getElementById('start-btn').innerHTML = '<i class="fas fa-play mr-2"></i>Start Session';
+    
+    // Auto-log the session
+    const duration = Math.round((Date.now() - sessionStartTime) / 60000);
+    if (duration > 0) {
+        autoLogSession(duration);
+    }
+}
+
+function updateTimer() {
+    if (!sessionStartTime) return;
+    
+    const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
+    const minutes = Math.floor(elapsed / 60);
+    const seconds = elapsed % 60;
+    
+    document.getElementById('timer-display').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+}
+
+function startGuidedSession(sessionCategory, type, duration) { // Added sessionCategory
+    if (sessionCategory === 'breathing') {
+        const session = breathingPatterns[type]; // Use breathingPatterns
+        if (session) {
+            startBreathing(type); // Call breathing startBreathing
+            document.getElementById('exercise_name').value = session.name;
+            document.getElementById('duration_minutes').value = duration;
+            
+            // Auto-start session
+            setTimeout(() => {
+                startSession(); // Call breathing startSession
+            }, 1000);
+        }
+    } else if (sessionCategory === 'yoga') {
+        const session = guidedYogaSessions[type]; // Use guidedYogaSessions
+        if (session) {
+            currentYogaSessionName = session.name;
+            yogaSessionDuration = duration;
+            
+            // Update form
+            document.getElementById('session_name').value = session.name;
+            document.getElementById('duration_minutes').value = duration;
+            document.getElementById('difficulty_level').value = session.difficulty;
+            
+            // Update status
+            document.getElementById('session-status').textContent = `Ready for ${session.name}`;
+            document.getElementById('timer-display').textContent = `${duration.toString().padStart(2, '0')}:00`;
+            document.getElementById('progress-bar').style.width = '0%';
+            
+            // Auto-start timer after a short delay
+            setTimeout(() => {
+                startTimer(); // Call yoga startTimer
+            }, 2000);
+        }
+    }
+}
+
+async function autoLogSession(duration) {
+    const formData = {
+        exercise_name: currentBreathingType ? breathingPatterns[currentBreathingType].name : 'Custom Session',
+        duration_minutes: duration,
+        notes: 'Session completed via interactive timer'
+    };
+    
+    try {
+        const response = await fetch('/api/log-breathing-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            showNotification('Session logged successfully!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        }
+    } catch (error) {
+        console.error('Error logging session:', error);
+        showNotification('Error logging session.', 'error'); // Use global showNotification
+    }
+}
+
+// Form submission for breathing-log-form
+document.addEventListener('DOMContentLoaded', function() {
+    const breathingLogForm = document.getElementById('breathing-log-form');
+    if (breathingLogForm) {
+        breathingLogForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const messageDiv = document.getElementById('form-message');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+            
+            try {
+                const response = await fetch('/api/log-breathing-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    messageDiv.className = 'mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded';
+                    messageDiv.textContent = 'Session logged successfully!';
+                    messageDiv.classList.remove('hidden');
+                    
+                    this.reset();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+                    messageDiv.textContent = result.message || 'Failed to log session.';
+                    messageDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+                messageDiv.textContent = 'Network error. Please try again.';
+                messageDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Log Session';
+            }
+        });
+    }
+});
+
+// Yoga Timer functions (moved from yoga.html)
+function startTimer() {
+    if (yogaSessionDuration === 0) {
+        showNotification('Please set a session duration first.', 'error'); // Use global showNotification
+        return;
+    }
+    
+    isYogaSessionActive = true;
+    yogaSessionStartTime = Date.now();
+    
+    document.getElementById('start-timer-btn').classList.add('hidden');
+    document.getElementById('pause-timer-btn').classList.remove('hidden');
+    document.getElementById('stop-timer-btn').classList.remove('hidden');
+    document.getElementById('session-status').textContent = 'Session in progress...';
+    
+    updateYogaTimer();
+    yogaSessionTimer = setInterval(updateYogaTimer, 1000);
+}
+
+function pauseTimer() {
+    if (yogaSessionTimer) {
+        clearInterval(yogaSessionTimer);
+        yogaSessionTimer = null;
+    }
+    
+    document.getElementById('pause-timer-btn').classList.add('hidden');
+    document.getElementById('start-timer-btn').classList.remove('hidden');
+    document.getElementById('start-timer-btn').innerHTML = '<i class="fas fa-play mr-2"></i>Resume';
+    document.getElementById('session-status').textContent = 'Session paused';
+}
+
+function stopTimer() {
+    if (yogaSessionTimer) {
+        clearInterval(yogaSessionTimer);
+        yogaSessionTimer = null;
+    }
+    
+    isYogaSessionActive = false;
+    
+    document.getElementById('start-timer-btn').classList.remove('hidden');
+    document.getElementById('pause-timer-btn').classList.add('hidden');
+    document.getElementById('stop-timer-btn').classList.add('hidden');
+    document.getElementById('session-status').textContent = 'Session completed!';
+    
+    document.getElementById('start-timer-btn').innerHTML = '<i class="fas fa-play mr-2"></i>Start Session';
+    
+    // Auto-log the session
+    const actualDuration = Math.round((Date.now() - yogaSessionStartTime) / 60000);
+    if (actualDuration > 0) {
+        autoLogYogaSession(actualDuration);
+    }
+}
+
+function updateYogaTimer() {
+    if (!yogaSessionStartTime) return;
+    
+    const elapsed = Math.floor((Date.now() - yogaSessionStartTime) / 1000);
+    const remaining = Math.max(0, (yogaSessionDuration * 60) - elapsed);
+    const minutes = Math.floor(remaining / 60);
+    const seconds = remaining % 60;
+    
+    document.getElementById('timer-display').textContent = 
+        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    // Update progress bar
+    const progress = Math.min(100, (elapsed / (yogaSessionDuration * 60)) * 100);
+    document.getElementById('progress-bar').style.width = `${progress}%`;
+    
+    // Check if session is complete
+    if (remaining <= 0) {
+        stopTimer();
+        showNotification('Session completed! Great job!', 'success');
+    }
+}
+
+function setQuickSession(duration) {
+    yogaSessionDuration = duration;
+    document.getElementById('duration_minutes').value = duration; // This targets the form input, not the timer display
+    document.getElementById('session-status').textContent = `Ready for ${duration}-minute session`;
+    
+    // Reset timer display
+    document.getElementById('timer-display').textContent = `${duration.toString().padStart(2, '0')}:00`;
+    document.getElementById('progress-bar').style.width = '0%';
+}
+
+async function autoLogYogaSession(duration) {
+    const formData = {
+        session_name: currentYogaSessionName || 'Custom Session',
+        duration_minutes: duration,
+        difficulty_level: 'Beginner', // Default for auto-logged sessions
+        notes: 'Session completed via interactive timer'
+    };
+    
+    try {
+        const response = await fetch('/api/log-yoga-session', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            showNotification('Session logged successfully!', 'success');
+            setTimeout(() => location.reload(), 1500);
+        }
+    } catch (error) {
+        console.error('Error logging yoga session:', error);
+        showNotification('Error logging yoga session.', 'error'); // Use global showNotification
+    }
+}
+
+// Form submission for yoga-log-form
+document.addEventListener('DOMContentLoaded', function() {
+    const yogaLogForm = document.getElementById('yoga-log-form');
+    if (yogaLogForm) {
+        yogaLogForm.addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const messageDiv = document.getElementById('form-message');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+            
+            try {
+                const response = await fetch('/api/log-yoga-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    messageDiv.className = 'mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded';
+                    messageDiv.textContent = 'Session logged successfully!';
+                    messageDiv.classList.remove('hidden');
+                    
+                    this.reset();
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+                    messageDiv.textContent = result.message || 'Failed to log session.';
+                    messageDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+                messageDiv.textContent = 'Network error. Please try again.';
+                messageDiv.classList.remove('hidden');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Log Session';
+            }
+        });
+    }
+});
+
 // Cleanup function
 function cleanup() {
     if (rpmUpdateInterval) {
@@ -867,52 +1312,5 @@ function drawLineChart(ctx, canvas, xLabels, yData, label, color) {
 }
 
 
-// Breathing Exercise Visualizer
-let breathingInterval;
 
-function startBreathing(type) {
-    clearInterval(breathingInterval);
-
-    const visualizer = document.getElementById('breathing-visualizer');
-    const circle = document.getElementById('breathing-circle');
-    const instruction = document.getElementById('breathing-instruction');
-
-    if (!visualizer || !circle || !instruction) {
-        console.error('Breathing visualizer elements not found.');
-        return;
-    }
-
-    const animations = {
-        box: [
-            { instruction: 'Breathe In (4s)', duration: 4000, scale: 1.5 },
-            { instruction: 'Hold (4s)', duration: 4000, scale: 1.5 },
-            { instruction: 'Breathe Out (4s)', duration: 4000, scale: 1 },
-            { instruction: 'Hold (4s)', duration: 4000, scale: 1 },
-        ],
-        '478': [
-            { instruction: 'Breathe In (4s)', duration: 4000, scale: 1.5 },
-            { instruction: 'Hold (7s)', duration: 7000, scale: 1.5 },
-            { instruction: 'Breathe Out (8s)', duration: 8000, scale: 1 },
-        ],
-    };
-
-    const sequence = animations[type];
-    let currentStep = 0;
-
-    function runStep() {
-        const step = sequence[currentStep];
-        instruction.textContent = step.instruction;
-        
-        circle.style.transitionDuration = `${step.duration}ms`;
-        circle.style.transform = `scale(${step.scale})`;
-        
-        breathingInterval = setTimeout(() => {
-            currentStep = (currentStep + 1) % sequence.length;
-            runStep();
-        }, step.duration);
-    }
-
-    clearTimeout(breathingInterval);
-    runStep();
-}
 
