@@ -219,6 +219,7 @@
         
         <div id="assessmentContent">
             <!-- Assessment questions will be loaded here -->
+            <div id="question-container"></div>
         </div>
         
         <div class="flex justify-between mt-6">
@@ -335,9 +336,11 @@ function showQuestion() {
     if (currentQuestion === currentAssessment.questions.length - 1) {
         nextBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Complete Assessment';
         nextBtn.onclick = completeAssessment;
+        console.log("DEBUG: 'Complete Assessment' button handler assigned.");
     } else {
         nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right ml-2"></i>';
         nextBtn.onclick = nextQuestion;
+        console.log("DEBUG: 'Next' button handler assigned.");
     }
 }
 
@@ -365,6 +368,7 @@ function previousQuestion() {
 }
 
 async function completeAssessment() {
+    console.log("DEBUG: completeAssessment function called.");
     // Ensure an answer is selected for the current question
     if (assessmentAnswers[currentQuestion] === undefined) {
         showNotification('Please select an answer before completing the assessment.', 'error');
@@ -374,7 +378,7 @@ async function completeAssessment() {
     // Calculate total score
     const totalScore = assessmentAnswers.reduce((sum, score) => sum + (score || 0), 0);
     const maxScore = currentAssessment.questions.length * 3;
-    const questionContainer = document.getElementById('question-container');
+    const questionContainer = document.getElementById('assessmentContent'); // Target the main content area of the modal
     const nextBtn = document.getElementById('nextBtn');
     const modal = document.getElementById('assessmentModal');
     
@@ -395,14 +399,12 @@ async function completeAssessment() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                'X-Requested-With': 'XMLHttpRequest'
             },
             body: JSON.stringify({
                 assessment_type: currentAssessment.type,
                 score: totalScore,
-                responses: assessmentAnswers,
-                _csrf: document.querySelector('meta[name="csrf-token"]')?.content || ''
+                responses: assessmentAnswers
             })
         });
 
@@ -433,6 +435,48 @@ async function completeAssessment() {
             // Close the modal immediately
             if (modal) {
                 modal.classList.add('hidden');
+            }
+            
+            // Handle AI insights display based on the flag
+            const aiInsightsSection = document.getElementById('aiInsightsContent');
+            const aiLoadingSection = document.getElementById('aiInsightsLoading');
+            const aiComingSoonSection = document.getElementById('aiInsightsComingSoon');
+
+            if (data.ai_insights_generated === false) {
+                // If AI insights were not generated successfully, show a message
+                if (aiComingSoonSection) {
+                    aiComingSoonSection.classList.remove('hidden');
+                    aiComingSoonSection.innerHTML = '<p class="text-sm text-gray-600">AI insights are currently unavailable. Please try again later.</p>';
+                }
+                if (aiLoadingSection) aiLoadingSection.classList.add('hidden');
+                if (aiInsightsSection) aiInsightsSection.classList.add('hidden'); // Hide actual insights if they were somehow shown
+            } else {
+                // If AI insights were generated, display them
+                const insights = data.ai_insights;
+                const summaryEl = document.getElementById('aiSummary');
+                const recommendationsEl = document.getElementById('aiRecommendations');
+                const resourcesEl = document.getElementById('aiResources');
+
+                if (summaryEl) {
+                    summaryEl.textContent = insights.summary || 'No summary available.';
+                }
+
+                if (recommendationsEl && insights.recommendations) {
+                    recommendationsEl.innerHTML = insights.recommendations
+                        .map(rec => '<li class="flex items-start"><i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i><span>' + rec + '</span></li>')
+                        .join('');
+                }
+
+                if (resourcesEl && insights.resources) {
+                    resourcesEl.innerHTML = insights.resources
+                        .map(res => '<li class="flex items-start"><i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i><span>' + res + '</span></li>')
+                        .join('');
+                }
+
+                // Show the AI insights section
+                if (aiInsightsSection) aiInsightsSection.classList.remove('hidden');
+                if (aiLoadingSection) aiLoadingSection.classList.add('hidden');
+                if (aiComingSoonSection) aiComingSoonSection.classList.add('hidden'); // Hide coming soon if it was shown
             }
             
             // Reload the page to show updated data

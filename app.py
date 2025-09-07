@@ -5,9 +5,11 @@ from datetime import datetime, timedelta, date
 from functools import wraps
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
+from flask_session import Session
 from flask_compress import Compress
 from flask_migrate import Migrate
+from flask_wtf.csrf import CSRFProtect, CSRFError
 
 from ai_service import ai_service
 from database import db
@@ -21,7 +23,28 @@ except Exception as e:
     print("Continuing with default configuration...")
 
 app = Flask(__name__)
+
+# Configure session
 app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')  # Use environment variable or fallback
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # Session expires after 1 day
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
+
+# Initialize Flask-Session
+Session(app)
+
+# Initialize CSRF protection
+csrf = CSRFProtect()
+csrf.init_app(app)
+
+# Disable CSRF for all views by default
+app.config['WTF_CSRF_ENABLED'] = False
+
+# Enable CSRF only for specific forms that need it
+app.config['WTF_CSRF_TIME_LIMIT'] = None  # No time limit for CSRF tokens
 
 # Configure logging
 logging.basicConfig(
@@ -155,11 +178,26 @@ def login():
         user = User.query.filter_by(email=email, role=role).first()
         
         if user and user.check_password(password):
+            # Clear any existing session data
+            session.clear()
+            
+            # Set session data
+            session.permanent = True  # Make the session persistent
             session['user_email'] = email
             session['user_role'] = role
             session['user_name'] = user.name
             session['user_id'] = user.id
             session['user_institution'] = user.institution
+            
+            # Ensure session is saved
+            session.modified = True
+            
+            print(f"\n=== Login Successful ===")
+            print(f"User ID: {user.id}")
+            print(f"User Role: {role}")
+            print(f"Session ID: {session.sid if hasattr(session, 'sid') else 'N/A'}")
+            print(f"Session keys: {list(session.keys())}")
+            print("======================\n")
             
             if role == 'patient':
                 return redirect(url_for('patient_dashboard'))
@@ -930,7 +968,7 @@ def log_yoga_session():
             duration_minutes=duration_minutes,
             difficulty_level=difficulty_level,
             notes=notes,
-            created_at=datetime.now()
+            created_at=datetime.utcnow() # Use utcnow for consistency
         )
         
         db.session.add(new_log)
@@ -940,6 +978,13 @@ def log_yoga_session():
             'success': True,
             'message': 'Yoga session logged successfully!'
         })
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error logging yoga session for user {session.get('user_id')}: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Failed to log yoga session: {str(e)}'
+        }), 500
         
     except Exception as e:
         db.session.rollback()
@@ -1031,6 +1076,19 @@ def submit_digital_detox():
 @login_required
 @role_required('patient')
 def assessment():
+    # Debug session data
+    print("\n=== Session Debug Info ===")
+    print(f"User ID in session: {session.get('user_id')}")
+    print(f"User email in session: {session.get('user_email')}")
+    print(f"User role in session: {session.get('user_role')}")
+    print(f"Session keys: {list(session.keys())}")
+    print("=========================\n")
+    
+    if 'user_id' not in session:
+        print("ERROR: User ID not found in session")
+        flash('Please log in to continue', 'error')
+        return redirect(url_for('login'))
+        
     user_id = session['user_id']
     assessment_objects = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
     
@@ -1065,8 +1123,13 @@ def assessment():
 @login_required
 @role_required('patient')
 def api_save_assessment():
+    if not request.is_json:
+        print("DEBUG: Request is not JSON.")
+        return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
+        
     user_id = session['user_id']
-    data = request.json
+    data = request.get_json()
+    print(f"DEBUG: Received assessment data: {data}")
     
     # Extract data from request
     assessment_type = data.get('assessment_type')
@@ -1074,6 +1137,7 @@ def api_save_assessment():
     responses = data.get('responses', {})
     
     if not all([assessment_type, score is not None]):
+        print("DEBUG: Missing required fields for assessment.")
         return jsonify({
             'success': False,
             'message': 'Missing required fields: assessment_type and score are required'
@@ -1081,55 +1145,79 @@ def api_save_assessment():
 
     # Generate AI insights
     ai_insights = {}
+    ai_insights_generated_successfully = True
     try:
+        print("DEBUG: Generating AI insights for assessment.")
         ai_insights = ai_service.generate_assessment_insights(
             assessment_type=assessment_type,
             score=score,
             responses=responses
         )
+        print(f"DEBUG: AI insights generated: {ai_insights}")
     except Exception as e:
         logger.error(f"Error generating AI insights: {e}")
+        print(f"DEBUG: Error generating AI insights: {e}")
+        ai_insights_generated_successfully = False
         ai_insights = {
-            'summary': 'Your assessment has been recorded successfully.',
-            'recommendations': ['Continue with your current mental health routine.', 'Consider discussing results with a healthcare provider.'],
-            'resources': ['Local mental health resources', 'Crisis hotlines if needed']
+            'summary': 'AI insights are currently unavailable. Please try again later.',
+            'recommendations': [],
+            'resources': []
         }
 
     try:
-        # Create new assessment with AI insights
-        logger.info(f"Responses type: {type(responses)}")
-        logger.info(f"Responses content: {responses}")
-
-        new_assessment = Assessment(
+        print("DEBUG: Creating new assessment record.")
+        # Create new assessment record
+        assessment = Assessment(
             user_id=user_id,
-            assessment_type=assessment_type,
+            assessment_type=assessment_type.upper(),  # GAD-7 or PHQ-9
             score=score,
-            responses=json.dumps(responses),
-            ai_insights=json.dumps(ai_insights) if ai_insights else None  # Convert dict to JSON string
+            responses=responses,
+            ai_insights=json.dumps(ai_insights) if ai_insights else None
         )
         
-        db.session.add(new_assessment)
-        db.session.commit()
+        db.session.add(assessment)
+        print("DEBUG: Assessment added to session.")
         
-        try:
-            return jsonify({
-                'success': True, 
-                'message': 'Assessment saved successfully!',
-                'insights': json.loads(new_assessment.ai_insights) if new_assessment.ai_insights else {}
-            }), 200
-        except TypeError as e:
-            logger.error(f"TypeError during jsonify: {e}")
-            logger.error(f"Data causing error: {new_assessment.ai_insights}")
-            return jsonify({'success': False, 'message': 'Error serializing response.'}), 500
+        # Update gamification points
+        gamification = Gamification.query.filter_by(user_id=user_id).first()
+        if not gamification:
+            gamification = Gamification(user_id=user_id, points=0, streak=0)
+            db.session.add(gamification)
+            print("DEBUG: New gamification record added to session.")
+        
+        # Add points for completing assessment
+        gamification.points += 20  # More points for completing an assessment
+        print(f"DEBUG: Gamification points updated: {gamification.points}")
+        
+        # Update streak if this is the first assessment today
+        today = datetime.utcnow().date()
+        if not gamification.last_activity or gamification.last_activity < today:
+            gamification.streak += 1
+            print(f"DEBUG: Gamification streak updated: {gamification.streak}")
+        gamification.last_activity = datetime.utcnow().date()
+        
+        print("DEBUG: Attempting to commit changes to database.")
+        db.session.commit()
+        print("DEBUG: Changes committed successfully.")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Assessment saved successfully',
+            'assessment_id': assessment.id,
+            'points_earned': 20,
+            'total_points': gamification.points,
+            'ai_insights': ai_insights,
+            'ai_insights_generated': ai_insights_generated_successfully
+        })
         
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error saving assessment for user {user_id}: {str(e)}")
-        
+        print(f"DEBUG: Error saving assessment: {e}")
         return jsonify({
             'success': False,
-            'message': 'Failed to save assessment, but here are your insights.',
-            'insights': ai_insights
+            'message': f'Failed to save assessment: {str(e)}',
+            'insights': ai_insights if 'ai_insights' in locals() else None
         }), 500
 
 @app.route('/goals')
@@ -1490,22 +1578,33 @@ def utility_processor():
 @login_required
 @role_required('patient')
 def save_mood():
+    if not request.is_json:
+        print("DEBUG: Request is not JSON.")
+        return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
+        
     user_id = session['user_id']
-    data = request.json
+    data = request.get_json()
+    print(f"DEBUG: Received mood data: {data}")
+    
+    if not data or 'mood' not in data:
+        print("DEBUG: Missing mood data.")
+        return jsonify({'success': False, 'message': 'Missing mood data'}), 400
     
     try:
         mood = int(data.get('mood'))
         if not (1 <= mood <= 5):
+            print("DEBUG: Mood score out of range.")
             return jsonify({'success': False, 'message': 'Mood must be between 1 and 5'}), 400
             
+        print("DEBUG: Creating new mood log.")
         # Create new mood log
         mood_log = MoodLog(
             user_id=user_id,
             mood_score=mood,
             notes=data.get('notes', '')
         )
-        
         db.session.add(mood_log)
+        print("DEBUG: Mood log added to session.")
         
         # Also update RPM data for dashboard
         today = datetime.utcnow().date()
@@ -1513,35 +1612,57 @@ def save_mood():
         if not rpm_data:
             rpm_data = RPMData(user_id=user_id, date=today, mood_score=mood)
             db.session.add(rpm_data)
+            print("DEBUG: New RPM data added to session.")
         else:
             rpm_data.mood_score = mood
+            print("DEBUG: Existing RPM data updated.")
         
         # Update gamification points
         gamification = Gamification.query.filter_by(user_id=user_id).first()
-        if gamification:
-            # Add points for mood check-in
-            gamification.points += 10
+        if not gamification:
+            gamification = Gamification(user_id=user_id, points=0, streak=0)
+            db.session.add(gamification)
+            print("DEBUG: New gamification record added to session.")
             
-            # Check for streak
-            if gamification.last_activity and gamification.last_activity == today - timedelta(days=1):
-                gamification.streak += 1
-            elif not gamification.last_activity or gamification.last_activity < today - timedelta(days=1):
-                gamification.streak = 1
-            
-            gamification.last_activity = today
+        # Add points for mood check-in
+        gamification.points += 10
+        print(f"DEBUG: Gamification points updated: {gamification.points}")
         
+        # Check for streak
+        if gamification.last_activity:
+            last_activity = gamification.last_activity.date() if hasattr(gamification.last_activity, 'date') else gamification.last_activity
+            if last_activity == today - timedelta(days=1):
+                gamification.streak += 1
+                print(f"DEBUG: Gamification streak updated: {gamification.streak}")
+            elif last_activity < today - timedelta(days=1):
+                gamification.streak = 1
+                print("DEBUG: Gamification streak reset.")
+        else:
+            gamification.streak = 1
+            print("DEBUG: Gamification streak initialized.")
+        
+        gamification.last_activity = today
+        print(f"DEBUG: Gamification last_activity updated: {gamification.last_activity}")
+        
+        print("DEBUG: Attempting to commit changes to database.")
         db.session.commit()
+        print("DEBUG: Changes committed successfully.")
+        
         return jsonify({
             'success': True,
             'message': 'Mood saved successfully',
-            'points': gamification.points if gamification else 0,
-            'streak': gamification.streak if gamification else 0
+            'points': gamification.points,
+            'streak': gamification.streak
         })
         
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error saving mood: {str(e)}')
-        return jsonify({'success': False, 'message': 'An error occurred while saving your mood'}), 500
+        print(f"DEBUG: Error saving mood: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Failed to save mood: {str(e)}'
+        }), 500
 
 if __name__ == '__main__':
     # Create an app context for database initialization

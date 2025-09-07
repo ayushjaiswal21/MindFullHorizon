@@ -9,7 +9,7 @@
             <div class="flex-shrink-0">
                 <!-- Placeholder for profile picture -->
                 <img class="h-24 w-24 rounded-full object-cover border-4 border-purple-300 shadow-lg"
-                     src="https://via.placeholder.com/150/800080/FFFFFF?text={{ user.name[0] | upper }}"
+                     src="{{ url_for('static', filename='images/user_placeholder.png') }}" 
                      alt="Profile Picture">
             </div>
             <div>

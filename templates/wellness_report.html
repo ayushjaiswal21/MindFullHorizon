@@ -334,7 +334,7 @@ function initializeWellnessTrendsChart() {
     const ctx = document.getElementById('wellness-trends-chart');
     if (!ctx) return;
     
-    const wellnessData = {{ wellness_trend.digital_detox | tojson }};
+    const wellnessData = JSON.parse('{{ wellness_trend.digital_detox | tojson | safe }}');
     
     if (!wellnessData || wellnessData.length === 0) return;
     

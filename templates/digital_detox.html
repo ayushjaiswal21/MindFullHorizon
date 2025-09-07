@@ -158,6 +158,56 @@ async function initializeScreenTimeChart() {
 
         const dates = screenTimeData.map(item => formatDate(item.date));
         const hours = screenTimeData.map(item => item.hours);
+        // Move the chart initialization here, inside the try block, after data is ready
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Screen Time (Hours)',
+                    data: hours,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: false,
+                        text: 'Screen Time Trends'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        return; // Exit after chart is initialized or no data message is shown
     } catch (error) {
         console.error('Error fetching screen time data:', error);
         ctx.font = '16px Inter';
@@ -167,58 +217,16 @@ async function initializeScreenTimeChart() {
         return;
     }
 
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: dates,
-            datasets: [{
-                label: 'Screen Time (Hours)',
-                data: hours,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                tension: 0.3,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: false,
-                    text: 'Screen Time Trends'
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                },
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                x: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Date'
-                    }
-                },
-                y: {
-                    display: true,
-                    title: {
-                        display: true,
-                        text: 'Hours'
-                    },
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+    
 }
 
 async function initializeCorrelationChart() {
-    const ctx = document.getElementById('correlation-chart').getContext('2d');
+    const canvas = document.getElementById('correlation-chart');
+    // Check if a chart instance already exists on this canvas
+    if (Chart.getChart(canvas)) {
+        Chart.getChart(canvas).destroy();
+    }
+    const ctx = canvas.getContext('2d');
     // Jinja injects JSON here; wrap in template literal and parse to satisfy static analyzers
     const screenTimeLog = JSON.parse(`{{ screen_time_log | tojson | safe }}`);
     
