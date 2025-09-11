@@ -978,17 +978,16 @@ def log_yoga_session():
             'success': True,
             'message': 'Yoga session logged successfully!'
         })
-    except Exception as e:
+    except ValueError as ve:
         db.session.rollback()
-        logger.error(f"Error logging yoga session for user {session.get('user_id')}: {e}")
+        logger.error(f"Validation error in yoga session for user {session.get('user_id')}: {ve}")
         return jsonify({
             'success': False,
-            'message': f'Failed to log yoga session: {str(e)}'
-        }), 500
-        
+            'message': f'Validation error: {str(ve)}'
+        }), 400
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error logging yoga session for user {session.get('user_id')}: {e}")
+        logger.error(f"Error logging yoga session for user {session.get('user_id')}: {str(e)}", exc_info=True)
         return jsonify({
             'success': False,
             'message': 'Failed to log session. Please try again.'

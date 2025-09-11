@@ -1166,11 +1166,16 @@ async function autoLogYogaSession(duration) {
 document.addEventListener('DOMContentLoaded', function() {
     const yogaLogForm = document.getElementById('yoga-log-form');
     if (yogaLogForm) {
-        yogaLogForm.addEventListener('submit', async function(event) {
+        document.getElementById('yoga-log-form').addEventListener('submit', async function(event) {
             event.preventDefault();
             
             const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
+            const data = {
+                session_name: formData.get('session_name') || 'Custom Session',
+                duration_minutes: parseInt(formData.get('duration_minutes') || '0', 10),
+                difficulty_level: formData.get('difficulty_level') || 'Beginner',
+                notes: formData.get('notes') || ''
+            };
             
             const submitBtn = this.querySelector('button[type="submit"]');
             const messageDiv = document.getElementById('form-message');
@@ -1182,8 +1187,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response = await fetch('/api/log-yoga-session', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]')?.value || ''
                     },
+                    credentials: 'same-origin',
                     body: JSON.stringify(data)
                 });
                 
