@@ -13,7 +13,7 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 
 from ai_service import ai_service
 from database import db
-from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, MoodLog, get_user_wellness_trend, get_institutional_summary
+from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary
 
 # Load environment variables from .env file
 try:
@@ -745,11 +745,21 @@ def digital_detox():
     if screen_time_log:
         total_hours = sum(log['hours'] for log in screen_time_log)
         avg_screen_time = round(total_hours / len(screen_time_log), 1)
+
+    # Get the latest AI insights
+    latest_log = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).first()
+    score = None
+    suggestion = None
+    if latest_log:
+        score = latest_log.ai_score
+        suggestion = latest_log.ai_suggestion
     
     return render_template('digital_detox.html', 
                          user_name=session['user_name'],
                          screen_time_log=screen_time_log,
-                         avg_screen_time=avg_screen_time)
+                         avg_screen_time=avg_screen_time,
+                         score=score,
+                         suggestion=suggestion)
 
 @app.route('/analytics')
 @login_required
@@ -1071,6 +1081,48 @@ def submit_digital_detox():
         }), 500
 
 
+@app.route('/api/analyze-digital-detox', methods=['POST'])
+@login_required
+@role_required('patient')
+def api_analyze_digital_detox():
+    user_id = session['user_id']
+    logger.info(f"Starting digital detox analysis for user {user_id}")
+    
+    # Get the most recent digital detox log
+    latest_log = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).first()
+    
+    if not latest_log:
+        logger.warning(f"No digital detox data found for user {user_id}")
+        return jsonify({'success': False, 'message': 'No digital detox data found.'}), 404
+        
+    # Prepare data for AI service
+    detox_data = {
+        'screen_time_hours': latest_log.screen_time_hours,
+        'academic_score': latest_log.academic_score,
+        'social_interactions': latest_log.social_interactions
+    }
+    logger.info(f"Digital detox data for user {user_id}: {detox_data}")
+    
+    try:
+        # Generate insights
+        logger.info(f"Generating digital detox insights for user {user_id}")
+        insights = ai_service.generate_digital_detox_insights(detox_data)
+        logger.info(f"Digital detox insights for user {user_id}: {insights}")
+        
+        # Update the log with the new insights
+        latest_log.ai_score = insights.get('ai_score')
+        latest_log.ai_suggestion = insights.get('ai_suggestion')
+        
+        db.session.commit()
+        logger.info(f"Digital detox insights saved for user {user_id}")
+        
+        return jsonify({'success': True, 'insights': insights})
+        
+    except Exception as e:
+        logger.error(f"Error analyzing digital detox for user {user_id}: {e}")
+        return jsonify({'success': False, 'message': 'An error occurred while analyzing your data.'}), 500
+
+
 @app.route('/assessment')
 @login_required
 @role_required('patient')
@@ -1116,7 +1168,16 @@ def assessment():
         
         assessments.append(assessment_dict)
     
-    return render_template('assessment.html', user_name=session['user_name'], assessments=assessments)
+    # Get the latest insights to display on the page
+    latest_insights = None
+    if assessments:
+        # The first assessment in the sorted list is the latest one
+        latest_insights = assessments[0].get('ai_insights')
+
+    return render_template('assessment.html', 
+                           user_name=session['user_name'], 
+                           assessments=assessments,
+                           latest_insights=latest_insights)
 
 @app.route('/api/save-assessment', methods=['POST'])
 @login_required
@@ -1194,6 +1255,10 @@ def api_save_assessment():
             gamification.streak += 1
             print(f"DEBUG: Gamification streak updated: {gamification.streak}")
         gamification.last_activity = datetime.utcnow().date()
+
+        # Update user's last assessment time
+        user = User.query.get(user_id)
+        user.last_assessment_at = datetime.utcnow()
         
         print("DEBUG: Attempting to commit changes to database.")
         db.session.commit()
@@ -1262,15 +1327,32 @@ def progress():
             'days_since_assessment': days_since_assessment
         }
         
-        try:
-            ai_recommendations = ai_service.generate_progress_recommendations(user_data_for_ai)
-        except Exception as ai_error:
-            logger.error(f"AI service error in progress page: {ai_error}")
-            ai_recommendations = {
-                'summary': 'Your progress data has been recorded.',
-                'recommendations': ['Continue with your current mental health routine.'],
-                'priority_actions': []
-            }
+        user = User.query.get(user_id)
+        last_assessment_at = user.last_assessment_at
+
+        # Check for cached recommendations
+        latest_recommendation = ProgressRecommendation.query.filter_by(user_id=user_id).order_by(ProgressRecommendation.created_at.desc()).first()
+
+        ai_recommendations = None
+        if latest_recommendation and last_assessment_at and latest_recommendation.created_at > last_assessment_at:
+            ai_recommendations = latest_recommendation.recommendations
+        
+        if not ai_recommendations:
+            try:
+                ai_recommendations = ai_service.generate_progress_recommendations(user_data_for_ai)
+                new_recommendation = ProgressRecommendation(
+                    user_id=user_id,
+                    recommendations=ai_recommendations
+                )
+                db.session.add(new_recommendation)
+                db.session.commit()
+            except Exception as ai_error:
+                logger.error(f"AI service error in progress page: {ai_error}")
+                ai_recommendations = {
+                    'summary': 'Your progress data has been recorded.',
+                    'recommendations': ['Continue with your current mental health routine.'],
+                    'priority_actions': []
+                }
 
         scores_to_average = []
         if latest_gad7 and latest_gad7.score is not None:
@@ -1595,15 +1677,16 @@ def save_mood():
             print("DEBUG: Mood score out of range.")
             return jsonify({'success': False, 'message': 'Mood must be between 1 and 5'}), 400
             
-        print("DEBUG: Creating new mood log.")
-        # Create new mood log
-        mood_log = MoodLog(
+        print("DEBUG: Creating new mood assessment.")
+        # Create new assessment for the mood
+        mood_assessment = Assessment(
             user_id=user_id,
-            mood_score=mood,
-            notes=data.get('notes', '')
+            assessment_type='Daily Mood',
+            score=mood,
+            responses={'mood': mood, 'notes': data.get('notes', '')}
         )
-        db.session.add(mood_log)
-        print("DEBUG: Mood log added to session.")
+        db.session.add(mood_assessment)
+        print("DEBUG: Mood assessment added to session.")
         
         # Also update RPM data for dashboard
         today = datetime.utcnow().date()
@@ -1642,6 +1725,10 @@ def save_mood():
         
         gamification.last_activity = today
         print(f"DEBUG: Gamification last_activity updated: {gamification.last_activity}")
+
+        # Update user's last assessment time
+        user = User.query.get(user_id)
+        user.last_assessment_at = datetime.utcnow()
         
         print("DEBUG: Attempting to commit changes to database.")
         db.session.commit()
