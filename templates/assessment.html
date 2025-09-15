@@ -152,57 +152,77 @@
             <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
                 <i class="fas fa-robot text-blue-500 mr-2"></i> AI-Powered Insights
             </h4>
-            
+
             <!-- Loading State (hidden by default; shown when generating insights) -->
             <div id="aiInsightsLoading" class="hidden text-center py-4">
                 <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
                 <p class="text-gray-600">Analyzing your responses...</p>
             </div>
-            
-            <!-- Coming Soon Message (Hidden by default) -->
-            <div id="aiInsightsComingSoon" class="hidden p-4 bg-blue-50 rounded-lg">
-                <p class="text-sm text-gray-600">
-                    AI insights are being generated. Please wait...
-                </p>
-            </div>
-            
+
             <!-- AI Insights Content -->
-            <div id="aiInsightsContent" class="hidden space-y-4">
+            <div id="aiInsightsContent" class="{% if not latest_insights %}hidden{% endif %} space-y-4">
                 <div class="bg-white p-4 rounded-lg border border-gray-200">
                     <h5 class="font-medium text-gray-800 mb-2 flex items-center">
                         <i class="fas fa-comment-alt text-blue-500 mr-2"></i> Summary
                     </h5>
-                    <p id="aiSummary" class="text-gray-700"></p>
+                    <p id="aiSummary" class="text-gray-700">
+                        {% if latest_insights and latest_insights.summary %}
+                            {{ latest_insights.summary }}
+                        {% else %}
+                            No summary available.
+                        {% endif %}
+                    </p>
                 </div>
-                
+
                 <div class="bg-white p-4 rounded-lg border border-gray-200">
                     <h5 class="font-medium text-gray-800 mb-2 flex items-center">
                         <i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Recommendations
                     </h5>
                     <ul id="aiRecommendations" class="space-y-2">
-                        <li class="flex items-start">
-                            <div class="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
-                        </li>
-                        <li class="flex items-start">
-                            <div class="animate-pulse bg-gray-200 h-4 w-2/3 rounded"></div>
-                        </li>
+                        {% if latest_insights and latest_insights.recommendations %}
+                            {% for rec in latest_insights.recommendations %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                                    <span>{{ rec }}</span>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="flex items-start">
+                                <div class="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
+                            </li>
+                        {% endif %}
                     </ul>
                 </div>
-                
+
                 <div class="bg-white p-4 rounded-lg border border-gray-200">
                     <h5 class="font-medium text-gray-800 mb-2 flex items-center">
                         <i class="fas fa-book-open text-green-500 mr-2"></i> Resources
                     </h5>
                     <ul id="aiResources" class="space-y-2">
-                        <li class="flex items-start">
-                            <div class="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
-                        </li>
-                        <li class="flex items-start">
-                            <div class="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
-                        </li>
+                        {% if latest_insights and latest_insights.resources %}
+                            {% for res in latest_insights.resources %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i>
+                                    <span>{{ res }}</span>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="flex items-start">
+                                <div class="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
+                            </li>
+                        {% endif %}
                     </ul>
                 </div>
             </div>
+            
+            {% if not latest_insights %}
+            <!-- Message when no insights are available -->
+            <div id="noInsightsMessage" class="p-4 bg-blue-50 rounded-lg">
+                <p class="text-sm text-gray-600">
+                    Complete an assessment to receive personalized AI-powered insights.
+                </p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -238,6 +258,7 @@ let currentAssessment = null;
 let currentQuestion = 0;
 let assessmentAnswers = [];
 let selectedMood = null;
+let assessmentChart = null;
 
 // Assessment data
 const assessments = {
@@ -477,12 +498,28 @@ async function completeAssessment() {
                 if (aiInsightsSection) aiInsightsSection.classList.remove('hidden');
                 if (aiLoadingSection) aiLoadingSection.classList.add('hidden');
                 if (aiComingSoonSection) aiComingSoonSection.classList.add('hidden'); // Hide coming soon if it was shown
+
+                // Hide the 'no insights' message
+                const noInsightsMessage = document.getElementById('noInsightsMessage');
+                if (noInsightsMessage) {
+                    noInsightsMessage.classList.add('hidden');
+                }
             }
             
-            // Reload the page to show updated data
-            setTimeout(() => {
-                location.reload();
-            }, 500);
+            // Update the history table and chart
+            const newAssessment = {
+                id: data.assessment_id,
+                assessment_type: currentAssessment.type,
+                score: totalScore,
+                created_at: new Date().toISOString(),
+                ai_insights: data.ai_insights
+            };
+            updateAssessmentHistory(newAssessment);
+
+            // No longer reloading the page to keep the insights visible
+            // setTimeout(() => {
+            //     location.reload();
+            // }, 500);
             
         } else {
             throw new Error(data.message || 'Failed to save assessment');
@@ -609,8 +646,6 @@ function closeAssessment() {
     currentAssessment = null;
     currentQuestion = 0;
     assessmentAnswers = [];
-    // Reload the page to show updated history
-    location.reload();
 }
 
 function selectMood(mood) {
@@ -698,10 +733,20 @@ async function saveDailyMood() {
                 }
             }
             
-            // Reload the page to show updated data
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+            // Update the history table and chart
+            const newMoodAssessment = {
+                id: 'mood-' + new Date().getTime(), // Create a temporary unique ID
+                assessment_type: 'Daily Mood',
+                score: mood,
+                created_at: new Date().toISOString(),
+                ai_insights: {} // No AI insights for mood
+            };
+            updateAssessmentHistory(newMoodAssessment);
+
+            // No longer reloading the page
+            // setTimeout(() => {
+            //     window.location.reload();
+            // }, 1000);
         } else {
             throw new Error(data.message || 'Failed to save mood');
         }
@@ -738,6 +783,11 @@ function initializeAssessmentHistoryChart() {
     const ctx = document.getElementById('assessment-history-chart');
     if (!ctx) return;
 
+    // Destroy existing chart if it exists
+    if (assessmentChart) {
+        assessmentChart.destroy();
+    }
+
     if (!assessmentData || assessmentData.length === 0) {
         // Show placeholder chart with sample data if no assessments exist
         const sampleData = [
@@ -756,7 +806,7 @@ function initializeAssessmentHistoryChart() {
             return '#10b981'; // Default color for mood
         });
         
-        new Chart(ctx, {
+        assessmentChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
@@ -917,6 +967,66 @@ function getAssessmentFeedback(assessmentType, score, maxScore) {
 document.addEventListener('DOMContentLoaded', function() {
     initializeAssessmentHistoryChart();
 });
+
+function updateAssessmentHistory(newAssessment) {
+    // Add to data
+    assessmentData.unshift(newAssessment);
+
+    // Update table
+    const tableBody = document.getElementById('assessmentHistory');
+    const newRow = document.createElement('tr');
+
+    const severityInfo = get_severity_info(newAssessment.assessment_type, newAssessment.score);
+
+    newRow.innerHTML = `
+        <td class="px-4 py-3 text-sm text-gray-700">${new Date(newAssessment.created_at).toLocaleString()}</td>
+        <td class="px-4 py-3 text-sm text-gray-700">${newAssessment.assessment_type}</td>
+        <td class="px-4 py-3 text-sm font-semibold text-blue-600">${newAssessment.score}</td>
+        <td class="px-4 py-3 text-sm">
+            <span class="px-2 py-1 rounded-full text-xs font-medium bg-${severityInfo.color}-100 text-${severityInfo.color}-800">${severityInfo.severity}</span>
+        </td>
+        <td class="px-4 py-3 text-sm">
+            <button class="text-blue-600 hover:text-blue-800 mr-2" onclick="viewAssessmentDetails('${newAssessment.id}')">
+                <i class="fas fa-eye"></i> View
+            </button>
+        </td>
+    `;
+
+    // Remove "No assessments" row if it exists
+    const noAssessmentsRow = tableBody.querySelector('td[colspan="5"]');
+    if (noAssessmentsRow) {
+        noAssessmentsRow.parentElement.remove();
+    }
+
+    tableBody.prepend(newRow);
+
+    // Update chart
+    initializeAssessmentHistoryChart();
+}
+
+// Helper function to get severity info, adapted from the backend
+function get_severity_info(assessment_type, score) {
+    if (score === null || score === undefined) {
+        return { 'severity': 'N/A', 'color': 'gray' };
+    }
+    score = parseFloat(score);
+    if (assessment_type === 'GAD-7') {
+        if (score <= 4) return { 'severity': 'Minimal', 'color': 'green' };
+        if (score <= 9) return { 'severity': 'Mild', 'color': 'yellow' };
+        if (score <= 14) return { 'severity': 'Moderate', 'color': 'orange' };
+        return { 'severity': 'Severe', 'color': 'red' };
+    } else if (assessment_type === 'PHQ-9') {
+        if (score <= 4) return { 'severity': 'Minimal', 'color': 'green' };
+        if (score <= 9) return { 'severity': 'Mild', 'color': 'yellow' };
+        if (score <= 14) return { 'severity': 'Moderate', 'color': 'orange' };
+        return { 'severity': 'Severe', 'color': 'red' };
+    } else if (assessment_type === 'Daily Mood') {
+        if (score >= 4) return { 'severity': 'Positive', 'color': 'green' };
+        if (score >= 3) return { 'severity': 'Neutral', 'color': 'yellow' };
+        return { 'severity': 'Negative', 'color': 'red' };
+    }
+    return { 'severity': 'N/A', 'color': 'gray' };
+}
 
 // Function to view assessment details (placeholder for now)
 function viewAssessmentDetails(assessmentId) {

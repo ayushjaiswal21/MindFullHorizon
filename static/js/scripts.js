@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize real-time features
     initializeRealTimeFeatures();
     initializeAIInteractionCues();
-    initializeEnhancedForms();
+    
 });
 
 // Function to show custom message box
@@ -455,104 +455,9 @@ function updateAIDebugInfo(data) {
     }
 }
 
-// Enhanced Forms with AJAX
-function initializeEnhancedForms() {
-    // Enhanced digital detox form
-    const detoxForm = document.getElementById('digital-detox-form');
-    if (detoxForm) {
-        detoxForm.addEventListener('submit', handleDigitalDetoxSubmission);
-    }
-    
-    // Enhanced chat functionality
-    const chatForm = document.getElementById('chat-form');
-    if (chatForm) {
-        chatForm.addEventListener('submit', handleChatMessage);
-    }
-}
 
-function handleDigitalDetoxSubmission(event) {
-    event.preventDefault();
-    
-    const formData = new FormData(event.target);
-    const data = {
-        screen_time: formData.get('screen_time'),
-        academic_score: formData.get('academic_score'),
-        social_interactions: formData.get('social_interactions')
-    };
-    
-    // Show AI processing
-    showAIProcessing('🔍 Analyzing your digital wellness patterns...', true);
-    
-    // Submit via AJAX
-    fetch('/api/submit-digital-detox', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-    })
-    .then(response => response.json())
-    .then(result => {
-        hideAIProcessing();
-        
-        if (result.success) {
-            // Update debug info
-            updateAIDebugInfo(result.ai_analysis);
-            
-            // Show success with gamification feedback
-            showGamificationFeedback(result);
-            
-            // Update UI with new data
-            updateDigitalDetoxUI(result);
-            
-            // Reset form
-            event.target.reset();
-        } else {
-            showNotification('Error: ' + result.error, 'error');
-        }
-    })
-    .catch(error => {
-        hideAIProcessing();
-        showNotification('Network error occurred', 'error');
-        console.error('Error:', error);
-    });
-}
 
-function showGamificationFeedback(result) {
-    let message = `🎉 You earned ${result.points_earned} points!`;
-    
-    if (result.badge_earned) {
-        message += ` 🏆 New badge unlocked: ${result.badge_earned}!`;
-    }
-    
-    message += ` AI Analysis: ${result.ai_analysis.score}`;
-    
-    // Create animated feedback popup
-    const popup = document.createElement('div');
-    popup.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
-    popup.innerHTML = `
-        <div class="flex items-center">
-            <span class="text-2xl mr-3">🎉</span>
-            <div>
-                <div class="font-semibold">${message}</div>
-                <div class="text-sm opacity-90">AI processing time: ${result.analysis_time}s</div>
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(popup);
-    
-    // Animate in
-    setTimeout(() => {
-        popup.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Animate out and remove
-    setTimeout(() => {
-        popup.style.transform = 'translateX(full)';
-        setTimeout(() => popup.remove(), 300);
-    }, 5000);
-}
+
 
 function updateDigitalDetoxUI(result) {
     // Update AI analysis display
@@ -685,11 +590,18 @@ function initializeChartJS() {
     }
 }
 
+
+
 function initializeWellnessChart() {
-    const ctx = document.getElementById('wellness-trend-chart');
+    const ctx = document.getElementById('wellness-chart');
     if (!ctx) return;
     
-    new Chart(ctx, {
+    // Destroy existing chart if it exists
+    if (window.wellnessChart) {
+        window.wellnessChart.destroy();
+    }
+    
+    window.wellnessChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -719,44 +631,22 @@ function initializeWellnessChart() {
     });
 }
 
-function initializeScreenTimeChart() {
-    const ctx = document.getElementById('screen-time-chart');
-    if (!ctx) return;
-    
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Screen Time (hours)',
-                data: [8.5, 9.2, 7.8, 8.9, 6.5, 5.2, 4.8],
-                backgroundColor: 'rgba(239, 68, 68, 0.8)',
-                borderColor: 'rgb(239, 68, 68)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Daily Screen Time'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-}
+
+
+
+
+
 
 function initializeCorrelationChart() {
     const ctx = document.getElementById('correlation-chart');
     if (!ctx) return;
     
-    new Chart(ctx, {
+    // Destroy existing chart if it exists
+    if (window.correlationChart) {
+        window.correlationChart.destroy();
+    }
+    
+    window.correlationChart = new Chart(ctx, {
         type: 'scatter',
         data: {
             datasets: [{

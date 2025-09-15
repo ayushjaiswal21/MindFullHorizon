@@ -16,6 +16,7 @@ class User(db.Model):
     role = db.Column(db.String(20), nullable=False)  # 'patient' or 'provider'
     institution = db.Column(db.String(100), nullable=True)  # For institutional aggregation
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_assessment_at = db.Column(db.DateTime, nullable=True)
     
     # Relationships
     assessments = db.relationship('Assessment', backref='user', lazy=True)
@@ -26,6 +27,7 @@ class User(db.Model):
     medication_logs = db.relationship('MedicationLog', backref='user', lazy=True)
     breathing_logs = db.relationship('BreathingExerciseLog', backref='user', lazy=True)
     yoga_logs = db.relationship('YogaLog', backref='user', lazy=True)
+    progress_recommendations = db.relationship('ProgressRecommendation', backref='user', lazy=True)
     
     def set_password(self, password):
         """Hash and set password"""
@@ -223,17 +225,16 @@ class YogaLog(db.Model):
     def __repr__(self):
         return f'<YogaLog {self.session_name} - {self.duration_minutes} minutes>'
 
-class MoodLog(db.Model):
-    """Mood log model for storing user mood data."""
-    __tablename__ = 'mood_logs'
+
+class ProgressRecommendation(db.Model):
+    """Model for storing AI-generated progress recommendations."""
+    __tablename__ = 'progress_recommendations'
+    
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    mood_score = db.Column(db.Integer, nullable=False)  # 1-5 scale
-    notes = db.Column(db.Text, nullable=True)  # Optional notes about mood
+    recommendations = db.Column(db.JSON, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def __repr__(self):
-        return f'<MoodLog {self.mood_score}/5 - {self.created_at}>'
 
 # Helper functions for analytics
 def get_user_wellness_trend(user_id, days=30):
