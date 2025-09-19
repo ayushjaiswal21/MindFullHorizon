@@ -29,6 +29,19 @@
         </div>
 
         <!-- Empty State -->
+        <!-- Goal Analytics -->
+        <div class="mt-12 bg-white rounded-lg shadow-lg p-6">
+            <h2 class="text-2xl font-bold text-gray-900 mb-4">Goal Analytics</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <canvas id="screen-time-chart" data-log='{{ screen_time_log | safe }}'></canvas>
+                </div>
+                <div>
+                    <canvas id="wellness-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <div id="empty-state" class="text-center py-12 hidden">
             <div class="text-gray-400 mb-4">
                 <i class="fas fa-bullseye text-6xl"></i>
@@ -181,6 +194,7 @@ let currentGoalId = null;
 
 // Load goals on page load
 document.addEventListener('DOMContentLoaded', function() {
+    initializeChartJS();
     loadGoals();
     
     // Add event listeners
