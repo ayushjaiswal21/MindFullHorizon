@@ -5,59 +5,102 @@ let rpmUpdateInterval;
 let aiProcessingModal;
 
 // Chart Initialization Functions
-function initializeScreenTimeChart() {
+async function initializeScreenTimeChart() {
     const ctx = document.getElementById('screen-time-chart');
     if (!ctx) return;
 
-    // Destroy existing chart if it exists
-    if (window.screenTimeChart) {
-        window.screenTimeChart.destroy();
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
 
-    // Get data from the template
-    const screenTimeLog = JSON.parse(ctx.dataset.log || '[]');
-    const labels = screenTimeLog.map(log => log.date);
-    const data = screenTimeLog.map(log => log.hours);
+    try {
+        const response = await fetch('/api/digital-detox-data');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const screenTimeData = await response.json();
 
-    window.screenTimeChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Screen Time (hours)',
-                data: data,
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Screen Time Over Last 30 Days'
-                }
+        if (!screenTimeData || screenTimeData.length === 0) {
+            const canvasCtx = ctx.getContext('2d');
+            canvasCtx.font = '16px Inter';
+            canvasCtx.textAlign = 'center';
+            canvasCtx.fillStyle = '#6b7280';
+            canvasCtx.fillText('No screen time data available yet.', ctx.width / 2, ctx.height / 2);
+            canvasCtx.fillText('Add data using the form below to see your trends.', ctx.width / 2, ctx.height / 2 + 25);
+            return;
+        }
+
+        const dates = screenTimeData.map(item => new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
+        const hours = screenTimeData.map(item => item.hours);
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Screen Time (Hours)',
+                    data: hours,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    tension: 0.3,
+                    fill: true
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: false,
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        },
+                        beginAtZero: true
+                    }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error fetching screen time data:', error);
+        const canvasCtx = ctx.getContext('2d');
+        canvasCtx.font = '16px Inter';
+        canvasCtx.textAlign = 'center';
+        canvasCtx.fillStyle = '#ef4444';
+        canvasCtx.fillText('Error loading chart data.', ctx.width / 2, ctx.height / 2);
+    }
 }
 
 function initializeWellnessChart() {
     const ctx = document.getElementById('wellness-chart');
     if (!ctx) return;
     
-    // Destroy existing chart if it exists
-    if (window.wellnessChart) {
-        window.wellnessChart.destroy();
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
     
-    window.wellnessChart = new Chart(ctx, {
+    new Chart(ctx, {
         type: 'line',
         data: {
             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -87,68 +130,91 @@ function initializeWellnessChart() {
     });
 }
 
-function initializeCorrelationChart() {
-    const ctx = document.getElementById('correlation-chart');
-    if (!ctx) return;
-    
-    // Destroy existing chart if it exists
-    if (window.correlationChart) {
-        window.correlationChart.destroy();
+async function initializeCorrelationChart() {
+    const canvas = document.getElementById('correlation-chart');
+    if (!canvas) return;
+
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+        existingChart.destroy();
     }
-    
-    window.correlationChart = new Chart(ctx, {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: 'Screen Time vs Academic Score',
-                data: [
-                    {x: 8.5, y: 75},
-                    {x: 9.2, y: 72},
-                    {x: 7.8, y: 78},
-                    {x: 8.9, y: 70},
-                    {x: 6.5, y: 85},
-                    {x: 5.2, y: 88},
-                    {x: 4.8, y: 92}
-                ],
-                backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                borderColor: 'rgb(16, 185, 129)'
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Screen Time vs Academic Performance'
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `Screen Time: ${context.parsed.x}h, Score: ${context.parsed.y}%`;
+
+    const ctx = canvas.getContext('2d');
+
+    try {
+        const response = await fetch('/api/digital-detox-data');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const screenTimeData = await response.json();
+
+        let correlationData = [];
+        if (screenTimeData && screenTimeData.length > 0) {
+            correlationData = screenTimeData.map(log => ({
+                x: log.hours,
+                y: log.academic_score
+            }));
+        } else {
+            correlationData = [
+                { x: 3, y: 90 }, { x: 5, y: 85 }, { x: 7, y: 70 }, { x: 4, y: 92 }, { x: 6, y: 78 }
+            ];
+        }
+
+        new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Screen Time vs Academic Score',
+                    data: correlationData,
+                    backgroundColor: '#8b5cf6',
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: false,
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Screen Time: ${context.parsed.x}h, Academic Score: ${context.parsed.y}`;
+                            }
                         }
                     }
-                }
-            },
-            scales: {
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Daily Screen Time (hours)'
-                    },
-                    min: 0,
-                    max: 12
                 },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Academic Score (%)'
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: {
+                            display: true,
+                            text: 'Screen Time (Hours)'
+                        }
                     },
-                    min: 50,
-                    max: 100
+                    y: {
+                        type: 'linear',
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Academic Score'
+                        },
+                        beginAtZero: true,
+                        max: 100
+                    }
                 }
             }
-        }
-    });
+        });
+    } catch (error) {
+        console.error('Error fetching correlation data:', error);
+        ctx.font = '16px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('Error loading chart data.', canvas.width / 2, canvas.height / 2);
+    }
 }
 
 // Initialize all charts when the page loads
@@ -159,12 +225,6 @@ function initializeChartJS() {
         initializeCorrelationChart();
     }
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof Chart !== 'undefined') {
-        initializeChartJS();
-    }
-});
 
 // Global variables for breathing exercises
 let currentBreathingType = null;
@@ -199,22 +259,7 @@ const guidedYogaSessions = { // Renamed to avoid conflict with breathing guidedS
 };
 
 // Auto-hide flash messages after 5 seconds
-document.addEventListener('DOMContentLoaded', function() {
-    const alerts = document.querySelectorAll('.alert-success, .alert-error');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.opacity = '0';
-            setTimeout(() => {
-                alert.remove();
-            }, 300);
-        }, 5000);
-    });
-    
-    // Initialize real-time features
-    initializeRealTimeFeatures();
-    initializeAIInteractionCues();
-    
-});
+
 
 // Function to show custom message box
 function showMessageBox(title, message, type = 'info') {

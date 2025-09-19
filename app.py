@@ -163,6 +163,10 @@ def role_required(role):
         return decorated_function
     return decorator
 
+@app.route('/favicon.ico')
+def favicon():
+    return redirect('https://em-content.zobj.net/source/twitter/376/brain_1f9e0.png', code=302)
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -1455,7 +1459,7 @@ def add_goal():
             current_value=0.0,
             unit=unit,
             target_date=parsed_target_date,
-            start_date=datetime.now(datetime.UTC).date()
+            start_date=datetime.utcnow().date()
         )
         db.session.add(new_goal)
         db.session.commit()
@@ -1508,12 +1512,12 @@ def update_goal(goal_id):
     try:
         if completed is not None:
             goal.status = 'completed'
-            goal.completed_date = datetime.now(datetime.UTC).date()
+            goal.completed_date = datetime.utcnow().date()
         else:
             goal.status = 'active'
             goal.completed_date = None
         
-        goal.updated_at = datetime.now(datetime.UTC)
+        goal.updated_at = datetime.utcnow()
         db.session.commit()
         
         return jsonify({
