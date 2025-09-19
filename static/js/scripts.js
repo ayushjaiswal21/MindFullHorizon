@@ -4,6 +4,168 @@
 let rpmUpdateInterval;
 let aiProcessingModal;
 
+// Chart Initialization Functions
+function initializeScreenTimeChart() {
+    const ctx = document.getElementById('screen-time-chart');
+    if (!ctx) return;
+
+    // Destroy existing chart if it exists
+    if (window.screenTimeChart) {
+        window.screenTimeChart.destroy();
+    }
+
+    // Get data from the template
+    const screenTimeLog = JSON.parse(ctx.dataset.log || '[]');
+    const labels = screenTimeLog.map(log => log.date);
+    const data = screenTimeLog.map(log => log.hours);
+
+    window.screenTimeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Screen Time (hours)',
+                data: data,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Screen Time Over Last 30 Days'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function initializeWellnessChart() {
+    const ctx = document.getElementById('wellness-chart');
+    if (!ctx) return;
+    
+    // Destroy existing chart if it exists
+    if (window.wellnessChart) {
+        window.wellnessChart.destroy();
+    }
+    
+    window.wellnessChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+                label: 'Wellness Score',
+                data: [7.2, 6.8, 7.5, 6.9, 8.1, 7.8, 8.3],
+                borderColor: 'rgb(59, 130, 246)',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Weekly Wellness Trend'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 10
+                }
+            }
+        }
+    });
+}
+
+function initializeCorrelationChart() {
+    const ctx = document.getElementById('correlation-chart');
+    if (!ctx) return;
+    
+    // Destroy existing chart if it exists
+    if (window.correlationChart) {
+        window.correlationChart.destroy();
+    }
+    
+    window.correlationChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Screen Time vs Academic Score',
+                data: [
+                    {x: 8.5, y: 75},
+                    {x: 9.2, y: 72},
+                    {x: 7.8, y: 78},
+                    {x: 8.9, y: 70},
+                    {x: 6.5, y: 85},
+                    {x: 5.2, y: 88},
+                    {x: 4.8, y: 92}
+                ],
+                backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                borderColor: 'rgb(16, 185, 129)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Screen Time vs Academic Performance'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return `Screen Time: ${context.parsed.x}h, Score: ${context.parsed.y}%`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Daily Screen Time (hours)'
+                    },
+                    min: 0,
+                    max: 12
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Academic Score (%)'
+                    },
+                    min: 50,
+                    max: 100
+                }
+            }
+        }
+    });
+}
+
+// Initialize all charts when the page loads
+function initializeChartJS() {
+    if (typeof Chart !== 'undefined') {
+        initializeScreenTimeChart();
+        initializeWellnessChart();
+        initializeCorrelationChart();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof Chart !== 'undefined') {
+        initializeChartJS();
+    }
+});
+
 // Global variables for breathing exercises
 let currentBreathingType = null;
 let breathingInterval = null;
@@ -579,106 +741,6 @@ function removeTypingIndicator() {
         typingIndicator.remove();
     }
 }
-
-// Enhanced Chart.js Integration (replacing canvas charts)
-function initializeChartJS() {
-    // Initialize Chart.js charts if the library is loaded
-    if (typeof Chart !== 'undefined') {
-        initializeWellnessChart();
-        initializeScreenTimeChart();
-        initializeCorrelationChart();
-    }
-}
-
-
-
-function initializeScreenTimeChart() {
-    const ctx = document.getElementById('screen-time-chart');
-    if (!ctx) return;
-
-    // Destroy existing chart if it exists
-    if (window.screenTimeChart) {
-        window.screenTimeChart.destroy();
-    }
-
-    // Get data from the template
-    const screenTimeLog = JSON.parse(ctx.dataset.log || '[]');
-    const labels = screenTimeLog.map(log => log.date);
-    const data = screenTimeLog.map(log => log.hours);
-
-    window.screenTimeChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Screen Time (hours)',
-                data: data,
-                backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                borderColor: 'rgba(255, 99, 132, 1)',
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Screen Time Over Last 30 Days'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
-}
-
-function initializeWellnessChart() {
-    const ctx = document.getElementById('wellness-chart');
-    if (!ctx) return;
-    
-    // Destroy existing chart if it exists
-    if (window.wellnessChart) {
-        window.wellnessChart.destroy();
-    }
-    
-    window.wellnessChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-                label: 'Wellness Score',
-                data: [7.2, 6.8, 7.5, 6.9, 8.1, 7.8, 8.3],
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Weekly Wellness Trend'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 10
-                }
-            }
-        }
-    });
-}
-
-
-
-
-
-
 
 function initializeCorrelationChart() {
     const ctx = document.getElementById('correlation-chart');
