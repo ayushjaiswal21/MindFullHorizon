@@ -592,6 +592,49 @@ function initializeChartJS() {
 
 
 
+function initializeScreenTimeChart() {
+    const ctx = document.getElementById('screen-time-chart');
+    if (!ctx) return;
+
+    // Destroy existing chart if it exists
+    if (window.screenTimeChart) {
+        window.screenTimeChart.destroy();
+    }
+
+    // Get data from the template
+    const screenTimeLog = JSON.parse(ctx.dataset.log || '[]');
+    const labels = screenTimeLog.map(log => log.date);
+    const data = screenTimeLog.map(log => log.hours);
+
+    window.screenTimeChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Screen Time (hours)',
+                data: data,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Screen Time Over Last 30 Days'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
 function initializeWellnessChart() {
     const ctx = document.getElementById('wellness-chart');
     if (!ctx) return;

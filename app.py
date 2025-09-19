@@ -617,7 +617,7 @@ def breathing():
                     user_id=user_id,
                     exercise_name=exercise_name,
                     duration_minutes=int(duration_minutes),
-                    created_at=datetime.utcnow()
+                    created_at=datetime.now(datetime.UTC)
                 )
                 db.session.add(new_log)
                 db.session.commit()
@@ -674,7 +674,7 @@ def yoga():
                     user_id=user_id,
                     session_name=session_name,
                     duration_minutes=int(duration_minutes),
-                    created_at=datetime.utcnow()
+                    created_at=datetime.now(datetime.UTC)
                 )
                 db.session.add(new_log)
                 db.session.commit()
@@ -978,7 +978,7 @@ def log_yoga_session():
             duration_minutes=duration_minutes,
             difficulty_level=difficulty_level,
             notes=notes,
-            created_at=datetime.utcnow() # Use utcnow for consistency
+            created_at=datetime.now(datetime.UTC) # Use utcnow for consistency
         )
         
         db.session.add(new_log)
@@ -1250,15 +1250,15 @@ def api_save_assessment():
         print(f"DEBUG: Gamification points updated: {gamification.points}")
         
         # Update streak if this is the first assessment today
-        today = datetime.utcnow().date()
+        today = datetime.now(datetime.UTC).date()
         if not gamification.last_activity or gamification.last_activity < today:
             gamification.streak += 1
             print(f"DEBUG: Gamification streak updated: {gamification.streak}")
-        gamification.last_activity = datetime.utcnow().date()
+        gamification.last_activity = datetime.now(datetime.UTC).date()
 
         # Update user's last assessment time
         user = User.query.get(user_id)
-        user.last_assessment_at = datetime.utcnow()
+        user.last_assessment_at = datetime.now(datetime.UTC)
         
         print("DEBUG: Attempting to commit changes to database.")
         db.session.commit()
@@ -1288,7 +1288,20 @@ def api_save_assessment():
 @login_required
 @role_required('patient')
 def goals():
-    return render_template('goals.html', user_name=session['user_name'])
+    user_id = session['user_id']
+    
+    # Get digital detox logs for the user
+    screen_time_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
+    
+    # Convert to list of dictionaries for JSON serialization
+    screen_time_log = []
+    for log in screen_time_logs:
+        screen_time_log.append({
+            'date': log.date.strftime('%Y-%m-%d'),
+            'hours': log.screen_time_hours
+        })
+        
+    return render_template('goals.html', user_name=session['user_name'], screen_time_log=json.dumps(screen_time_log))
 
 @app.route('/progress')
 @login_required
@@ -1439,11 +1452,11 @@ def add_goal():
             category=category,
             priority=priority,
             status='active',
-            target_value=float(target_value) if target_value else None,
+            target_value=float(target_value) if target_value and target_value.strip() else None,
             current_value=0.0,
             unit=unit,
             target_date=parsed_target_date,
-            start_date=datetime.utcnow().date()
+            start_date=datetime.now(datetime.UTC).date()
         )
         db.session.add(new_goal)
         db.session.commit()
@@ -1473,19 +1486,35 @@ def update_goal(goal_id):
         return jsonify({'success': False, 'message': 'Goal not found.'}), 404
 
     data = request.json
+
+    # List of all editable fields
+    editable_fields = [
+        'title',
+        'description',
+        'category',
+        'priority',
+        'target_value',
+        'current_value',
+        'unit'
+    ]
+
+    # Update fields if they exist in the request data
+    for field in editable_fields:
+        if field in data:
+            setattr(goal, field, data[field])
+
+    # Handle 'completed' status separately
     completed = data.get('completed')
-    if 'priority' in data:
-        goal.priority = data['priority']
 
     try:
-        if completed:
+        if completed is not None:
             goal.status = 'completed'
-            goal.completed_date = datetime.utcnow().date()
+            goal.completed_date = datetime.now(datetime.UTC).date()
         else:
             goal.status = 'active'
             goal.completed_date = None
         
-        goal.updated_at = datetime.utcnow()
+        goal.updated_at = datetime.now(datetime.UTC)
         db.session.commit()
         
         return jsonify({
@@ -1689,7 +1718,7 @@ def save_mood():
         print("DEBUG: Mood assessment added to session.")
         
         # Also update RPM data for dashboard
-        today = datetime.utcnow().date()
+        today = datetime.now(datetime.UTC).date()
         rpm_data = RPMData.query.filter_by(user_id=user_id, date=today).first()
         if not rpm_data:
             rpm_data = RPMData(user_id=user_id, date=today, mood_score=mood)
@@ -1728,7 +1757,7 @@ def save_mood():
 
         # Update user's last assessment time
         user = User.query.get(user_id)
-        user.last_assessment_at = datetime.utcnow()
+        user.last_assessment_at = datetime.now(datetime.UTC)
         
         print("DEBUG: Attempting to commit changes to database.")
         db.session.commit()
