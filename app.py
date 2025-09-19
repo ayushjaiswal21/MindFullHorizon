@@ -913,7 +913,6 @@ def log_breathing_session():
         
         exercise_name = data.get('exercise_name', 'Custom Session')
         duration_minutes = int(data.get('duration_minutes', 0))
-        notes = data.get('notes', '')
         
         # Validate data
         if duration_minutes <= 0 or duration_minutes > 120:
@@ -927,8 +926,8 @@ def log_breathing_session():
             user_id=session.get('user_id'),
             exercise_name=exercise_name,
             duration_minutes=duration_minutes,
-            notes=notes,
-            created_at=datetime.now()
+            notes=data.get('notes'),  # Save notes if provided
+            created_at=datetime.utcnow()
         )
         
         db.session.add(new_log)
