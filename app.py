@@ -13,7 +13,7 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 
 from ai_service import ai_service
 from database import db
-from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary
+from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, BlogPost, BlogLike, BlogComment, BlogInsight, get_user_wellness_trend, get_institutional_summary
 
 # Load environment variables from .env file
 try:
@@ -165,7 +165,28 @@ def role_required(role):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Get blog insights for the landing page
+    try:
+        blog_insights = get_blog_insights()
+        
+        # Get featured/recent blog posts for display
+        featured_posts = BlogPost.query.filter_by(
+            is_published=True, 
+            is_featured=True
+        ).order_by(BlogPost.created_at.desc()).limit(3).all()
+        
+        # If no featured posts, get recent ones
+        if not featured_posts:
+            featured_posts = BlogPost.query.filter_by(
+                is_published=True
+            ).order_by(BlogPost.created_at.desc()).limit(3).all()
+            
+    except Exception as e:
+        logger.error(f"Error getting blog insights for homepage: {e}")
+        blog_insights = None
+        featured_posts = []
+    
+    return render_template('index.html', blog_insights=blog_insights, featured_posts=featured_posts)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1749,6 +1770,230 @@ def save_mood():
             'success': False,
             'message': f'Failed to save mood: {str(e)}'
         }), 500
+
+# --- Enhanced Blog System Routes ---
+@app.route('/blog')
+def blog_list():
+    # Get all published posts with engagement data
+    posts = BlogPost.query.filter_by(is_published=True).order_by(BlogPost.created_at.desc()).all()
+    
+    # Get blog insights for the homepage
+    blog_insights = get_blog_insights()
+    
+    return render_template('blog_list.html', posts=posts, insights=blog_insights)
+
+@app.route('/blog/create', methods=['GET', 'POST'], endpoint='blog_create')
+@login_required
+def create_blog():
+    if request.method == 'POST':
+        title = request.form['title']
+        content = request.form['content']
+        category = request.form.get('category', 'general')
+        tags = request.form.get('tags', '')
+        author_id = session.get('user_id')
+        
+        if not title or not content:
+            flash('Title and content are required.', 'error')
+            return render_template('blog_create.html')
+            
+        post = BlogPost(
+            title=title, 
+            content=content, 
+            category=category,
+            tags=tags,
+            author_id=author_id
+        )
+        db.session.add(post)
+        db.session.commit()
+        
+        flash('Blog post created successfully!', 'success')
+        return redirect(url_for('blog_detail', post_id=post.id))
+    
+    return render_template('blog_create.html')
+
+@app.route('/blog/<int:post_id>')
+def blog_detail(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    
+    # Increment view count
+    post.views += 1
+    db.session.commit()
+    
+    # Get comments for this post (top-level only, replies loaded via JavaScript)
+    comments = BlogComment.query.filter_by(post_id=post_id, parent_id=None).order_by(BlogComment.created_at.desc()).all()
+    
+    # Check if current user has liked this post
+    user_has_liked = False
+    if session.get('user_id'):
+        user_has_liked = post.is_liked_by(session['user_id'])
+    
+    return render_template('blog_detail.html', 
+                         post=post, 
+                         comments=comments, 
+                         user_has_liked=user_has_liked)
+
+@app.route('/blog/<int:post_id>/edit', methods=['GET', 'POST'])
+@login_required
+def blog_edit(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    
+    if post.author_id != session.get('user_id'):
+        flash('You do not have permission to edit this post.', 'error')
+        return redirect(url_for('blog_detail', post_id=post_id))
+    
+    if request.method == 'POST':
+        post.title = request.form['title']
+        post.content = request.form['content']
+        post.category = request.form.get('category', post.category)
+        post.tags = request.form.get('tags', post.tags)
+        post.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        flash('Blog post updated successfully!', 'success')
+        return redirect(url_for('blog_detail', post_id=post.id))
+    
+    return render_template('blog_edit.html', post=post)
+
+@app.route('/blog/<int:post_id>/delete', methods=['POST'])
+@login_required
+def blog_delete(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    if post.author_id != session.get('user_id'):
+        flash('You do not have permission to delete this post.', 'error')
+        return redirect(url_for('blog_list'))
+    
+    db.session.delete(post)
+    db.session.commit()
+    flash('Blog post deleted successfully.', 'success')
+    return redirect(url_for('blog_list'))
+
+# --- Blog API Routes ---
+@app.route('/api/blog/<int:post_id>/like', methods=['POST'])
+@login_required
+def toggle_blog_like(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    user_id = session['user_id']
+    
+    existing_like = BlogLike.query.filter_by(user_id=user_id, post_id=post_id).first()
+    
+    if existing_like:
+        # Unlike the post
+        db.session.delete(existing_like)
+        liked = False
+    else:
+        # Like the post
+        new_like = BlogLike(user_id=user_id, post_id=post_id)
+        db.session.add(new_like)
+        liked = True
+    
+    db.session.commit()
+    
+    return jsonify({
+        'success': True,
+        'liked': liked,
+        'like_count': post.like_count
+    })
+
+@app.route('/api/blog/<int:post_id>/comment', methods=['POST'])
+@login_required
+def add_blog_comment(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    user_id = session['user_id']
+    
+    data = request.get_json()
+    content = data.get('content', '').strip()
+    parent_id = data.get('parent_id')  # For replies
+    
+    if not content:
+        return jsonify({'success': False, 'message': 'Comment cannot be empty'}), 400
+    
+    comment = BlogComment(
+        user_id=user_id,
+        post_id=post_id,
+        parent_id=parent_id,
+        content=content
+    )
+    
+    db.session.add(comment)
+    db.session.commit()
+    
+    # Get user info for response
+    user = User.query.get(user_id)
+    
+    return jsonify({
+        'success': True,
+        'comment': {
+            'id': comment.id,
+            'content': comment.content,
+            'author_name': user.name,
+            'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M'),
+            'parent_id': comment.parent_id
+        },
+        'comment_count': post.comment_count
+    })
+
+@app.route('/api/blog/<int:post_id>/comments/<int:comment_id>/replies')
+def get_comment_replies(post_id, comment_id):
+    replies = BlogComment.query.filter_by(parent_id=comment_id).order_by(BlogComment.created_at.asc()).all()
+    
+    reply_data = []
+    for reply in replies:
+        reply_data.append({
+            'id': reply.id,
+            'content': reply.content,
+            'author_name': reply.user.name,
+            'created_at': reply.created_at.strftime('%Y-%m-%d %H:%M')
+        })
+    
+    return jsonify({'replies': reply_data})
+
+@app.route('/api/blog/insights')
+def api_blog_insights():
+    insights = get_blog_insights()
+    return jsonify(insights)
+
+def get_blog_insights():
+    """Get blog insights and analytics"""
+    from sqlalchemy import func, desc
+    
+    # Total counts
+    total_posts = BlogPost.query.filter_by(is_published=True).count()
+    total_likes = db.session.query(func.count(BlogLike.id)).scalar() or 0
+    total_comments = db.session.query(func.count(BlogComment.id)).scalar() or 0
+    total_views = db.session.query(func.sum(BlogPost.views)).scalar() or 0
+    
+    # Most popular post (by engagement score)
+    popular_posts = BlogPost.query.filter_by(is_published=True).all()
+    popular_posts.sort(key=lambda x: x.engagement_score, reverse=True)
+    
+    # Category distribution
+    category_stats = db.session.query(
+        BlogPost.category, 
+        func.count(BlogPost.id).label('count')
+    ).filter_by(is_published=True).group_by(BlogPost.category).all()
+    
+    # Recent activity (posts from last 7 days)
+    week_ago = datetime.utcnow() - timedelta(days=7)
+    recent_posts = BlogPost.query.filter(
+        BlogPost.created_at >= week_ago,
+        BlogPost.is_published == True
+    ).count()
+    
+    return {
+        'total_posts': total_posts,
+        'total_likes': total_likes,
+        'total_comments': total_comments,
+        'total_views': total_views,
+        'most_popular_post': {
+            'id': popular_posts[0].id,
+            'title': popular_posts[0].title,
+            'engagement_score': popular_posts[0].engagement_score,
+            'author_name': popular_posts[0].author.name
+        } if popular_posts else None,
+        'categories': dict(category_stats),
+        'recent_posts_count': recent_posts,
+        'engagement_rate': round((total_likes + total_comments) / max(total_posts, 1), 2)
+    }
 
 if __name__ == '__main__':
     # Create an app context for database initialization

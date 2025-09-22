@@ -35,11 +35,13 @@
                         <a href="{{ url_for('breathing') }}" class="nav-link">Breathe</a>
                         <a href="{{ url_for('yoga') }}" class="nav-link">Yoga</a>
                     {% endif %}
+                    <a href="{{ url_for('blog_list') }}" class="nav-link">Blog</a>
                     <a href="{{ url_for('progress') }}" class="nav-link">Progress</a>
                     <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
                     <span class="text-sm">Welcome, {{ session.user_name }}</span>
                     <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
                 {% else %}
+                    <a href="{{ url_for('blog_list') }}" class="nav-link">Blog</a>
                     <a href="{{ url_for('login') }}" class="nav-link">Login</a>
                 {% endif %}
             </div>
