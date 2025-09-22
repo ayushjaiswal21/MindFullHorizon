@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Edit Profile</h2>
+<form method="post">
+  <input type="text" name="name" value="{{ user.name }}" required>
+  <textarea name="bio" rows="4" cols="40">{{ user.bio }}</textarea>
+  <button type="submit">Save</button>
+</form>
+{% endblock %}

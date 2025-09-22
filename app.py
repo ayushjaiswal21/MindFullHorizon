@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, date
 from functools import wraps
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, session,jsonify, send_from_directory
 from flask_session import Session
 from flask_compress import Compress
 from flask_migrate import Migrate
@@ -14,7 +14,6 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from ai_service import ai_service
 from database import db
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary
-
 # Load environment variables from .env file
 try:
     load_dotenv(encoding='utf-8-sig')
@@ -74,7 +73,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database and migrations
 db.init_app(app)
-migrate = Migrate(app, db)
+with app.app_context():
+    db.create_all()
 
 # Light HTML caching (10 minutes) to reduce repeat downloads on slow connections
 @app.after_request
@@ -1749,6 +1749,45 @@ def save_mood():
             'success': False,
             'message': f'Failed to save mood: {str(e)}'
         }), 500
+from werkzeug.utils import secure_filename
+
+UPLOAD_FOLDER = os.path.join('static', 'uploads')
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Ensure upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+import time
+# ...existing code...
+
+@app.route('/upload_photo', methods=['POST'])
+@login_required
+@role_required('patient')
+def upload_photo():
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    if 'photo' not in request.files:
+        flash('No file part')
+        return redirect(url_for('patient_dashboard'))
+
+    file = request.files['photo']
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(url_for('patient_dashboard'))
+
+    if file and allowed_file(file.filename):
+        filename = f"{user_id}_{int(time.time())}_{secure_filename(file.filename)}"
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+        user.profile_image = filename
+        db.session.commit()
+        flash('Profile picture updated!')
+    return redirect(url_for('patient_dashboard'))
+
+
 
 if __name__ == '__main__':
     # Create an app context for database initialization
@@ -1764,3 +1803,4 @@ if __name__ == '__main__':
     
     # Start the Flask development server
     app.run(debug=True, port=5000, use_reloader=False)
+    
