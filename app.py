@@ -1,4 +1,5 @@
 import json
+
 import logging
 import os
 from datetime import datetime, timedelta, date, timezone
@@ -10,6 +11,7 @@ from flask_session import Session
 from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask_socketio import SocketIO, emit
 
 from ai_service import ai_service
 from database import db
@@ -23,7 +25,9 @@ except Exception as e:
     print(f"Warning: Could not load .env file: {e}")
     print("Continuing with default configuration...")
 
+
 app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Configure session
 app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')  # Use environment variable or fallback
@@ -1327,5 +1331,16 @@ def blog_edit(post_id):
             flash('Failed to update blog post.', 'error')
     return render_template('blog_edit.html', post=post)
 
+
+# --- SocketIO Chat Handler ---
+@socketio.on('chat_message')
+def handle_chat_message(data):
+    user_message = data.get('message')
+    try:
+        reply = ai_service.generate_chat_response(user_message)
+    except Exception as e:
+        reply = "Sorry, the AI is currently unavailable."
+    emit('chat_response', {'reply': reply, 'is_crisis': False})
+
 if __name__ == '__main__':
-    app.run(debug=True, port=5000, use_reloader=False)
+    socketio.run(app, debug=True, port=5000)
