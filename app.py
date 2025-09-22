@@ -132,12 +132,68 @@ def index():
                 is_published=True
             ).order_by(BlogPost.created_at.desc()).limit(3).all()
 
+        # Student-focused homepage theme data
+        landing_theme = {
+            "hero_title": "Welcome to MindFull Horizon",
+            "hero_subtitle": "Empowering Students for Better Mental Wellness",
+            "hero_message": "Track your mood, set goals, join wellness challenges, and connect with campus providers. Your journey to a healthier mind starts here!",
+            "features": [
+                {
+                    "title": "Daily Mood Tracker",
+                    "desc": "Check in with your feelings and see your progress over time."
+                },
+                {
+                    "title": "Digital Detox",
+                    "desc": "Reduce screen time and boost your academic and social life."
+                },
+                {
+                    "title": "Gamified Wellness",
+                    "desc": "Earn points, badges, and rewards for healthy habits and activities."
+                }
+            ]
+        }
+
+        # FAQ section data
+        faqs = [
+            {
+                "question": "What is MindFull Horizon?",
+                "answer": "MindFull Horizon is a student wellness platform designed to help you track your mood, set goals, and improve your mental health."
+            },
+            {
+                "question": "How do I join wellness challenges?",
+                "answer": "Sign up and visit your dashboard to participate in ongoing wellness challenges and earn rewards."
+            },
+            {
+                "question": "Is my data private?",
+                "answer": "Yes, your data is securely stored and only accessible to you and authorized campus providers."
+            },
+            {
+                "question": "Can I connect with campus counselors?",
+                "answer": "Absolutely! Use the telehealth feature to book appointments and chat with campus counselors."
+            }
+        ]
+
     except Exception as e:
         logger.error(f"Error getting blog insights for homepage: {e}")
         blog_insights = None
         featured_posts = []
+        landing_theme = {
+            "hero_title": "Welcome to MindFull Horizon",
+            "hero_subtitle": "Empowering Students for Better Mental Wellness",
+            "hero_message": "Track your mood, set goals, join wellness challenges, and connect with campus providers. Your journey to a healthier mind starts here!",
+            "features": []
+        }
+        faqs = []
 
-    return render_template('index.html', blog_insights=blog_insights, featured_posts=featured_posts)
+    from datetime import datetime
+    return render_template(
+        'index.html',
+        blog_insights=blog_insights,
+        featured_posts=featured_posts,
+        landing_theme=landing_theme,
+        faqs=faqs,
+        datetime=datetime
+    )
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
