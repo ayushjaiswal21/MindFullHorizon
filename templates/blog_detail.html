@@ -73,7 +73,7 @@
                 <div class="flex items-center space-x-4">
                     <!-- Like Button -->
                     {% if session.get('user_id') %}
-                    <button id="likeBtn" onclick="toggleLike({{ post.id }})" 
+                    <button id="likeBtn" onclick="toggleLike('{{ post.id }}')"
                             class="flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors {% if user_has_liked %}bg-red-100 text-red-600{% else %}bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600{% endif %}">
                         <i class="{% if user_has_liked %}fas{% else %}far{% endif %} fa-heart"></i>
                         <span id="likeCount">{{ post.like_count }}</span>
@@ -164,7 +164,7 @@
                             </div>
                             
                             {% if session.get('user_id') %}
-                            <button onclick="toggleReplyForm({{ comment.id }})" 
+                            <button onclick="toggleReplyForm('{{ comment.id }}')"
                                     class="mt-2 text-sm text-blue-600 hover:text-blue-800">
                                 <i class="fas fa-reply mr-1"></i> Reply
                             </button>
@@ -181,11 +181,11 @@
                                                   class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" 
                                                   rows="2"></textarea>
                                         <div class="flex justify-end mt-2 space-x-2">
-                                            <button onclick="toggleReplyForm({{ comment.id }})" 
+                                            <button onclick="toggleReplyForm('{{ comment.id }}')"
                                                     class="px-3 py-1 text-sm text-gray-600 hover:text-gray-800">
                                                 Cancel
                                             </button>
-                                            <button onclick="addReply({{ comment.id }})" 
+                                            <button onclick="addReply('{{ comment.id }}')"
                                                     class="px-4 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
                                                 Reply
                                             </button>

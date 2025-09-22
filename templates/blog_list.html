@@ -128,7 +128,7 @@
                         
                         {% if session.get('user_id') == post.author_id %}
                         <div class="relative">
-                            <button onclick="toggleDropdown({{ post.id }})" class="text-gray-400 hover:text-gray-600 p-2">
+                            <button onclick="toggleDropdown('{{ post.id }}')" class="text-gray-400 hover:text-gray-600 p-2">
                                 <i class="fas fa-ellipsis-v"></i>
                             </button>
                             <div id="dropdown-{{ post.id }}" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 hidden">
@@ -136,7 +136,7 @@
                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class="fas fa-edit mr-2"></i>Edit
                                 </a>
-                                <button onclick="confirmDelete({{ post.id }}, '{{ post.title }}')" 
+                                <button onclick="confirmDelete('{{ post.id }}', {{ post.title|tojson }})"
                                         class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50">
                                     <i class="fas fa-trash mr-2"></i>Delete
                                 </button>

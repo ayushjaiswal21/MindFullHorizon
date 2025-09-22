@@ -102,12 +102,29 @@ body {
 }
 
 /* Chart containers */
-.chart-container {
-    position: relative;
-    height: 400px;
-    width: 100%;
-    margin: 20px 0;
+.chat-container {
+    /* ... existing styles ... */
 }
+
+.chat-message.user .chat-bubble {
+    background-color: #3B82F6;
+    color: white;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.chat-message.bot .chat-bubble {
+    background-color: #F3F4F6;
+    color: #1F2937;
+    border-bottom-left-radius: 0.25rem;
+}
+
+.chat-bubble {
+    max-width: 75%;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    line-height: 1.5;
+}
+
 
 .chart-container canvas {
     max-height: 400px !important;
@@ -195,4 +212,12 @@ span[style*="color"] {
     transform: translateY(-4px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease-in-out;
+}
+
+/* Google Translate Widget */
+#google_translate_element {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
 }
