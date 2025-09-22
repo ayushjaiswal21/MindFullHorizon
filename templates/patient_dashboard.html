@@ -4,6 +4,28 @@
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Profile Picture Upload Section -->
+    <div class="flex items-center mb-8">
+        <div class="mr-6">
+            {% if user.profile_image %}
+                <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}"
+                     alt="Profile Picture"
+                     class="w-24 h-24 rounded-full border-2 border-indigo-500 object-cover shadow">
+            {% else %}
+                <img src="{{ url_for('static', filename='default_avatar.png') }}"
+                     alt="Default Avatar"
+                     class="w-24 h-24 rounded-full border-2 border-gray-300 object-cover shadow">
+            {% endif %}
+        </div>
+        <form action="{{ url_for('upload_photo') }}" method="post" enctype="multipart/form-data" class="flex flex-col">
+            <input type="file" name="photo" accept="image/*" class="mb-2">
+            <button type="submit" class="btn-primary bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">
+                Upload Profile Picture
+            </button>
+        </form>
+    </div>
+
     <div class="mb-8">
         <h1 class="text-4xl font-extrabold text-gray-800 mb-2 animate-fade-in">Welcome back, {{ user_name }}!</h1>
         <p class="text-lg text-gray-600 animate-fade-in-delay">Here's your mental health journey overview.</p>
@@ -294,4 +316,6 @@
         </div>
     </div>
 </div>
+
+
 {% endblock %}
