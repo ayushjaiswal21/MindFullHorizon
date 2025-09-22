@@ -17,6 +17,7 @@ class User(db.Model):
     institution = db.Column(db.String(100), nullable=True)  # For institutional aggregation
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_assessment_at = db.Column(db.DateTime, nullable=True)
+    profile_pic = db.Column(db.String(255), nullable=True)  # Path to profile picture
     
     # Relationships
     assessments = db.relationship('Assessment', backref='user', lazy=True)

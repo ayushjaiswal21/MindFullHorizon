@@ -8,15 +8,9 @@
     <!-- Profile Picture Upload Section -->
     <div class="flex items-center mb-8">
         <div class="mr-6">
-            {% if user.profile_image %}
-                <img src="{{ url_for('static', filename='uploads/' + user.profile_image) }}"
-                     alt="Profile Picture"
-                     class="w-24 h-24 rounded-full border-2 border-indigo-500 object-cover shadow">
-            {% else %}
-                <img src="{{ url_for('static', filename='default_avatar.png') }}"
-                     alt="Default Avatar"
-                     class="w-24 h-24 rounded-full border-2 border-gray-300 object-cover shadow">
-            {% endif %}
+          <img src="{{ url_for('static', filename='profile_pics/' + (user.profile_pic or 'default.png')) }}"
+              alt="Profile Picture"
+              class="w-24 h-24 rounded-full border-2 border-indigo-500 object-cover shadow">
         </div>
         <form action="{{ url_for('upload_photo') }}" method="post" enctype="multipart/form-data" class="flex flex-col">
             <input type="file" name="photo" accept="image/*" class="mb-2">
