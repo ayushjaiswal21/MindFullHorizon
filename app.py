@@ -73,6 +73,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database and migrations
 db.init_app(app)
+# Initialize Flask-Migrate
+migrate = Migrate(app, db)
 with app.app_context():
     db.create_all()
 
@@ -356,8 +358,10 @@ def patient_dashboard():
         logger.error(f"Error checking RPM alerts: {e}")
         alerts = []
 
+    user = User.query.filter_by(id=user_id).first()
     return render_template('patient_dashboard.html', 
                          user_name=session['user_name'], 
+                         user=user,
                          data=data, 
                          alerts=alerts,
                          upcoming_appointments=upcoming_appointments,
@@ -824,40 +828,68 @@ def wellness_report(user_id):
                          recent_sessions=recent_sessions,
                          datetime=datetime)
 
-@app.route('/profile')
+from werkzeug.utils import secure_filename
+import time
+
+@app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
     user_id = session['user_id']
     user = User.query.filter_by(email=session['user_email']).first()
-    
+    if user is None:
+        flash('User not found. Please log in again.', 'error')
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        # Editable profile info
+        user.name = request.form.get('name', user.name)
+        user.email = request.form.get('email', user.email)
+        user.institution = request.form.get('institution', user.institution)
+        # Custom goal (optional, if you want to store a single goal as a string)
+        # user.goal = request.form.get('goal', user.goal)
+        # Profile picture upload
+        file = request.files.get('profile_pic')
+        print(f"[DEBUG] Uploaded file: {file}")
+        if file and file.filename:
+            filename = f"{user_id}_{int(time.time())}_{secure_filename(file.filename)}"
+            upload_folder = os.path.join(app.root_path, 'static', 'profile_pics')
+            os.makedirs(upload_folder, exist_ok=True)
+            file_path = os.path.join(upload_folder, filename)
+            file.save(file_path)
+            print(f"[DEBUG] Saved file to: {file_path}")
+            user.profile_pic = filename
+            print(f"[DEBUG] Set user.profile_pic to: {filename}")
+        elif not user.profile_pic:
+            user.profile_pic = 'default.png'
+            print("[DEBUG] No profile_pic, set to default.png")
+        else:
+            print(f"[DEBUG] No new file uploaded. Current user.profile_pic: {user.profile_pic}")
+        db.session.commit()
+        flash('Profile updated successfully!')
+        return redirect(url_for('profile'))
     # Get gamification data
     gamification = Gamification.query.filter_by(user_id=user_id).first()
-    
-    # Get digital detox data for averages
+    # Get digital detox data for averages and trends
     digital_detox_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).all()
-    
-    # Calculate screen time averages
     avg_screen_time_7_days = None
     avg_screen_time_30_days = None
-    
     if digital_detox_logs:
         # Last 7 days
         recent_7_days = digital_detox_logs[:7]
         if recent_7_days:
             avg_screen_time_7_days = sum(log.screen_time_hours for log in recent_7_days) / len(recent_7_days)
-        
         # Last 30 days
         recent_30_days = digital_detox_logs[:30]
         if recent_30_days:
             avg_screen_time_30_days = sum(log.screen_time_hours for log in recent_30_days) / len(recent_30_days)
-    
-    return render_template('profile.html', 
-                         user_name=session['user_name'], 
+    # Get user goals
+    goals = user.goals if hasattr(user, 'goals') else []
+    return render_template('profile.html',
                          user=user,
                          gamification=gamification,
                          digital_detox_logs=digital_detox_logs,
                          avg_screen_time_7_days=avg_screen_time_7_days,
-                         avg_screen_time_30_days=avg_screen_time_30_days)
+                         avg_screen_time_30_days=avg_screen_time_30_days,
+                         goals=goals)
 
 @app.route('/api/institutional-trends')
 @login_required
@@ -1781,8 +1813,10 @@ def upload_photo():
 
     if file and allowed_file(file.filename):
         filename = f"{user_id}_{int(time.time())}_{secure_filename(file.filename)}"
-        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        user.profile_image = filename
+        upload_folder = os.path.join(app.root_path, 'static', 'profile_pics')
+        os.makedirs(upload_folder, exist_ok=True)
+        file.save(os.path.join(upload_folder, filename))
+        user.profile_pic = filename
         db.session.commit()
         flash('Profile picture updated!')
     return redirect(url_for('patient_dashboard'))
