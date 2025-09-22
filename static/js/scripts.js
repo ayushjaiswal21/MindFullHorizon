@@ -4,604 +4,104 @@
 let rpmUpdateInterval;
 let aiProcessingModal;
 
-// Global variables for breathing exercises
-let currentBreathingType = null;
-let breathingInterval = null;
-let sessionTimer = null;
-let sessionStartTime = null;
-let isSessionActive = false;
-let currentPhase = 'inhale';
-let phaseTimer = null;
+// Chart Initialization Functions
+let screenTimeChart = null;
 
-const breathingPatterns = {
-    'box': { inhale: 4, hold1: 4, exhale: 4, hold2: 4, name: 'Box Breathing' },
-    '478': { inhale: 4, hold1: 7, exhale: 8, hold2: 0, name: '4-7-8 Breathing' },
-    'triangle': { inhale: 3, hold1: 3, exhale: 3, hold2: 0, name: 'Triangle Breathing' },
-    'coherence': { inhale: 5, hold1: 0, exhale: 5, hold2: 0, name: 'Coherence Breathing' }
-};
+async function initializeScreenTimeChart() {
+    const ctx = document.getElementById('screen-time-chart');
+    if (!ctx) return;
 
-// Global variables for yoga exercises
-let yogaSessionTimer = null;
-let yogaSessionStartTime = null;
-let yogaSessionDuration = 0;
-let isYogaSessionActive = false;
-let currentYogaSessionName = '';
-
-const guidedYogaSessions = { // Renamed to avoid conflict with breathing guidedSessions
-    'morning': { name: 'Morning Energy Flow', duration: 15, difficulty: 'Beginner' },
-    'desk': { name: 'Desk Worker\'s Relief', duration: 10, difficulty: 'All Levels' },
-    'evening': { name: 'Evening Wind-Down', duration: 20, difficulty: 'Beginner' },
-    'stress': { name: 'Stress Relief Flow', duration: 12, difficulty: 'All Levels' },
-    'focus': { name: 'Focus & Clarity', duration: 18, difficulty: 'Intermediate' },
-    'flexibility': { name: 'Flexibility Flow', duration: 25, difficulty: 'All Levels' }
-};
-
-// Auto-hide flash messages after 5 seconds
-document.addEventListener('DOMContentLoaded', function() {
-    const alerts = document.querySelectorAll('.alert-success, .alert-error');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.opacity = '0';
-            setTimeout(() => {
-                alert.remove();
-            }, 300);
-        }, 5000);
-    });
-    
-    // Initialize real-time features
-    initializeRealTimeFeatures();
-    initializeAIInteractionCues();
-    
-});
-
-// Function to show custom message box
-function showMessageBox(title, message, type = 'info') {
-    // Create modal overlay
-    const overlay = document.createElement('div');
-    overlay.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-    
-    // Create modal content
-    const modal = document.createElement('div');
-    modal.className = 'bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl';
-    
-    const iconClass = type === 'success' ? 'fas fa-check-circle text-green-500' : 
-                     type === 'error' ? 'fas fa-exclamation-triangle text-red-500' :
-                     'fas fa-info-circle text-blue-500';
-    
-    modal.innerHTML = `
-        <div class="text-center">
-            <i class="${iconClass} text-4xl mb-4"></i>
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">${title}</h3>
-            <p class="text-gray-600 mb-4">${message}</p>
-            <button onclick="hideMessageBox()" class="btn-primary">OK</button>
-        </div>
-    `;
-    
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-    
-    // Store reference for hiding
-    window.currentMessageBox = overlay;
-}
-
-function hideMessageBox() {
-    if (window.currentMessageBox) {
-        window.currentMessageBox.remove();
-        window.currentMessageBox = null;
+    if (screenTimeChart) {
+        screenTimeChart.destroy();
     }
-}
 
-// Enhanced form validation
-function validateForm(formId) {
-    const form = document.getElementById(formId);
-    const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
-    let isValid = true;
-    
-    inputs.forEach(input => {
-        if (!input.value.trim()) {
-            input.classList.add('border-red-500');
-            isValid = false;
-        } else {
-            input.classList.remove('border-red-500');
+    try {
+        const response = await fetch('/api/digital-detox-data');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
-    });
-    
-    return isValid;
-}
+        const screenTimeData = await response.json();
 
-// Real-time form validation
-document.addEventListener('DOMContentLoaded', function() {
-    const inputs = document.querySelectorAll('input, select, textarea');
-    inputs.forEach(input => {
-        input.addEventListener('blur', function() {
-            if (this.hasAttribute('required') && !this.value.trim()) {
-                this.classList.add('border-red-500');
-            } else {
-                this.classList.remove('border-red-500');
-            }
-        });
-    });
-});
-
-// Progress bar animation
-function animateProgressBar(elementId, targetPercent) {
-    const progressBar = document.getElementById(elementId);
-    if (progressBar) {
-        let currentPercent = 0;
-        const increment = targetPercent / 50; // 50 steps for smooth animation
-        
-        const timer = setInterval(() => {
-            currentPercent += increment;
-            if (currentPercent >= targetPercent) {
-                currentPercent = targetPercent;
-                clearInterval(timer);
-            }
-            progressBar.style.width = currentPercent + '%';
-        }, 20);
-    }
-}
-
-// Smooth scroll to element
-function scrollToElement(elementId) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-// Copy text to clipboard
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        showMessageBox('Success', 'Text copied to clipboard!', 'success');
-    }).catch(err => {
-        showMessageBox('Error', 'Failed to copy text to clipboard.', 'error');
-    });
-}
-
-// Format date for display
-function formatDate(dateString) {
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-}
-
-// Auto-resize textarea
-function autoResizeTextarea(textarea) {
-    textarea.style.height = 'auto';
-    textarea.style.height = textarea.scrollHeight + 'px';
-}
-
-// Initialize auto-resize for all textareas
-document.addEventListener('DOMContentLoaded', function() {
-    const textareas = document.querySelectorAll('textarea');
-    textareas.forEach(textarea => {
-        textarea.addEventListener('input', function() {
-            autoResizeTextarea(this);
-        });
-    });
-});
-
-// Loading spinner utility
-function showLoadingSpinner(buttonElement) {
-    const originalText = buttonElement.innerHTML;
-    buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
-    buttonElement.disabled = true;
-    
-    return function hideSpinner() {
-        buttonElement.innerHTML = originalText;
-        buttonElement.disabled = false;
-    };
-}
-
-// Enhanced table sorting
-function sortTable(tableId, columnIndex, dataType = 'string') {
-    const table = document.getElementById(tableId);
-    const tbody = table.querySelector('tbody');
-    const rows = Array.from(tbody.querySelectorAll('tr'));
-    
-    rows.sort((a, b) => {
-        const aValue = a.cells[columnIndex].textContent.trim();
-        const bValue = b.cells[columnIndex].textContent.trim();
-        
-        if (dataType === 'number') {
-            return parseFloat(aValue) - parseFloat(bValue);
-        } else if (dataType === 'date') {
-            return new Date(aValue) - new Date(bValue);
-        } else {
-            return aValue.localeCompare(bValue);
+        if (!screenTimeData || screenTimeData.length === 0) {
+            const canvasCtx = ctx.getContext('2d');
+            canvasCtx.font = '16px Inter';
+            canvasCtx.textAlign = 'center';
+            canvasCtx.fillStyle = '#6b7280';
+            canvasCtx.fillText('No screen time data available yet.', ctx.width / 2, ctx.height / 2);
+            canvasCtx.fillText('Add data using the form below to see your trends.', ctx.width / 2, ctx.height / 2 + 25);
+            return;
         }
-    });
-    
-    rows.forEach(row => tbody.appendChild(row));
-}
 
-// Search functionality for tables
-function searchTable(tableId, searchInputId) {
-    const searchInput = document.getElementById(searchInputId);
-    const table = document.getElementById(tableId);
-    const rows = table.querySelectorAll('tbody tr');
-    
-    searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            if (text.includes(searchTerm)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    });
-}
+        const dates = screenTimeData.map(item => new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
+        const hours = screenTimeData.map(item => item.hours);
 
-// Mobile menu toggle
-function toggleMobileMenu() {
-    const mobileMenu = document.getElementById('mobile-menu');
-    if (mobileMenu) {
-        mobileMenu.classList.toggle('hidden');
-    }
-}
-
-// Notification system
-class NotificationSystem {
-    constructor() {
-        this.container = this.createContainer();
-    }
-    
-    createContainer() {
-        const container = document.createElement('div');
-        container.id = 'notification-container';
-        container.className = 'fixed top-20 right-4 z-50 space-y-2';
-        document.body.appendChild(container);
-        return container;
-    }
-    
-    show(message, type = 'info', duration = 5000) {
-        const notification = document.createElement('div');
-        const bgColor = type === 'success' ? 'bg-green-500' : 
-                       type === 'error' ? 'bg-red-500' : 
-                       type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500';
-        
-        notification.className = `${bgColor} text-white px-4 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300`;
-        notification.innerHTML = `
-            <div class="flex items-center justify-between">
-                <span>${message}</span>
-                <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
-        
-        this.container.appendChild(notification);
-        
-        // Animate in
-        setTimeout(() => {
-            notification.classList.remove('translate-x-full');
-        }, 100);
-        
-        // Auto remove
-        if (duration > 0) {
-            setTimeout(() => {
-                notification.classList.add('translate-x-full');
-                setTimeout(() => {
-                    if (notification.parentElement) {
-                        notification.remove();
+        screenTimeChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: dates,
+                datasets: [{
+                    label: 'Screen Time (Hours)',
+                    data: hours,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
+                    tension: 0.3,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: false,
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    legend: {
+                        display: false
                     }
-                }, 300);
-            }, duration);
-        }
-    }
-}
-
-// Initialize notification system
-const notifications = new NotificationSystem();
-
-// Utility function to show notifications
-function showNotification(message, type = 'info', duration = 5000) {
-    notifications.show(message, type, duration);
-}
-
-// Initialize tooltips
-function initializeTooltips() {
-    const tooltipElements = document.querySelectorAll('[data-tooltip]');
-    tooltipElements.forEach(element => {
-        element.addEventListener('mouseenter', function() {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'absolute bg-gray-800 text-white text-sm px-2 py-1 rounded shadow-lg z-50';
-            tooltip.textContent = this.getAttribute('data-tooltip');
-            tooltip.id = 'tooltip';
-            
-            document.body.appendChild(tooltip);
-            
-            const rect = this.getBoundingClientRect();
-            tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
-            tooltip.style.top = rect.top - tooltip.offsetHeight - 5 + 'px';
-        });
-        
-        element.addEventListener('mouseleave', function() {
-            const tooltip = document.getElementById('tooltip');
-            if (tooltip) {
-                tooltip.remove();
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Hours'
+                        },
+                        beginAtZero: true
+                    }
+                }
             }
         });
-    });
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    initializeTooltips();
-});
-
-// ============= NEW ENHANCED FEATURES =============
-
-// Real-time RPM data updates
-function initializeRealTimeFeatures() {
-    if (window.location.pathname.includes('patient-dashboard')) {
-        startRPMUpdates();
+    } catch (error) {
+        console.error('Error fetching screen time data:', error);
+        const canvasCtx = ctx.getContext('2d');
+        canvasCtx.font = '16px Inter';
+        canvasCtx.textAlign = 'center';
+        canvasCtx.fillStyle = '#ef4444';
+        canvasCtx.fillText('Error loading chart data.', ctx.width / 2, ctx.height / 2);
     }
 }
-
-function startRPMUpdates() {
-    // Update RPM data every 10 seconds
-    // rpmUpdateInterval = setInterval(updateRPMData, 10000); // Disabled to prevent excessive API calls
-    
-    // Initial update
-    // updateRPMData(); // Also disabling the initial call on page load
-}
-
-function updateRPMData() {
-    fetch('/api/rpm-data')
-        .then(response => response.json())
-        .then(data => {
-            // Update heart rate
-            const heartRateElement = document.getElementById('heart-rate');
-            if (heartRateElement) {
-                animateNumberChange(heartRateElement, data.heart_rate);
-            }
-            
-            // Update sleep duration
-            const sleepElement = document.getElementById('sleep-duration');
-            if (sleepElement) {
-                animateNumberChange(sleepElement, data.sleep_duration + 'h');
-            }
-            
-            // Update steps
-            const stepsElement = document.getElementById('steps');
-            if (stepsElement) {
-                animateNumberChange(stepsElement, data.steps.toLocaleString());
-            }
-            
-            // Update mood score
-            const moodElement = document.getElementById('mood-score');
-            if (moodElement) {
-                animateNumberChange(moodElement, data.mood_score + '/10');
-            }
-            
-            // Update timestamp
-            const timestampElement = document.getElementById('rpm-timestamp');
-            if (timestampElement) {
-                timestampElement.textContent = `Last updated: ${data.timestamp}`;
-            }
-            
-            // Show alerts if any
-            if (data.alerts && data.alerts.length > 0) {
-                data.alerts.forEach(alert => {
-                    showNotification(alert, 'warning', 8000);
-                });
-            }
-        })
-        .catch(error => {
-            console.error('Error updating RPM data:', error);
-        });
-}
-
-function animateNumberChange(element, newValue) {
-    element.style.transform = 'scale(1.1)';
-    element.style.color = '#10b981';
-    element.textContent = newValue;
-    
-    setTimeout(() => {
-        element.style.transform = 'scale(1)';
-        element.style.color = '';
-    }, 300);
-}
-
-// AI Interaction Cues
-function initializeAIInteractionCues() {
-    // Add AI processing modal
-    createAIProcessingModal();
-}
-
-function createAIProcessingModal() {
-    const modal = document.createElement('div');
-    modal.id = 'ai-processing-modal';
-    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden';
-    modal.innerHTML = `
-        <div class="bg-white rounded-lg p-8 max-w-md mx-4 shadow-xl text-center">
-            <div class="mb-4">
-                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-            </div>
-            <h3 class="text-xl font-semibold text-gray-800 mb-2">🧠 Analyzing with Mindwell...</h3>
-            <p class="text-gray-600 mb-4" id="ai-status">Processing your data with AI...</p>
-            <div class="bg-gray-100 rounded-lg p-3 text-sm text-left" id="ai-debug-info" style="display: none;">
-                <strong>Debug Info:</strong>
-                <div id="ai-raw-output"></div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    aiProcessingModal = modal;
-}
-
-function showAIProcessing(message = 'Processing your data with AI...', showDebug = false) {
-    const modal = document.getElementById('ai-processing-modal');
-    const statusElement = document.getElementById('ai-status');
-    const debugInfo = document.getElementById('ai-debug-info');
-    
-    statusElement.textContent = message;
-    debugInfo.style.display = showDebug ? 'block' : 'none';
-    modal.classList.remove('hidden');
-}
-
-function hideAIProcessing() {
-    const modal = document.getElementById('ai-processing-modal');
-    modal.classList.add('hidden');
-}
-
-function updateAIDebugInfo(data) {
-    const debugOutput = document.getElementById('ai-raw-output');
-    if (debugOutput) {
-        debugOutput.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
-    }
-}
-
-
-
-
-
-function updateDigitalDetoxUI(result) {
-    // Update AI analysis display
-    const scoreElement = document.getElementById('ai-score');
-    if (scoreElement) {
-        scoreElement.textContent = result.ai_analysis.score;
-        scoreElement.className = `px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(result.ai_analysis.score)}`;
-    }
-    
-    const suggestionElement = document.getElementById('ai-suggestion');
-    if (suggestionElement) {
-        suggestionElement.textContent = result.ai_analysis.suggestion;
-    }
-}
-
-function getScoreColor(score) {
-    switch(score.toLowerCase()) {
-        case 'excellent': return 'bg-green-100 text-green-800';
-        case 'good': return 'bg-blue-100 text-blue-800';
-        case 'fair': return 'bg-yellow-100 text-yellow-800';
-        case 'poor': return 'bg-red-100 text-red-800';
-        default: return 'bg-gray-100 text-gray-800';
-    }
-}
-
-function handleChatMessage(event) {
-    event.preventDefault();
-    
-    const messageInput = event.target.querySelector('input[name="message"]');
-    const message = messageInput.value.trim();
-    
-    if (!message) return;
-    
-    // Add user message to chat
-    addChatMessage(message, 'user');
-    
-    // Clear input
-    messageInput.value = '';
-    
-    // Show typing indicator
-    addTypingIndicator();
-    
-    // Send to server
-    fetch('/api/chat-message', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: message })
-    })
-    .then(response => response.json())
-    .then(result => {
-        removeTypingIndicator();
-        
-        if (result.success) {
-            addChatMessage(result.response, 'bot', result.timestamp);
-        } else {
-            addChatMessage('Sorry, I encountered an error. Please try again.', 'bot');
-        }
-    })
-    .catch(error => {
-        removeTypingIndicator();
-        addChatMessage('Connection error. Please check your internet connection.', 'bot');
-        console.error('Chat error:', error);
-    });
-}
-
-function addChatMessage(message, sender, timestamp = null) {
-    const chatMessages = document.getElementById('chat-messages');
-    if (!chatMessages) return;
-    
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `mb-4 ${sender === 'user' ? 'text-right' : 'text-left'}`;
-    
-    const time = timestamp || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    
-    messageDiv.innerHTML = `
-        <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-            sender === 'user' 
-                ? 'bg-blue-500 text-white' 
-                : 'bg-gray-200 text-gray-800'
-        }">
-            <p>${message}</p>
-            <p class="text-xs mt-1 opacity-70">${time}</p>
-        </div>
-    `;
-    
-    chatMessages.appendChild(messageDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function addTypingIndicator() {
-    const chatMessages = document.getElementById('chat-messages');
-    if (!chatMessages) return;
-    
-    const typingDiv = document.createElement('div');
-    typingDiv.id = 'typing-indicator';
-    typingDiv.className = 'mb-4 text-left';
-    typingDiv.innerHTML = `
-        <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800">
-            <div class="flex items-center">
-                <div class="typing-dots">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <span class="ml-2 text-sm">Bot is typing...</span>
-            </div>
-        </div>
-    `;
-    
-    chatMessages.appendChild(typingDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-
-function removeTypingIndicator() {
-    const typingIndicator = document.getElementById('typing-indicator');
-    if (typingIndicator) {
-        typingIndicator.remove();
-    }
-}
-
-// Enhanced Chart.js Integration (replacing canvas charts)
-function initializeChartJS() {
-    // Initialize Chart.js charts if the library is loaded
-    if (typeof Chart !== 'undefined') {
-        initializeWellnessChart();
-        initializeScreenTimeChart();
-        initializeCorrelationChart();
-    }
-}
-
-
 
 function initializeWellnessChart() {
     const ctx = document.getElementById('wellness-chart');
     if (!ctx) return;
     
-    // Destroy existing chart if it exists
-    if (window.wellnessChart) {
-        window.wellnessChart.destroy();
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
     
-    window.wellnessChart = new Chart(ctx, {
+    new Chart(ctx, {
         type: 'line',
         data: {
             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -631,583 +131,399 @@ function initializeWellnessChart() {
     });
 }
 
+async function initializeCorrelationChart() {
+    const canvas = document.getElementById('correlation-chart');
+    if (!canvas) return;
 
-
-
-
-
-
-function initializeCorrelationChart() {
-    const ctx = document.getElementById('correlation-chart');
-    if (!ctx) return;
-    
-    // Destroy existing chart if it exists
-    if (window.correlationChart) {
-        window.correlationChart.destroy();
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+        existingChart.destroy();
     }
-    
-    window.correlationChart = new Chart(ctx, {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: 'Screen Time vs Academic Score',
-                data: [
-                    {x: 8.5, y: 75},
-                    {x: 9.2, y: 72},
-                    {x: 7.8, y: 78},
-                    {x: 8.9, y: 70},
-                    {x: 6.5, y: 85},
-                    {x: 5.2, y: 88},
-                    {x: 4.8, y: 92}
-                ],
-                backgroundColor: 'rgba(16, 185, 129, 0.8)',
-                borderColor: 'rgb(16, 185, 129)'
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                title: {
-                    display: true,
-                    text: 'Screen Time vs Academic Performance Correlation'
-                }
+
+    const ctx = canvas.getContext('2d');
+
+    try {
+        const response = await fetch('/api/digital-detox-data');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const screenTimeData = await response.json();
+
+        let correlationData = [];
+        if (screenTimeData && screenTimeData.length > 0) {
+            correlationData = screenTimeData.map(log => ({
+                x: log.hours,
+                y: log.academic_score
+            }));
+        } else {
+            correlationData = [
+                { x: 3, y: 90 }, { x: 5, y: 85 }, { x: 7, y: 70 }, { x: 4, y: 92 }, { x: 6, y: 78 }
+            ];
+        }
+
+        new Chart(ctx, {
+            type: 'scatter',
+            data: {
+                datasets: [{
+                    label: 'Screen Time vs Academic Score',
+                    data: correlationData,
+                    backgroundColor: '#8b5cf6',
+                    pointRadius: 6,
+                    pointHoverRadius: 8
+                }]
             },
-            scales: {
-                x: {
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
                     title: {
-                        display: true,
-                        text: 'Screen Time (hours)'
+                        display: false,
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Screen Time: ${context.parsed.x}h, Academic Score: ${context.parsed.y}`;
+                            }
+                        }
                     }
                 },
-                y: {
-                    title: {
-                        display: true,
-                        text: 'Academic Score'
+                scales: {
+                    x: {
+                        type: 'linear',
+                        position: 'bottom',
+                        title: {
+                            display: true,
+                            text: 'Screen Time (Hours)'
+                        }
+                    },
+                    y: {
+                        type: 'linear',
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Academic Score'
+                        },
+                        beginAtZero: true,
+                        max: 100
                     }
                 }
             }
+        });
+    } catch (error) {
+        console.error('Error fetching correlation data:', error);
+        ctx.font = '16px Inter';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('Error loading chart data.', canvas.width / 2, canvas.height / 2);
+    }
+}
+
+// Initialize all charts when the page loads
+function initializeChartJS() {
+    if (typeof Chart !== 'undefined') {
+        initializeScreenTimeChart();
+        initializeWellnessChart();
+        initializeCorrelationChart();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // ... (other page scripts)
+
+    // Chat page scripts
+    if (document.getElementById('chat-form')) {
+        const socket = io();
+
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = chatInput.value;
+            if (message) {
+                // Show user message immediately
+                const userMsg = document.createElement('div');
+                    userMsg.classList.add('chat-message', 'text-right');
+                    userMsg.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-blue-600 text-white ml-auto text-right"><p>${escapeHtml(message)}</p></div>`;
+                    chatMessages.appendChild(userMsg);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                socket.emit('chat_message', { 'message': message });
+                chatInput.value = '';
+            }
+        });
+
+        socket.on('chat_response', function(data) {
+            // Split multiline bot responses for better display
+            const botReplies = data.reply.split(/\n+/);
+            botReplies.forEach(function(reply) {
+                if (reply.trim() === '') return;
+                const messageElement = document.createElement('div');
+                    messageElement.classList.add('chat-message', 'text-left');
+                    if (data.is_crisis) {
+                        messageElement.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-red-200 text-red-800 mr-auto text-left"><p>${escapeHtml(reply)}</p></div>`;
+                    } else {
+                        messageElement.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800 mr-auto text-left"><p>${escapeHtml(reply)}</p></div>`;
+                    }
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
+        });
+
+        // Helper to escape HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+    }
+});
+
+function setupDigitalDetoxForm() {
+    const form = document.getElementById('digital-detox-form');
+    const messageDiv = document.getElementById('form-message');
+
+    form.addEventListener('submit', async function(event) {
+        event.preventDefault(); 
+
+        const submitBtn = form.querySelector('button[type="submit"]');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch('/api/submit-digital-detox', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                messageDiv.className = 'mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded';
+                messageDiv.textContent = 'Data saved successfully! Analyzing your data...';
+                messageDiv.classList.remove('hidden');
+                
+                form.reset();
+                
+                const analysisResponse = await fetch('/api/analyze-digital-detox', { method: 'POST' });
+                const analysisResult = await analysisResponse.json();
+
+                if (analysisResult.success) {
+                    document.getElementById('ai-score').textContent = analysisResult.insights.ai_score;
+                    document.getElementById('ai-suggestion').textContent = analysisResult.insights.ai_suggestion;
+                    document.getElementById('last-analysis-time').textContent = new Date().toLocaleTimeString();
+                    messageDiv.textContent = 'Data saved and analyzed successfully!';
+                } else {
+                    messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+                    messageDiv.textContent = analysisResult.message || 'Failed to analyze data.';
+                    console.error('Error in digital detox analysis:', analysisResult.message);
+                }
+
+            } else {
+                messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+                messageDiv.textContent = result.message || 'Failed to save data. Please try again.';
+                messageDiv.classList.remove('hidden');
+            }
+        } catch (error) {
+            messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
+            messageDiv.textContent = 'Network error. Please check your connection and try again.';
+            messageDiv.classList.remove('hidden');
+            console.error('Error in digital detox form submission:', error);
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Today\'s Data';
         }
     });
 }
 
-// Breathing Exercise Visualizer functions (moved from breathing.html)
-function startBreathing(type) {
-    if (breathingInterval) {
-        clearInterval(breathingInterval);
+// Yoga Timer Functionality
+let yogaTimer = null;
+let yogaTimerDuration = 0;
+let yogaTimerRemaining = 0;
+let isYogaTimerRunning = false;
+let isYogaTimerPaused = false;
+
+function formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+
+function updateYogaTimerDisplay() {
+    const timerDisplay = document.getElementById('timer-display');
+    const sessionStatus = document.getElementById('session-status');
+    const progressBar = document.getElementById('progress-bar');
+
+    if (timerDisplay) {
+        timerDisplay.textContent = formatTime(yogaTimerRemaining);
     }
-    
-    currentBreathingType = type;
-    const pattern = breathingPatterns[type];
-    const instruction = document.getElementById('breathing-instruction');
-    const circle = document.getElementById('breathing-circle');
-    const text = document.getElementById('breathing-text');
-    
-    instruction.textContent = `Follow the ${pattern.name} pattern`;
-    
-    let phase = 'inhale';
-    let count = 0;
-    
-    function updateBreathing() {
-        const visualizer = document.getElementById('breathing-visualizer');
-        
-        switch(phase) {
-            case 'inhale':
-                visualizer.style.transform = 'scale(1.2)';
-                circle.style.transform = 'scale(1.3)';
-                text.textContent = 'Inhale';
-                count++;
-                if (count >= pattern.inhale) {
-                    phase = pattern.hold1 > 0 ? 'hold1' : 'exhale';
-                    count = 0;
-                }
-                break;
-            case 'hold1':
-                text.textContent = 'Hold';
-                count++;
-                if (count >= pattern.hold1) {
-                    phase = 'exhale';
-                    count = 0;
-                }
-                break;
-            case 'exhale':
-                visualizer.style.transform = 'scale(1)';
-                circle.style.transform = 'scale(1)';
-                text.textContent = 'Exhale';
-                count++;
-                if (count >= pattern.exhale) {
-                    phase = pattern.hold2 > 0 ? 'hold2' : 'inhale';
-                    count = 0;
-                }
-                break;
-            case 'hold2':
-                text.textContent = 'Hold';
-                count++;
-                if (count >= pattern.hold2) {
-                    phase = 'inhale';
-                    count = 0;
-                }
-                break;
+
+    if (sessionStatus) {
+        if (isYogaTimerRunning && !isYogaTimerPaused) {
+            sessionStatus.textContent = 'Session in progress...';
+        } else if (isYogaTimerPaused) {
+            sessionStatus.textContent = 'Session paused';
+        } else {
+            sessionStatus.textContent = 'Ready to begin your practice';
         }
     }
-    
-    updateBreathing();
-    breathingInterval = setInterval(updateBreathing, 1000);
-}
 
-function startSession() {
-    if (!currentBreathingType) {
-        showNotification('Please select a breathing exercise first.', 'error'); // Use global showNotification
-        return;
-    }
-    
-    isSessionActive = true;
-    sessionStartTime = Date.now();
-    
-    document.getElementById('start-btn').classList.add('hidden');
-    document.getElementById('pause-btn').classList.remove('hidden');
-    document.getElementById('stop-btn').classList.remove('hidden');
-    document.getElementById('timer-display').classList.remove('hidden');
-    
-    updateTimer();
-    sessionTimer = setInterval(updateTimer, 1000);
-}
-
-function pauseSession() {
-    if (sessionTimer) {
-        clearInterval(sessionTimer);
-        sessionTimer = null;
-    }
-    if (breathingInterval) {
-        clearInterval(breathingInterval);
-        breathingInterval = null;
-    }
-    
-    document.getElementById('pause-btn').classList.add('hidden');
-    document.getElementById('start-btn').classList.remove('hidden');
-    document.getElementById('start-btn').innerHTML = '<i class="fas fa-play mr-2"></i>Resume';
-}
-
-function stopSession() {
-    if (sessionTimer) {
-        clearInterval(sessionTimer);
-        sessionTimer = null;
-    }
-    if (breathingInterval) {
-        clearInterval(breathingInterval);
-        breathingInterval = null;
-    }
-    
-    isSessionActive = false;
-    
-    document.getElementById('start-btn').classList.remove('hidden');
-    document.getElementById('pause-btn').classList.add('hidden');
-    document.getElementById('stop-btn').classList.add('hidden');
-    document.getElementById('timer-display').classList.add('hidden');
-    
-    document.getElementById('start-btn').innerHTML = '<i class="fas fa-play mr-2"></i>Start Session';
-    
-    // Auto-log the session
-    const duration = Math.round((Date.now() - sessionStartTime) / 60000);
-    if (duration > 0) {
-        autoLogSession(duration);
+    if (progressBar) {
+        const progress = ((yogaTimerDuration - yogaTimerRemaining) / yogaTimerDuration) * 100;
+        progressBar.style.width = `${Math.max(0, Math.min(100, progress))}%`;
     }
 }
 
-function updateTimer() {
-    if (!sessionStartTime) return;
-    
-    const elapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
-    const minutes = Math.floor(elapsed / 60);
-    const seconds = elapsed % 60;
-    
-    document.getElementById('timer-display').textContent = 
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
-
-function startGuidedSession(sessionCategory, type, duration) { // Added sessionCategory
-    if (sessionCategory === 'breathing') {
-        const session = breathingPatterns[type]; // Use breathingPatterns
-        if (session) {
-            startBreathing(type); // Call breathing startBreathing
-            document.getElementById('exercise_name').value = session.name;
-            document.getElementById('duration_minutes').value = duration;
-            
-            // Auto-start session
-            setTimeout(() => {
-                startSession(); // Call breathing startSession
-            }, 1000);
-        }
-    } else if (sessionCategory === 'yoga') {
-        const session = guidedYogaSessions[type]; // Use guidedYogaSessions
-        if (session) {
-            currentYogaSessionName = session.name;
-            yogaSessionDuration = duration;
-            
-            // Update form
-            document.getElementById('session_name').value = session.name;
-            document.getElementById('duration_minutes').value = duration;
-            document.getElementById('difficulty_level').value = session.difficulty;
-            
-            // Update status
-            document.getElementById('session-status').textContent = `Ready for ${session.name}`;
-            document.getElementById('timer-display').textContent = `${duration.toString().padStart(2, '0')}:00`;
-            document.getElementById('progress-bar').style.width = '0%';
-            
-            // Auto-start timer after a short delay
-            setTimeout(() => {
-                startTimer(); // Call yoga startTimer
-            }, 2000);
-        }
-    }
-}
-
-async function autoLogSession(duration) {
-    const formData = {
-        exercise_name: currentBreathingType ? breathingPatterns[currentBreathingType].name : 'Custom Session',
-        duration_minutes: duration,
-        notes: 'Session completed via interactive timer'
-    };
-    
-    try {
-        const response = await fetch('/api/log-breathing-session', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-            showNotification('Session logged successfully!', 'success');
-            setTimeout(() => location.reload(), 1500);
-        }
-    } catch (error) {
-        console.error('Error logging session:', error);
-        showNotification('Error logging session.', 'error'); // Use global showNotification
-    }
-}
-
-// Form submission for breathing-log-form
-document.addEventListener('DOMContentLoaded', function() {
-    const breathingLogForm = document.getElementById('breathing-log-form');
-    if (breathingLogForm) {
-        breathingLogForm.addEventListener('submit', async function(event) {
-            event.preventDefault();
-            
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
-            
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const messageDiv = document.getElementById('form-message');
-            
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
-            
-            try {
-                const response = await fetch('/api/log-breathing-session', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    messageDiv.className = 'mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded';
-                    messageDiv.textContent = 'Session logged successfully!';
-                    messageDiv.classList.remove('hidden');
-                    
-                    this.reset();
-                    setTimeout(() => location.reload(), 1500);
-                } else {
-                    messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
-                    messageDiv.textContent = result.message || 'Failed to log session.';
-                    messageDiv.classList.remove('hidden');
-                }
-            } catch (error) {
-                messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
-                messageDiv.textContent = 'Network error. Please try again.';
-                messageDiv.classList.remove('hidden');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Log Session';
-            }
-        });
-    }
-});
-
-// Yoga Timer functions (moved from yoga.html)
 function startTimer() {
-    if (yogaSessionDuration === 0) {
-        showNotification('Please set a session duration first.', 'error'); // Use global showNotification
+    if (yogaTimerDuration <= 0) {
+        alert('Please set a session duration first using the quick session buttons or manually.');
         return;
     }
-    
-    isYogaSessionActive = true;
-    yogaSessionStartTime = Date.now();
-    
-    document.getElementById('start-timer-btn').classList.add('hidden');
-    document.getElementById('pause-timer-btn').classList.remove('hidden');
-    document.getElementById('stop-timer-btn').classList.remove('hidden');
-    document.getElementById('session-status').textContent = 'Session in progress...';
-    
-    updateYogaTimer();
-    yogaSessionTimer = setInterval(updateYogaTimer, 1000);
+
+    if (isYogaTimerRunning && !isYogaTimerPaused) {
+        return; // Already running
+    }
+
+    const startBtn = document.getElementById('start-timer-btn');
+    const pauseBtn = document.getElementById('pause-timer-btn');
+    const stopBtn = document.getElementById('stop-timer-btn');
+
+    if (isYogaTimerPaused) {
+        // Resume timer
+        isYogaTimerPaused = false;
+        isYogaTimerRunning = true;
+    } else {
+        // Start new timer
+        isYogaTimerRunning = true;
+        isYogaTimerPaused = false;
+        yogaTimerRemaining = yogaTimerDuration;
+    }
+
+    // Update button visibility
+    if (startBtn) startBtn.classList.add('hidden');
+    if (pauseBtn) pauseBtn.classList.remove('hidden');
+    if (stopBtn) stopBtn.classList.remove('hidden');
+
+    yogaTimer = setInterval(() => {
+        if (yogaTimerRemaining > 0) {
+            yogaTimerRemaining--;
+            updateYogaTimerDisplay();
+        } else {
+            stopTimer();
+            alert('Session completed! Great job on your yoga practice!');
+        }
+    }, 1000);
+
+    updateYogaTimerDisplay();
 }
 
 function pauseTimer() {
-    if (yogaSessionTimer) {
-        clearInterval(yogaSessionTimer);
-        yogaSessionTimer = null;
+    if (!isYogaTimerRunning || isYogaTimerPaused) {
+        return;
     }
-    
-    document.getElementById('pause-timer-btn').classList.add('hidden');
-    document.getElementById('start-timer-btn').classList.remove('hidden');
-    document.getElementById('start-timer-btn').innerHTML = '<i class="fas fa-play mr-2"></i>Resume';
-    document.getElementById('session-status').textContent = 'Session paused';
+
+    const startBtn = document.getElementById('start-timer-btn');
+    const pauseBtn = document.getElementById('pause-timer-btn');
+    const stopBtn = document.getElementById('stop-timer-btn');
+
+    isYogaTimerPaused = true;
+    isYogaTimerRunning = false;
+    clearInterval(yogaTimer);
+
+    // Update button visibility
+    if (startBtn) startBtn.classList.remove('hidden');
+    if (pauseBtn) pauseBtn.classList.add('hidden');
+
+    updateYogaTimerDisplay();
 }
 
 function stopTimer() {
-    if (yogaSessionTimer) {
-        clearInterval(yogaSessionTimer);
-        yogaSessionTimer = null;
-    }
-    
-    isYogaSessionActive = false;
-    
-    document.getElementById('start-timer-btn').classList.remove('hidden');
-    document.getElementById('pause-timer-btn').classList.add('hidden');
-    document.getElementById('stop-timer-btn').classList.add('hidden');
-    document.getElementById('session-status').textContent = 'Session completed!';
-    
-    document.getElementById('start-timer-btn').innerHTML = '<i class="fas fa-play mr-2"></i>Start Session';
-    
-    // Auto-log the session
-    const actualDuration = Math.round((Date.now() - yogaSessionStartTime) / 60000);
-    if (actualDuration > 0) {
-        autoLogYogaSession(actualDuration);
-    }
+    const startBtn = document.getElementById('start-timer-btn');
+    const pauseBtn = document.getElementById('pause-timer-btn');
+    const stopBtn = document.getElementById('stop-timer-btn');
+
+    isYogaTimerRunning = false;
+    isYogaTimerPaused = false;
+    clearInterval(yogaTimer);
+    yogaTimerRemaining = yogaTimerDuration;
+
+    // Update button visibility
+    if (startBtn) startBtn.classList.remove('hidden');
+    if (pauseBtn) pauseBtn.classList.add('hidden');
+    if (stopBtn) stopBtn.classList.add('hidden');
+
+    updateYogaTimerDisplay();
 }
 
-function updateYogaTimer() {
-    if (!yogaSessionStartTime) return;
-    
-    const elapsed = Math.floor((Date.now() - yogaSessionStartTime) / 1000);
-    const remaining = Math.max(0, (yogaSessionDuration * 60) - elapsed);
-    const minutes = Math.floor(remaining / 60);
-    const seconds = remaining % 60;
-    
-    document.getElementById('timer-display').textContent = 
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    
-    // Update progress bar
-    const progress = Math.min(100, (elapsed / (yogaSessionDuration * 60)) * 100);
-    document.getElementById('progress-bar').style.width = `${progress}%`;
-    
-    // Check if session is complete
-    if (remaining <= 0) {
-        stopTimer();
-        showNotification('Session completed! Great job!', 'success');
+function setQuickSession(minutes) {
+    yogaTimerDuration = minutes * 60;
+    yogaTimerRemaining = yogaTimerDuration;
+    updateYogaTimerDisplay();
+
+    // Update button text to show selected duration
+    const startBtn = document.getElementById('start-timer-btn');
+    if (startBtn) {
+        startBtn.innerHTML = `<i class="fas fa-play mr-2"></i>Start ${minutes} min Session`;
     }
 }
 
-function setQuickSession(duration) {
-    yogaSessionDuration = duration;
-    document.getElementById('duration_minutes').value = duration; // This targets the form input, not the timer display
-    document.getElementById('session-status').textContent = `Ready for ${duration}-minute session`;
-    
-    // Reset timer display
-    document.getElementById('timer-display').textContent = `${duration.toString().padStart(2, '0')}:00`;
-    document.getElementById('progress-bar').style.width = '0%';
-}
+function startGuidedSession(type, sessionType, duration) {
+    // Set the session duration
+    setQuickSession(duration);
 
-async function autoLogYogaSession(duration) {
-    const formData = {
-        session_name: currentYogaSessionName || 'Custom Session',
-        duration_minutes: duration,
-        difficulty_level: 'Beginner', // Default for auto-logged sessions
-        notes: 'Session completed via interactive timer'
-    };
-    
-    try {
-        const response = await fetch('/api/log-yoga-session', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(formData)
-        });
-        
-        const result = await response.json();
-        if (result.success) {
-            showNotification('Session logged successfully!', 'success');
-            setTimeout(() => location.reload(), 1500);
-        }
-    } catch (error) {
-        console.error('Error logging yoga session:', error);
-        showNotification('Error logging yoga session.', 'error'); // Use global showNotification
+    // Start the timer
+    setTimeout(() => {
+        startTimer();
+    }, 100);
+
+    // You could add session-specific instructions here
+    const sessionStatus = document.getElementById('session-status');
+    if (sessionStatus) {
+        sessionStatus.textContent = `Starting ${sessionType} session...`;
     }
 }
 
-// Form submission for yoga-log-form
+// Initialize yoga timer when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    const yogaLogForm = document.getElementById('yoga-log-form');
-    if (yogaLogForm) {
-        document.getElementById('yoga-log-form').addEventListener('submit', async function(event) {
-            event.preventDefault();
-            
-            const formData = new FormData(this);
-            const data = {
-                session_name: formData.get('session_name') || 'Custom Session',
-                duration_minutes: parseInt(formData.get('duration_minutes') || '0', 10),
-                difficulty_level: formData.get('difficulty_level') || 'Beginner',
-                notes: formData.get('notes') || ''
-            };
-            
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const messageDiv = document.getElementById('form-message');
-            
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
-            
+    // Initialize timer display
+    updateYogaTimerDisplay();
+
+    // Setup yoga form submission
+    const yogaForm = document.getElementById('yoga-log-form');
+    if (yogaForm) {
+        yogaForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(yogaForm);
+            const data = Object.fromEntries(formData.entries());
+
             try {
-                const response = await fetch('/api/log-yoga-session', {
+                const response = await fetch('/yoga', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('input[name="csrf_token"]')?.value || ''
+                        'Content-Type': 'application/x-www-form-urlencoded'
                     },
-                    credentials: 'same-origin',
-                    body: JSON.stringify(data)
+                    body: new URLSearchParams(data)
                 });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    messageDiv.className = 'mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded';
-                    messageDiv.textContent = 'Session logged successfully!';
-                    messageDiv.classList.remove('hidden');
-                    
-                    this.reset();
-                    setTimeout(() => location.reload(), 1500);
+
+                if (response.ok) {
+                    // Refresh the page to show updated logs
+                    window.location.reload();
                 } else {
-                    messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
-                    messageDiv.textContent = result.message || 'Failed to log session.';
-                    messageDiv.classList.remove('hidden');
+                    alert('Failed to log yoga session. Please try again.');
                 }
             } catch (error) {
-                messageDiv.className = 'mt-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded';
-                messageDiv.textContent = 'Network error. Please try again.';
-                messageDiv.classList.remove('hidden');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Log Session';
+                console.error('Error logging yoga session:', error);
+                alert('Network error. Please check your connection and try again.');
             }
         });
     }
 });
-
-// Cleanup function
-function cleanup() {
-    if (rpmUpdateInterval) {
-        clearInterval(rpmUpdateInterval);
-    }
-}
-
-
-// A reusable function to draw a line chart on a canvas
-function drawLineChart(ctx, canvas, xLabels, yData, label, color) {
-    const padding = 40;
-    const width = canvas.width - 2 * padding;
-    const height = canvas.height - 2 * padding;
-
-    // Clear canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    if (yData.length === 0) return;
-
-    // Set up scales
-    const maxY = Math.max(...yData) + 1;
-    const minY = 0;
-    const yRange = maxY - minY || 1;
-    
-    // Draw axes
-    ctx.strokeStyle = '#e5e7eb';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(padding, padding);
-    ctx.lineTo(padding, padding + height);
-    ctx.moveTo(padding, padding + height);
-    ctx.lineTo(padding + width, padding + height);
-    ctx.stroke();
-    
-    // Draw grid lines
-    ctx.strokeStyle = '#f3f4f6';
-    for (let i = 1; i <= 4; i++) {
-        const y = padding + (height / 4) * i;
-        ctx.beginPath();
-        ctx.moveTo(padding, y);
-        ctx.lineTo(padding + width, y);
-        ctx.stroke();
-    }
-
-    // Draw data line
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    
-    for (let i = 0; i < yData.length; i++) {
-        const x = padding + (width / (yData.length - 1)) * i;
-        const y = padding + height - ((yData[i] - minY) / yRange) * height;
-        
-        if (i === 0) {
-            ctx.moveTo(x, y);
-        } else {
-            ctx.lineTo(x, y);
-        }
-    }
-    ctx.stroke();
-    
-    // Draw data points and labels
-    ctx.fillStyle = color;
-    ctx.font = '12px Inter';
-    ctx.textAlign = 'center';
-    for (let i = 0; i < yData.length; i++) {
-        const x = padding + (width / (yData.length - 1)) * i;
-        const y = padding + height - ((yData[i] - minY) / yRange) * height;
-        
-        ctx.beginPath();
-        ctx.arc(x, y, 4, 0, 2 * Math.PI);
-        ctx.fill();
-        
-        // Label points with the value
-        ctx.fillStyle = '#6b7280';
-        ctx.fillText(yData[i], x, y - 10);
-        
-        // X-axis labels
-        ctx.fillText(xLabels[i], x, padding + height + 20);
-    }
-
-    // Y-axis labels
-    for (let i = 0; i <= 4; i++) {
-        const value = minY + (yRange / 4) * (4 - i);
-        const y = padding + (height / 4) * i;
-        ctx.fillStyle = '#6b7280';
-        ctx.textAlign = 'right';
-        ctx.fillText(Math.round(value * 10) / 10, padding - 10, y + 4);
-    }
-    
-    // Y-axis label
-    ctx.save();
-    ctx.translate(padding - 30, padding + height / 2);
-    ctx.rotate(-Math.PI / 2);
-    ctx.fillText(label, 0, 0);
-    ctx.restore();
-}
-
-
-
-
