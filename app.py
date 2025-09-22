@@ -7,15 +7,14 @@ from functools import wraps
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
 from flask_session import Session
-from flask_socketio import SocketIO, emit
 from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect, CSRFError
 
 from ai_service import ai_service
-from gamification_engine import award_points
-from extensions import db, socketio
+from database import db
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary
+from models import BlogPost, BlogComment, BlogLike, BlogInsight  # Ensure BlogPost and related models are imported
 
 # Load environment variables from .env file
 try:
@@ -77,7 +76,20 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # Initialize database and migrations
 db.init_app(app)
 migrate = Migrate(app, db)
-socketio.init_app(app, async_mode='threading')
+
+# Stub for get_blog_insights (replace with real logic as needed)
+def get_blog_insights():
+    return {
+        'total_posts': BlogPost.query.count(),
+        'total_likes': 0,
+        'total_comments': 0,
+        'total_views': 0,
+        'most_popular_post': None
+    }
+
+# Stub for award_points (replace with real logic as needed)
+def award_points(user_id, points, reason):
+    pass
 
 def login_required(f):
     @wraps(f)
@@ -100,7 +112,28 @@ def role_required(role):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Get blog insights for the landing page
+    try:
+        blog_insights = get_blog_insights()
+        
+        # Get featured/recent blog posts for display
+        featured_posts = BlogPost.query.filter_by(
+            is_published=True, 
+            is_featured=True
+        ).order_by(BlogPost.created_at.desc()).limit(3).all()
+        
+        # If no featured posts, get recent ones
+        if not featured_posts:
+            featured_posts = BlogPost.query.filter_by(
+                is_published=True
+            ).order_by(BlogPost.created_at.desc()).limit(3).all()
+            
+    except Exception as e:
+        logger.error(f"Error getting blog insights for homepage: {e}")
+        blog_insights = None
+        featured_posts = []
+    
+    return render_template('index.html', blog_insights=blog_insights, featured_posts=featured_posts)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1094,93 +1127,6 @@ def update_goal(goal_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error updating goal: {str(e)}'})
 
-@socketio.on('connect')
-def handle_connect():
-    emit('chat_response', {'reply': 'Hello! I am Dr. Anya, your personal AI psychologist. I am here to listen and support you. How are you feeling today?'})
-
-@socketio.on('chat_message')
-def handle_chat_message(data):
-    user_message = data['message']
-    user_id = session['user_id']
-
-    crisis_keywords = ['suicide', 'kill myself', 'hopeless', 'end it all', 'self-harm']
-    if any(keyword in user_message.lower() for keyword in crisis_keywords):
-        emit('chat_response', {
-            'reply': 'It sounds like you are going through a difficult time. Please reach out for immediate help. You can call the National Suicide Prevention Lifeline at 988 or visit their website. You are not alone.',
-            'is_crisis': True
-        })
-        return
-
-    gamification = Gamification.query.filter_by(user_id=user_id).first()
-    wellness_trend = get_user_wellness_trend(user_id)
-
-    context = {
-        'wellness_score': wellness_trend.get('current_score', 'N/A'),
-        'engagement_level': f"{gamification.points} points, {gamification.streak} day streak" if gamification else 'Low'
-    }
-
-    try:
-        ai_reply = ai_service.generate_chat_response(user_message, context)
-        emit('chat_response', {'reply': ai_reply, 'is_crisis': False})
-    except Exception as e:
-        logger.error(f"Error in AI chat for user {user_id}: {e}")
-        emit('chat_response', {'reply': 'I am having trouble connecting right now. Please know that your feelings are valid.'})
-
-def init_database(app_instance):
-    with app_instance.app_context():
-        db.create_all()
-        if User.query.first() is None:
-            patient = User(
-                email='patient@example.com',
-                name='John Doe',
-                role='patient',
-                institution='Sample University'
-            )
-            patient.set_password('password')
-            
-            provider = User(
-                email='provider@example.com',
-                name='Dr. Smith',
-                role='provider',
-                institution='Sample University'
-            )
-            provider.set_password('password')
-            
-            db.session.add(patient)
-            db.session.add(provider)
-            db.session.commit()
-            
-            gamification = Gamification(
-                user_id=patient.id,
-                points=1250,
-                streak=7,
-                badges=['Early Bird', 'Consistency Champion', 'Mood Tracker'],
-                last_activity=date.today()
-            )
-            
-            rpm_data = RPMData(
-                user_id=patient.id,
-                date=date.today(),
-                heart_rate=72,
-                sleep_duration=7.5,
-                steps=8500,
-                mood_score=8
-            )
-            
-            for i in range(7):
-                detox_log = DigitalDetoxLog(
-                    user_id=patient.id,
-                    date=date.today() - timedelta(days=i),
-                    screen_time_hours=6.5 - i * 0.3,
-                    academic_score=85 + i,
-                    social_interactions='medium' if i % 2 == 0 else 'high'
-                )
-                db.session.add(detox_log)
-            
-            db.session.add(gamification)
-            db.session.add(rpm_data)
-            db.session.commit()
-
 @app.context_processor
 def utility_processor():
     def get_severity_info(assessment_type, score):
@@ -1216,9 +1162,170 @@ def utility_processor():
             return {'severity': 'N/A', 'color': 'gray'}
     return dict(get_severity_info=get_severity_info)
 
+@app.route('/api/save-mood', methods=['POST'])
+@login_required
+@role_required('patient')
+def save_mood():
+    if not request.is_json:
+        print("DEBUG: Request is not JSON.")
+        return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
+        
+    user_id = session['user_id']
+    data = request.get_json()
+    print(f"DEBUG: Received mood data: {data}")
+    
+    if not data or 'mood' not in data:
+        print("DEBUG: Missing mood data.")
+        return jsonify({'success': False, 'message': 'Missing mood data'}), 400
+    
+    try:
+        mood = int(data.get('mood'))
+        if not (1 <= mood <= 5):
+            print("DEBUG: Mood score out of range.")
+            return jsonify({'success': False, 'message': 'Mood must be between 1 and 5'}), 400
+            
+        print("DEBUG: Creating new mood assessment.")
+        # Create new assessment for the mood
+        mood_assessment = Assessment(
+            user_id=user_id,
+            assessment_type='Daily Mood',
+            score=mood,
+            responses={'mood': mood, 'notes': data.get('notes', '')}
+        )
+        db.session.add(mood_assessment)
+        print("DEBUG: Mood assessment added to session.")
+        
+        # Also update RPM data for dashboard
+        today = datetime.utcnow().date()
+        rpm_data = RPMData.query.filter_by(user_id=user_id, date=today).first()
+        if not rpm_data:
+            rpm_data = RPMData(user_id=user_id, date=today, mood_score=mood)
+            db.session.add(rpm_data)
+            print("DEBUG: New RPM data added to session.")
+        else:
+            rpm_data.mood_score = mood
+            print("DEBUG: Existing RPM data updated.")
+        
+        # Update gamification points
+        gamification = Gamification.query.filter_by(user_id=user_id).first()
+        if not gamification:
+            gamification = Gamification(user_id=user_id, points=0, streak=0)
+            db.session.add(gamification)
+            print("DEBUG: New gamification record added to session.")
+            
+        # Add points for mood check-in
+        gamification.points += 10
+        print(f"DEBUG: Gamification points updated: {gamification.points}")
+        
+        # Check for streak
+        if gamification.last_activity:
+            last_activity = gamification.last_activity.date() if hasattr(gamification.last_activity, 'date') else gamification.last_activity
+            if last_activity == today - timedelta(days=1):
+                gamification.streak += 1
+                print(f"DEBUG: Gamification streak updated: {gamification.streak}")
+            elif last_activity < today - timedelta(days=1):
+                gamification.streak = 1
+                print("DEBUG: Gamification streak reset.")
+        else:
+            gamification.streak = 1
+            print("DEBUG: Gamification streak initialized.")
+        
+        gamification.last_activity = today
+        print(f"DEBUG: Gamification last_activity updated: {gamification.last_activity}")
+
+        # Update user's last assessment time
+        user = User.query.get(user_id)
+        user.last_assessment_at = datetime.utcnow()
+        
+        print("DEBUG: Attempting to commit changes to database.")
+        db.session.commit()
+        print("DEBUG: Changes committed successfully.")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Mood saved successfully',
+            'points': gamification.points,
+            'streak': gamification.streak
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Error saving mood: {str(e)}')
+        print(f"DEBUG: Error saving mood: {e}")
+        return jsonify({
+            'success': False,
+            'message': f'Failed to save mood: {str(e)}'
+        }), 500
+
+
+
+
+# --- BLOG ROUTES ---
+from sqlalchemy.exc import SQLAlchemyError
+
+@app.route('/blog')
+def blog_list():
+    try:
+        posts = BlogPost.query.filter_by(is_published=True).order_by(BlogPost.created_at.desc()).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Error fetching blog posts: {e}")
+        posts = []
+    return render_template('blog_list.html', posts=posts)
+
+@app.route('/blog/<int:post_id>')
+def blog_detail(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    return render_template('blog_detail.html', post=post)
+
+@app.route('/blog/create', methods=['GET', 'POST'])
+@login_required
+def blog_create():
+    if request.method == 'POST':
+        title = request.form.get('title')
+        content = request.form.get('content')
+        category = request.form.get('category')
+        tags = request.form.get('tags')
+        is_published = bool(request.form.get('is_published'))
+        author_id = session.get('user_id')
+        try:
+            post = BlogPost(
+                title=title,
+                content=content,
+                category=category,
+                tags=tags,
+                is_published=is_published,
+                author_id=author_id,
+                created_at=datetime.now()
+            )
+            db.session.add(post)
+            db.session.commit()
+            flash('Blog post created successfully!', 'success')
+            return redirect(url_for('blog_list'))
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            logger.error(f"Error creating blog post: {e}")
+            flash('Failed to create blog post.', 'error')
+    return render_template('blog_create.html')
+
+@app.route('/blog/<int:post_id>/edit', methods=['GET', 'POST'])
+@login_required
+def blog_edit(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    if request.method == 'POST':
+        post.title = request.form.get('title')
+        post.content = request.form.get('content')
+        post.category = request.form.get('category')
+        post.tags = request.form.get('tags')
+        post.is_published = bool(request.form.get('is_published'))
+        try:
+            db.session.commit()
+            flash('Blog post updated successfully!', 'success')
+            return redirect(url_for('blog_detail', post_id=post.id))
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            logger.error(f"Error updating blog post: {e}")
+            flash('Failed to update blog post.', 'error')
+    return render_template('blog_edit.html', post=post)
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        if User.query.first() is None:
-            init_database(app)
-    socketio.run(app, debug=True, port=5000, use_reloader=False)
+    app.run(debug=True, port=5000, use_reloader=False)
