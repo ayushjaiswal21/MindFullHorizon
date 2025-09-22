@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block title %}Blog - Mental Health Community{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header Section -->
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4">Mental Health Blog</h1>
+        <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
+            Discover insights, stories, and expert advice on mental health and wellbeing from our community.
+        </p>
+        {% if session.get('user_id') %}
+            <a href="{{ url_for('blog_create') }}" class="btn-primary inline-flex items-center">
+                <i class="fas fa-plus mr-2"></i> Write New Post
+            </a>
+        {% endif %}
+    </div>
+
+    <!-- Blog Insights Dashboard (if insights available) -->
+    {% if insights %}
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+            <i class="fas fa-chart-line mr-3 text-blue-500"></i>
+            Community Insights
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div class="text-center">
+                <div class="text-3xl font-bold text-blue-600">{{ insights.total_posts }}</div>
+                <div class="text-sm text-gray-500">Total Posts</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-red-500">{{ insights.total_likes }}</div>
+                <div class="text-sm text-gray-500">Total Likes</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-green-500">{{ insights.total_comments }}</div>
+                <div class="text-sm text-gray-500">Comments</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-purple-500">{{ insights.total_views }}</div>
+                <div class="text-sm text-gray-500">Total Views</div>
+            </div>
+        </div>
+        
+        {% if insights.most_popular_post %}
+        <div class="mt-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">
+                <i class="fas fa-fire mr-2 text-orange-500"></i>Most Popular Post
+            </h3>
+            <a href="{{ url_for('blog_detail', post_id=insights.most_popular_post.id) }}" 
+               class="text-blue-600 hover:text-blue-800 font-medium">
+                {{ insights.most_popular_post.title }}
+            </a>
+            <p class="text-sm text-gray-600 mt-1">
+                by {{ insights.most_popular_post.author_name }} • 
+                Engagement Score: {{ "%.1f"|format(insights.most_popular_post.engagement_score) }}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Blog Posts Grid -->
+    <div class="space-y-8">
+        {% for post in posts %}
+        <article class="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+            <div class="p-8">
+                <!-- Post Header -->
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                            {{ post.author.name[0].upper() if post.author else 'U' }}
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900">{{ post.author.name if post.author else 'Unknown Author' }}</p>
+                            <p class="text-sm text-gray-500">{{ post.created_at.strftime('%B %d, %Y • %I:%M %p') }}</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Category Badge -->
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {{ post.category.title() if post.category else 'General' }}
+                    </span>
+                </div>
+
+                <!-- Post Content -->
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-3 hover:text-blue-600 transition-colors">
+                        <a href="{{ url_for('blog_detail', post_id=post.id) }}">{{ post.title }}</a>
+                    </h2>
+                    <p class="text-gray-600 leading-relaxed">
+                        {{ post.content[:300] }}{% if post.content|length > 300 %}...{% endif %}
+                    </p>
+                    
+                    {% if post.tags %}
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        {% for tag in post.tags.split(',') %}
+                        <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                            #{{ tag.strip() }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Post Stats and Actions -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <div class="flex items-center space-x-6 text-sm text-gray-500">
+                        <div class="flex items-center space-x-1">
+                            <i class="far fa-heart"></i>
+                            <span>{{ post.like_count }} likes</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <i class="far fa-comment"></i>
+                            <span>{{ post.comment_count }} comments</span>
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <i class="far fa-eye"></i>
+                            <span>{{ post.views }} views</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-2">
+                        <a href="{{ url_for('blog_detail', post_id=post.id) }}" 
+                           class="text-blue-600 hover:text-blue-800 font-medium text-sm">
+                            Read More →
+                        </a>
+                        
+                        {% if session.get('user_id') == post.author_id %}
+                        <div class="relative">
+                            <button onclick="toggleDropdown({{ post.id }})" class="text-gray-400 hover:text-gray-600 p-2">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
+                            <div id="dropdown-{{ post.id }}" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 hidden">
+                                <a href="{{ url_for('blog_edit', post_id=post.id) }}" 
+                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class="fas fa-edit mr-2"></i>Edit
+                                </a>
+                                <button onclick="confirmDelete({{ post.id }}, '{{ post.title }}')" 
+                                        class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50">
+                                    <i class="fas fa-trash mr-2"></i>Delete
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </article>
+        {% else %}
+        <div class="text-center py-12">
+            <div class="w-24 h-24 mx-auto mb-4 text-gray-300">
+                <i class="fas fa-blog text-6xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">No blog posts yet</h3>
+            <p class="text-gray-600 mb-6">Be the first to share your thoughts and experiences with the community.</p>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('blog_create') }}" class="btn-primary inline-flex items-center">
+                    <i class="fas fa-plus mr-2"></i> Write the First Post
+                </a>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 max-w-md mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
+        <p class="text-gray-600 mb-6">Are you sure you want to delete "<span id="deletePostTitle"></span>"? This action cannot be undone.</p>
+        <div class="flex space-x-4">
+            <button onclick="hideDeleteModal()" class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
+                Cancel
+            </button>
+            <form id="deleteForm" method="post" class="flex-1">
+                <button type="submit" class="w-full px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleDropdown(postId) {
+    const dropdown = document.getElementById(`dropdown-${postId}`);
+    // Hide all other dropdowns
+    document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
+        if (d.id !== `dropdown-${postId}`) d.classList.add('hidden');
+    });
+    dropdown.classList.toggle('hidden');
+}
+
+function confirmDelete(postId, title) {
+    document.getElementById('deletePostTitle').textContent = title;
+    document.getElementById('deleteForm').action = `/blog/${postId}/delete`;
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function hideDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('[onclick^="toggleDropdown"]')) {
+        document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
+            d.classList.add('hidden');
+        });
+    }
+});
+</script>
+{% endblock %}

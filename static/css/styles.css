@@ -120,6 +120,8 @@ body {
     width: 100%;
     margin: 15px 0;
 }
+
+.assessment-chart-fill {
     @apply bg-blue-600 h-full transition-all duration-500 ease-out;
 }
 
