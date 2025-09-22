@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Mindful Horizon - A Better Way to Care for Your Mind{% endblock %}
+
+{% block content %}
+<header class="header-bg text-white text-center py-32 pt-48 relative overflow-hidden">
+    <!-- Background hero image with overlay -->
+    <div class="absolute inset-0">
+        <img src="{{ url_for('static', filename='images/hero_image.png') }}"
+             onerror="this.onerror=null;this.src='https://placehold.co/1920x1080/a7f3d0/1e3a8a?text=MindFullHorizon';"
+             alt="Mindful Horizon - Your path to wellness" class="hero-image">
+        <div class="absolute inset-0 hero-overlay" aria-hidden="true"></div>
+    </div>
+    <div class="container mx-auto px-6 relative z-10 animate-fade-in">
+        <h1 class="text-5xl md:text-6xl font-extrabold leading-tight mb-4">A Better Way to Care for Your Mind</h1>
+        <p class="text-xl md:text-2xl mb-8 opacity-90">Tools and support designed for your modern life.</p>
+        <a href="{{ url_for('signup') }}" class="btn-primary animate-fade-in-delay">Get Started Today</a>
+    </div>
+    <div class="absolute inset-0 z-0 opacity-10">
+        <div class="absolute top-1/4 left-1/4 w-48 h-48 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div class="absolute top-1/2 right-1/4 w-48 h-48 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div class="absolute bottom-1/4 left-1/2 w-48 h-48 bg-pink-400 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+    </div>
+</header>
+
+<section id="features" class="py-16 bg-white">
+    <div class="container mx-auto px-6">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">Key Features</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+            <div class="feature-card text-center p-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                <div class="feature-icon mb-4 mx-auto w-20 h-20 flex items-center justify-center rounded-full bg-blue-100 text-blue-600">
+                    <i class="fas fa-brain text-blue-600 text-3xl"></i>
+                    <span class="ml-1 text-2xl" aria-hidden="true">🧠</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">AI-Powered</h3>
+                <p class="text-gray-600">Personalized insights and support.</p>
+            </div>
+            <div class="feature-card text-center p-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                <div class="feature-icon mb-4 mx-auto w-20 h-20 flex items-center justify-center rounded-full bg-green-100 text-green-600">
+                    <i class="fas fa-chart-line text-green-600 text-3xl"></i>
+                    <span class="ml-1 text-2xl" aria-hidden="true">📊</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Progress Tracking</h3>
+                <p class="text-gray-600">Visualize your mental wellness journey.</p>
+            </div>
+            <div class="feature-card text-center p-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                <div class="feature-icon mb-4 mx-auto w-20 h-20 flex items-center justify-center rounded-full bg-red-100 text-red-600">
+                    <i class="fas fa-heart-pulse text-red-600 text-3xl"></i>
+                    <span class="ml-1 text-2xl" aria-hidden="true">❤️</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Mental Wellness</h3>
+                <p class="text-gray-600">Tools for mindfulness and stress relief.</p>
+            </div>
+            <div class="feature-card text-center p-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300">
+                <div class="feature-icon mb-4 mx-auto w-20 h-20 flex items-center justify-center rounded-full bg-purple-100 text-purple-600">
+                    <i class="fas fa-lock text-purple-600 text-3xl"></i>
+                    <span class="ml-1 text-2xl" aria-hidden="true">🔒</span>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Secure & Private</h3>
+                <p class="text-gray-600">Your data is safe and confidential.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="how-it-works" class="py-16 bg-gray-50">
+    <div class="container mx-auto px-6">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-12">How It Works</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 items-center">
+            <div class="text-center lg:text-left how-it-works-item">
+                <div class="flex items-center justify-center lg:justify-start mb-4">
+                    <div class="p-3 rounded-full bg-blue-100 mr-4 w-12 h-12 flex items-center justify-center">
+                        <span class="text-2xl" aria-hidden="true">🤖</span>
+                    </div>
+                    <h3 class="text-2xl font-semibold text-gray-800">AI-Powered Companion</h3>
+                </div>
+                <p class="text-gray-600 leading-relaxed mb-4">
+                    Chat with our intelligent AI anytime you need to talk, reflect, or work through your thoughts in a safe, private space. Our AI provides empathetic support and guided exercises.
+                </p>
+                <ul class="text-gray-600 text-left space-y-2 lg:pl-16">
+                    <li class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-2"></i> Instant emotional support</li>
+                    <li class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-2"></i> Guided journaling</li>
+                    <li class="flex items-center"><i class="fas fa-check-circle text-blue-500 mr-2"></i> Mood analysis</li>
+                </ul>
+            </div>
+            <div class="lg:col-span-1 flex justify-center items-center">
+                <div class="w-56 h-56 rounded-full icon-background-blue flex items-center justify-center shadow-xl">
+                    <span class="text-6xl" aria-hidden="true">📱</span>
+                </div>
+            </div>
+            <div class="text-center lg:text-right how-it-works-item">
+                <div class="flex items-center justify-center lg:justify-end mb-4">
+                    <h3 class="text-2xl font-semibold text-gray-800">Track Your Progress</h3>
+                    <div class="p-3 rounded-full bg-green-100 ml-4">
+                        <i class="fas fa-chart-line text-2xl text-green-600"></i>
+                    </div>
+                </div>
+                <p class="text-gray-600 leading-relaxed mb-4">
+                    Complete assessments and monitor your mental wellness over time with easy-to-understand visualizations and insights.
+                </p>
+                <ul class="text-gray-600 text-left space-y-2 lg:pl-16">
+                    <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Simple visual charts</li>
+                    <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Weekly trend summaries</li>
+                    <li class="flex items-center"><i class="fas fa-check-circle text-green-500 mr-2"></i> Personalized recommendations</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Student-focused Stats -->
+<section class="py-12 bg-white">
+    <div class="container mx-auto px-6">
+        <div class="stats-strip">
+            <div class="stat-card">
+                <div class="stat-number text-sky-600">92%</div>
+                <div class="stat-label">students feel calmer in 2 weeks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-emerald-600">50k+</div>
+                <div class="stat-label">daily mindful check-ins</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-indigo-600">4.8/5</div>
+                <div class="stat-label">average student rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number text-fuchsia-600">200+</div>
+                <div class="stat-label">campus partners</div>
+            </div>
+        </div>
+    </div>
+    </section>
+
+<!-- Campus Partners -->
+<section class="py-12 bg-slate-50">
+    <div class="container mx-auto px-6">
+        <p class="text-center text-gray-500 mb-6">Trusted by student wellness teams</p>
+        <div class="partner-badges">
+            <div class="partner-badge text-center">Campus A</div>
+            <div class="partner-badge text-center">Campus B</div>
+            <div class="partner-badge text-center">Campus C</div>
+            <div class="partner-badge text-center">Campus D</div>
+            <div class="partner-badge text-center">Campus E</div>
+        </div>
+    </div>
+</section>
+
+<!-- Student Value Props -->
+<section class="py-16 bg-white">
+    <div class="container mx-auto px-6">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-10">Built for Student Life</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="value-card">
+                <div class="mb-3 w-12 h-12 rounded-full icon-background-blue flex items-center justify-center text-white"><i class="fas fa-bolt"></i></div>
+                <h3 class="font-semibold text-gray-900">1-minute check-ins</h3>
+                <p class="text-gray-600 mt-2">Short, powerful moments to pause between classes and reduce stress.</p>
+            </div>
+            <div class="value-card">
+                <div class="mb-3 w-12 h-12 rounded-full icon-background-green flex items-center justify-center text-white"><i class="fas fa-graduation-cap"></i></div>
+                <h3 class="font-semibold text-gray-900">Study-friendly routines</h3>
+                <p class="text-gray-600 mt-2">Breathing, focus, and mindful breaks designed to fit academic schedules.</p>
+            </div>
+            <div class="value-card">
+                <div class="mb-3 w-12 h-12 rounded-full icon-background-red flex items-center justify-center text-white"><i class="fas fa-shield-heart"></i></div>
+                <h3 class="font-semibold text-gray-900">Private & secure</h3>
+                <p class="text-gray-600 mt-2">Your reflections remain yours. Control who can view your data at all times.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="py-16 bg-slate-50">
+    <div class="container mx-auto px-6">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-10">What Students Say</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="testimonial-card">
+                <p class="text-gray-700">“Mindful Horizon helped me manage exam stress without feeling overwhelmed. The 1-minute check-ins are a lifesaver.”</p>
+                <div class="mt-4 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-lg">🧑‍🎓</div>
+                    <div>
+                        <div class="font-semibold text-gray-900">Priya</div>
+                        <div class="text-xs text-gray-500">Computer Science, 3rd Year</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <p class="text-gray-700">“The progress charts keep me honest and motivated. I can actually see myself getting better week by week.”</p>
+                <div class="mt-4 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-lg">🧑‍🎓</div>
+                    <div>
+                        <div class="font-semibold text-gray-900">Arjun</div>
+                        <div class="text-xs text-gray-500">Business, 2nd Year</div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card">
+                <p class="text-gray-700">“I love that it’s private. I can reflect honestly and still share highlights with my counselor when I choose.”</p>
+                <div class="mt-4 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-lg">🧑‍🎓</div>
+                    <div>
+                        <div class="font-semibold text-gray-900">Meera</div>
+                        <div class="text-xs text-gray-500">Design, 1st Year</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section class="py-16 bg-white">
+    <div class="container mx-auto px-6 max-w-4xl">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-8">Frequently Asked Questions</h2>
+        <div class="faq">
+            <div class="faq-item">
+                <div class="faq-q">Is my data private? <i class="fas fa-chevron-down faq-icon"></i></div>
+                <div class="faq-a"><p class="pb-4">Yes. Your data is encrypted in transit and at rest. You choose what to share and with whom.</p></div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">How much time does it take daily? <i class="fas fa-chevron-down faq-icon"></i></div>
+                <div class="faq-a"><p class="pb-4">Most students spend 1–3 minutes a day. You can do longer sessions when you want.</p></div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-q">Can I use this with my campus counselor? <i class="fas fa-chevron-down faq-icon"></i></div>
+                <div class="faq-a"><p class="pb-4">Absolutely. You can export highlights and share them on your terms.</p></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Strong CTA -->
+<section class="py-16 bg-slate-50">
+    <div class="container mx-auto px-6 text-center">
+        <h2 class="text-3xl font-extrabold text-gray-900 mb-4">Start Your 7‑Day Focus Journey</h2>
+        <p class="text-gray-600 max-w-2xl mx-auto">Build a sustainable routine with short check-ins, calm breaks, and progress you can feel.</p>
+        <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{{ url_for('signup') }}" class="btn-primary">Create Free Account</a>
+            <a href="{{ url_for('login') }}" class="btn-primary-nav">I already have an account</a>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Mindful Horizon{% endblock %}</title>
+    <title>{% block title %}Mindfull Horizon{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=20250922-1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced.css') }}?v=20250922-1">
     {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
@@ -16,31 +16,32 @@
             {% if session.user_email %}
                 {% if session.user_role == 'patient' %}
                     <a href="{{ url_for('patient_dashboard') }}" class="logo">
-                        <i class="fas fa-brain logo-icon"></i> Mindful Horizon
+                        <i class="fas fa-brain logo-icon"></i> Mindfull Horizon
                     </a>
                 {% else %}
                     <a href="{{ url_for('provider_dashboard') }}" class="logo">
-                        <i class="fas fa-brain logo-icon"></i> Mindful Horizon
+                        <i class="fas fa-brain logo-icon"></i> Mindfull Horizon
                     </a>
                 {% endif %}
             {% else %}
                 <a href="{{ url_for('index') }}" class="logo">
-                    <i class="fas fa-brain logo-icon"></i> Mindful Horizon
+                    <i class="fas fa-brain logo-icon"></i> Mindfull Horizon
                 </a>
             {% endif %}
             <div id="nav-links" class="space-x-4 flex items-center">
                 {% if session.user_email %}
                     {% if session.user_role == 'patient' %}
-                        <a href="{{ url_for('medication') }}" class="nav-link">Medications</a>
-                        <a href="{{ url_for('breathing') }}" class="nav-link">Breathe</a>
-                        <a href="{{ url_for('yoga') }}" class="nav-link">Yoga</a>
+                        <a href="{{ url_for('medication') }}" class="nav-link nav-item">Medications</a>
+                        <a href="{{ url_for('breathing') }}" class="nav-link nav-item">Breathe</a>
+                        <a href="{{ url_for('yoga') }}" class="nav-link nav-item">Yoga</a>
                     {% endif %}
-                    <a href="{{ url_for('progress') }}" class="nav-link">Progress</a>
-                    <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
+                    <a href="{{ url_for('progress') }}" class="nav-link nav-item">Progress</a>
+                    <a href="{{ url_for('profile') }}" class="nav-link nav-item">Profile</a>
                     <span class="text-sm">Welcome, {{ session.user_name }}</span>
                     <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
                 {% else %}
-                    <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                    <a href="{{ url_for('login') }}" class="nav-link nav-item">Login</a>
+                    <a href="{{ url_for('signup') }}" class="btn-primary-nav">Sign Up</a>
                 {% endif %}
             </div>
         </div>
@@ -62,8 +63,9 @@
         {% block content %}{% endblock %}
     </main>
 
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}?v=20250922-1"></script>
     <script>
         // Initialize Chart.js charts on page load
         document.addEventListener('DOMContentLoaded', function() {
