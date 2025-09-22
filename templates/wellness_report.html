@@ -309,9 +309,9 @@
 
     <!-- Action Buttons -->
     <div class="mt-8 flex justify-between items-center">
-        <a href="{{ url_for('provider_dashboard') }}" class="btn-secondary">
-            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
-        </a>
+    <div class="mt-12 text-center">
+        {{ back_to_dashboard_button() }}
+    </div>
         <div class="flex space-x-4">
             <button onclick="window.print()" class="btn-primary">
                 <i class="fas fa-print mr-2"></i>Print Report
