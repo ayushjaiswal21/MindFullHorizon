@@ -1,4 +1,5 @@
 """Flask extensions initialization."""
+import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_session import Session
@@ -13,9 +14,23 @@ compress = Compress()
 csrf = CSRFProtect()
 
 def init_extensions(app):
-    """Initialize Flask extensions."""
+    """Initialize Flask extensions in the correct order."""
+    # Ensure instance directory exists
+    os.makedirs(os.path.join(app.root_path, 'instance'), exist_ok=True)
+    
+    # Initialize SQLAlchemy first
     db.init_app(app)
+    
+    # Then initialize Flask-Migrate
     migrate.init_app(app, db)
+    
+    # Initialize session after database
+    if not os.path.exists(app.config['SESSION_FILE_DIR']):
+        os.makedirs(app.config['SESSION_FILE_DIR'])
     session.init_app(app)
-    compress.init_app(app)
+    
+    # Initialize security features
     csrf.init_app(app)
+    
+    # Initialize compression last
+    compress.init_app(app)

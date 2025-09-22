@@ -12,7 +12,7 @@ from flask_wtf.csrf import CSRFError
 # from flask_socketio import SocketIO, emit
 
 from ai_service import ai_service
-from extensions import db, init_extensions
+from extensions import init_extensions, db  # Import db from extensions
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary
 from models import BlogPost, BlogComment, BlogLike, BlogInsight  # Ensure BlogPost and related models are imported
 # Load environment variables from .env file
@@ -27,35 +27,56 @@ app = Flask(__name__)
 # Comment out SocketIO until we can install it
 # socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Configure session
-app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')  # Use environment variable or fallback
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # Session expires after 1 day
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
-app.config['SESSION_COOKIE_HTTPONLY'] = True
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
+# Configure security and session settings
+app.secret_key = os.getenv('SECRET_KEY')
+if not app.secret_key:
+    if app.debug:
+        app.secret_key = 'dev-key-should-be-changed-in-production'
+        print("WARNING: Using development secret key. This should be changed in production!")
+    else:
+        raise RuntimeError("No secret key set. Set the SECRET_KEY environment variable.")
 
-# Configure extensions
-app.config['WTF_CSRF_ENABLED'] = False  # Disable CSRF for all views by default
+# Configure security and session settings
+app.config.update(
+    # Session settings
+    SESSION_TYPE='filesystem',
+    PERMANENT_SESSION_LIFETIME=timedelta(days=1),
+    SESSION_COOKIE_SECURE=not app.debug,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_FILE_DIR=os.path.join(os.getcwd(), 'flask_session'),
+    
+    # Security settings
+    WTF_CSRF_ENABLED=True,
+    WTF_CSRF_TIME_LIMIT=None,
+    WTF_CSRF_SSL_STRICT=True,
+    
+    # SQLAlchemy settings
+    SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL', f'sqlite:///{os.path.join(os.path.dirname(__file__), "instance", "mindful_horizon.db")}'),
+    SQLALCHEMY_TRACK_MODIFICATIONS=False
+)
 app.config['WTF_CSRF_TIME_LIMIT'] = None  # No time limit for CSRF tokens
-app.config['COMPRESS_ALGORITHM'] = ['gzip']  # Enable gzip compression
+app.config['WTF_CSRF_SSL_STRICT'] = True  # Enforce SSL for CSRF tokens
+
+# Configure compression and caching
+app.config['COMPRESS_ALGORITHM'] = ['gzip']
 app.config['COMPRESS_LEVEL'] = 6
-app.config['COMPRESS_MIN_SIZE'] = 500  # Only compress responses > 500 bytes
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(days=30)  # Cache static assets for 30 days
+app.config['COMPRESS_MIN_SIZE'] = 500
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(days=30)
 
-# Database configuration
+# Configure database
 basedir = os.path.abspath(os.path.dirname(__file__))
-os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)  # Ensure instance folder exists
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(basedir, "instance", "mindful_horizon.db")}'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+instance_path = os.path.join(basedir, 'instance')
+db_path = os.path.join(instance_path, 'mindful_horizon.db')
 
-# Initialize all extensions
-init_extensions(app)
+# Ensure instance directory exists and is writable
+os.makedirs(instance_path, exist_ok=True)
 
-# Push an application context and create database tables
-with app.app_context():
-    db.create_all()
+# Configure SQLAlchemy
+app.config.update(
+    SQLALCHEMY_DATABASE_URI=f'sqlite:///{db_path}',
+    SQLALCHEMY_TRACK_MODIFICATIONS=False
+)
 
 # Configure logging
 logging.basicConfig(
@@ -69,25 +90,40 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.info("--- SCRIPT START: app.py is being executed ---")
 
-# Enable gzip compression and static caching for low-bandwidth optimization
-app.config['COMPRESS_ALGORITHM'] = ['gzip']
-app.config['COMPRESS_LEVEL'] = 6
-app.config['COMPRESS_MIN_SIZE'] = 500  # Only compress responses > 500 bytes
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(days=30)  # Cache static assets for 30 days
+# Setup logging first
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-# Database configuration
-basedir = os.path.abspath(os.path.dirname(__file__))
-# Ensure instance folder exists
-os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(basedir, "instance", "mindful_horizon.db")}'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Push an application context
-app_ctx = app.app_context()
-app_ctx.push()
-
-# Initialize database tables
-db.create_all()
+try:
+    # Initialize extensions (including SQLAlchemy)
+    init_extensions(app)
+    
+    # Create database tables within app context
+    with app.app_context():
+        try:
+            # Create all tables
+            db.create_all()
+            logger.info("Database initialized successfully")
+        except Exception as e:
+            logger.error(f"Error creating database tables: {str(e)}")
+            # If database file doesn't exist or is not writable, try to create it
+            try:
+                import sqlite3
+                conn = sqlite3.connect(db_path)
+                conn.close()
+                logger.info(f"Created new SQLite database at {db_path}")
+                # Try creating tables again
+                db.create_all()
+                logger.info("Database tables created successfully after retry")
+            except Exception as e2:
+                logger.error(f"Failed to create database file: {str(e2)}")
+                raise
+except Exception as e:
+    logger.error(f"Error during initialization: {str(e)}")
+    raise
 
 # Stub for get_blog_insights (replace with real logic as needed)
 def get_blog_insights():
@@ -1307,7 +1343,10 @@ def save_mood():
         }), 500
 from werkzeug.utils import secure_filename
 
-UPLOAD_FOLDER = os.path.join('static', 'uploads')
+import time
+
+# File upload settings
+UPLOAD_FOLDER = os.path.join('static', 'profile_pics')
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
@@ -1317,38 +1356,49 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-import time
-# ...existing code...
-
-@app.route('/upload_photo', methods=['POST'])
+@app.route('/upload_profile_pic', methods=['POST'])
 @login_required
-@role_required('patient')
-def upload_photo():
-    user_id = session['user_id']
-    user = User.query.get(user_id)
-    if 'photo' not in request.files:
-        flash('No file part')
-        return redirect(url_for('patient_dashboard'))
+def upload_profile_pic():
+    if 'profile_pic' not in request.files:
+        flash('No file part', 'error')
+        return redirect(url_for('profile'))
 
-    file = request.files['photo']
+    file = request.files['profile_pic']
     if file.filename == '':
-        flash('No selected file')
-        return redirect(url_for('patient_dashboard'))
+        flash('No selected file', 'error')
+        return redirect(url_for('profile'))
 
     if file and allowed_file(file.filename):
-        filename = f"{user_id}_{int(time.time())}_{secure_filename(file.filename)}"
-        upload_folder = os.path.join(app.root_path, 'static', 'profile_pics')
-        os.makedirs(upload_folder, exist_ok=True)
-        file.save(os.path.join(upload_folder, filename))
-        user.profile_pic = filename
-        db.session.commit()
-        flash('Profile picture updated!')
-    return redirect(url_for('patient_dashboard'))
-
-
-
-
-
+        try:
+            # Create a unique filename using user_id and timestamp
+            filename = f"{session['user_id']}_{int(time.time())}_{secure_filename(file.filename)}"
+            # Save the file
+            file.save(os.path.join(app.root_path, UPLOAD_FOLDER, filename))
+            
+            # Update user's profile picture in database
+            user = User.query.get(session['user_id'])
+            if user:
+                # Delete old profile picture if it exists and is not default
+                if user.profile_pic and user.profile_pic != 'default.png':
+                    try:
+                        old_file = os.path.join(app.root_path, UPLOAD_FOLDER, user.profile_pic)
+                        if os.path.exists(old_file):
+                            os.remove(old_file)
+                    except Exception as e:
+                        logger.error(f"Error deleting old profile picture: {e}")
+                
+                user.profile_pic = filename
+                db.session.commit()
+                flash('Profile picture updated successfully!', 'success')
+            else:
+                flash('User not found', 'error')
+        except Exception as e:
+            logger.error(f"Error uploading profile picture: {e}")
+            flash('Error uploading profile picture', 'error')
+    else:
+        flash('Invalid file type. Allowed types are: png, jpg, jpeg, gif', 'error')
+    
+    return redirect(url_for('profile'))
 
 # --- BLOG ROUTES ---
 from sqlalchemy.exc import SQLAlchemyError
@@ -1432,9 +1482,5 @@ def handle_chat_message():
     return jsonify({'reply': reply, 'is_crisis': False})
 
 if __name__ == '__main__':
-    try:
-        # Start the Flask development server (temporarily without SocketIO)
-        app.run(debug=True, port=5000)
-    finally:
-        # Pop the application context when the server stops
-        app_ctx.pop()
+    # Start the Flask development server (temporarily without SocketIO)
+    app.run(debug=True, port=5000)

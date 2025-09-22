@@ -4,9 +4,6 @@ from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
 from extensions import db
 
-
-from werkzeug.security import generate_password_hash, check_password_hash
-
 class User(db.Model):
     """User model for both patients and providers."""
     __tablename__ = 'users'

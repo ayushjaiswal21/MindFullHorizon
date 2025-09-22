@@ -9,18 +9,31 @@
         <form method="POST" enctype="multipart/form-data">
             <div class="flex items-center space-x-6 mb-6">
                 <div class="flex-shrink-0">
-                    <!-- Profile picture upload -->
-                <img class="h-24 w-24 rounded-full object-cover border-4 border-purple-300 shadow-lg"
-                    src="{{ url_for('static', filename='profile_pics/' + (user.profile_pic or 'default.png')) }}?v={{ user.profile_pic or 'default' }}"
-                    alt="Profile Picture">
-                    <input type="file" name="profile_pic" class="mt-2">
+                    <div class="text-center">
+                        <img class="h-24 w-24 rounded-full object-cover border-4 border-purple-300 shadow-lg mx-auto mb-2"
+                            src="{{ url_for('static', filename='profile_pics/' + (user.profile_pic or 'default.png')) }}"
+                            alt="Profile Picture">
+                        <form action="{{ url_for('upload_profile_pic') }}" method="post" enctype="multipart/form-data" class="mt-2">
+                            <input type="file" name="profile_pic" accept="image/*" class="block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-purple-50 file:text-purple-700
+                                hover:file:bg-purple-100 mb-2">
+                            <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full text-sm">
+                                Update Profile Picture
+                            </button>
+                        </form>
+                    </div>
                 </div>
                 <div>
                     <label>Name:</label>
                     <input type="text" name="name" value="{{ user.name }}" class="block border rounded px-2 py-1 mb-2">
                     <label>Email:</label>
                     <input type="email" name="email" value="{{ user.email }}" class="block border rounded px-2 py-1 mb-2">
-                    <button type="submit" class="btn-primary mt-2">Update Profile</button>
+                    <label>College/Institution:</label>
+                    <input type="text" name="institution" value="{{ user.institution }}" class="block border rounded px-2 py-1 mb-2" placeholder="Enter your college name">
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full text-sm">Update Profile</button>
                 </div>
             </div>
         </form>
@@ -92,17 +105,5 @@
         </ul>
     </div>
 
-    <!-- Future Enhancements Section -->
-    <div class="card p-6">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-            <i class="fas fa-lightbulb text-green-500 mr-2"></i>Future Enhancements
-        </h2>
-        <ul class="text-gray-600 space-y-2">
-            <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Profile Picture Upload</li>
-            <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Editable Profile Information</li>
-            <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Detailed Digital Detox Trends</li>
-            <li><i class="fas fa-check-circle text-green-500 mr-2"></i>Customizable Goals Display</li>
-        </ul>
-    </div>
 </div>
 {% endblock %}
