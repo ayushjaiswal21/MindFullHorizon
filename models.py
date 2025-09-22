@@ -1,14 +1,15 @@
-from flask_sqlalchemy import SQLAlchemy
 """Database models for the Mindful Horizon application."""
-from database import db
 from datetime import datetime, timedelta
 from sqlalchemy import func
+from werkzeug.security import generate_password_hash, check_password_hash
+from extensions import db
+
+
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class User(db.Model):
     """User model for both patients and providers."""
     __tablename__ = 'users'
-    
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -29,17 +30,120 @@ class User(db.Model):
     breathing_logs = db.relationship('BreathingExerciseLog', backref='user', lazy=True)
     yoga_logs = db.relationship('YogaLog', backref='user', lazy=True)
     progress_recommendations = db.relationship('ProgressRecommendation', backref='user', lazy=True)
-    
+
     def set_password(self, password):
         """Hash and set password"""
         self.password_hash = generate_password_hash(password)
-    
+
     def check_password(self, password):
         """Check if provided password matches hash"""
         return check_password_hash(self.password_hash, password)
-    
+
     def __repr__(self):
         return f'<User {self.email}>'
+
+
+# BlogPost model for blog system (enhanced with relationships)
+class BlogPost(db.Model):
+    """Blog post model for storing blog entries."""
+    __tablename__ = 'blog_posts'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    category = db.Column(db.String(50), default='general')
+    tags = db.Column(db.Text, nullable=True)  # Comma-separated tags
+    views = db.Column(db.Integer, default=0)
+    is_featured = db.Column(db.Boolean, default=False)
+    is_published = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    author = db.relationship('User', backref='blog_posts')
+    likes = db.relationship('BlogLike', backref='post', lazy='dynamic', cascade='all, delete-orphan')
+    comments = db.relationship('BlogComment', backref='post', lazy='dynamic', cascade='all, delete-orphan')
+    
+    @property
+    def like_count(self):
+        """Get total number of likes for this post"""
+        return self.likes.count()
+    
+    @property
+    def comment_count(self):
+        """Get total number of comments for this post"""
+        return self.comments.count()
+    
+    def is_liked_by(self, user_id):
+        """Check if a user has liked this post"""
+        return self.likes.filter_by(user_id=user_id).first() is not None
+    
+    @property
+    def engagement_score(self):
+        """Calculate engagement score based on likes, comments, and views"""
+        return (self.like_count * 2) + (self.comment_count * 3) + (self.views * 0.1)
+    
+    def __repr__(self):
+        return f'<BlogPost {self.title}>'
+
+
+class BlogLike(db.Model):
+    """Blog like model for tracking post likes."""
+    __tablename__ = 'blog_likes'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('blog_posts.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='blog_likes')
+    
+    # Ensure a user can only like a post once
+    __table_args__ = (db.UniqueConstraint('user_id', 'post_id', name='unique_user_post_like'),)
+    
+    def __repr__(self):
+        return f'<BlogLike user:{self.user_id} post:{self.post_id}>'
+
+
+class BlogComment(db.Model):
+    """Blog comment model for storing post comments."""
+    __tablename__ = 'blog_comments'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('blog_posts.id'), nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey('blog_comments.id'), nullable=True)  # For reply functionality
+    content = db.Column(db.Text, nullable=False)
+    is_edited = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='blog_comments')
+    parent = db.relationship('BlogComment', remote_side=[id], backref='replies')
+    
+    def __repr__(self):
+        return f'<BlogComment {self.id} by {self.user_id}>'
+
+
+class BlogInsight(db.Model):
+    """Blog insight model for tracking analytics and insights."""
+    __tablename__ = 'blog_insights'
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    total_posts = db.Column(db.Integer, default=0)
+    total_views = db.Column(db.Integer, default=0)
+    total_likes = db.Column(db.Integer, default=0)
+    total_comments = db.Column(db.Integer, default=0)
+    top_categories = db.Column(db.JSON, nullable=True)  # Store popular categories
+    engagement_rate = db.Column(db.Float, default=0.0)
+    most_popular_post_id = db.Column(db.Integer, db.ForeignKey('blog_posts.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    most_popular_post = db.relationship('BlogPost', backref='insights')
+    
+    def __repr__(self):
+        return f'<BlogInsight {self.date}>'
 
 class Assessment(db.Model):
     """Assessment model for storing user assessments."""
@@ -206,6 +310,7 @@ class BreathingExerciseLog(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     exercise_name = db.Column(db.String(100), nullable=False)
     duration_minutes = db.Column(db.Integer, nullable=False)
+    notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
