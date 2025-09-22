@@ -65,11 +65,49 @@
             </p>
         </div>
         
-        <div class="mt-4 text-center">
-            <a href="{{ url_for('patient_dashboard') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-full transition duration-300">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
-            </a>
+        <div class="mt-8 text-center">
+            {{ back_to_dashboard_button() }}
         </div>
-    </div>
-</div>
+    {% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const localVideo = document.getElementById('local-video');
+    const remoteVideo = document.getElementById('remote-video');
+    const muteAudioBtn = document.getElementById('mute-audio');
+    const muteVideoBtn = document.getElementById('mute-video');
+    const endCallBtn = document.getElementById('end-call');
+
+    let localStream;
+
+    // Get user media
+    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        .then(stream => {
+            localStream = stream;
+            localVideo.srcObject = stream;
+        })
+        .catch(error => {
+            console.error('Error accessing media devices.', error);
+        });
+
+    // Mute audio
+    muteAudioBtn.addEventListener('click', () => {
+        localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled;
+        muteAudioBtn.classList.toggle('bg-red-600');
+    });
+
+    // Mute video
+    muteVideoBtn.addEventListener('click', () => {
+        localStream.getVideoTracks()[0].enabled = !localStream.getVideoTracks()[0].enabled;
+        muteVideoBtn.classList.toggle('bg-red-600');
+    });
+
+    // End call
+    endCallBtn.addEventListener('click', () => {
+        localStream.getTracks().forEach(track => track.stop());
+        window.location.href = "{{ url_for('patient_dashboard') if session.user_role == 'patient' else url_for('provider_dashboard') }}";
+    });
+});
+</script>
 {% endblock %}

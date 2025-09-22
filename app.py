@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from datetime import datetime, timedelta, date
+from datetime import datetime, timedelta, date, timezone
 from functools import wraps
 
 from dotenv import load_dotenv
@@ -13,7 +13,8 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 
 from ai_service import ai_service
 from database import db
-from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, BlogPost, BlogLike, BlogComment, BlogInsight, get_user_wellness_trend, get_institutional_summary
+from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary
+from models import BlogPost, BlogComment, BlogLike, BlogInsight  # Ensure BlogPost and related models are imported
 
 # Load environment variables from .env file
 try:
@@ -76,73 +77,19 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db.init_app(app)
 migrate = Migrate(app, db)
 
-# Light HTML caching (10 minutes) to reduce repeat downloads on slow connections
-@app.after_request
-def add_cache_headers(response):
-    content_type = response.headers.get('Content-Type', '')
-    if 'text/html' in content_type:
-        response.headers['Cache-Control'] = 'public, max-age=600'
-    return response
+# Stub for get_blog_insights (replace with real logic as needed)
+def get_blog_insights():
+    return {
+        'total_posts': BlogPost.query.count(),
+        'total_likes': 0,
+        'total_comments': 0,
+        'total_views': 0,
+        'most_popular_post': None
+    }
 
-def init_database(app_instance):
-    """Initialize database with sample data"""
-    with app_instance.app_context():
-        db.create_all()
-        
-        if User.query.first() is None:
-            patient = User(
-                email='patient@example.com',
-                name='John Doe',
-                role='patient',
-                institution='Sample University'
-            )
-            patient.set_password('password')
-            
-            provider = User(
-                email='provider@example.com',
-                name='Dr. Smith',
-                role='provider',
-                institution='Sample University'
-            )
-            provider.set_password('password')
-            
-            db.session.add(patient)
-            db.session.add(provider)
-            db.session.commit()
-            
-            gamification = Gamification(
-                user_id=patient.id,
-                points=1250,
-                streak=7,
-                badges=['Early Bird', 'Consistency Champion', 'Mood Tracker'],
-                last_activity=date.today()
-            )
-            
-            rpm_data = RPMData(
-                user_id=patient.id,
-                date=date.today(),
-                heart_rate=72,
-                sleep_duration=7.5,
-                steps=8500,
-                mood_score=8
-            )
-            
-            for i in range(7):
-                detox_log = DigitalDetoxLog(
-                    user_id=patient.id,
-                    date=date.today() - timedelta(days=i),
-                    screen_time_hours=6.5 - i * 0.3,
-                    academic_score=85 + i,
-                    social_interactions='medium' if i % 2 == 0 else 'high'
-                )
-                db.session.add(detox_log)
-            
-            db.session.add(gamification)
-            db.session.add(rpm_data)
-            db.session.commit()
-
-# Initialize database on startup
-# init_database()
+# Stub for award_points (replace with real logic as needed)
+def award_points(user_id, points, reason):
+    pass
 
 def login_required(f):
     @wraps(f)
@@ -195,30 +142,17 @@ def login():
         password = request.form['password']
         role = request.form['role']
         
-        # Query database for user
         user = User.query.filter_by(email=email, role=role).first()
         
         if user and user.check_password(password):
-            # Clear any existing session data
             session.clear()
-            
-            # Set session data
-            session.permanent = True  # Make the session persistent
+            session.permanent = True
             session['user_email'] = email
             session['user_role'] = role
             session['user_name'] = user.name
             session['user_id'] = user.id
             session['user_institution'] = user.institution
-            
-            # Ensure session is saved
             session.modified = True
-            
-            print(f"\n=== Login Successful ===")
-            print(f"User ID: {user.id}")
-            print(f"User Role: {role}")
-            print(f"Session ID: {session.sid if hasattr(session, 'sid') else 'N/A'}")
-            print(f"Session keys: {list(session.keys())}")
-            print("======================\n")
             
             if role == 'patient':
                 return redirect(url_for('patient_dashboard'))
@@ -239,7 +173,6 @@ def signup():
         role = request.form['role']
         institution = request.form.get('institution', 'Default University')
         
-        # Validation
         if not all([name, email, password, confirm_password, role]):
             flash('All fields are required.', 'error')
             return render_template('signup.html')
@@ -252,13 +185,11 @@ def signup():
             flash('Password must be at least 6 characters long.', 'error')
             return render_template('signup.html')
         
-        # Check if user already exists
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash('Email already registered. Please use a different email or login.', 'error')
             return render_template('signup.html')
         
-        # Create new user
         new_user = User(
             name=name,
             email=email,
@@ -271,7 +202,6 @@ def signup():
             db.session.add(new_user)
             db.session.commit()
             
-            # Initialize gamification for patients
             if role == 'patient':
                 gamification = Gamification(
                     user_id=new_user.id,
@@ -305,20 +235,9 @@ def logout():
 def patient_dashboard():
     user_id = session['user_id']
     
-    # Get user data from database
-    try:
-        gamification = Gamification.query.filter_by(user_id=user_id).first()
-        rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.desc()).first()
-        logger.info(f"Loaded gamification data for user {user_id}: {gamification}")
-        logger.info(f"Loaded RPM data for user {user_id}: {rpm_data}")
-
-        # Get appointments
-        all_appointments = Appointment.query.filter_by(user_id=user_id).order_by(Appointment.date.asc(), Appointment.time.asc()).all()
-    except Exception as e:
-        logger.error(f"Error loading user data for {user_id}: {e}")
-        gamification = None
-        rpm_data = None
-        all_appointments = []
+    gamification = Gamification.query.filter_by(user_id=user_id).first()
+    rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.desc()).first()
+    all_appointments = Appointment.query.filter_by(user_id=user_id).order_by(Appointment.date.asc(), Appointment.time.asc()).all()
 
     upcoming_appointments = []
     past_appointments = []
@@ -333,49 +252,28 @@ def patient_dashboard():
                 past_appointments.append(appt)
         except Exception as e:
             logger.error(f"Error processing appointment {appt.id}: {e}")
-            # Skip malformed appointments
             continue
 
-    # Prepare data structure
-    try:
-        data = {
-            'points': gamification.points if gamification else 0,
-            'streak': gamification.streak if gamification else 0,
-            'badges': gamification.badges if gamification else [],
-            'rpm_data': {
-                'heart_rate': rpm_data.heart_rate if rpm_data else 72,
-                'sleep_duration': rpm_data.sleep_duration if rpm_data else 7.5,
-                'steps': rpm_data.steps if rpm_data else 8500,
-                'mood_score': rpm_data.mood_score if rpm_data else 8
-            }
+    data = {
+        'points': gamification.points if gamification else 0,
+        'streak': gamification.streak if gamification else 0,
+        'badges': gamification.badges if gamification else [],
+        'rpm_data': {
+            'heart_rate': rpm_data.heart_rate if rpm_data else 72,
+            'sleep_duration': rpm_data.sleep_duration if rpm_data else 7.5,
+            'steps': rpm_data.steps if rpm_data else 8500,
+            'mood_score': rpm_data.mood_score if rpm_data else 8
         }
-    except Exception as e:
-        logger.error(f"Error preparing data structure: {e}")
-        data = {
-            'points': 0,
-            'streak': 0,
-            'badges': [],
-            'rpm_data': {
-                'heart_rate': 72,
-                'sleep_duration': 7.5,
-                'steps': 8500,
-                'mood_score': 8
-            }
-        }
+    }
 
-    # Check for RPM alerts
     alerts = []
-    try:
-        if rpm_data:
-            if rpm_data.heart_rate and rpm_data.heart_rate > 100:
-                alerts.append('High heart rate detected')
-            if rpm_data.sleep_duration and rpm_data.sleep_duration < 6:
-                alerts.append('Insufficient sleep detected')
-            if rpm_data.mood_score and rpm_data.mood_score < 4:
-                alerts.append('Low mood score detected')
-    except Exception as e:
-        logger.error(f"Error checking RPM alerts: {e}")
-        alerts = []
+    if rpm_data:
+        if rpm_data.heart_rate and rpm_data.heart_rate > 100:
+            alerts.append('High heart rate detected')
+        if rpm_data.sleep_duration and rpm_data.sleep_duration < 6:
+            alerts.append('Insufficient sleep detected')
+        if rpm_data.mood_score and rpm_data.mood_score < 4:
+            alerts.append('Low mood score detected')
 
     return render_template('patient_dashboard.html', 
                          user_name=session['user_name'], 
@@ -390,58 +288,35 @@ def patient_dashboard():
 def provider_dashboard():
     institution = session.get('user_institution', 'Sample University')
     
-    # Get patients from the same institution
     patients = User.query.filter_by(role='patient', institution=institution).all()
     
-    # Build caseload data with real database information
     caseload_data = []
     for patient in patients:
-        try:
-            # Get latest digital detox data for risk assessment
-            latest_detox = DigitalDetoxLog.query.filter_by(user_id=patient.id).order_by(DigitalDetoxLog.date.desc()).first()
-            latest_session = ClinicalNote.query.filter_by(patient_id=patient.id).order_by(ClinicalNote.session_date.desc()).first()
-            
-            # Determine risk level based on AI score and screen time
-            risk_level = 'Low'
-            if latest_detox:
-                if latest_detox.screen_time_hours > 8 or (latest_detox.ai_score and latest_detox.ai_score == 'Needs Improvement'):
-                    risk_level = 'High'
-                elif latest_detox.screen_time_hours > 6 or (latest_detox.ai_score and latest_detox.ai_score == 'Good'):
-                    risk_level = 'Medium'
-            
-            caseload_data.append({
-                'user_id': patient.id,
-                'name': patient.name,
-                'email': patient.email,
-                'risk_level': risk_level,
-                'last_session': latest_session.session_date.strftime('%Y-%m-%d') if latest_session else 'No sessions',
-                'status': 'Active' if latest_detox and latest_detox.date >= date.today() - timedelta(days=7) else 'Inactive',
-                'digital_score': latest_detox.ai_score if latest_detox and latest_detox.ai_score else 'No data'
-            })
-        except Exception as e:
-            logger.error(f"Error processing patient {patient.id}: {e}")
-            # Add patient with default values if there's an error
-            caseload_data.append({
-                'user_id': patient.id,
-                'name': patient.name,
-                'email': patient.email,
-                'risk_level': 'Unknown',
-                'last_session': 'No sessions',
-                'status': 'Unknown',
-                'digital_score': 'No data'
-            })
+        latest_detox = DigitalDetoxLog.query.filter_by(user_id=patient.id).order_by(DigitalDetoxLog.date.desc()).first()
+        latest_session = ClinicalNote.query.filter_by(patient_id=patient.id).order_by(ClinicalNote.session_date.desc()).first()
+        
+        risk_level = 'Low'
+        if latest_detox:
+            if latest_detox.screen_time_hours > 8 or (latest_detox.ai_score and latest_detox.ai_score == 'Needs Improvement'):
+                risk_level = 'High'
+            elif latest_detox.screen_time_hours > 6 or (latest_detox.ai_score and latest_detox.ai_score == 'Good'):
+                risk_level = 'Medium'
+        
+        caseload_data.append({
+            'user_id': patient.id,
+            'name': patient.name,
+            'email': patient.email,
+            'risk_level': risk_level,
+            'last_session': latest_session.session_date.strftime('%Y-%m-%d') if latest_session else 'No sessions',
+            'status': 'Active' if latest_detox and latest_detox.date >= date.today() - timedelta(days=7) else 'Inactive',
+            'digital_score': latest_detox.ai_score if latest_detox and latest_detox.ai_score else 'No data'
+        })
     
-    # Get institutional analytics
-    try:
-        institutional_data = get_institutional_summary(institution, db)
-    except Exception as e:
-        logger.error(f"Error getting institutional data: {e}")
-        institutional_data = None
+    institutional_data = get_institutional_summary(institution, db)
     
-    # Enhanced BI data with real calculations
     bi_data = {
         'patient_engagement': institutional_data['engagement_rate'] if institutional_data else 0,
-        'avg_session_duration': 45,  # Could be calculated from clinical notes
+        'avg_session_duration': 45,
         'completion_rate': 82,
         'satisfaction_score': 4.2,
         'total_patients': institutional_data['total_users'] if institutional_data else 0,
@@ -471,7 +346,6 @@ def schedule():
         user_id = session['user_id']
 
         try:
-            # Convert date string to date object
             appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
 
             new_appointment = Appointment(
@@ -503,12 +377,10 @@ def ai_documentation():
         patient_email = request.form.get('patient_email', '')
         
         if transcript:
-            # Get patient context for AI analysis
             patient_context = None
             if patient_email:
                 patient = User.query.filter_by(email=patient_email, role='patient').first()
                 if patient:
-                    # Get recent wellness data for context
                     recent_detox = DigitalDetoxLog.query.filter_by(user_id=patient.id).order_by(DigitalDetoxLog.date.desc()).first()
                     gamification = Gamification.query.filter_by(user_id=patient.id).first()
                     
@@ -518,10 +390,8 @@ def ai_documentation():
                         'engagement': f'{gamification.points} points, {gamification.streak} day streak' if gamification else 'Low'
                     }
             
-            # Use AI service for clinical note generation
             clinical_note = ai_service.generate_clinical_note(transcript, patient_context)
             
-            # Save to database if patient is specified
             if patient_email and patient:
                 clinical_note_record = ClinicalNote(
                     provider_id=session['user_id'],
@@ -570,10 +440,8 @@ def medication():
             flash(f'{name} has been added to your tracker.', 'success')
         return redirect(url_for('medication'))
 
-    # Fetch all active medications for the user
     medications = Medication.query.filter_by(user_id=user_id, is_active=True).all()
     
-    # Get today's medication logs
     today_start = datetime.combine(date.today(), datetime.min.time())
     today_end = datetime.combine(date.today(), datetime.max.time())
     
@@ -583,7 +451,6 @@ def medication():
         MedicationLog.taken_at <= today_end
     ).all()
     
-    # Create a set of medication IDs that have been logged today
     logged_med_ids = {log.medication_id for log in todays_logs}
     
     today = date.today()
@@ -602,7 +469,6 @@ def log_medication():
     medication_id = request.form.get('medication_id')
     
     if medication_id:
-        # Check if already logged today
         today_start = datetime.combine(date.today(), datetime.min.time())
         existing_log = MedicationLog.query.filter(
             MedicationLog.medication_id == medication_id,
@@ -614,11 +480,12 @@ def log_medication():
             new_log = MedicationLog(user_id=user_id, medication_id=medication_id)
             db.session.add(new_log)
             db.session.commit()
-            flash('Medication logged successfully!', 'success')
+            award_points(user_id, 10, 'log_medication')
+            return jsonify({'success': True, 'message': 'Medication logged successfully!'})
         else:
-            flash('Medication already logged for today.', 'info')
+            return jsonify({'success': False, 'message': 'Medication already logged for today.'})
             
-    return redirect(url_for('medication'))
+    return jsonify({'success': False, 'message': 'Invalid request.'})
 
 @app.route('/breathing', methods=['GET', 'POST'])
 @login_required
@@ -638,24 +505,22 @@ def breathing():
                     user_id=user_id,
                     exercise_name=exercise_name,
                     duration_minutes=int(duration_minutes),
-                    created_at=datetime.utcnow()
+                    created_at=datetime.now(datetime.UTC)
                 )
                 db.session.add(new_log)
                 db.session.commit()
+                award_points(user_id, 20, 'breathing_exercise')
                 flash(f'Your {exercise_name} session has been logged!', 'success')
             except ValueError:
                 flash('Invalid duration. Please enter a number.', 'error')
         return redirect(url_for('breathing'))
 
-    # Fetch recent breathing logs for the user
     recent_logs = BreathingExerciseLog.query.filter_by(user_id=user_id).order_by(BreathingExerciseLog.created_at.desc()).limit(10).all()
     
-    # Calculate statistics
     all_logs = BreathingExerciseLog.query.filter_by(user_id=user_id).all()
     total_sessions = len(all_logs)
     total_minutes = sum(log.duration_minutes for log in all_logs)
     
-    # Calculate streak (consecutive days with sessions)
     streak = 0
     if all_logs:
         dates = sorted([log.created_at.date() for log in all_logs], reverse=True)
@@ -695,25 +560,23 @@ def yoga():
                     user_id=user_id,
                     session_name=session_name,
                     duration_minutes=int(duration_minutes),
-                    created_at=datetime.utcnow()
+                    created_at=datetime.now(datetime.UTC)
                 )
                 db.session.add(new_log)
                 db.session.commit()
+                award_points(user_id, 20, 'yoga_session')
                 flash(f'Your {session_name} session has been logged!', 'success')
             except ValueError:
                 flash('Invalid duration. Please enter a number.', 'error')
         return redirect(url_for('yoga'))
 
-    # Fetch recent yoga logs for the user
     recent_logs = YogaLog.query.filter_by(user_id=user_id).order_by(YogaLog.created_at.desc()).limit(10).all()
     
-    # Calculate statistics
     all_logs = YogaLog.query.filter_by(user_id=user_id).all()
     total_sessions = len(all_logs)
     total_minutes = sum(log.duration_minutes for log in all_logs)
     avg_duration = round(total_minutes / total_sessions, 1) if total_sessions > 0 else 0
     
-    # Calculate streak (consecutive days with sessions)
     streak = 0
     if all_logs:
         dates = sorted([log.created_at.date() for log in all_logs], reverse=True)
@@ -747,10 +610,8 @@ def telehealth():
 def digital_detox():
     user_id = session['user_id']
     
-    # Get digital detox logs for the user
     screen_time_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
     
-    # Convert to list of dictionaries for JSON serialization
     screen_time_log = []
     for log in screen_time_logs:
         screen_time_log.append({
@@ -761,13 +622,11 @@ def digital_detox():
             'ai_score': log.ai_score
         })
     
-    # Calculate average screen time
     avg_screen_time = 0
     if screen_time_log:
         total_hours = sum(log['hours'] for log in screen_time_log)
         avg_screen_time = round(total_hours / len(screen_time_log), 1)
 
-    # Get the latest AI insights
     latest_log = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).first()
     score = None
     suggestion = None
@@ -782,11 +641,260 @@ def digital_detox():
                          score=score,
                          suggestion=suggestion)
 
-@app.route('/analytics')
+@app.route('/progress')
 @login_required
-@role_required('provider')
-def analytics():
-    return render_template('analytics.html', user_name=session['user_name'])
+@role_required('patient')
+def progress():
+    user_id = session['user_id']
+    goals = Goal.query.filter_by(user_id=user_id).all()
+    
+    achievements = [goal.title for goal in goals if goal.status == 'completed']
+    
+    assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+    
+    latest_gad7 = next((a for a in assessments if a.assessment_type == 'GAD-7'), None)
+    latest_phq9 = next((a for a in assessments if a.assessment_type == 'PHQ-9'), None)
+    latest_mood = next((a for a in assessments if a.assessment_type == 'Daily Mood'), None)
+
+    mood_assessments = sorted([a for a in assessments if a.assessment_type == 'Daily Mood'], key=lambda x: x.created_at)[-30:]
+    mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
+    
+    gad7_assessments = sorted([a for a in assessments if a.assessment_type == 'GAD-7'], key=lambda x: x.created_at)
+    phq9_assessments = sorted([a for a in assessments if a.assessment_type == 'PHQ-9'], key=lambda x: x.created_at)
+
+    assessment_chart_labels = sorted(list(set([a.created_at.strftime('%Y-%m-%d') for a in gad7_assessments + phq9_assessments])))
+    assessment_chart_gad7_data = [next((a.score for a in gad7_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
+    assessment_chart_phq9_data = [next((a.score for a in phq9_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
+
+    days_since_assessment = (datetime.now() - assessments[0].created_at).days if assessments else 'N/A'
+    
+    user_data_for_ai = {
+        'gad7_score': latest_gad7.score if latest_gad7 else 'N/A',
+        'phq9_score': latest_phq9.score if latest_phq9 else 'N/A',
+        'wellness_score': 'calculating...',
+        'completed_goals': len(achievements),
+        'total_goals': len(goals),
+        'days_since_assessment': days_since_assessment
+    }
+    
+    user = User.query.get(user_id)
+    last_assessment_at = user.last_assessment_at
+
+    latest_recommendation = ProgressRecommendation.query.filter_by(user_id=user_id).order_by(ProgressRecommendation.created_at.desc()).first()
+
+    ai_recommendations = None
+    if latest_recommendation and last_assessment_at and latest_recommendation.created_at > last_assessment_at:
+        ai_recommendations = latest_recommendation.recommendations
+    
+    if not ai_recommendations:
+        try:
+            ai_recommendations = ai_service.generate_progress_recommendations(user_data_for_ai)
+            new_recommendation = ProgressRecommendation(
+                user_id=user_id,
+                recommendations=ai_recommendations
+            )
+            db.session.add(new_recommendation)
+            db.session.commit()
+        except Exception as ai_error:
+            logger.error(f"AI service error in progress page: {ai_error}")
+            ai_recommendations = {
+                'summary': 'Your progress data has been recorded.',
+                'recommendations': ['Continue with your current mental health routine.'],
+                'priority_actions': []
+            }
+
+    scores_to_average = []
+    if latest_gad7 and latest_gad7.score is not None:
+        scores_to_average.append(10 - (latest_gad7.score / 21 * 9))
+    if latest_phq9 and latest_phq9.score is not None:
+        scores_to_average.append(10 - (latest_phq9.score / 27 * 9))
+    if latest_mood and latest_mood.score is not None:
+        scores_to_average.append(latest_mood.score)
+
+    overall_wellness_score = round(sum(scores_to_average) / len(scores_to_average), 1) if scores_to_average else 0
+    user_data_for_ai['wellness_score'] = overall_wellness_score
+
+    return render_template('progress.html', 
+                         user_name=session['user_name'], 
+                         goals=goals, 
+                         achievements=achievements,
+                         latest_gad7=latest_gad7,
+                         latest_phq9=latest_phq9,
+                         overall_wellness_score=overall_wellness_score,
+                         mood_data=mood_data,
+                         assessment_chart_labels=assessment_chart_labels,
+                         assessment_chart_gad7_data=assessment_chart_gad7_data,
+                         assessment_chart_phq9_data=assessment_chart_phq9_data,
+                         ai_recommendations=ai_recommendations)
+
+@app.route('/goals', methods=['GET', 'POST'])
+@login_required
+@role_required('patient')
+def goals():
+    user_id = session['user_id']
+    
+    if request.method == 'POST':
+        title = request.form.get('title')
+        description = request.form.get('description', '')
+        category = request.form.get('category', 'mental_health')
+        priority = request.form.get('priority', 'medium')
+        target_value = request.form.get('target_value')
+        unit = request.form.get('unit', '')
+        target_date = request.form.get('target_date')
+
+        if not title:
+            flash('Goal title is required.', 'error')
+        else:
+            try:
+                parsed_target_date = None
+                if target_date:
+                    parsed_target_date = datetime.strptime(target_date, '%Y-%m-%d').date()
+
+                new_goal = Goal(
+                    user_id=user_id,
+                    title=title,
+                    description=description,
+                    category=category,
+                    priority=priority,
+                    status='active',
+                    target_value=float(target_value) if target_value and target_value.strip() else None,
+                    current_value=0.0,
+                    unit=unit,
+                    target_date=parsed_target_date,
+                    start_date=datetime.utcnow().date()
+                )
+                db.session.add(new_goal)
+                db.session.commit()
+                flash('Goal created successfully!', 'success')
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"Error adding goal for user {user_id}: {e}")
+                flash('Failed to create goal.', 'error')
+        return redirect(url_for('goals'))
+
+    goals = Goal.query.filter_by(user_id=user_id).all()
+    return render_template('goals.html', user_name=session['user_name'], goals=goals)
+
+@app.route('/assessment')
+@login_required
+@role_required('patient')
+def assessment():
+    user_id = session['user_id']
+    assessment_objects = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+    
+    assessments = []
+    for assessment in assessment_objects:
+        assessment_dict = {
+            'id': assessment.id,
+            'user_id': assessment.user_id,
+            'assessment_type': assessment.assessment_type,
+            'score': assessment.score,
+            'responses': assessment.responses,
+            'created_at': assessment.created_at.isoformat() if assessment.created_at else None,
+            'ai_insights': {}
+        }
+        
+        if assessment.ai_insights:
+            if isinstance(assessment.ai_insights, str):
+                try:
+                    assessment_dict['ai_insights'] = json.loads(assessment.ai_insights)
+                except json.JSONDecodeError:
+                    assessment_dict['ai_insights'] = {}
+            else:
+                assessment_dict['ai_insights'] = assessment.ai_insights
+        
+        assessments.append(assessment_dict)
+    
+    latest_insights = None
+    if assessments:
+        latest_insights = assessments[0].get('ai_insights')
+
+    return render_template('assessment.html', 
+                           user_name=session['user_name'], 
+                           assessments=assessments,
+                           latest_insights=latest_insights)
+
+@app.route('/api/save-assessment', methods=['POST'])
+@login_required
+@role_required('patient')
+def api_save_assessment():
+    if not request.is_json:
+        return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
+        
+    user_id = session['user_id']
+    data = request.get_json()
+    
+    assessment_type = data.get('assessment_type')
+    score = data.get('score')
+    responses = data.get('responses', {})
+    
+    if not all([assessment_type, score is not None]):
+        return jsonify({
+            'success': False,
+            'message': 'Missing required fields: assessment_type and score are required'
+        }), 400
+
+    ai_insights = {}
+    ai_insights_generated_successfully = True
+    try:
+        ai_insights = ai_service.generate_assessment_insights(
+            assessment_type=assessment_type,
+            score=score,
+            responses=responses
+        )
+    except Exception as e:
+        logger.error(f"Error generating AI insights: {e}")
+        ai_insights_generated_successfully = False
+        ai_insights = {
+            'summary': 'AI insights are currently unavailable. Please try again later.',
+            'recommendations': [],
+            'resources': []
+        }
+
+    try:
+        logger.debug("Attempting to create assessment object.")
+        assessment = Assessment(
+            user_id=user_id,
+            assessment_type=assessment_type.upper(),
+            score=score,
+            responses=responses,
+            ai_insights=json.dumps(ai_insights) if ai_insights else None
+        )
+        logger.debug("Assessment object created.")
+        
+        db.session.add(assessment)
+        logger.debug("Assessment added to session.")
+
+        logger.debug("Awarding points and updating gamification.")
+        gamification = award_points(user_id, 20, 'assessment')
+        logger.debug(f"Gamification points awarded. Total points: {gamification.points}")
+
+        logger.debug("Updating user's last assessment time.")
+        user = User.query.get(user_id)
+        user.last_assessment_at = datetime.now(timezone.utc)
+        logger.debug("User's last assessment time updated.")
+        
+        db.session.commit()
+        logger.debug("Database commit successful.")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Assessment saved successfully',
+            'assessment_id': assessment.id,
+            'points_earned': 20,
+            'total_points': gamification.points,
+            'ai_insights': ai_insights,
+            'ai_insights_generated': ai_insights_generated_successfully
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error saving assessment for user {user_id}: {str(e)}")
+        return jsonify({
+            'success': False,
+            'message': f'Failed to save assessment: {str(e)}',
+            'insights': ai_insights if 'ai_insights' in locals() else None
+        }), 500
 
 @app.route('/wellness-report/<int:user_id>')
 @login_required
@@ -796,17 +904,13 @@ def wellness_report(user_id):
     
     patient = User.query.get_or_404(user_id)
     
-    # Get gamification data
     gamification = Gamification.query.filter_by(user_id=user_id).first()
     
-    # Get AI analysis data
     ai_analysis = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).first()
     
-    # Get wellness trend data (last 90 days)
     digital_detox_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(90).all()
     assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).limit(20).all()
     
-    # Convert digital detox logs to JSON serializable format
     digital_detox_data = []
     for log in digital_detox_logs:
         digital_detox_data.append({
@@ -817,7 +921,6 @@ def wellness_report(user_id):
             'ai_score': log.ai_score
         })
     
-    # Convert assessments to JSON serializable format
     assessment_data = []
     for assessment in assessments:
         assessment_data.append({
@@ -833,7 +936,6 @@ def wellness_report(user_id):
         'assessments': assessment_data
     }
     
-    # Get recent clinical sessions (mock data for now)
     recent_sessions = []
     
     return render_template('wellness_report.html', 
@@ -851,23 +953,18 @@ def profile():
     user_id = session['user_id']
     user = User.query.filter_by(email=session['user_email']).first()
     
-    # Get gamification data
     gamification = Gamification.query.filter_by(user_id=user_id).first()
     
-    # Get digital detox data for averages
     digital_detox_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).all()
     
-    # Calculate screen time averages
     avg_screen_time_7_days = None
     avg_screen_time_30_days = None
     
     if digital_detox_logs:
-        # Last 7 days
         recent_7_days = digital_detox_logs[:7]
         if recent_7_days:
             avg_screen_time_7_days = sum(log.screen_time_hours for log in recent_7_days) / len(recent_7_days)
         
-        # Last 30 days
         recent_30_days = digital_detox_logs[:30]
         if recent_30_days:
             avg_screen_time_30_days = sum(log.screen_time_hours for log in recent_30_days) / len(recent_30_days)
@@ -880,34 +977,14 @@ def profile():
                          avg_screen_time_7_days=avg_screen_time_7_days,
                          avg_screen_time_30_days=avg_screen_time_30_days)
 
-@app.route('/api/institutional-trends')
-@login_required
-@role_required('provider')
-def institutional_trends():
-    return jsonify([])
-
-@app.route('/api/institutional-mood-trends')
-@login_required
-@role_required('provider')
-def institutional_mood_trends():
-    return jsonify([])
-
-@app.route('/api/institutional-assessment-history')
-@login_required
-@role_required('provider')
-def institutional_assessment_history():
-    return jsonify([])
-
 @app.route('/api/digital-detox-data')
 @login_required
 @role_required('patient')
 def digital_detox_data():
     user_id = session['user_id']
     
-    # Get digital detox logs for the user
     screen_time_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
     
-    # Convert to list of dictionaries for JSON response
     data = []
     for log in screen_time_logs:
         data.append({
@@ -920,496 +997,62 @@ def digital_detox_data():
     
     return jsonify(data)
 
-@app.route('/api/log-breathing-session', methods=['POST'])
-@login_required
-def log_breathing_session():
-    """Log a breathing exercise session"""
-    try:
-        data = request.json
-        if not data:
-            return jsonify({
-                'success': False,
-                'message': 'No data provided.'
-            }), 400
-        
-        exercise_name = data.get('exercise_name', 'Custom Session')
-        duration_minutes = int(data.get('duration_minutes', 0))
-        notes = data.get('notes', '')
-        
-        # Validate data
-        if duration_minutes <= 0 or duration_minutes > 120:
-            return jsonify({
-                'success': False,
-                'message': 'Invalid duration. Must be between 1-120 minutes.'
-            }), 400
-        
-        # Create new breathing log entry
-        new_log = BreathingExerciseLog(
-            user_id=session.get('user_id'),
-            exercise_name=exercise_name,
-            duration_minutes=duration_minutes,
-            notes=notes,
-            created_at=datetime.now()
-        )
-        
-        db.session.add(new_log)
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Breathing session logged successfully!'
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error logging breathing session for user {session.get('user_id')}: {e}")
-        return jsonify({
-            'success': False,
-            'message': 'Failed to log session. Please try again.'
-        }), 500
-
-@app.route('/api/log-yoga-session', methods=['POST'])
-@login_required
-def log_yoga_session():
-    """Log a yoga session"""
-    try:
-        data = request.json
-        if not data:
-            return jsonify({
-                'success': False,
-                'message': 'No data provided.'
-            }), 400
-        
-        session_name = data.get('session_name', 'Custom Session')
-        duration_minutes = int(data.get('duration_minutes', 0))
-        difficulty_level = data.get('difficulty_level', 'Beginner')
-        notes = data.get('notes', '')
-        
-        # Validate data
-        if duration_minutes <= 0 or duration_minutes > 120:
-            return jsonify({
-                'success': False,
-                'message': 'Invalid duration. Must be between 1-120 minutes.'
-            }), 400
-        
-        # Create new yoga log entry
-        new_log = YogaLog(
-            user_id=session.get('user_id'),
-            session_name=session_name,
-            duration_minutes=duration_minutes,
-            difficulty_level=difficulty_level,
-            notes=notes,
-            created_at=datetime.utcnow() # Use utcnow for consistency
-        )
-        
-        db.session.add(new_log)
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Yoga session logged successfully!'
-        })
-    except ValueError as ve:
-        db.session.rollback()
-        logger.error(f"Validation error in yoga session for user {session.get('user_id')}: {ve}")
-        return jsonify({
-            'success': False,
-            'message': f'Validation error: {str(ve)}'
-        }), 400
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error logging yoga session for user {session.get('user_id')}: {str(e)}", exc_info=True)
-        return jsonify({
-            'success': False,
-            'message': 'Failed to log session. Please try again.'
-        }), 500
-
-@app.route('/api/submit-digital-detox', methods=['POST'])
+@app.route('/api/goals', methods=['GET', 'POST'])
 @login_required
 @role_required('patient')
-def submit_digital_detox():
-    try:
-        user_id = session['user_id']
-        data = request.json
-        
-        if not data:
-            return jsonify({
-                'success': False,
-                'message': 'No data provided.'
-            }), 400
-        
-        screen_time = float(data.get('screen_time', 0))
-        academic_score = int(data.get('academic_score', 0))
-        social_interactions = data.get('social_interactions', 'medium')
-        
-        # Validate data
-        if screen_time < 0 or screen_time > 24:
-            return jsonify({
-                'success': False,
-                'message': 'Invalid screen time value.'
-            }), 400
-        
-        if academic_score < 0 or academic_score > 100:
-            return jsonify({
-                'success': False,
-                'message': 'Invalid academic score value.'
-            }), 400
-        
-        # Create new digital detox log entry
-        new_log = DigitalDetoxLog(
-            user_id=user_id,
-            date=date.today(),
-            screen_time_hours=screen_time,
-            academic_score=academic_score,
-            social_interactions=social_interactions
-        )
-        
-        # Check if entry for today already exists
-        existing_log = DigitalDetoxLog.query.filter_by(
-            user_id=user_id,
-            date=date.today()
-        ).first()
-        
-        if existing_log:
-            # Update existing entry
-            existing_log.screen_time_hours = screen_time
-            existing_log.academic_score = academic_score
-            existing_log.social_interactions = social_interactions
-        else:
-            # Add new entry
-            db.session.add(new_log)
-        
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Digital wellness data saved successfully!'
-        })
-        
-    except ValueError as e:
-        db.session.rollback()
-        logger.error(f"Validation error in digital detox data for user {session.get('user_id')}: {e}")
-        return jsonify({
-            'success': False,
-            'message': 'Invalid data format. Please check your input.'
-        }), 400
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error saving digital detox data for user {session.get('user_id')}: {e}")
-        return jsonify({
-            'success': False,
-            'message': 'Failed to save data. Please try again.'
-        }), 500
-
-
-@app.route('/api/analyze-digital-detox', methods=['POST'])
-@login_required
-@role_required('patient')
-def api_analyze_digital_detox():
+def handle_goals():
     user_id = session['user_id']
-    logger.info(f"Starting digital detox analysis for user {user_id}")
-    
-    # Get the most recent digital detox log
-    latest_log = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).first()
-    
-    if not latest_log:
-        logger.warning(f"No digital detox data found for user {user_id}")
-        return jsonify({'success': False, 'message': 'No digital detox data found.'}), 404
-        
-    # Prepare data for AI service
-    detox_data = {
-        'screen_time_hours': latest_log.screen_time_hours,
-        'academic_score': latest_log.academic_score,
-        'social_interactions': latest_log.social_interactions
-    }
-    logger.info(f"Digital detox data for user {user_id}: {detox_data}")
-    
-    try:
-        # Generate insights
-        logger.info(f"Generating digital detox insights for user {user_id}")
-        insights = ai_service.generate_digital_detox_insights(detox_data)
-        logger.info(f"Digital detox insights for user {user_id}: {insights}")
-        
-        # Update the log with the new insights
-        latest_log.ai_score = insights.get('ai_score')
-        latest_log.ai_suggestion = insights.get('ai_suggestion')
-        
-        db.session.commit()
-        logger.info(f"Digital detox insights saved for user {user_id}")
-        
-        return jsonify({'success': True, 'insights': insights})
-        
-    except Exception as e:
-        logger.error(f"Error analyzing digital detox for user {user_id}: {e}")
-        return jsonify({'success': False, 'message': 'An error occurred while analyzing your data.'}), 500
 
+    if request.method == 'POST':
+        data = request.json
+        title = data.get('title')
+        description = data.get('description', '')
+        category = data.get('category', 'mental_health')
+        priority = data.get('priority', 'medium')
+        target_value = data.get('target_value')
+        unit = data.get('unit', '')
+        target_date = data.get('target_date')
 
-@app.route('/assessment')
-@login_required
-@role_required('patient')
-def assessment():
-    # Debug session data
-    print("\n=== Session Debug Info ===")
-    print(f"User ID in session: {session.get('user_id')}")
-    print(f"User email in session: {session.get('user_email')}")
-    print(f"User role in session: {session.get('user_role')}")
-    print(f"Session keys: {list(session.keys())}")
-    print("=========================\n")
-    
-    if 'user_id' not in session:
-        print("ERROR: User ID not found in session")
-        flash('Please log in to continue', 'error')
-        return redirect(url_for('login'))
-        
-    user_id = session['user_id']
-    assessment_objects = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
-    
-    # Convert SQLAlchemy objects to a list of dictionaries
-    assessments = []
-    for assessment in assessment_objects:
-        assessment_dict = {
-            'id': assessment.id,
-            'user_id': assessment.user_id,
-            'assessment_type': assessment.assessment_type,
-            'score': assessment.score,
-            'responses': assessment.responses,
-            'created_at': assessment.created_at.isoformat() if assessment.created_at else None,
-            'ai_insights': {}
-        }
-        
-        # Parse ai_insights if it exists
-        if assessment.ai_insights:
-            if isinstance(assessment.ai_insights, str):
-                try:
-                    assessment_dict['ai_insights'] = json.loads(assessment.ai_insights)
-                except json.JSONDecodeError:
-                    assessment_dict['ai_insights'] = {}
-            else:
-                assessment_dict['ai_insights'] = assessment.ai_insights
-        
-        assessments.append(assessment_dict)
-    
-    # Get the latest insights to display on the page
-    latest_insights = None
-    if assessments:
-        # The first assessment in the sorted list is the latest one
-        latest_insights = assessments[0].get('ai_insights')
+        if not title:
+            return jsonify({'success': False, 'message': 'Goal title is required.'}), 400
 
-    return render_template('assessment.html', 
-                           user_name=session['user_name'], 
-                           assessments=assessments,
-                           latest_insights=latest_insights)
+        try:
+            parsed_target_date = None
+            if target_date:
+                parsed_target_date = datetime.strptime(target_date, '%Y-%m-%d').date()
 
-@app.route('/api/save-assessment', methods=['POST'])
-@login_required
-@role_required('patient')
-def api_save_assessment():
-    if not request.is_json:
-        print("DEBUG: Request is not JSON.")
-        return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
-        
-    user_id = session['user_id']
-    data = request.get_json()
-    print(f"DEBUG: Received assessment data: {data}")
-    
-    # Extract data from request
-    assessment_type = data.get('assessment_type')
-    score = data.get('score')
-    responses = data.get('responses', {})
-    
-    if not all([assessment_type, score is not None]):
-        print("DEBUG: Missing required fields for assessment.")
-        return jsonify({
-            'success': False,
-            'message': 'Missing required fields: assessment_type and score are required'
-        }), 400
+            new_goal = Goal(
+                user_id=user_id,
+                title=title,
+                description=description,
+                category=category,
+                priority=priority,
+                status='active',
+                target_value=float(target_value) if target_value and target_value.strip() else None,
+                current_value=0.0,
+                unit=unit,
+                target_date=parsed_target_date,
+                start_date=datetime.utcnow().date()
+            )
+            db.session.add(new_goal)
+            db.session.commit()
 
-    # Generate AI insights
-    ai_insights = {}
-    ai_insights_generated_successfully = True
-    try:
-        print("DEBUG: Generating AI insights for assessment.")
-        ai_insights = ai_service.generate_assessment_insights(
-            assessment_type=assessment_type,
-            score=score,
-            responses=responses
-        )
-        print(f"DEBUG: AI insights generated: {ai_insights}")
-    except Exception as e:
-        logger.error(f"Error generating AI insights: {e}")
-        print(f"DEBUG: Error generating AI insights: {e}")
-        ai_insights_generated_successfully = False
-        ai_insights = {
-            'summary': 'AI insights are currently unavailable. Please try again later.',
-            'recommendations': [],
-            'resources': []
-        }
-
-    try:
-        print("DEBUG: Creating new assessment record.")
-        # Create new assessment record
-        assessment = Assessment(
-            user_id=user_id,
-            assessment_type=assessment_type.upper(),  # GAD-7 or PHQ-9
-            score=score,
-            responses=responses,
-            ai_insights=json.dumps(ai_insights) if ai_insights else None
-        )
-        
-        db.session.add(assessment)
-        print("DEBUG: Assessment added to session.")
-        
-        # Update gamification points
-        gamification = Gamification.query.filter_by(user_id=user_id).first()
-        if not gamification:
-            gamification = Gamification(user_id=user_id, points=0, streak=0)
-            db.session.add(gamification)
-            print("DEBUG: New gamification record added to session.")
-        
-        # Add points for completing assessment
-        gamification.points += 20  # More points for completing an assessment
-        print(f"DEBUG: Gamification points updated: {gamification.points}")
-        
-        # Update streak if this is the first assessment today
-        today = datetime.utcnow().date()
-        if not gamification.last_activity or gamification.last_activity < today:
-            gamification.streak += 1
-            print(f"DEBUG: Gamification streak updated: {gamification.streak}")
-        gamification.last_activity = datetime.utcnow().date()
-
-        # Update user's last assessment time
-        user = User.query.get(user_id)
-        user.last_assessment_at = datetime.utcnow()
-        
-        print("DEBUG: Attempting to commit changes to database.")
-        db.session.commit()
-        print("DEBUG: Changes committed successfully.")
-        
-        return jsonify({
-            'success': True,
-            'message': 'Assessment saved successfully',
-            'assessment_id': assessment.id,
-            'points_earned': 20,
-            'total_points': gamification.points,
-            'ai_insights': ai_insights,
-            'ai_insights_generated': ai_insights_generated_successfully
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error saving assessment for user {user_id}: {str(e)}")
-        print(f"DEBUG: Error saving assessment: {e}")
-        return jsonify({
-            'success': False,
-            'message': f'Failed to save assessment: {str(e)}',
-            'insights': ai_insights if 'ai_insights' in locals() else None
-        }), 500
-
-@app.route('/goals')
-@login_required
-@role_required('patient')
-def goals():
-    return render_template('goals.html', user_name=session['user_name'])
-
-@app.route('/progress')
-@login_required
-@role_required('patient')
-def progress():
-    try:
-        user_id = session['user_id']
-        goals = Goal.query.filter_by(user_id=user_id).all()
-        
-        achievements = [goal.title for goal in goals if goal.status == 'completed']
-        
-        assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
-        
-        latest_gad7 = next((a for a in assessments if a.assessment_type == 'GAD-7'), None)
-        latest_phq9 = next((a for a in assessments if a.assessment_type == 'PHQ-9'), None)
-        latest_mood = next((a for a in assessments if a.assessment_type == 'Daily Mood'), None)
-
-        mood_assessments = sorted([a for a in assessments if a.assessment_type == 'Daily Mood'], key=lambda x: x.created_at)[-30:]
-        mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
-        
-        gad7_assessments = sorted([a for a in assessments if a.assessment_type == 'GAD-7'], key=lambda x: x.created_at)
-        phq9_assessments = sorted([a for a in assessments if a.assessment_type == 'PHQ-9'], key=lambda x: x.created_at)
-
-        assessment_chart_labels = sorted(list(set([a.created_at.strftime('%Y-%m-%d') for a in gad7_assessments + phq9_assessments])))
-        assessment_chart_gad7_data = [next((a.score for a in gad7_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
-        assessment_chart_phq9_data = [next((a.score for a in phq9_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
-
-        days_since_assessment = (datetime.now() - assessments[0].created_at).days if assessments else 'N/A'
-        
-        user_data_for_ai = {
-            'gad7_score': latest_gad7.score if latest_gad7 else 'N/A',
-            'phq9_score': latest_phq9.score if latest_phq9 else 'N/A',
-            'wellness_score': 'calculating...',
-            'completed_goals': len(achievements),
-            'total_goals': len(goals),
-            'days_since_assessment': days_since_assessment
-        }
-        
-        user = User.query.get(user_id)
-        last_assessment_at = user.last_assessment_at
-
-        # Check for cached recommendations
-        latest_recommendation = ProgressRecommendation.query.filter_by(user_id=user_id).order_by(ProgressRecommendation.created_at.desc()).first()
-
-        ai_recommendations = None
-        if latest_recommendation and last_assessment_at and latest_recommendation.created_at > last_assessment_at:
-            ai_recommendations = latest_recommendation.recommendations
-        
-        if not ai_recommendations:
-            try:
-                ai_recommendations = ai_service.generate_progress_recommendations(user_data_for_ai)
-                new_recommendation = ProgressRecommendation(
-                    user_id=user_id,
-                    recommendations=ai_recommendations
-                )
-                db.session.add(new_recommendation)
-                db.session.commit()
-            except Exception as ai_error:
-                logger.error(f"AI service error in progress page: {ai_error}")
-                ai_recommendations = {
-                    'summary': 'Your progress data has been recorded.',
-                    'recommendations': ['Continue with your current mental health routine.'],
-                    'priority_actions': []
+            return jsonify({
+                'success': True,
+                'message': 'Goal created successfully!',
+                'goal': {
+                    'id': new_goal.id,
+                    'title': new_goal.title,
+                    'description': new_goal.description
                 }
+            }), 201
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error adding goal for user {user_id}: {e}")
+            return jsonify({'success': False, 'message': 'Failed to create goal.'}), 500
 
-        scores_to_average = []
-        if latest_gad7 and latest_gad7.score is not None:
-            scores_to_average.append(10 - (latest_gad7.score / 21 * 9))
-        if latest_phq9 and latest_phq9.score is not None:
-            scores_to_average.append(10 - (latest_phq9.score / 27 * 9))
-        if latest_mood and latest_mood.score is not None:
-            scores_to_average.append(latest_mood.score)
-
-        overall_wellness_score = round(sum(scores_to_average) / len(scores_to_average), 1) if scores_to_average else 0
-        user_data_for_ai['wellness_score'] = overall_wellness_score
-
-        return render_template('progress.html', 
-                             user_name=session['user_name'], 
-                             goals=goals, 
-                             achievements=achievements,
-                             latest_gad7=latest_gad7,
-                             latest_phq9=latest_phq9,
-                             overall_wellness_score=overall_wellness_score,
-                             mood_data=mood_data,
-                             assessment_chart_labels=assessment_chart_labels,
-                             assessment_chart_gad7_data=assessment_chart_gad7_data,
-                             assessment_chart_phq9_data=assessment_chart_phq9_data,
-                             ai_recommendations=ai_recommendations)
-    except Exception as e:
-        logger.error(f"Error loading progress page for user {session.get('user_id')}: {e}")
-        flash('An error occurred while loading your progress page. Please try again later.', 'error')
-        return redirect(url_for('patient_dashboard'))
-
-@app.route('/api/goals', methods=['GET'])
-@login_required
-@role_required('patient')
-def get_goals():
-    user_id = session['user_id']
+    # GET request logic
     goals = Goal.query.filter_by(user_id=user_id).all()
-    
     goals_data = []
     for goal in goals:
         goals_data.append({
@@ -1426,62 +1069,7 @@ def get_goals():
             'progress_percentage': goal.progress_percentage,
             'created_at': goal.created_at.strftime('%Y-%m-%d') if goal.created_at else None
         })
-    
     return jsonify({'success': True, 'goals': goals_data})
-
-@app.route('/api/goals', methods=['POST'])
-@login_required
-@role_required('patient')
-def add_goal():
-    user_id = session['user_id']
-    data = request.json
-    
-    title = data.get('title')
-    description = data.get('description', '')
-    category = data.get('category', 'mental_health')
-    priority = data.get('priority', 'medium')
-    target_value = data.get('target_value')
-    unit = data.get('unit', '')
-    target_date = data.get('target_date')
-
-    if not title:
-        return jsonify({'success': False, 'message': 'Goal title is required.'}), 400
-
-    try:
-        # Parse target_date if provided
-        parsed_target_date = None
-        if target_date:
-            parsed_target_date = datetime.strptime(target_date, '%Y-%m-%d').date()
-
-        new_goal = Goal(
-            user_id=user_id,
-            title=title,
-            description=description,
-            category=category,
-            priority=priority,
-            status='active',
-            target_value=float(target_value) if target_value else None,
-            current_value=0.0,
-            unit=unit,
-            target_date=parsed_target_date,
-            start_date=datetime.utcnow().date()
-        )
-        db.session.add(new_goal)
-        db.session.commit()
-
-        return jsonify({
-            'success': True,
-            'message': 'Goal created successfully!',
-            'goal': {
-                'id': new_goal.id,
-                'title': new_goal.title,
-                'description': new_goal.description
-            }
-        }), 201
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error adding goal for user {user_id}: {e}")
-        return jsonify({'success': False, 'message': 'Failed to create goal.'}), 500
 
 @app.route('/api/goals/<int:goal_id>', methods=['PUT'])
 @login_required
@@ -1494,12 +1082,25 @@ def update_goal(goal_id):
         return jsonify({'success': False, 'message': 'Goal not found.'}), 404
 
     data = request.json
+
+    editable_fields = [
+        'title',
+        'description',
+        'category',
+        'priority',
+        'target_value',
+        'current_value',
+        'unit'
+    ]
+
+    for field in editable_fields:
+        if field in data:
+            setattr(goal, field, data[field])
+
     completed = data.get('completed')
-    if 'priority' in data:
-        goal.priority = data['priority']
 
     try:
-        if completed:
+        if completed is not None:
             goal.status = 'completed'
             goal.completed_date = datetime.utcnow().date()
         else:
@@ -1526,154 +1127,39 @@ def update_goal(goal_id):
         db.session.rollback()
         return jsonify({'success': False, 'message': f'Error updating goal: {str(e)}'})
 
-@app.route('/api/goals/<int:goal_id>', methods=['DELETE'])
-@login_required
-@role_required('patient')
-def delete_goal(goal_id):
-    """Delete a goal"""
-    goal = Goal.query.get_or_404(goal_id)
-    
-    if goal.user_id != session['user_id']:
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-    
-    try:
-        db.session.delete(goal)
-        db.session.commit()
-        return jsonify({'success': True, 'message': 'Goal deleted successfully!'})
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'message': f'Error deleting goal: {str(e)}'})
-
-@app.route('/api/chat-message', methods=['POST'])
-@login_required
-def api_chat_message():
-    user_id = session['user_id']
-    user_message = request.json.get('message')
-
-    if not user_message:
-        return jsonify({'reply': 'No message received.'})
-
-    # Check for crisis keywords
-    crisis_keywords = ['suicide', 'kill myself', 'hopeless', 'end it all', 'self-harm']
-    if any(keyword in user_message.lower() for keyword in crisis_keywords):
-        return jsonify({
-            'reply': 'It sounds like you are going through a difficult time. Please reach out for immediate help. You can call the National Suicide Prevention Lifeline at 988 or visit their website. You are not alone.',
-            'is_crisis': True
-        })
-
-    # Get user context for AI
-    gamification = Gamification.query.filter_by(user_id=user_id).first()
-    wellness_trend = get_user_wellness_trend(user_id)
-
-    context = {
-        'wellness_score': wellness_trend.get('current_score', 'N/A'),
-        'engagement_level': f"{gamification.points} points, {gamification.streak} day streak" if gamification else 'Low'
-    }
-
-    try:
-        # Generate AI chat response
-        ai_reply = ai_service.generate_chat_response(user_message, context)
-        return jsonify({'reply': ai_reply, 'is_crisis': False})
-    except Exception as e:
-        logger.error(f"Error in AI chat for user {user_id}: {e}")
-        return jsonify({'reply': 'I am having trouble connecting right now. Please know that your feelings are valid.'}), 500
-
-
-@app.route('/api/institutional-analytics')
-@login_required
-@role_required('provider')
-def api_institutional_analytics():
-    institution = session.get('user_institution')
-    if not institution:
-        return jsonify({'error': 'Institution not found for user'}), 404
-
-    summary = get_institutional_summary(institution)
-    return jsonify(summary)
-
-@app.route('/api/ai-status')
-@login_required
-@role_required('provider')
-def api_ai_status():
-    """Check AI service status and rate limits"""
-    try:
-        status = ai_service.check_api_status()
-        model_info = ai_service.get_model_info()
-        
-        return jsonify({
-            'status': status,
-            'model_info': model_info,
-            'timestamp': datetime.now().isoformat()
-        })
-    except Exception as e:
-        logger.error(f"Error checking AI status: {e}")
-        return jsonify({
-            'status': {'status': 'error', 'message': str(e)},
-            'model_info': ai_service.get_model_info(),
-            'timestamp': datetime.now().isoformat()
-        })
-
-@app.route('/api/enhanced-clinical-analysis', methods=['POST'])
-@login_required
-@role_required('provider')
-def api_enhanced_clinical_analysis():
-    """Generate enhanced clinical analysis using multiple AI models"""
-    try:
-        data = request.json
-        transcript = data.get('transcript', '')
-        patient_data = data.get('patient_data', {})
-        
-        if not transcript:
-            return jsonify({'error': 'Transcript is required'}), 400
-        
-        # Generate enhanced analysis
-        analysis = ai_service.generate_enhanced_clinical_analysis(transcript, patient_data)
-        
-        return jsonify({
-            'success': True,
-            'analysis': analysis
-        })
-        
-    except Exception as e:
-        logger.error(f"Error in enhanced clinical analysis: {e}")
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
-
-def get_severity_info(assessment_type, score):
-    if score is None:
-        return {'severity': 'N/A', 'color': 'gray'}
-    score = float(score)
-    if assessment_type == 'GAD-7':
-        if score <= 4:
-            return {'severity': 'Minimal', 'color': 'green'}
-        elif score <= 9:
-            return {'severity': 'Mild', 'color': 'yellow'}
-        elif score <= 14:
-            return {'severity': 'Moderate', 'color': 'orange'}
-        else:
-            return {'severity': 'Severe', 'color': 'red'}
-    elif assessment_type == 'PHQ-9':
-        if score <= 4:
-            return {'severity': 'Minimal', 'color': 'green'}
-        elif score <= 9:
-            return {'severity': 'Mild', 'color': 'yellow'}
-        elif score <= 14:
-            return {'severity': 'Moderate', 'color': 'orange'}
-        else:
-            return {'severity': 'Severe', 'color': 'red'}
-    elif assessment_type == 'Daily Mood':
-        if score >= 4:
-            return {'severity': 'Positive', 'color': 'green'}
-        elif score >= 3:
-            return {'severity': 'Neutral', 'color': 'yellow'}
-        else:
-            return {'severity': 'Negative', 'color': 'red'}
-    else:
-        return {'severity': 'N/A', 'color': 'gray'}
-
 @app.context_processor
 def utility_processor():
+    def get_severity_info(assessment_type, score):
+        if score is None:
+            return {'severity': 'N/A', 'color': 'gray'}
+        score = float(score)
+        if assessment_type == 'GAD-7':
+            if score <= 4:
+                return {'severity': 'Minimal', 'color': 'green'}
+            elif score <= 9:
+                return {'severity': 'Mild', 'color': 'yellow'}
+            elif score <= 14:
+                return {'severity': 'Moderate', 'color': 'orange'}
+            else:
+                return {'severity': 'Severe', 'color': 'red'}
+        elif assessment_type == 'PHQ-9':
+            if score <= 4:
+                return {'severity': 'Minimal', 'color': 'green'}
+            elif score <= 9:
+                return {'severity': 'Mild', 'color': 'yellow'}
+            elif score <= 14:
+                return {'severity': 'Moderate', 'color': 'orange'}
+            else:
+                return {'severity': 'Severe', 'color': 'red'}
+        elif assessment_type == 'Daily Mood':
+            if score >= 4:
+                return {'severity': 'Positive', 'color': 'green'}
+            elif score >= 3:
+                return {'severity': 'Neutral', 'color': 'yellow'}
+            else:
+                return {'severity': 'Negative', 'color': 'red'}
+        else:
+            return {'severity': 'N/A', 'color': 'gray'}
     return dict(get_severity_info=get_severity_info)
 
 @app.route('/api/save-mood', methods=['POST'])
@@ -1771,241 +1257,75 @@ def save_mood():
             'message': f'Failed to save mood: {str(e)}'
         }), 500
 
-# --- Enhanced Blog System Routes ---
+
+
+
+# --- BLOG ROUTES ---
+from sqlalchemy.exc import SQLAlchemyError
+
 @app.route('/blog')
 def blog_list():
-    # Get all published posts with engagement data
-    posts = BlogPost.query.filter_by(is_published=True).order_by(BlogPost.created_at.desc()).all()
-    
-    # Get blog insights for the homepage
-    blog_insights = get_blog_insights()
-    
-    return render_template('blog_list.html', posts=posts, insights=blog_insights)
-
-@app.route('/blog/create', methods=['GET', 'POST'], endpoint='blog_create')
-@login_required
-def create_blog():
-    if request.method == 'POST':
-        title = request.form['title']
-        content = request.form['content']
-        category = request.form.get('category', 'general')
-        tags = request.form.get('tags', '')
-        author_id = session.get('user_id')
-        
-        if not title or not content:
-            flash('Title and content are required.', 'error')
-            return render_template('blog_create.html')
-            
-        post = BlogPost(
-            title=title, 
-            content=content, 
-            category=category,
-            tags=tags,
-            author_id=author_id
-        )
-        db.session.add(post)
-        db.session.commit()
-        
-        flash('Blog post created successfully!', 'success')
-        return redirect(url_for('blog_detail', post_id=post.id))
-    
-    return render_template('blog_create.html')
+    try:
+        posts = BlogPost.query.filter_by(is_published=True).order_by(BlogPost.created_at.desc()).all()
+    except SQLAlchemyError as e:
+        logger.error(f"Error fetching blog posts: {e}")
+        posts = []
+    return render_template('blog_list.html', posts=posts)
 
 @app.route('/blog/<int:post_id>')
 def blog_detail(post_id):
     post = BlogPost.query.get_or_404(post_id)
-    
-    # Increment view count
-    post.views += 1
-    db.session.commit()
-    
-    # Get comments for this post (top-level only, replies loaded via JavaScript)
-    comments = BlogComment.query.filter_by(post_id=post_id, parent_id=None).order_by(BlogComment.created_at.desc()).all()
-    
-    # Check if current user has liked this post
-    user_has_liked = False
-    if session.get('user_id'):
-        user_has_liked = post.is_liked_by(session['user_id'])
-    
-    return render_template('blog_detail.html', 
-                         post=post, 
-                         comments=comments, 
-                         user_has_liked=user_has_liked)
+    return render_template('blog_detail.html', post=post)
+
+@app.route('/blog/create', methods=['GET', 'POST'])
+@login_required
+def blog_create():
+    if request.method == 'POST':
+        title = request.form.get('title')
+        content = request.form.get('content')
+        category = request.form.get('category')
+        tags = request.form.get('tags')
+        is_published = bool(request.form.get('is_published'))
+        author_id = session.get('user_id')
+        try:
+            post = BlogPost(
+                title=title,
+                content=content,
+                category=category,
+                tags=tags,
+                is_published=is_published,
+                author_id=author_id,
+                created_at=datetime.now()
+            )
+            db.session.add(post)
+            db.session.commit()
+            flash('Blog post created successfully!', 'success')
+            return redirect(url_for('blog_list'))
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            logger.error(f"Error creating blog post: {e}")
+            flash('Failed to create blog post.', 'error')
+    return render_template('blog_create.html')
 
 @app.route('/blog/<int:post_id>/edit', methods=['GET', 'POST'])
 @login_required
 def blog_edit(post_id):
     post = BlogPost.query.get_or_404(post_id)
-    
-    if post.author_id != session.get('user_id'):
-        flash('You do not have permission to edit this post.', 'error')
-        return redirect(url_for('blog_detail', post_id=post_id))
-    
     if request.method == 'POST':
-        post.title = request.form['title']
-        post.content = request.form['content']
-        post.category = request.form.get('category', post.category)
-        post.tags = request.form.get('tags', post.tags)
-        post.updated_at = datetime.utcnow()
-        
-        db.session.commit()
-        flash('Blog post updated successfully!', 'success')
-        return redirect(url_for('blog_detail', post_id=post.id))
-    
+        post.title = request.form.get('title')
+        post.content = request.form.get('content')
+        post.category = request.form.get('category')
+        post.tags = request.form.get('tags')
+        post.is_published = bool(request.form.get('is_published'))
+        try:
+            db.session.commit()
+            flash('Blog post updated successfully!', 'success')
+            return redirect(url_for('blog_detail', post_id=post.id))
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            logger.error(f"Error updating blog post: {e}")
+            flash('Failed to update blog post.', 'error')
     return render_template('blog_edit.html', post=post)
 
-@app.route('/blog/<int:post_id>/delete', methods=['POST'])
-@login_required
-def blog_delete(post_id):
-    post = BlogPost.query.get_or_404(post_id)
-    if post.author_id != session.get('user_id'):
-        flash('You do not have permission to delete this post.', 'error')
-        return redirect(url_for('blog_list'))
-    
-    db.session.delete(post)
-    db.session.commit()
-    flash('Blog post deleted successfully.', 'success')
-    return redirect(url_for('blog_list'))
-
-# --- Blog API Routes ---
-@app.route('/api/blog/<int:post_id>/like', methods=['POST'])
-@login_required
-def toggle_blog_like(post_id):
-    post = BlogPost.query.get_or_404(post_id)
-    user_id = session['user_id']
-    
-    existing_like = BlogLike.query.filter_by(user_id=user_id, post_id=post_id).first()
-    
-    if existing_like:
-        # Unlike the post
-        db.session.delete(existing_like)
-        liked = False
-    else:
-        # Like the post
-        new_like = BlogLike(user_id=user_id, post_id=post_id)
-        db.session.add(new_like)
-        liked = True
-    
-    db.session.commit()
-    
-    return jsonify({
-        'success': True,
-        'liked': liked,
-        'like_count': post.like_count
-    })
-
-@app.route('/api/blog/<int:post_id>/comment', methods=['POST'])
-@login_required
-def add_blog_comment(post_id):
-    post = BlogPost.query.get_or_404(post_id)
-    user_id = session['user_id']
-    
-    data = request.get_json()
-    content = data.get('content', '').strip()
-    parent_id = data.get('parent_id')  # For replies
-    
-    if not content:
-        return jsonify({'success': False, 'message': 'Comment cannot be empty'}), 400
-    
-    comment = BlogComment(
-        user_id=user_id,
-        post_id=post_id,
-        parent_id=parent_id,
-        content=content
-    )
-    
-    db.session.add(comment)
-    db.session.commit()
-    
-    # Get user info for response
-    user = User.query.get(user_id)
-    
-    return jsonify({
-        'success': True,
-        'comment': {
-            'id': comment.id,
-            'content': comment.content,
-            'author_name': user.name,
-            'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M'),
-            'parent_id': comment.parent_id
-        },
-        'comment_count': post.comment_count
-    })
-
-@app.route('/api/blog/<int:post_id>/comments/<int:comment_id>/replies')
-def get_comment_replies(post_id, comment_id):
-    replies = BlogComment.query.filter_by(parent_id=comment_id).order_by(BlogComment.created_at.asc()).all()
-    
-    reply_data = []
-    for reply in replies:
-        reply_data.append({
-            'id': reply.id,
-            'content': reply.content,
-            'author_name': reply.user.name,
-            'created_at': reply.created_at.strftime('%Y-%m-%d %H:%M')
-        })
-    
-    return jsonify({'replies': reply_data})
-
-@app.route('/api/blog/insights')
-def api_blog_insights():
-    insights = get_blog_insights()
-    return jsonify(insights)
-
-def get_blog_insights():
-    """Get blog insights and analytics"""
-    from sqlalchemy import func, desc
-    
-    # Total counts
-    total_posts = BlogPost.query.filter_by(is_published=True).count()
-    total_likes = db.session.query(func.count(BlogLike.id)).scalar() or 0
-    total_comments = db.session.query(func.count(BlogComment.id)).scalar() or 0
-    total_views = db.session.query(func.sum(BlogPost.views)).scalar() or 0
-    
-    # Most popular post (by engagement score)
-    popular_posts = BlogPost.query.filter_by(is_published=True).all()
-    popular_posts.sort(key=lambda x: x.engagement_score, reverse=True)
-    
-    # Category distribution
-    category_stats = db.session.query(
-        BlogPost.category, 
-        func.count(BlogPost.id).label('count')
-    ).filter_by(is_published=True).group_by(BlogPost.category).all()
-    
-    # Recent activity (posts from last 7 days)
-    week_ago = datetime.utcnow() - timedelta(days=7)
-    recent_posts = BlogPost.query.filter(
-        BlogPost.created_at >= week_ago,
-        BlogPost.is_published == True
-    ).count()
-    
-    return {
-        'total_posts': total_posts,
-        'total_likes': total_likes,
-        'total_comments': total_comments,
-        'total_views': total_views,
-        'most_popular_post': {
-            'id': popular_posts[0].id,
-            'title': popular_posts[0].title,
-            'engagement_score': popular_posts[0].engagement_score,
-            'author_name': popular_posts[0].author.name
-        } if popular_posts else None,
-        'categories': dict(category_stats),
-        'recent_posts_count': recent_posts,
-        'engagement_rate': round((total_likes + total_comments) / max(total_posts, 1), 2)
-    }
-
 if __name__ == '__main__':
-    # Create an app context for database initialization
-    with app.app_context():
-        # Create all database tables
-        db.create_all()
-        
-        # Check if database needs initialization
-        if User.query.first() is None:
-            print("Initializing database with sample data...")
-            init_database(app)
-            print("Database initialized successfully!")
-    
-    # Start the Flask development server
     app.run(debug=True, port=5000, use_reloader=False)
