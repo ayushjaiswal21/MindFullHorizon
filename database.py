@@ -1,4 +1,2 @@
 """Database initialization for the Mindful Horizon application."""
-from flask_sqlalchemy import SQLAlchemy
-
-db = SQLAlchemy()
+from extensions import db
