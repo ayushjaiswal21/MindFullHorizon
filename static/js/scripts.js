@@ -242,22 +242,42 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             const message = chatInput.value;
             if (message) {
+                // Show user message immediately
+                const userMsg = document.createElement('div');
+                    userMsg.classList.add('chat-message', 'text-right');
+                    userMsg.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-blue-600 text-white ml-auto text-right"><p>${escapeHtml(message)}</p></div>`;
+                    chatMessages.appendChild(userMsg);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
                 socket.emit('chat_message', { 'message': message });
                 chatInput.value = '';
             }
         });
 
         socket.on('chat_response', function(data) {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('chat-message');
-            if (data.is_crisis) {
-                messageElement.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-red-200 text-red-800"><p>${data.reply}</p></div>`;
-            } else {
-                messageElement.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800"><p>${data.reply}</p></div>`;
-            }
-            chatMessages.appendChild(messageElement);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+            // Split multiline bot responses for better display
+            const botReplies = data.reply.split(/\n+/);
+            botReplies.forEach(function(reply) {
+                if (reply.trim() === '') return;
+                const messageElement = document.createElement('div');
+                    messageElement.classList.add('chat-message', 'text-left');
+                    if (data.is_crisis) {
+                        messageElement.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-red-200 text-red-800 mr-auto text-left"><p>${escapeHtml(reply)}</p></div>`;
+                    } else {
+                        messageElement.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800 mr-auto text-left"><p>${escapeHtml(reply)}</p></div>`;
+                    }
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            });
         });
+
+        // Helper to escape HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
     }
 });
 
