@@ -16,6 +16,7 @@ python-dateutil==2.9.0
 gunicorn==22.0.0
 python-dotenv==1.0.1
 Flask-Session==0.5.0
+Flask-SocketIO==5.3.6
 # New AI libraries
 google-generativeai==0.4.1
 ollama==0.1.8

@@ -14,7 +14,7 @@
   <div class="absolute inset-0">
     <img src="{{ url_for('static', filename='images/hero_image.png') }}" 
          onerror="this.onerror=null;this.src='https://placehold.co/1920x1080/a7f3d0/1e3a8a?text=MindFullHorizon';" 
-         alt="Mindfull Horizon - Your path to wellness" class="hero-image">
+         alt="A brain logo with a sun and waves, representing mental wellness." class="hero-image">
     <!-- This overlay darkens the image slightly so the white text on top is easy to read. -->
     <div class="absolute inset-0 hero-overlay" aria-hidden="true"></div>
   </div>
@@ -205,9 +205,126 @@
   </div>
 </section>
 
-<!-- FAQ section removed (now provided globally in base.html) -->
+<!-- Blog Insights Section -->
+{% if blog_insights and featured_posts %}
+<section class="bg-white py-16 sm:py-24">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <h2 class="text-base font-semibold text-sky-600 tracking-wide uppercase">Community Blog</h2>
+      <p class="mt-1 text-3xl font-extrabold text-gray-900 sm:text-4xl">Stories, Insights & Support</p>
+      <p class="max-w-2xl mt-5 mx-auto text-xl text-gray-500">Real experiences and expert advice from our mental health community</p>
+    </div>
+    
+    <!-- Blog Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+      <div class="text-center p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+        <div class="text-3xl font-bold text-blue-600">{{ blog_insights.total_posts }}</div>
+        <div class="text-sm text-gray-600 mt-1">Blog Posts</div>
+      </div>
+      <div class="text-center p-6 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg">
+        <div class="text-3xl font-bold text-red-500">{{ blog_insights.total_likes }}</div>
+        <div class="text-sm text-gray-600 mt-1">Community Likes</div>
+      </div>
+      <div class="text-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+        <div class="text-3xl font-bold text-green-600">{{ blog_insights.total_comments }}</div>
+        <div class="text-sm text-gray-600 mt-1">Discussions</div>
+      </div>
+      <div class="text-center p-6 bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg">
+        <div class="text-3xl font-bold text-purple-600">{{ blog_insights.total_views }}</div>
+        <div class="text-sm text-gray-600 mt-1">Total Views</div>
+      </div>
+    </div>
+    
+    <!-- Featured Posts -->
+    <div class="grid gap-8 md:grid-cols-3">
+      {% for post in featured_posts %}
+      <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300">
+        <div class="p-6">
+          <div class="flex items-center space-x-3 mb-4">
+            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+              {{ post.author.name[0].upper() if post.author else 'U' }}
+            </div>
+            <div>
+              <p class="font-medium text-gray-900 text-sm">{{ post.author.name if post.author else 'Anonymous' }}</p>
+              <p class="text-xs text-gray-500">{{ post.created_at.strftime('%B %d, %Y') }}</p>
+            </div>
+          </div>
+          
+          <h3 class="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">
+            <a href="{{ url_for('blog_detail', post_id=post.id) }}" class="hover:text-blue-600 transition-colors">
+              {{ post.title }}
+            </a>
+          </h3>
+          
+          <p class="text-gray-600 text-sm mb-4 line-clamp-3">
+            {{ post.content[:150] }}{% if post.content|length > 150 %}...{% endif %}
+          </p>
+          
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-4 text-xs text-gray-500">
+              <div class="flex items-center space-x-1">
+                <i class="far fa-heart"></i>
+                <span>{{ post.like_count }}</span>
+              </div>
+              <div class="flex items-center space-x-1">
+                <i class="far fa-comment"></i>
+                <span>{{ post.comment_count }}</span>
+              </div>
+              <div class="flex items-center space-x-1">
+                <i class="far fa-eye"></i>
+                <span>{{ post.views }}</span>
+              </div>
+            </div>
+            
+            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              {{ post.category.title() if post.category else 'General' }}
+            </span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    
+    <!-- Most Popular Post Highlight -->
+    {% if blog_insights.most_popular_post %}
+    <div class="mt-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-white">
+      <div class="text-center">
+        <div class="inline-flex items-center px-4 py-2 bg-white/20 rounded-full text-sm font-medium mb-4">
+          <i class="fas fa-fire mr-2 text-orange-300"></i>
+          Most Popular Post
+        </div>
+        <h3 class="text-2xl font-bold mb-4">
+          <a href="{{ url_for('blog_detail', post_id=blog_insights.most_popular_post.id) }}" 
+             class="hover:text-blue-200 transition-colors">
+            {{ blog_insights.most_popular_post.title }}
+          </a>
+        </h3>
+        <p class="text-lg text-blue-100 mb-6">
+          by {{ blog_insights.most_popular_post.author_name }} • 
+          Engagement Score: {{ "%.1f"|format(blog_insights.most_popular_post.engagement_score) }}
+        </p>
+        <a href="{{ url_for('blog_detail', post_id=blog_insights.most_popular_post.id) }}" 
+           class="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
+          Read This Post
+          <i class="fas fa-arrow-right ml-2"></i>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+    
+    <!-- CTA to Blog -->
+    <div class="mt-12 text-center">
+      <a href="{{ url_for('blog_list') }}" 
+         class="inline-flex items-center px-8 py-4 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors">
+        Explore All Posts
+        <i class="fas fa-arrow-right ml-3"></i>
+      </a>
+    </div>
+  </div>
+</section>
+{% endif %}
 
-<!-- 6. Final Call to Action (CTA) Section -->
+<!-- 5. Final Call to Action (CTA) Section -->
 <!-- A final prompt for the user to sign up before the footer. -->
 <div class="bg-white">
     <div class="max-w-4xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">

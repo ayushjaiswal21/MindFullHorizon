@@ -229,12 +229,29 @@ body {
 }
 
 /* Chart containers */
-.chart-container {
-    position: relative;
-    height: 400px;
-    width: 100%;
-    margin: 20px 0;
+.chat-container {
+    /* ... existing styles ... */
 }
+
+.chat-message.user .chat-bubble {
+    background-color: #3B82F6;
+    color: white;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.chat-message.bot .chat-bubble {
+    background-color: #F3F4F6;
+    color: #1F2937;
+    border-bottom-left-radius: 0.25rem;
+}
+
+.chat-bubble {
+    max-width: 75%;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    line-height: 1.5;
+}
+
 
 .chart-container canvas {
     max-height: 400px !important;
@@ -266,6 +283,10 @@ body {
 
 .animation-delay-4000 {
     animation-delay: 4s;
+}
+
+.assessment-chart-fill {
+    @apply bg-blue-600 h-full transition-all duration-500 ease-out;
 }
 
 /* Status badges */
@@ -474,4 +495,12 @@ span[style*="color"] {
 
 .icon-background-red {
     background-image: linear-gradient(135deg, #fca5a5, #ef4444);
+}
+
+/* Google Translate Widget */
+#google_translate_element {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
 }

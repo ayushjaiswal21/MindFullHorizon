@@ -2,117 +2,32 @@
 
 {% block title %}Chat Support - Mindful Horizon{% endblock %}
 
+{% block extra_head %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.2/socket.io.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="max-w-4xl mx-auto">
-    <div class="card">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">
-            <i class="fas fa-comments text-blue-500 mr-2"></i>Chat Support
-        </h2>
-        
-        <div class="chat-container" id="chat-messages">
-            <div class="chat-message text-left">
-                <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800">
-                    <p>Hello {{ user_name }}! I'm here to help you with any questions or concerns you may have. How are you feeling today?</p>
-                    <p class="text-xs mt-1 opacity-70">Just now</p>
-                </div>
+    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center">
+            <img src="https://placehold.co/40x40/ffffff/3B82F6?text=DA" alt="Dr. Anya" class="w-10 h-10 rounded-full mr-3">
+            <div>
+                <h2 class="text-lg font-bold">Dr. Anya</h2>
+                <p class="text-sm text-blue-200">AI Psychologist</p>
             </div>
         </div>
         
-        <form id="chat-form" class="flex space-x-2">
-            <input type="text" name="message" id="chat-input" placeholder="Type your message here..." 
-                   class="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-            <button type="submit" class="btn-ai px-6 py-3 rounded-lg transition duration-200">
+        <div class="p-6 h-96 overflow-y-auto" id="chat-messages">
+            <!-- Chat messages will be dynamically inserted here -->
+        </div>
+        
+        <form id="chat-form" class="p-4 bg-gray-100 border-t border-gray-200 flex items-center">
+            <input type="text" name="message" id="chat-input" placeholder="Type your message..." 
+                   class="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200" required>
+            <button type="submit" class="ml-3 bg-blue-600 hover:bg-blue-700 text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-200 shadow-lg">
                 <i class="fas fa-paper-plane"></i>
             </button>
         </form>
-        
-        <div class="mt-4 p-3 bg-blue-50 rounded-lg">
-            <p class="text-sm text-blue-800">
-                <i class="fas fa-robot mr-2"></i>
-                Enhanced interactive chat with AI-powered responses. Messages are processed and responded to automatically.
-            </p>
-        </div>
     </div>
 </div>
-
-<script>
-function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const messages = document.getElementById('chat-messages');
-    const userMessageText = input.value.trim();
-    
-    if (userMessageText) {
-        // Add user message to chat display
-        const userMessageDiv = document.createElement('div');
-        userMessageDiv.className = 'mb-4 flex justify-end';
-        userMessageDiv.innerHTML = `
-            <div class="bg-blue-600 text-white rounded-lg p-3 max-w-xs">
-                <p class="text-sm">${userMessageText}</p>
-                <span class="text-xs opacity-75">You - ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-            </div>
-        `;
-        messages.appendChild(userMessageDiv);
-        messages.scrollTop = messages.scrollHeight;
-        
-        input.value = ''; // Clear input field
-
-        // Show typing indicator
-        const typingIndicator = document.createElement('div');
-        typingIndicator.id = 'typing-indicator';
-        typingIndicator.className = 'chat-message text-left mb-4';
-        typingIndicator.innerHTML = `
-            <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800">
-                <p class="text-sm">Typing...</p>
-            </div>
-        `;
-        messages.appendChild(typingIndicator);
-        messages.scrollTop = messages.scrollHeight;
-
-        // Send message to backend
-        fetch('/api/chat-message', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ message: userMessageText }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            // Remove typing indicator
-            typingIndicator.remove();
-
-            // Add bot response
-            const botMessageDiv = document.createElement('div');
-            botMessageDiv.className = 'chat-message text-left mb-4';
-            botMessageDiv.innerHTML = `
-                <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800">
-                    <p class="text-sm text-gray-800">${data.response}</p>
-                    <span class="text-xs text-gray-500">Support Bot - ${data.timestamp}</span>
-                </div>
-            `;
-            messages.appendChild(botMessageDiv);
-            messages.scrollTop = messages.scrollHeight;
-        })
-        .catch(error => {
-            console.error('Error sending message:', error);
-            typingIndicator.remove(); // Remove typing indicator on error
-            const errorMessageDiv = document.createElement('div');
-            errorMessageDiv.className = 'chat-message text-left mb-4';
-            errorMessageDiv.innerHTML = `
-                <div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-red-200 text-red-800">
-                    <p class="text-sm">Error: Could not get a response.</p>
-                </div>
-            `;
-            messages.appendChild(errorMessageDiv);
-            messages.scrollTop = messages.scrollHeight;
-        });
-    }
-}
-
-document.getElementById('chat-input').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        sendMessage();
-    }
-});
-</script>
 {% endblock %}

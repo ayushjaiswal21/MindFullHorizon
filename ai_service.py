@@ -30,27 +30,39 @@ class MindfulAIService:
             except Exception as e:
                 print(f"Warning: Could not connect to local Ollama server. Mindwell features will use fallback. Error: {e}")
 
-    def generate_clinical_note(self, transcript: str, patient_info: dict = None) -> str:
+
+    def generate_chat_response(self, user_message: str, context: dict = None) -> str:
         """
-        Generates a clinical note.
-        Uses the local 'mindwell' model if available, otherwise falls back to Gemini.
+        Generates a conversational chatbot response using the local LLM (Ollama Mindwell) or Gemini fallback.
         """
-        prompt = f"Generate a comprehensive clinical note from the following therapy session transcript for a patient with context {patient_info}:\n\nTranscript:\n{transcript}"
+        system_prompt = (
+            "You are Dr. Anya, a compassionate AI psychologist. "
+            "Greet the user warmly, answer their questions, and provide supportive, empathetic, and helpful responses. "
+            "Do not give medical advice or diagnoses. If the user says 'hi', respond with a friendly greeting and ask how you can help. "
+            "If the user shares a concern, ask open-ended questions and encourage them to talk more. "
+            "Keep responses concise but meaningful."
+        )
+        prompt = f"{system_prompt}\n\nUser: {user_message}"
 
         if self.local_model_available:
-            print("Using local 'mindwell' model for clinical note.")
+            print("Using local 'mindwell' model for chat.")
             try:
                 response = ollama.chat(
                     model='ALIENTELLIGENCE/mindwell:latest',
-                    messages=[{'role': 'user', 'content': prompt}]
+                    messages=[
+                        {'role': 'system', 'content': system_prompt},
+                        {'role': 'user', 'content': user_message}
+                    ],
+                    stream=False,
+                    options={"num_predict": 512, "timeout": 120}
                 )
                 return response['message']['content']
             except Exception as e:
                 print(f"Error with local model: {e}. Falling back to Gemini.")
-                return self._gemini_request(prompt, "Error generating clinical note.")
+                return self._gemini_request(prompt, "Error generating chat response.")
         else:
-            print("Using Gemini API for clinical note (fallback).")
-            return self._gemini_request(prompt, "AI documentation service is currently unavailable.")
+            print("Using Gemini API for chat (fallback).")
+            return self._gemini_request(prompt, "AI chat service is currently unavailable.")
 
     def generate_assessment_insights(self, assessment_type: str, score: int, responses: dict) -> dict:
         """
@@ -103,13 +115,9 @@ class MindfulAIService:
         """
         Generates progress recommendations using the Gemini API.
         """
-        prompt = f"""You are a supportive mental health guide.
-        Based on the user's latest data, provide encouraging and actionable recommendations.
-        User Data: {json.dumps(user_data, indent=2)}
-        Provide a JSON response with three keys: "summary", "recommendations" (a list of strings), and "priority_actions" (a list of strings).
-        The summary should be a brief, positive overview of their progress.
-        Recommendations should be gentle suggestions for continued well-being.
-        Priority actions should be 1-2 critical next steps if any data is concerning (e.g., high GAD-7 score)."""
+        prompt = f"""You are a compassionate and empathetic psychologist. Your name is Dr. Anya. Start the conversation with a warm and welcoming message. Ask open-ended questions to encourage the user to share their thoughts and feelings. Your goal is to provide a safe and supportive space for the user to reflect. Do not give medical advice. User's message: {user_message}
+
+User's context: {json.dumps(context, indent=2)}"""
 
         if self.gemini_model:
             try:
