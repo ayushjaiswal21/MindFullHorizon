@@ -20,20 +20,26 @@ class MindfulAIService:
             print("Warning: GEMINI_API_KEY not found. Gemini features will be disabled.")
 
         # --- Local Ollama (Mindwell) Configuration ---
-        self.ollama_host = os.getenv('OLLAMA_HOST')
+        self.ollama_host = os.getenv('OLLAMA_HOST', 'http://localhost:11434')
         self.local_model_available = False
-        if self.ollama_host:
+        
+        # Only try to connect if DISABLE_LOCAL_AI is not set
+        if not os.getenv('DISABLE_LOCAL_AI'):
             try:
-                ollama.list()
-                self.local_model_available = True
-                print(f"Successfully connected to local Ollama server at {self.ollama_host}")
+                # Set a short timeout for the connection attempt
+                import requests
+                response = requests.get(f"{self.ollama_host}/api/tags", timeout=2)
+                if response.status_code == 200:
+                    self.local_model_available = True
+                    print("Successfully connected to local Ollama server")
             except Exception as e:
-                print(f"Warning: Could not connect to local Ollama server. Mindwell features will use fallback. Error: {e}")
+                print("Info: Local AI services not available. Using cloud fallback.")
 
 
     def generate_chat_response(self, user_message: str, context: dict = None) -> str:
         """
-        Generates a conversational chatbot response using the local LLM (Ollama Mindwell) or Gemini fallback.
+        Generates a conversational chatbot response using available AI services.
+        Falls back to simpler responses if no AI services are available.
         """
         system_prompt = (
             "You are Dr. Anya, a compassionate AI psychologist. "
@@ -42,10 +48,34 @@ class MindfulAIService:
             "If the user shares a concern, ask open-ended questions and encourage them to talk more. "
             "Keep responses concise but meaningful."
         )
+        
+        # If no AI services are available, use basic responses
+        if not self.local_model_available and not self.gemini_model:
+            return self._get_basic_response(user_message)
+            
         prompt = f"{system_prompt}\n\nUser: {user_message}"
+        
+    def _get_basic_response(self, user_message: str) -> str:
+        """Provide basic responses when AI services are unavailable."""
+        message = user_message.lower().strip()
+        
+        # Basic response patterns
+        if any(greeting in message for greeting in ['hi', 'hello', 'hey']):
+            return "Hello! I'm Dr. Anya. While our AI services are currently limited, I'm here to chat. How are you feeling today?"
+        
+        if 'help' in message or '?' in message:
+            return ("I'm currently operating in basic mode, but I'm still here to listen. "
+                   "Would you like to tell me more about what's on your mind?")
+        
+        if any(word in message for word in ['sad', 'depressed', 'anxious', 'worried']):
+            return ("I hear that you're going through a difficult time. While I'm operating in basic mode, "
+                   "remember that it's okay to seek help. Would you like information about professional support services?")
+        
+        # Default response
+        return ("I'm listening and I care about what you're saying. While I'm operating in basic mode right now, "
+               "I'm here to chat. Would you like to tell me more?")
 
         if self.local_model_available:
-            print("Using local 'mindwell' model for chat.")
             try:
                 response = ollama.chat(
                     model='ALIENTELLIGENCE/mindwell:latest',

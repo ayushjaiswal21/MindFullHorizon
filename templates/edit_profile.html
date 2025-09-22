@@ -13,15 +13,7 @@
             <input type="text" class="form-control" id="institution" name="institution" value="{{ user.institution }}">
         </div>
 
-        <div class="mb-3">
-            <label for="profile_pic" class="form-label">Profile Picture</label>
-            <input type="file" class="form-control" id="profile_pic" name="profile_pic" accept="image/*">
-            {% if user.profile_pic %}
-            <div class="mt-2">
-                <img src="{{ url_for('static', filename='uploads/' + user.profile_pic) }}" alt="Current profile picture" class="img-thumbnail" style="max-width: 150px;">
-            </div>
-            {% endif %}
-        </div>
+
 
         <button type="submit" class="btn btn-primary">Save Changes</button>
     </form>
