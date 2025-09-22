@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 """Database models for the Mindful Horizon application."""
-from database import db
+from extensions import db
 from datetime import datetime, timedelta
 from sqlalchemy import func
 from werkzeug.security import generate_password_hash, check_password_hash
