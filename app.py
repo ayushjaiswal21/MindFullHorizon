@@ -1,3 +1,4 @@
+
 import json
 
 import logging
@@ -7,7 +8,7 @@ from functools import wraps
 from sqlalchemy import func
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, abort
 from flask_session import Session
 from flask_compress import Compress
 from flask_migrate import Migrate
@@ -61,8 +62,14 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
+
 logger = logging.getLogger(__name__)
-logger.info("--- SCRIPT START: app.py is being executed ---")
+
+# Yoga Video Library Page (correct placement)
+@app.route('/yoga-videos')
+def yoga_videos():
+    return render_template('yoga_videos.html')
+
 
 # Enable gzip compression and static caching for low-bandwidth optimization
 app.config['COMPRESS_ALGORITHM'] = ['gzip']
@@ -104,6 +111,23 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# Blog Delete Route (placed after app, login_required, and abort are defined)
+@app.route('/blog/<int:post_id>/delete', methods=['POST'])
+@login_required
+def blog_delete(post_id):
+    post = BlogPost.query.get_or_404(post_id)
+    # Optional: Only allow author or admin to delete
+    if post.author_id != session.get('user_id'):
+        abort(403)
+    try:
+        db.session.delete(post)
+        db.session.commit()
+        flash('Blog post deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash('Failed to delete blog post.', 'error')
+    return redirect(url_for('blog_list'))
+
 def role_required(role):
     def decorator(f):
         @wraps(f)
@@ -143,28 +167,43 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        role = request.form['role']
-        
-        user = User.query.filter_by(email=email, role=role).first()
-        
-        if user and user.check_password(password):
-            session.clear()
-            session.permanent = True
-            session['user_email'] = email
-            session['user_role'] = role
-            session['user_name'] = user.name
-            session['user_id'] = user.id
-            session['user_institution'] = user.institution
-            session.modified = True
-            
-            if role == 'patient':
-                return redirect(url_for('patient_dashboard'))
-            else:
-                return redirect(url_for('provider_dashboard'))
+        # Use .get to avoid KeyError and normalize inputs
+        email = (request.form.get('email') or '').strip().lower()
+        password = request.form.get('password') or ''
+        role = (request.form.get('role') or '').strip().lower()
+
+        if not email or not password or not role:
+            flash('Please provide email, password, and select a role.', 'error')
+            return render_template('login.html')
+
+        user = User.query.filter_by(email=email).first()
+
+        if not user:
+            flash('No account found with that email. Please sign up first.', 'error')
+            return render_template('login.html')
+
+        if user.role.lower() != role:
+            flash('Selected role does not match account role. Please choose the correct role.', 'error')
+            return render_template('login.html')
+
+        if not user.check_password(password):
+            flash('Invalid credentials. Please check your email and password.', 'error')
+            return render_template('login.html')
+
+        # Successful login
+        session.clear()
+        session.permanent = True
+        session['user_email'] = email
+        session['user_role'] = role
+        session['user_name'] = user.name
+        session['user_id'] = user.id
+        session['user_institution'] = user.institution
+        session.modified = True
+
+        if role == 'patient':
+            return redirect(url_for('patient_dashboard'))
         else:
-            flash('Invalid credentials. Please check your email, password, and role.', 'error')
+            return redirect(url_for('provider_dashboard'))
     
     return render_template('login.html')
 
@@ -335,6 +374,17 @@ def provider_dashboard():
                          caseload=caseload_data,
                          bi_data=bi_data,
                          institution=institution)
+
+
+@app.route('/analytics')
+@login_required
+@role_required('provider')
+def analytics():
+    # Basic placeholder for advanced analytics page; can be expanded later
+    # Gather some summary data for provider
+    institution = session.get('user_institution')
+    summary = get_institutional_summary(institution, db) if institution else {}
+    return render_template('analytics.html', summary=summary)
 
 @app.route('/chat')
 @login_required
