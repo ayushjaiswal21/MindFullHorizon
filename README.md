@@ -193,7 +193,42 @@ SENTRY_DSN=your-sentry-dsn-for-error-tracking
 
 ## 🌐 Platform-Specific Deployment Guides
 
-### **1. Heroku Deployment (Recommended for Beginners)**
+### **1. Render.com Deployment (Recommended)**
+
+#### Prerequisites
+- **Render.com account** (free tier available)
+- **GitHub repository** with your code
+
+#### Step 1: Connect Repository
+1. **Go to [Render.com](https://render.com)**
+2. **Click "New" → "Web Service"**
+3. **Connect your GitHub repository**
+
+#### Step 2: Configure Service
+- **Name**: `mindful-horizon`
+- **Runtime**: `Python 3.13`
+- **Build Command**: `pip install --no-cache-dir --upgrade pip setuptools wheel && pip install --no-cache-dir --only-binary=all -r requirements.txt`
+- **Start Command**: `gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app`
+
+#### Step 3: Environment Variables
+Set these in Render.com dashboard:
+```bash
+FLASK_ENV=production
+SECRET_KEY=your-256-bit-secret-key-here
+GEMINI_API_KEY=your-google-gemini-api-key
+DATABASE_URL=your-postgresql-database-url
+REDIS_URL=your-redis-url (optional)
+```
+
+#### Step 4: Deploy
+- **Click "Create Web Service"**
+- **Wait for deployment** (usually 5-10 minutes)
+- **Check logs** if there are any issues
+- **Access your app** at the provided URL
+
+---
+
+### **2. Heroku Deployment (Beginner-Friendly)**
 
 #### Step 1: Prepare Your Application
 ```bash
