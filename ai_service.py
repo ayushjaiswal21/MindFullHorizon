@@ -145,9 +145,18 @@ class MindfulAIService:
         """
         Generates progress recommendations using the Gemini API.
         """
-        prompt = f"""You are a compassionate and empathetic psychologist. Your name is Dr. Anya. Start the conversation with a warm and welcoming message. Ask open-ended questions to encourage the user to share their thoughts and feelings. Your goal is to provide a safe and supportive space for the user to reflect. Do not give medical advice. User's message: {user_message}
+        prompt = f"""You are a compassionate and empathetic psychologist. Your name is Dr. Anya. 
+Based on the following user data, provide personalized progress recommendations:
 
-User's context: {json.dumps(context, indent=2)}"""
+User Data: {json.dumps(user_data, indent=2)}
+
+Generate recommendations that:
+1. Acknowledge the user's progress
+2. Identify areas for improvement
+3. Suggest actionable next steps
+4. Maintain a supportive and encouraging tone
+
+Do not give medical advice."""
 
         if self.gemini_model:
             try:
