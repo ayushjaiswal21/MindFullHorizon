@@ -6,28 +6,27 @@
 <div class="max-w-4xl mx-auto">
     <div class="card">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">
-            <i class="fas fa-video text-green-500 mr-2"></i>Telehealth Session
+            <i class="fas fa-video text-green-500 mr-2"></i>Telehealth Session with {{ patient_name }}
         </h2>
         
-        <div class="bg-gray-900 rounded-lg p-8 text-center mb-6">
-            <div class="bg-gray-800 rounded-lg p-12 mb-4">
-                <i class="fas fa-video text-gray-400 text-6xl mb-4"></i>
-                <p class="text-white text-lg">Video session will appear here</p>
-                <p class="text-gray-400 text-sm">Secure, HIPAA-compliant video conferencing</p>
-            </div>
+        <div class="bg-gray-900 rounded-lg p-4 md:p-8 text-center mb-6 relative">
+            <!-- Remote Video Stream -->
+            <video id="remote-video" autoplay playsinline class="w-full h-96 bg-black rounded-lg object-cover mb-2"></video>
+            <!-- Local Video Stream -->
+            <video id="local-video" autoplay playsinline muted class="absolute bottom-6 right-6 w-32 h-24 md:w-48 md:h-36 bg-black rounded-lg object-cover border-2 border-white"></video>
             
-            <div class="flex justify-center space-x-4">
-                <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full transition duration-200">
+            <p class="text-white text-lg mt-2">Connecting to {{ patient_name }}...</p>
+            <p class="text-gray-400 text-sm">Secure, HIPAA-compliant video conferencing</p>
+            
+            <div class="flex justify-center space-x-4 mt-4">
+                <button id="mute-audio" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition duration-200">
                     <i class="fas fa-microphone-slash"></i>
                 </button>
-                <button class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full transition duration-200">
+                <button id="mute-video" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition duration-200">
                     <i class="fas fa-video-slash"></i>
                 </button>
-                <button class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-full transition duration-200">
-                    <i class="fas fa-phone"></i>
-                </button>
-                <button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-full transition duration-200">
-                    <i class="fas fa-share-screen"></i>
+                <button id="end-call" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-full transition duration-200">
+                    <i class="fas fa-phone-slash"></i> End Call
                 </button>
             </div>
         </div>
@@ -57,57 +56,145 @@
                 </ul>
             </div>
         </div>
-        
-        <div class="mt-6 p-4 bg-yellow-50 rounded-lg">
-            <p class="text-sm text-yellow-800">
-                <i class="fas fa-info-circle mr-2"></i>
-                This is a placeholder for the telehealth interface. In a production environment, this would integrate with a secure video conferencing solution like Zoom Healthcare, Doxy.me, or a custom WebRTC implementation.
-            </p>
-        </div>
-        
-        <div class="mt-8 text-center">
-            {{ back_to_dashboard_button() }}
-        </div>
-    {% endblock %}
+    </div>
+</div>
+{% endblock %}
 
 {% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const localVideo = document.getElementById('local-video');
-    const remoteVideo = document.getElementById('remote-video');
-    const muteAudioBtn = document.getElementById('mute-audio');
-    const muteVideoBtn = document.getElementById('mute-video');
-    const endCallBtn = document.getElementById('end-call');
+    document.addEventListener('DOMContentLoaded', function() {
+        const socket = io();
+        const localVideo = document.getElementById('local-video');
+        const remoteVideo = document.getElementById('remote-video');
+        const muteAudioBtn = document.getElementById('mute-audio');
+        const muteVideoBtn = document.getElementById('mute-video');
+        const endCallBtn = document.getElementById('end-call');
 
-    let localStream;
+        let localStream;
+        let peerConnection;
+        const room = 'telehealth_room_{{ patient_id }}'; // Use patient_id for room name
 
-    // Get user media
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(stream => {
-            localStream = stream;
-            localVideo.srcObject = stream;
-        })
-        .catch(error => {
-            console.error('Error accessing media devices.', error);
+        const configuration = {
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        };
+
+        // 1. Get local media and join room
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+            .then(stream => {
+                localStream = stream;
+                localVideo.srcObject = stream;
+                socket.emit('join', { room: room });
+            })
+            .catch(error => {
+                console.error('Error accessing media devices.', error);
+                alert('Could not access camera/microphone. Please ensure they are enabled.');
+            });
+
+        // 2. Socket.IO event handlers
+        socket.on('ready', () => {
+            console.log('Socket is ready, creating offer...');
+            createPeerConnection();
+            peerConnection.createOffer()
+                .then(offer => peerConnection.setLocalDescription(offer))
+                .then(() => {
+                    socket.emit('offer', { offer: peerConnection.localDescription, room: room });
+                })
+                .catch(error => console.error('Error creating offer:', error));
         });
 
-    // Mute audio
-    muteAudioBtn.addEventListener('click', () => {
-        localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled;
-        muteAudioBtn.classList.toggle('bg-red-600');
-    });
+        socket.on('offer', (data) => {
+            console.log('Received offer, creating answer...');
+            createPeerConnection();
+            peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer))
+                .then(() => peerConnection.createAnswer())
+                .then(answer => peerConnection.setLocalDescription(answer))
+                .then(() => {
+                    socket.emit('answer', { answer: peerConnection.localDescription, room: room });
+                })
+                .catch(error => console.error('Error creating answer:', error));
+        });
 
-    // Mute video
-    muteVideoBtn.addEventListener('click', () => {
-        localStream.getVideoTracks()[0].enabled = !localStream.getVideoTracks()[0].enabled;
-        muteVideoBtn.classList.toggle('bg-red-600');
-    });
+        socket.on('answer', (data) => {
+            console.log('Received answer.');
+            peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer))
+                .catch(error => console.error('Error setting remote description (answer):', error));
+        });
 
-    // End call
-    endCallBtn.addEventListener('click', () => {
-        localStream.getTracks().forEach(track => track.stop());
-        window.location.href = "{{ url_for('patient_dashboard') if session.user_role == 'patient' else url_for('provider_dashboard') }}";
+        socket.on('candidate', (data) => {
+            console.log('Received ICE candidate.');
+            peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate))
+                .catch(error => console.error('Error adding ICE candidate:', error));
+        });
+
+        socket.on('_disconnect', () => {
+            console.log('Peer disconnected.');
+            if (peerConnection) {
+                peerConnection.close();
+                peerConnection = null;
+            }
+            remoteVideo.srcObject = null;
+            alert('The other participant has disconnected.');
+        });
+
+        // 3. WebRTC Peer Connection setup
+        function createPeerConnection() {
+            if (peerConnection) return;
+            peerConnection = new RTCPeerConnection(configuration);
+
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    socket.emit('candidate', { candidate: event.candidate, room: room });
+                }
+            };
+
+            peerConnection.ontrack = (event) => {
+                console.log('Remote stream added.', event.streams[0]);
+                remoteVideo.srcObject = event.streams[0];
+            };
+
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+        }
+
+        // UI Button Handlers
+        muteAudioBtn.addEventListener('click', () => {
+            const audioTrack = localStream.getAudioTracks()[0];
+            if (audioTrack) {
+                audioTrack.enabled = !audioTrack.enabled;
+                muteAudioBtn.classList.toggle('bg-red-600');
+                muteAudioBtn.classList.toggle('bg-green-600');
+                muteAudioBtn.innerHTML = audioTrack.enabled ? '<i class="fas fa-microphone"></i>' : '<i class="fas fa-microphone-slash"></i>';
+            }
+        });
+
+        muteVideoBtn.addEventListener('click', () => {
+            const videoTrack = localStream.getVideoTracks()[0];
+            if (videoTrack) {
+                videoTrack.enabled = !videoTrack.enabled;
+                muteVideoBtn.classList.toggle('bg-red-600');
+                muteVideoBtn.classList.toggle('bg-green-600');
+                muteVideoBtn.innerHTML = videoTrack.enabled ? '<i class="fas fa-video"></i>' : '<i class="fas fa-video-slash"></i>';
+            }
+        });
+
+        endCallBtn.addEventListener('click', () => {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+            }
+            if (peerConnection) {
+                peerConnection.close();
+            }
+            socket.emit('leave', { room: room });
+            window.location.href = "{{ url_for('patient_dashboard') if session.user_role == 'patient' else url_for('provider_dashboard') }}";
+        });
+
+        // Handle browser tab/window close
+        window.addEventListener('beforeunload', () => {
+            socket.emit('leave', { room: room });
+        });
     });
-});
 </script>
 {% endblock %}

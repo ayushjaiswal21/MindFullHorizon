@@ -4,6 +4,7 @@ import logging
 import os
 from datetime import datetime, timedelta, date, timezone
 from functools import wraps
+from sqlalchemy import func
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
@@ -11,7 +12,7 @@ from flask_session import Session
 from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect, CSRFError
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO, emit, join_room, leave_room
 
 from ai_service import ai_service
 from database import db
@@ -292,8 +293,9 @@ def patient_dashboard():
 def provider_dashboard():
     institution = session.get('user_institution', 'Sample University')
     
+    # Fetch all patients for the institution with their latest detox logs and clinical notes
     patients = User.query.filter_by(role='patient', institution=institution).all()
-    
+
     caseload_data = []
     for patient in patients:
         latest_detox = DigitalDetoxLog.query.filter_by(user_id=patient.id).order_by(DigitalDetoxLog.date.desc()).first()
@@ -319,13 +321,13 @@ def provider_dashboard():
     institutional_data = get_institutional_summary(institution, db)
     
     bi_data = {
-        'patient_engagement': institutional_data['engagement_rate'] if institutional_data else 0,
-        'avg_session_duration': 45,
-        'completion_rate': 82,
-        'satisfaction_score': 4.2,
-        'total_patients': institutional_data['total_users'] if institutional_data else 0,
-        'high_risk_patients': institutional_data['high_risk_users'] if institutional_data else 0,
-        'avg_screen_time': institutional_data['avg_screen_time'] if institutional_data else 0
+        'patient_engagement': institutional_data['engagement_rate'],
+        'avg_session_duration': institutional_data['avg_session_duration'],
+        'completion_rate': institutional_data['completion_rate'],
+        'satisfaction_score': institutional_data['satisfaction_score'],
+        'total_patients': institutional_data['total_users'],
+        'high_risk_patients': institutional_data['high_risk_users'],
+        'avg_screen_time': institutional_data['avg_screen_time']
     }
     
     return render_template('provider_dashboard.html', 
@@ -416,6 +418,104 @@ def ai_documentation():
             flash('Please provide a session transcript.', 'error')
     
     return render_template('ai_documentation.html', user_name=session['user_name'])
+
+@app.route('/analytics')
+@login_required
+@role_required('provider')
+def analytics():
+    institution = session.get('user_institution', 'Sample University')
+
+    # Get institutional analytics data
+    institutional_data = get_institutional_summary(institution, db)
+
+    # Get recent blog insights
+    recent_blog_insights = BlogInsight.query.order_by(BlogInsight.created_at.desc()).limit(10).all()
+
+    # Get patient engagement trends
+    patients = User.query.filter_by(role='patient', institution=institution).all()
+    patient_ids = [p.id for p in patients]
+
+    # Get recent digital detox data for trends
+    recent_detox = DigitalDetoxLog.query.filter(
+        DigitalDetoxLog.user_id.in_(patient_ids),
+        DigitalDetoxLog.date >= datetime.now().date() - timedelta(days=30)
+    ).all()
+
+    # Calculate engagement metrics
+    active_patients = len(set([log.user_id for log in recent_detox]))
+    total_patients = len(patients)
+
+    # Get assessment completion rates
+    assessments_30_days = Assessment.query.filter(
+        Assessment.user_id.in_(patient_ids),
+        Assessment.created_at >= datetime.now() - timedelta(days=30)
+    ).count()
+
+    # Get gamification stats
+    gamification_stats = db.session.query(
+        func.avg(Gamification.points),
+        func.avg(Gamification.streak),
+        func.count(Gamification.id)
+    ).filter(Gamification.user_id.in_(patient_ids)).first()
+
+    # Get wellness trend data for charts
+    detox_trends = {}
+    for log in recent_detox:
+        date_str = log.date.strftime('%Y-%m-%d')
+        if date_str not in detox_trends:
+            detox_trends[date_str] = {'total_hours': 0, 'count': 0, 'ai_scores': []}
+        detox_trends[date_str]['total_hours'] += log.screen_time_hours
+        detox_trends[date_str]['count'] += 1
+        if log.ai_score:
+            detox_trends[date_str]['ai_scores'].append(log.ai_score)
+
+    # Calculate average daily screen time and wellness scores
+    chart_labels = sorted(detox_trends.keys())
+    screen_time_data = []
+    wellness_score_data = []
+
+    for date in chart_labels:
+        data = detox_trends[date]
+        avg_screen_time = data['total_hours'] / data['count'] if data['count'] > 0 else 0
+        screen_time_data.append(round(avg_screen_time, 1))
+
+        # Convert AI scores to numeric values for averaging
+        numeric_scores = []
+        for score in data['ai_scores']:
+            if score == 'Excellent':
+                numeric_scores.append(5)
+            elif score == 'Good':
+                numeric_scores.append(4)
+            elif score == 'Fair':
+                numeric_scores.append(3)
+            elif score == 'Needs Improvement':
+                numeric_scores.append(2)
+            elif score == 'Poor':
+                numeric_scores.append(1)
+
+        avg_wellness = sum(numeric_scores) / len(numeric_scores) if numeric_scores else 0
+        wellness_score_data.append(round(avg_wellness, 1))
+
+    analytics_data = {
+        'institution': institution,
+        'total_patients': total_patients,
+        'active_patients': active_patients,
+        'engagement_rate': round((active_patients / total_patients) * 100, 1) if total_patients > 0 else 0,
+        'assessments_30_days': assessments_30_days,
+        'avg_gamification_points': round(gamification_stats[0], 1) if gamification_stats[0] else 0,
+        'avg_streak': round(gamification_stats[1], 1) if gamification_stats[1] else 0,
+        'total_gamified_users': gamification_stats[2],
+        'chart_labels': chart_labels,
+        'screen_time_data': screen_time_data,
+        'wellness_score_data': wellness_score_data,
+        'blog_insights': recent_blog_insights,
+        'institutional_data': institutional_data
+    }
+
+    return render_template('analytics.html',
+                         user_name=session['user_name'],
+                         analytics_data=analytics_data,
+                         datetime=datetime)
 
 @app.route('/medication', methods=['GET', 'POST'])
 @login_required
@@ -602,6 +702,15 @@ def yoga():
                          user_name=session['user_name'],
                          recent_logs=recent_logs,
                          stats=stats)
+
+@app.route('/telehealth_session/<int:user_id>')
+@login_required
+def telehealth_session(user_id):
+    patient = User.query.get_or_404(user_id)
+    return render_template('telehealth.html', 
+                           user_name=session['user_name'],
+                           patient_id=patient.id,
+                           patient_name=patient.name)
 
 @app.route('/telehealth')
 @login_required
@@ -900,6 +1009,58 @@ def api_save_assessment():
             'insights': ai_insights if 'ai_insights' in locals() else None
         }), 500
 
+@app.route('/send_prescription/<int:patient_id>', methods=['POST'])
+@login_required
+@role_required('provider')
+def send_prescription(patient_id):
+    provider_id = session['user_id']
+    
+    medication_name = request.form.get('medication_name')
+    dosage = request.form.get('dosage')
+    instructions = request.form.get('instructions')
+    expiry_date_str = request.form.get('expiry_date')
+
+    if not all([medication_name, dosage]):
+        flash('Medication name and dosage are required.', 'error')
+        return redirect(url_for('wellness_report', user_id=patient_id))
+
+    expiry_date = None
+    if expiry_date_str:
+        try:
+            expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d')
+        except ValueError:
+            flash('Invalid expiry date format. Please use YYYY-MM-DD.', 'error')
+            return redirect(url_for('wellness_report', user_id=patient_id))
+
+    try:
+        new_prescription = Prescription(
+            provider_id=provider_id,
+            patient_id=patient_id,
+            medication_name=medication_name,
+            dosage=dosage,
+            instructions=instructions,
+            expiry_date=expiry_date
+        )
+        db.session.add(new_prescription)
+        db.session.commit()
+        flash(f'Prescription for {medication_name} sent successfully to patient {patient_id}!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error sending prescription: {e}', 'error')
+        logger.error(f"Error sending prescription for patient {patient_id} by provider {provider_id}: {e}")
+
+    return redirect(url_for('wellness_report', user_id=patient_id))
+
+@app.route('/my_prescriptions')
+@login_required
+@role_required('patient')
+def my_prescriptions():
+    user_id = session['user_id']
+    prescriptions = Prescription.query.filter_by(patient_id=user_id).order_by(Prescription.issue_date.desc()).all()
+    return render_template('my_prescriptions.html', 
+                           user_name=session['user_name'],
+                           prescriptions=prescriptions)
+
 @app.route('/wellness-report/<int:user_id>')
 @login_required
 @role_required('provider')
@@ -940,8 +1101,59 @@ def wellness_report(user_id):
         'assessments': assessment_data
     }
     
-    recent_sessions = []
-    
+    recent_sessions = ClinicalNote.query.filter_by(patient_id=user_id).order_by(ClinicalNote.session_date.desc()).limit(10).all()
+
+    # Fetch RPM data for mood charting
+    rpm_logs = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.asc()).limit(90).all()
+    mood_chart_labels = [log.date.strftime('%Y-%m-%d') for log in rpm_logs]
+    mood_chart_data = [log.mood_score if log.mood_score else 0 for log in rpm_logs]
+
+    # Fetch assessments for mental health charting
+    mental_health_assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.asc()).all()
+    mh_chart_labels = []
+    gad7_data = []
+    phq9_data = []
+
+    for assessment in mental_health_assessments:
+        date_str = assessment.created_at.strftime('%Y-%m-%d')
+        if date_str not in mh_chart_labels:
+            mh_chart_labels.append(date_str)
+            gad7_data.append(None) # Initialize with None
+            phq9_data.append(None) # Initialize with None
+
+        idx = mh_chart_labels.index(date_str)
+        if assessment.assessment_type == 'GAD-7':
+            gad7_data[idx] = assessment.score
+        elif assessment.assessment_type == 'PHQ-9':
+            phq9_data[idx] = assessment.score
+
+    # Filter out dates where both GAD-7 and PHQ-9 are None
+    filtered_mh_chart_labels = []
+    filtered_gad7_data = []
+    filtered_phq9_data = []
+    for i, label in enumerate(mh_chart_labels):
+        if gad7_data[i] is not None or phq9_data[i] is not None:
+            filtered_mh_chart_labels.append(label)
+            filtered_gad7_data.append(gad7_data[i])
+            filtered_phq9_data.append(phq9_data[i])
+
+    # Prepare patient data for AI goal suggestions
+    patient_data_for_ai = {
+        'latest_assessment': {
+            'type': ai_analysis.assessment_type,
+            'score': ai_analysis.score,
+            'insights': json.loads(ai_analysis.ai_insights) if ai_analysis and ai_analysis.ai_insights else None
+        } if ai_analysis else None,
+        'recent_goals': [{'title': g.title, 'status': g.status, 'progress': g.progress_percentage} for g in Goal.query.filter_by(user_id=user_id).order_by(Goal.created_at.desc()).limit(5).all()],
+        'recent_digital_detox': [{'screen_time_hours': d.screen_time_hours, 'ai_score': d.ai_score} for d in digital_detox_logs[:5]]
+    }
+    ai_goal_suggestions = ai_service.generate_goal_suggestions(patient_data_for_ai)
+
+    # Fetch medication logs for AI adherence analysis
+    medication_logs = MedicationLog.query.filter_by(user_id=user_id).order_by(MedicationLog.taken_at.desc()).limit(30).all()
+    medication_logs_data = [{'medication_id': log.medication_id, 'taken_at': log.taken_at.isoformat()} for log in medication_logs]
+    ai_medication_adherence_insights = ai_service.analyze_medication_adherence(medication_logs_data, patient_data_for_ai)
+
     return render_template('wellness_report.html', 
                          user_name=session['user_name'], 
                          patient=patient,
@@ -949,6 +1161,13 @@ def wellness_report(user_id):
                          ai_analysis=ai_analysis,
                          wellness_trend=wellness_trend,
                          recent_sessions=recent_sessions,
+                         mood_chart_labels=mood_chart_labels,
+                         mood_chart_data=mood_chart_data,
+                         mh_chart_labels=filtered_mh_chart_labels,
+                         gad7_data=filtered_gad7_data,
+                         phq9_data=filtered_phq9_data,
+                         ai_goal_suggestions=ai_goal_suggestions,
+                         ai_medication_adherence_insights=ai_medication_adherence_insights,
                          datetime=datetime)
 
 @app.route('/profile')
@@ -1263,9 +1482,7 @@ def save_mood():
 
 
 
-
 # --- BLOG ROUTES ---
-from sqlalchemy.exc import SQLAlchemyError
 
 @app.route('/blog')
 def blog_list():
@@ -1341,6 +1558,37 @@ def handle_chat_message(data):
     except Exception as e:
         reply = "Sorry, the AI is currently unavailable."
     emit('chat_response', {'reply': reply, 'is_crisis': False})
+
+# --- SocketIO Telehealth Handlers ---
+@socketio.on('join')
+def on_join(data):
+    room = data['room']
+    join_room(room)
+    emit('message', f'User has joined the room {room}.', to=room)
+    # Notify the other user in the room that a peer is ready
+    emit('ready', to=room, include_self=False)
+
+@socketio.on('offer')
+def on_offer(data):
+    room = data['room']
+    emit('offer', data, to=room, include_self=False)
+
+@socketio.on('answer')
+def on_answer(data):
+    room = data['room']
+    emit('answer', data, to=room, include_self=False)
+
+@socketio.on('candidate')
+def on_candidate(data):
+    room = data['room']
+    emit('candidate', data, to=room, include_self=False)
+
+@socketio.on('leave')
+def on_leave(data):
+    room = data['room']
+    leave_room(room)
+    emit('_disconnect', to=room, include_self=False)
+    emit('message', f'User has left the room {room}.', to=room)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)

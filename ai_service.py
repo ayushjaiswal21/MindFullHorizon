@@ -171,5 +171,75 @@ User's context: {json.dumps(context, indent=2)}"""
             'ai_suggestion': 'AI insights are currently unavailable. Try to balance your screen time with other activities.'
         }
 
+    def generate_goal_suggestions(self, patient_data: dict) -> dict:
+        """
+        Generates AI-powered goal suggestions or adjustments based on patient data.
+        """
+        prompt = f"""You are an AI assistant specializing in mental wellness and goal setting. 
+        Based on the following patient data, suggest 2-3 new, actionable, and measurable goals, 
+        or adjustments to existing goals, to improve their mental well-being. 
+        Focus on areas like digital wellness, stress management, physical activity, or mindfulness. 
+        Provide a JSON response with a single key: "suggestions" (a list of strings, each being a goal suggestion).
+
+        Patient Data: {json.dumps(patient_data, indent=2)}"""
+
+        if self.gemini_model:
+            try:
+                response_text = self._gemini_request(prompt, is_json=True)
+                if '{' in response_text and '}' in response_text:
+                    return json.loads(response_text)
+                else:
+                    return {'suggestions': ["Review patient's recent activities for goal ideas."]}
+            except (json.JSONDecodeError, Exception) as e:
+                print(f"Error processing Gemini response for goal suggestions: {e}")
+                return self._fallback_goal_suggestions()
+        else:
+            return self._fallback_goal_suggestions()
+
+    def _fallback_goal_suggestions(self) -> dict:
+        """Fallback if AI is unavailable for goal suggestions."""
+        return {
+            'suggestions': [
+                'Encourage patient to set a new mindfulness goal.',
+                'Suggest a digital detox goal for improved focus.',
+                'Recommend a physical activity goal to boost mood.'
+            ]
+        }
+
+    def analyze_medication_adherence(self, medication_logs: list, patient_data: dict = None) -> dict:
+        """
+        Analyzes medication adherence based on logs and provides insights.
+        """
+        prompt = f"""You are an AI assistant specializing in medication adherence.
+        Analyze the following medication logs and patient data to provide insights into adherence patterns.
+        Identify any potential adherence issues, suggest reasons, and offer actionable recommendations for improvement.
+        Provide a JSON response with two keys: "summary" (a string) and "recommendations" (a list of strings).
+
+        Medication Logs: {json.dumps(medication_logs, indent=2)}
+        Patient Data: {json.dumps(patient_data, indent=2) if patient_data else "N/A"}"""
+
+        if self.gemini_model:
+            try:
+                response_text = self._gemini_request(prompt, is_json=True)
+                if '{' in response_text and '}' in response_text:
+                    return json.loads(response_text)
+                else:
+                    return {'summary': 'Could not generate adherence insights.', 'recommendations': []}
+            except (json.JSONDecodeError, Exception) as e:
+                print(f"Error processing Gemini response for medication adherence: {e}")
+                return self._fallback_medication_adherence()
+        else:
+            return self._fallback_medication_adherence()
+
+    def _fallback_medication_adherence(self) -> dict:
+        """Fallback if AI is unavailable for medication adherence insights."""
+        return {
+            'summary': 'AI adherence insights are currently unavailable.',
+            'recommendations': [
+                'Encourage patient to consistently log their medication intake.',
+                'Review the patient\'s medication schedule and simplify if possible.'
+            ]
+        }
+
 # Global AI service instance
 ai_service = MindfulAIService()
