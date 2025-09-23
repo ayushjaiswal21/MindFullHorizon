@@ -369,6 +369,44 @@ function initializeChartJS() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Breathing page scripts
+    if (document.getElementById('start-4-7-8-breathing')) {
+        document.getElementById('start-4-7-8-breathing').addEventListener('click', function() {
+            startBreathing('478');
+        });
+    }
+    if (document.getElementById('start-box-breathing')) {
+        document.getElementById('start-box-breathing').addEventListener('click', function() {
+            startBreathing('box');
+        });
+    }
+    if (document.getElementById('start-diaphragmatic-breathing')) {
+        document.getElementById('start-diaphragmatic-breathing').addEventListener('click', function() {
+            startBreathing('default'); // Using default as there's no specific case for 'diaphragmatic'
+        });
+    }
+    if (document.getElementById('start-pursed-lip-breathing')) {
+        document.getElementById('start-pursed-lip-breathing').addEventListener('click', function() {
+            startBreathing('default'); // Using default as there's no specific case for 'pursed-lip'
+        });
+    }
+    if (document.getElementById('start-session-button')) {
+        document.getElementById('start-session-button').addEventListener('click', function() {
+            startSession();
+        });
+    }
+
+    // Breathing session control buttons
+    if (document.getElementById('start-btn')) {
+        document.getElementById('start-btn').addEventListener('click', startSession);
+    }
+    if (document.getElementById('pause-btn')) {
+        document.getElementById('pause-btn').addEventListener('click', pauseSession);
+    }
+    if (document.getElementById('stop-btn')) {
+        document.getElementById('stop-btn').addEventListener('click', stopSession);
+    }
+
     // ... (other page scripts)
 
     // Chat page scripts

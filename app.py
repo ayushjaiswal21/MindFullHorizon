@@ -376,16 +376,6 @@ def provider_dashboard():
                          institution=institution)
 
 
-@app.route('/analytics')
-@login_required
-@role_required('provider')
-def analytics():
-    # Basic placeholder for advanced analytics page; can be expanded later
-    # Gather some summary data for provider
-    institution = session.get('user_institution')
-    summary = get_institutional_summary(institution, db) if institution else {}
-    return render_template('analytics.html', summary=summary)
-
 @app.route('/chat')
 @login_required
 def chat():
