@@ -55,6 +55,25 @@ class MindfulAIService:
             
         prompt = f"{system_prompt}\n\nUser: {user_message}"
         
+        if self.local_model_available:
+            try:
+                response = ollama.chat(
+                    model='ALIENTELLIGENCE/mindwell:latest',
+                    messages=[
+                        {'role': 'system', 'content': system_prompt},
+                        {'role': 'user', 'content': user_message}
+                    ],
+                    stream=False,
+                    options={"num_predict": 512, "timeout": 120}
+                )
+                return response['message']['content']
+            except Exception as e:
+                print(f"Error with local model: {e}. Falling back to Gemini.")
+                return self._gemini_request(prompt, "Error generating chat response.")
+        else:
+            print("Using Gemini API for chat (fallback).")
+            return self._gemini_request(prompt, "AI chat service is currently unavailable.")
+
     def _get_basic_response(self, user_message: str) -> str:
         """Provide basic responses when AI services are unavailable."""
         message = user_message.lower().strip()
