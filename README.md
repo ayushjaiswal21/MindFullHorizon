@@ -149,7 +149,7 @@ MindFullHorizon/
 
 ### Prerequisites for Cloud Deployment
 
-1. **Python 3.9+** with pip package manager
+1. **Python 3.9+** with pip package manager (Python 3.13+ recommended)
 2. **Git** for version control
 3. **Cloud platform account** (free tiers available)
 4. **Database service** (PostgreSQL recommended)
@@ -220,7 +220,7 @@ heroku config:set GEMINI_API_KEY=your_actual_api_key
 #### Step 3: Create Procfile
 Create a `Procfile` in your project root:
 ```
-web: gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker --bind 0.0.0.0:$PORT app:app
+web: gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app
 ```
 
 #### Step 4: Deploy
@@ -271,7 +271,7 @@ aws elasticache create-cache-cluster \
 
 **Procfile** for AWS Elastic Beanstalk:
 ```
-web: gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker --bind 0.0.0.0:$PORT app:app
+web: gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app
 ```
 
 **.ebextensions/python.config**:
@@ -333,8 +333,8 @@ gcloud redis instances create mindful-horizon-redis \
 
 **app.yaml** for Google App Engine:
 ```yaml
-runtime: python39
-entrypoint: gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker --bind :$PORT app:app
+runtime: python313
+entrypoint: gunicorn --worker-class eventlet --workers 1 --bind :$PORT app:app
 
 env_variables:
   FLASK_ENV: production
@@ -425,7 +425,7 @@ az redis create \
 ```bash
 #!/bin/bash
 pip install -r requirements.txt
-gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker --bind=0.0.0.0:8000 app:app
+gunicorn --worker-class eventlet --workers 1 --bind=0.0.0.0:8000 app:app
 ```
 
 #### Step 3: Deploy to Azure App Service
@@ -435,13 +435,13 @@ az webapp create \
     --resource-group mindful-horizon-rg \
     --name mindful-horizon-app \
     --plan mindful-horizon-plan \
-    --runtime "PYTHON:3.9"
+    --runtime "PYTHON:3.13"
 
 # Configure startup command
 az webapp config set \
     --resource-group mindful-horizon-rg \
     --name mindful-horizon-app \
-    --startup-file "gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker --bind=0.0.0.0:8000 app:app"
+    --startup-file "gunicorn --worker-class eventlet --workers 1 --bind=0.0.0.0:8000 app:app"
 
 # Set environment variables
 az webapp config appsettings set \
@@ -486,7 +486,7 @@ doctl databases create-redis mindful-horizon-redis \
 
 **Dockerfile** for containerized deployment:
 ```dockerfile
-FROM python:3.9-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 COPY requirements.txt .
@@ -495,7 +495,7 @@ RUN pip install -r requirements.txt
 COPY . .
 EXPOSE 5000
 
-CMD ["gunicorn", "--worker-class", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker", "--bind", "0.0.0.0:5000", "app:app"]
+CMD ["gunicorn", "--worker-class", "eventlet", "--workers", "1", "--bind", "0.0.0.0:5000", "app:app"]
 ```
 
 **docker-compose.yml** for local development:
@@ -542,7 +542,7 @@ services:
       repo: yourusername/mindful-horizon
       branch: main
     build_command: pip install -r requirements.txt
-    run_command: gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker --bind 0.0.0.0:$PORT app:app
+    run_command: gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app
     environment_slug: python
     instance_count: 1
     instance_size_slug: basic-xs
@@ -695,13 +695,18 @@ pip install memory-profiler
 # Add @profile decorator to functions
 ```
 
-### WebSocket Connection Issues
+### Python Version Compatibility Issues
 ```bash
-# Use gevent workers for WebSocket support
-gunicorn --worker-class geventwebsocket.gunicorn.workers.GeventWebSocketWorker
+# If you encounter gevent compilation issues with Python 3.13:
+# The project uses eventlet which is more compatible with newer Python versions
+# Make sure your requirements.txt has: eventlet==0.36.1
 
-# Test WebSocket connectivity
-# Use browser developer tools to check WebSocket connections
+# Test Python version compatibility
+python --version
+# Should show Python 3.9+ (3.13+ recommended)
+
+# Install with specific Python version if needed
+pip install --python-version 3.13 -r requirements.txt
 ```
 
 ---

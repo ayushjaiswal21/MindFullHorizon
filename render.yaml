@@ -1,0 +1,18 @@
+{
+  "name": "MindFull Horizon",
+  "buildCommand": "pip install -r requirements.txt",
+  "startCommand": "gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app",
+  "environments": [
+    {
+      "name": "production",
+      "environmentVariables": {
+        "FLASK_ENV": "production",
+        "PYTHONPATH": ".",
+        "SECRET_KEY": "${{ secrets.SECRET_KEY }}",
+        "GEMINI_API_KEY": "${{ secrets.GEMINI_API_KEY }}",
+        "DATABASE_URL": "${{ secrets.DATABASE_URL }}",
+        "REDIS_URL": "${{ secrets.REDIS_URL }}"
+      }
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.13-slim
 
 # Set working directory
 WORKDIR /app
@@ -29,5 +29,5 @@ EXPOSE 5000
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD python -c "import requests; requests.get('http://localhost:5000/health', timeout=10)" || exit 1
 
-# Start application with gunicorn
-CMD ["gunicorn", "--worker-class", "geventwebsocket.gunicorn.workers.GeventWebSocketWorker", "--bind", "0.0.0.0:5000", "--workers", "3", "--preload", "app:app"]
+# Start application with gunicorn and eventlet (Python 3.13 compatible)
+CMD ["gunicorn", "--worker-class", "eventlet", "--workers", "1", "--bind", "0.0.0.0:5000", "--preload", "app:app"]

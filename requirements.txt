@@ -1,5 +1,5 @@
 # requirements.txt - Production-ready dependencies for MindFullHorizon
-# Updated for cloud deployment compatibility
+# Updated for Python 3.13+ compatibility and cloud deployment
 
 # Core Flask Dependencies
 Flask==3.0.3
@@ -33,9 +33,9 @@ Flask-Security-Too==5.3.3
 Flask-Bcrypt==1.0.1
 PyJWT==2.8.0
 
-# Production Server
+# Production Server - Python 3.13 compatible versions
 gunicorn==22.0.0
-gevent==24.2.1                  # For WebSocket support
+gevent==23.9.1                  # Downgraded for Python 3.13 compatibility
 eventlet==0.36.1               # Alternative for WebSocket
 
 # Monitoring and Logging
