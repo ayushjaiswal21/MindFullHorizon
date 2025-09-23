@@ -140,3 +140,36 @@ test_*.py
 fix_*.py
 manual_*.py
 flask_session/
+
+# Deployment files (keep these in git for easy deployment)
+# .ebextensions/
+# Procfile
+# Dockerfile
+# docker-compose.yml
+# nginx.conf
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+ssl/
+
+# Cloud provider credentials
+.aws/
+.terraform/
+.gcloud/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
