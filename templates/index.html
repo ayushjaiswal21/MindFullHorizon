@@ -14,135 +14,122 @@
 </section>
 
 <!-- Student Dashboard Section -->
-<section class="student-dashboard" id="features">
-    <div class="dashboard-container">
-        <div class="dashboard-header">
-            <h2 class="dashboard-title">
-                <span class="title-emoji">🎓</span>
+
+<!-- Redesigned Student Wellness Dashboard Section -->
+<section class="student-dashboard" id="features" style="background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%); border-radius: 32px; margin: 32px auto; max-width: 1400px; box-shadow: 0 2px 16px rgba(102,126,234,0.08); padding: 40px 0;">
+    <div class="dashboard-container" style="max-width: 1200px; margin: 0 auto;">
+        <div class="dashboard-header" style="text-align: center; margin-bottom: 32px;">
+            <h2 class="dashboard-title" style="font-size: 2.4rem; color: #fff; font-weight: 700; margin-bottom: 10px; text-shadow: 0 2px 8px rgba(38,99,235,0.18);">
+                <span class="title-emoji" style="font-size:2.2rem;">🎓</span>
                 <span class="title-text">Student Wellness Dashboard</span>
             </h2>
-            <p class="dashboard-subtitle">
-                Everything you need for mental wellness, designed specifically for college life
-            <!-- Header: Change color theme from black to blue (in base.html, but add a helper here for preview)-->
-            <style>
-                .header-bg {
-                    background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%) !important;
-                }
-            </style>
-            </p>
-    </div>
-
-        <div class="dashboard-grid">
-            <!-- Quick Actions Row -->
-            <div class="quick-actions-row">
-                <div class="quick-action-card">
-                    <div class="action-icon">🧘‍♂️</div>
-                    <h3>1-Min Breathing</h3>
-                    <p>Quick stress relief between classes</p>
-                    <a href="{{ url_for('breathing') }}" class="action-btn">Start Now</a>
-  </div>
-                <div class="quick-action-card">
-                    <div class="action-icon">📊</div>
-                    <h3>Mood Check-in</h3>
-                    <p>Track how you're feeling today</p>
-                    <a href="{{ url_for('assessment') }}" class="action-btn">Check In</a>
-                </div>
-                <div class="quick-action-card">
-                    <div class="action-icon">🧎</div>
-                    <h3>Yoga Timer</h3>
-                    <p>Guided sessions for focus & calm</p>
-                    <a href="{{ url_for('yoga') }}" class="action-btn">Begin</a>
-                </div>
-                <div class="quick-action-card">
-                    <div class="action-icon">💬</div>
-                    <h3>AI Chat</h3>
-                    <p>Talk to your wellness companion</p>
-                    <a href="{{ url_for('chat') }}" class="action-btn">Chat</a>
-                </div>
-</div>
-
-            <!-- Main Features Grid -->
-            <div class="features-grid">
-                <div class="feature-card student-focused">
-                    <div class="feature-header">
-                        <div class="feature-icon">🤖</div>
-                        <h3>AI Wellness Companion</h3>
-    </div>
-                    <p>24/7 support for exam stress, relationship issues, and academic pressure. Get instant, personalized advice.</p>
-                    <div class="feature-stats">
-                        <span class="stat">⚡ Instant responses</span>
-                        <span class="stat">🎯 Personalized for students</span>
-                        <span class="stat">🔒 100% private</span>
-  </div>
-</div>
-
-                <div class="feature-card student-focused">
-                    <div class="feature-header">
-                        <div class="feature-icon">📈</div>
-                        <h3>Progress Tracking</h3>
-    </div>
-                    <p>Visual charts showing your mental wellness journey. See patterns, celebrate wins, and stay motivated.</p>
-                    <div class="feature-stats">
-                        <span class="stat">📊 Weekly insights</span>
-                        <span class="stat">🎯 Goal tracking</span>
-                        <span class="stat">🏆 Achievement badges</span>
-  </div>
-</div>
-
-                <div class="feature-card student-focused">
-                    <div class="feature-header">
-                        <div class="feature-icon">👨‍⚕️</div>
-                        <h3>Campus Counseling</h3>
-        </div>
-                    <p>Connect with your college's mental health professionals. Schedule sessions that fit your class schedule.</p>
-                    <div class="feature-stats">
-                        <span class="stat">🏫 Campus integration</span>
-                        <span class="stat">⏰ Flexible scheduling</span>
-                        <span class="stat">💻 Online sessions</span>
-      </div>
+            <p class="dashboard-subtitle" style="font-size: 1.25rem; color: #e3f0ff; margin-bottom: 0; text-shadow: 0 1px 4px rgba(38,99,235,0.12);">Everything you need for mental wellness, designed specifically for college life</p>
         </div>
 
-                <div class="feature-card student-focused">
-                    <div class="feature-header">
-                        <div class="feature-icon">📱</div>
-                        <h3>Study Breaks</h3>
-      </div>
-                    <p>Guided meditations and breathing exercises designed for busy student schedules. Perfect for exam prep.</p>
-                    <div class="feature-stats">
-                        <span class="stat">⏱️ 1-5 min sessions</span>
-                        <span class="stat">📚 Study-friendly</span>
-                        <span class="stat">🎧 Audio guided</span>
-    </div>
+        <!-- Quick Actions Row -->
+        <div class="quick-actions-row" style="display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; margin-bottom: 36px;">
+            <div class="quick-action-card" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 28px 32px; min-width: 220px; max-width: 260px; flex: 1 1 220px; text-align: center; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="action-icon" style="font-size:2.2rem; margin-bottom:10px;">🧘‍♂️</div>
+                <h3 style="font-size:1.2rem; color:#2563eb; font-weight:700; margin-bottom:6px;">1-Min Breathing</h3>
+                <p style="color:#444; font-size:1rem; margin-bottom:12px;">Quick stress relief between classes</p>
+                <a href="{{ url_for('breathing') }}" class="action-btn" style="padding:8px 24px; background:#2563eb; color:#fff; border-radius:8px; font-weight:600; text-decoration:none; transition:background 0.2s;">Start Now</a>
             </div>
-
-                <div class="feature-card student-focused">
-                    <div class="feature-header">
-                        <div class="feature-icon">🔒</div>
-                        <h3>Privacy First</h3>
-          </div>
-                    <p>Your data stays private. Share only what you want with counselors. Control your information completely.</p>
-                    <div class="feature-stats">
-                        <span class="stat">🛡️ End-to-end encryption</span>
-                        <span class="stat">👤 Anonymous options</span>
-                        <span class="stat">🎛️ Full control</span>
-        </div>
-      </div>
-
-                <div class="feature-card student-focused">
-                    <div class="feature-header">
-                        <div class="feature-icon">👥</div>
-                        <h3>Student Community</h3>
+            <div class="quick-action-card" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 28px 32px; min-width: 220px; max-width: 260px; flex: 1 1 220px; text-align: center; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="action-icon" style="font-size:2.2rem; margin-bottom:10px;">📊</div>
+                <h3 style="font-size:1.2rem; color:#2563eb; font-weight:700; margin-bottom:6px;">Mood Check-in</h3>
+                <p style="color:#444; font-size:1rem; margin-bottom:12px;">Track how you're feeling today</p>
+                <a href="{{ url_for('assessment') }}" class="action-btn" style="padding:8px 24px; background:#2563eb; color:#fff; border-radius:8px; font-weight:600; text-decoration:none; transition:background 0.2s;">Check In</a>
             </div>
-                    <p>Connect with peers facing similar challenges. Share experiences, tips, and support each other's journey.</p>
-                    <div class="feature-stats">
-                        <span class="stat">🎓 Student-only groups</span>
-                        <span class="stat">💬 Safe discussions</span>
-                        <span class="stat">🤝 Peer support</span>
-          </div>
-        </div>
-      </div>
+            <div class="quick-action-card" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 28px 32px; min-width: 220px; max-width: 260px; flex: 1 1 220px; text-align: center; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="action-icon" style="font-size:2.2rem; margin-bottom:10px;">🧎</div>
+                <h3 style="font-size:1.2rem; color:#2563eb; font-weight:700; margin-bottom:6px;">Yoga Timer</h3>
+                <p style="color:#444; font-size:1rem; margin-bottom:12px;">Guided sessions for focus & calm</p>
+                <a href="{{ url_for('yoga') }}" class="action-btn" style="padding:8px 24px; background:#2563eb; color:#fff; border-radius:8px; font-weight:600; text-decoration:none; transition:background 0.2s;">Begin</a>
             </div>
-          </div>
+            <div class="quick-action-card" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 28px 32px; min-width: 220px; max-width: 260px; flex: 1 1 220px; text-align: center; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="action-icon" style="font-size:2.2rem; margin-bottom:10px;">💬</div>
+                <h3 style="font-size:1.2rem; color:#2563eb; font-weight:700; margin-bottom:6px;">AI Chat</h3>
+                <p style="color:#444; font-size:1rem; margin-bottom:12px;">Talk to your wellness companion</p>
+                <a href="{{ url_for('chat') }}" class="action-btn" style="padding:8px 24px; background:#2563eb; color:#fff; border-radius:8px; font-weight:600; text-decoration:none; transition:background 0.2s;">Chat</a>
+            </div>
+        </div>
+
+        <!-- Main Features Grid -->
+        <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 32px; justify-content: center;">
+            <div class="feature-card student-focused" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 32px 36px; text-align: left; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:10px;">
+                    <div class="feature-icon" style="font-size:2rem; margin-right:10px;">🤖</div>
+                    <h3 style="font-size:1.2rem; color:#2563eb; font-weight:700; margin:0;">AI Wellness Companion</h3>
+                </div>
+                <p style="color:#444; font-size:1rem; margin-bottom:12px;">24/7 support for exam stress, relationship issues, and academic pressure. Get instant, personalized advice.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:10px;">
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">⚡ Instant responses</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">🎯 Personalized for students</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">🔒 100% private</span>
+                </div>
+            </div>
+            <div class="feature-card student-focused" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 32px 36px; text-align: left; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:10px;">
+                    <div class="feature-icon" style="font-size:2rem; margin-right:10px;">📈</div>
+                    <h3 style="font-size:1.2rem; color:#2563eb; font-weight:700; margin:0;">Progress Tracking</h3>
+                </div>
+                <p style="color:#444; font-size:1rem; margin-bottom:12px;">Visual charts showing your mental wellness journey. See patterns, celebrate wins, and stay motivated.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:10px;">
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">📊 Weekly insights</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">🎯 Goal tracking</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">🏆 Achievement badges</span>
+                </div>
+            </div>
+            <div class="feature-card student-focused" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 32px 36px; text-align: left; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:10px;">
+                    <div class="feature-icon" style="font-size:2rem; margin-right:10px;">👨‍⚕️</div>
+                    <h3 style="font-size:1.2rem; color:#2563eb; font-weight:700; margin:0;">Campus Counseling</h3>
+                </div>
+                <p style="color:#444; font-size:1rem; margin-bottom:12px;">Connect with your college's mental health professionals. Schedule sessions that fit your class schedule.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:10px;">
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">🏫 Campus integration</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">⏰ Flexible scheduling</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">💻 Online sessions</span>
+                </div>
+            </div>
+            <div class="feature-card student-focused" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 32px 36px; text-align: left; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:10px;">
+                    <div class="feature-icon" style="font-size:2rem; margin-right:10px;">📱</div>
+                    <h3 style="font-size:1.2rem; color:#2563eb; font-weight:700; margin:0;">Study Breaks</h3>
+                </div>
+                <p style="color:#444; font-size:1rem; margin-bottom:12px;">Guided meditations and breathing exercises designed for busy student schedules. Perfect for exam prep.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:10px;">
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">⏱️ 1-5 min sessions</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">📚 Study-friendly</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">🎧 Audio guided</span>
+                </div>
+            </div>
+            <div class="feature-card student-focused" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 32px 36px; text-align: left; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:10px;">
+                    <div class="feature-icon" style="font-size:2rem; margin-right:10px;">🔒</div>
+                    <h3 style="font-size:1.2rem; color:#2563eb; font-weight:700; margin:0;">Privacy First</h3>
+                </div>
+                <p style="color:#444; font-size:1rem; margin-bottom:12px;">Your data stays private. Share only what you want with counselors. Control your information completely.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:10px;">
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">🛡️ End-to-end encryption</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">👤 Anonymous options</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">🎛️ Full control</span>
+                </div>
+            </div>
+            <div class="feature-card student-focused" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 32px 36px; text-align: left; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:10px;">
+                    <div class="feature-icon" style="font-size:2rem; margin-right:10px;">👥</div>
+                    <h3 style="font-size:1.2rem; color:#2563eb; font-weight:700; margin:0;">Student Community</h3>
+                </div>
+                <p style="color:#444; font-size:1rem; margin-bottom:12px;">Connect with peers facing similar challenges. Share experiences, tips, and support each other's journey.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:10px;">
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">🎓 Student-only groups</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">💬 Safe discussions</span>
+                    <span class="stat" style="background:#e3f0ff; color:#2563eb; border-radius:12px; padding:4px 12px; font-size:0.98rem; font-weight:600;">🤝 Peer support</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
 
 <!-- Enhanced Advanced Statistics Section -->
