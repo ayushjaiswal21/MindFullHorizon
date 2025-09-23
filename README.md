@@ -156,7 +156,20 @@ MindFullHorizon/
 5. **Redis** (for session storage and caching)
 6. **Environment variables** for API keys and configuration
 
-### Environment Variables Configuration
+### Database Configuration Notes
+
+**For Development**: The application works with SQLite (`sqlite:///instance/mindful_horizon.db`)
+
+**For Production**: Use PostgreSQL for better performance and reliability:
+```bash
+# Example PostgreSQL connection string
+DATABASE_URL=postgresql://username:password@host:port/database_name
+```
+
+**Database Setup**:
+- The app uses SQLAlchemy for database abstraction
+- Run `flask db upgrade` after deployment to create tables
+- Database migrations are handled by Alembic
 
 Create a `.env` file in your project root with the following variables:
 
@@ -207,7 +220,7 @@ SENTRY_DSN=your-sentry-dsn-for-error-tracking
 #### Step 2: Configure Service
 - **Name**: `mindful-horizon`
 - **Runtime**: `Python 3.13`
-- **Build Command**: `pip install --no-cache-dir --upgrade pip setuptools wheel && pip install --no-cache-dir --only-binary=all -r requirements.txt`
+- **Build Command**: `pip install --no-cache-dir --upgrade pip setuptools wheel && pip install --no-cache-dir --only-binary=psycopg2-binary -r requirements.txt`
 - **Start Command**: `gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app`
 
 #### Step 3: Environment Variables
@@ -742,9 +755,9 @@ pip install memory-profiler
 
 ### Python Version Compatibility Issues
 ```bash
-# If you encounter gevent compilation issues with Python 3.13:
-# The project now uses ONLY eventlet which is fully compatible with Python 3.13+
-# eventlet==0.36.1 provides excellent WebSocket support without Cython issues
+# If you encounter eventlet threading issues with Python 3.13:
+# The project uses eventlet 0.37.0 which is fully compatible with Python 3.13+
+# This version resolves the start_joinable_thread compatibility issues
 
 # Test Python version compatibility
 python --version
@@ -752,6 +765,10 @@ python --version
 
 # Install with specific Python version if needed
 pip install --python-version 3.13 -r requirements.txt
+
+# Verify eventlet installation
+python -c "import eventlet; print(f'Eventlet version: {eventlet.__version__}')"
+# Should show 0.37.0 or higher
 ```
 
 ---
