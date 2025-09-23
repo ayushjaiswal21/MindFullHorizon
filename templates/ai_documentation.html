@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}AI Documentation - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">AI Documentation</h1>
+        <p class="text-gray-600">Generate clinical documentation using AI analysis of session transcripts.</p>
+    </div>
+
+    <!-- Documentation Form -->
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
+        <form method="POST">
+            <div class="mb-4">
+                <label for="patient_email" class="block text-sm font-medium text-gray-700 mb-2">
+                    Patient Email (Optional)
+                </label>
+                <input type="email" id="patient_email" name="patient_email"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                       placeholder="patient@example.com">
+            </div>
+
+            <div class="mb-4">
+                <label for="transcript" class="block text-sm font-medium text-gray-700 mb-2">
+                    Session Transcript <span class="text-red-500">*</span>
+                </label>
+                <textarea id="transcript" name="transcript" rows="8" required
+                          class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter the session transcript here..."></textarea>
+            </div>
+
+            <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200">
+                <i class="fas fa-robot mr-2"></i>Generate AI Documentation
+            </button>
+        </form>
+    </div>
+
+    <!-- Generated Documentation Display -->
+    {% if transcript %}
+    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">
+            <i class="fas fa-file-medical-alt text-green-500 mr-2"></i>Generated Clinical Note
+        </h3>
+
+        <div class="mb-4">
+            <h4 class="font-medium text-gray-700 mb-2">Session Transcript:</h4>
+            <div class="bg-gray-50 p-4 rounded-md">
+                <p class="text-gray-700 whitespace-pre-wrap">{{ transcript }}</p>
+            </div>
+        </div>
+
+        {% if clinical_note %}
+        <div class="mb-4">
+            <h4 class="font-medium text-gray-700 mb-2">AI-Generated Documentation:</h4>
+            <div class="bg-blue-50 p-4 rounded-md border-l-4 border-blue-400">
+                <p class="text-gray-700 whitespace-pre-wrap">{{ clinical_note }}</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="flex justify-between items-center">
+            <a href="{{ url_for('provider_dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+            </a>
+            <button onclick="window.print()" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                <i class="fas fa-print mr-2"></i>Print Documentation
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Navigation -->
+    {% if not transcript %}
+    <div class="flex justify-start">
+        <a href="{{ url_for('provider_dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

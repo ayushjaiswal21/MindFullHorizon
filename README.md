@@ -23,8 +23,11 @@ MindFull Horizon is a revolutionary mental health platform that moves beyond sta
   - Mood score assessment and trends
 - **💬 AI-Powered Chat Interface**: Interactive communication with simulated bot responses
 - **📅 Self-Scheduling System**: Intuitive appointment booking with date/time selection
-- **🔗 Telehealth Integration**: Video session interface for remote consultations
+- **🔗 Telehealth Integration**: WebRTC video session interface for remote consultations
 - **📱 Digital Detox Tools**: Screen time analysis with academic performance correlation
+- **💊 Medication Tracking**: Daily medication logging with adherence insights
+- **🧘 Wellness Activities**: Breathing exercises and yoga session tracking
+- **🎯 Goal Setting**: Personalized goal management with progress tracking
 
 ### Provider Dashboard - Clinical Excellence
 - **👥 Caseload Management**: Comprehensive patient tracking with risk level assessment
@@ -33,6 +36,8 @@ MindFull Horizon is a revolutionary mental health platform that moves beyond sta
 - **🔗 Interoperability Support**: Integration pathways for major EHR systems
 - **💊 Digital Therapeutics (DTx)**: Evidence-based digital intervention modules
 - **📊 Advanced Analytics**: Real-time correlation analysis and predictive insights
+- **📋 Prescription Management**: Digital prescription sending and tracking
+- **📈 Wellness Reports**: Comprehensive patient progress reports with AI insights
 
 ## 🏗️ System Architecture
 
@@ -63,9 +68,10 @@ The MindFull Horizon system is built on a robust, scalable architecture designed
 ### Core Technologies
 - **Backend Framework**: Flask (Python 3.8+)
 - **Database ORM**: SQLAlchemy with SQLite (development) / PostgreSQL (production)
-- **Frontend**: HTML5, Tailwind CSS 3.x, Vanilla JavaScript
-- **AI/ML**: Ollama ALIENTELLIGENCE/mindwell model
+- **Frontend**: HTML5, Tailwind CSS 3.x, Vanilla JavaScript, Chart.js 4.x
+- **AI/ML**: Google Gemini API, Ollama ALIENTELLIGENCE/mindwell model
 - **Authentication**: Flask-Session with role-based access control
+- **Real-time Communication**: Flask-SocketIO for WebRTC telehealth
 
 ### Libraries & Dependencies
 - **Data Visualization**: Chart.js 4.x for interactive charts
@@ -73,6 +79,7 @@ The MindFull Horizon system is built on a robust, scalable architecture designed
 - **HTTP Client**: Fetch API for AJAX requests
 - **Styling**: Custom CSS animations and transitions
 - **Security**: CSRF protection, input validation, session management
+- **Compression**: Flask-Compress for bandwidth optimization
 
 ### Development Tools
 - **Package Management**: pip with requirements.txt
@@ -84,27 +91,59 @@ The MindFull Horizon system is built on a robust, scalable architecture designed
 
 ```
 MindFullHorizon/
-├── app.py                 # Main Flask application
-├── requirements.txt       # Python dependencies
-├── README.md             # Project documentation
+├── app.py                 # Main Flask application with 1000+ lines
+├── requirements.txt       # Python dependencies (updated)
+├── README.md             # Project documentation (this file)
+├── ai_service.py         # AI service for mental health analysis
+├── database.py           # Database configuration
+├── models.py             # SQLAlchemy models
+├── gamification_engine.py # Gamification logic
 ├── templates/            # Jinja2 HTML templates
 │   ├── base.html         # Base template with navigation
 │   ├── index.html        # Landing page
 │   ├── login.html        # Authentication page
+│   ├── signup.html       # User registration
 │   ├── patient_dashboard.html    # Patient dashboard
 │   ├── provider_dashboard.html   # Provider dashboard
 │   ├── chat.html         # Chat interface
 │   ├── schedule.html     # Appointment scheduling
 │   ├── ai_documentation.html    # AI note generation
-│   └── telehealth.html   # Video session interface
+│   ├── telehealth.html   # Video session interface
+│   ├── medication.html   # Medication tracking
+│   ├── breathing.html    # Breathing exercises
+│   ├── yoga.html        # Yoga sessions
+│   ├── digital_detox.html # Digital wellness
+│   ├── progress.html    # Goal progress tracking
+│   ├── wellness_report.html # Comprehensive patient reports
+│   ├── analytics.html   # Advanced analytics dashboard
+│   ├── my_prescriptions.html # Patient prescription view
+│   └── _macros.html     # Reusable template components
 └── static/              # Static assets
     ├── css/
     │   ├── styles.css   # Original custom styles
-    │   └── enhanced.css # New enhanced styles with animations
+    │   └── enhanced.css # Enhanced styles with animations
     └── js/
-        └── scripts.js   # Enhanced JavaScript with AJAX and real-time features
-        └── scripts.js   # Client-side functionality
+        ├── scripts.js   # Enhanced JavaScript with AJAX and real-time features
+        └── telehealth.js # WebRTC functionality for video calls
 ```
+
+## 🚀 Recent Enhancements
+
+### Version 2.0 Features
+- **Real-time Telehealth**: WebRTC-based video conferencing for remote consultations
+- **Advanced Analytics**: Comprehensive institutional analytics with trend analysis
+- **Medication Management**: Complete prescription and adherence tracking system
+- **Wellness Activities**: Dedicated breathing exercises and yoga session tracking
+- **AI Goal Suggestions**: Personalized goal recommendations based on patient data
+- **Enhanced Progress Reports**: Detailed wellness reports with AI-generated insights
+- **Digital Prescription System**: Provider-to-patient prescription management
+- **Interactive Charts**: Real-time mood and mental health assessment visualization
+
+### AI Integration Upgrades
+- **Dual AI Support**: Google Gemini API integration alongside Ollama for enhanced reliability
+- **Smart Medication Adherence**: AI-powered analysis of medication taking patterns
+- **Goal Suggestion Engine**: Personalized goal recommendations using patient assessment data
+- **Clinical Documentation**: Automated session note generation with context awareness
 
 ## Installation & Setup
 
@@ -119,12 +158,19 @@ MindFullHorizon/
    pip install -r requirements.txt
    ```
 
-3. **Run the application**:
+3. **Set up environment variables** (optional):
+   ```bash
+   # Create .env file with your API keys
+   GEMINI_API_KEY=your_gemini_api_key_here
+   SECRET_KEY=your_flask_secret_key_here
+   ```
+
+4. **Run the application**:
    ```bash
    python app.py
    ```
 
-4. **Access the application**:
+5. **Access the application**:
    - Open your browser and navigate to `http://127.0.0.1:5000`
    - Use the demo credentials provided in the login interface
 

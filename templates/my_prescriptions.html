@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}My Prescriptions - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">My Prescriptions</h1>
+
+    {% if prescriptions %}
+    <div class="space-y-6">
+        {% for prescription in prescriptions %}
+        <div class="card p-6 border border-blue-200 shadow-lg rounded-lg">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-blue-700">{{ prescription.medication_name }}</h2>
+                <span class="text-sm text-gray-500">Issued: {{ prescription.issue_date.strftime('%B %d, %Y') }}</span>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                    <p class="text-gray-600 font-medium">Dosage:</p>
+                    <p class="text-gray-800">{{ prescription.dosage }}</p>
+                </div>
+                <div>
+                    <p class="text-gray-600 font-medium">Prescribed by:</p>
+                    <p class="text-gray-800">{{ prescription.provider.name }} ({{ prescription.provider.institution }})</p>
+                </div>
+            </div>
+
+            {% if prescription.instructions %}
+            <div class="mb-4">
+                <p class="text-gray-600 font-medium">Instructions:</p>
+                <p class="text-gray-800">{{ prescription.instructions }}</p>
+            </div>
+            {% endif %}
+
+            {% if prescription.expiry_date %}
+            <div class="text-sm text-red-600">
+                Expires on: {{ prescription.expiry_date.strftime('%B %d, %Y') }}
+            </div>
+            {% else %}
+            <div class="text-sm text-gray-500">
+                No expiry date specified.
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+        <i class="fas fa-prescription-bottle-alt text-gray-400 text-5xl mb-4"></i>
+        <p class="text-xl text-gray-600 font-semibold">No Prescriptions Found</p>
+        <p class="text-gray-500 mt-2">Your provider has not sent you any prescriptions yet.</p>
+    </div>
+    {% endif %}
+
+    <div class="mt-8 text-center">
+        <a href="{{ url_for('patient_dashboard') }}" class="btn-secondary">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
