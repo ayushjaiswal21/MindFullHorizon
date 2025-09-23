@@ -20,7 +20,7 @@ body {
 }
 
 .card {
-    @apply bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 transform;
+    @apply bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 transform border border-gray-200;
 }
 
 .header-bg {
