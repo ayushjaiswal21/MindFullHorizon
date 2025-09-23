@@ -220,7 +220,7 @@ SENTRY_DSN=your-sentry-dsn-for-error-tracking
 #### Step 2: Configure Service
 - **Name**: `mindful-horizon`
 - **Runtime**: `Python 3.13`
-- **Build Command**: `pip install --no-cache-dir --upgrade pip setuptools wheel && pip install --no-cache-dir --only-binary=psycopg2-binary -r requirements.txt`
+- **Build Command**: `pip install --no-cache-dir --upgrade pip setuptools wheel && pip install --no-cache-dir -r requirements.txt`
 - **Start Command**: `gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app`
 
 #### Step 3: Environment Variables
