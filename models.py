@@ -1,11 +1,8 @@
-from flask_sqlalchemy import SQLAlchemy
 """Database models for the Mindful Horizon application."""
-from extensions import db
 from datetime import datetime, timedelta
 from sqlalchemy import func
-
-
 from werkzeug.security import generate_password_hash, check_password_hash
+from extensions import db
 
 class User(db.Model):
     """User model for both patients and providers."""
@@ -18,7 +15,8 @@ class User(db.Model):
     institution = db.Column(db.String(100), nullable=True)  # For institutional aggregation
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_assessment_at = db.Column(db.DateTime, nullable=True)
-
+    profile_pic = db.Column(db.String(255), nullable=True)  # Path to profile picture
+    
     # Relationships
     assessments = db.relationship('Assessment', backref='user', lazy=True)
     digital_detox_logs = db.relationship('DigitalDetoxLog', backref='user', lazy=True)
