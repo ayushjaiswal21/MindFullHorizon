@@ -15,7 +15,7 @@ Flask-Limiter==3.5.0
 # Database and Data Processing
 SQLAlchemy==2.0.35
 Werkzeug==3.0.3
-psycopg2-binary==2.9.9          # PostgreSQL adapter for production
+psycopg2-binary==2.9.10         # PostgreSQL adapter for production
 alembic==1.13.1                 # Database migration tool
 
 # Configuration and Environment
