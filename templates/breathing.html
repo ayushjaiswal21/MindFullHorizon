@@ -26,31 +26,21 @@
 
         <!-- Exercise Controls -->
         <div class="flex flex-wrap justify-center gap-4 mb-6">
-            <button onclick="startBreathing('box')" class="breathing-btn bg-indigo-500 hover:bg-indigo-600">
-                <i class="fas fa-square mr-2"></i>Box Breathing (4-4-4-4)
-            </button>
-            <button onclick="startBreathing('478')" class="breathing-btn bg-teal-500 hover:bg-teal-600">
-                <i class="fas fa-leaf mr-2"></i>4-7-8 Breathing
-            </button>
-            <button onclick="startBreathing('triangle')" class="breathing-btn bg-purple-500 hover:bg-purple-600">
-                <i class="fas fa-play mr-2"></i>Triangle Breathing (3-3-3)
-            </button>
-            <button onclick="startBreathing('coherence')" class="breathing-btn bg-green-500 hover:bg-green-600">
-                <i class="fas fa-heart mr-2"></i>Coherence Breathing (5-5)
-            </button>
+<button class="btn btn-primary" id="start-4-7-8-breathing">Start 4-7-8 Breathing</button>
+            <button class="btn btn-primary" id="start-box-breathing">Start Box Breathing</button>
+            <button class="btn btn-primary" id="start-diaphragmatic-breathing">Start Diaphragmatic Breathing</button>
+            <button class="btn btn-primary" id="start-pursed-lip-breathing">Start Pursed-Lip Breathing</button>
         </div>
 
         <!-- Timer and Controls -->
         <div class="text-center">
             <div id="timer-display" class="text-3xl font-bold text-gray-800 mb-4 hidden">00:00</div>
             <div class="flex justify-center gap-4">
-                <button id="start-btn" onclick="startSession()" class="btn-primary">
-                    <i class="fas fa-play mr-2"></i>Start Session
-                </button>
-                <button id="pause-btn" onclick="pauseSession()" class="btn-secondary hidden">
+<button class="btn btn-success" id="start-btn">Start Session</button>
+                <button id="pause-btn" class="btn-secondary hidden">
                     <i class="fas fa-pause mr-2"></i>Pause
                 </button>
-                <button id="stop-btn" onclick="stopSession()" class="btn-danger hidden">
+                <button id="stop-btn" class="btn-danger hidden">
                     <i class="fas fa-stop mr-2"></i>Stop
                 </button>
             </div>
