@@ -387,7 +387,7 @@ def patient_dashboard():
 
     return render_template('patient_dashboard.html',
                          user_name=session['user_name'],
-                         user=User.query.get(user_id),
+                         user=db.session.get(User, user_id),
                          data=data,
                          alerts=alerts,
                          upcoming_appointments=upcoming_appointments,
@@ -898,6 +898,10 @@ def progress():
     }
     
     user = User.query.get(user_id)
+    if not user:
+        flash('User not found. Please log in again.', 'error')
+        return redirect(url_for('login'))
+
     last_assessment_at = user.last_assessment_at
 
     latest_recommendation = ProgressRecommendation.query.filter_by(user_id=user_id).order_by(ProgressRecommendation.created_at.desc()).first()
@@ -1091,6 +1095,12 @@ def api_save_assessment():
 
         logger.debug("Updating user's last assessment time.")
         user = User.query.get(user_id)
+        if not user:
+            return jsonify({
+                'success': False,
+                'message': 'User not found. Please log in again.'
+            }), 400
+
         user.last_assessment_at = datetime.now(timezone.utc)
         logger.debug("User's last assessment time updated.")
         
@@ -1282,6 +1292,9 @@ def wellness_report(user_id):
 def profile():
     user_id = session['user_id']
     user = User.query.get(user_id)
+    if not user:
+        flash('User not found. Please log in again.', 'error')
+        return redirect(url_for('login'))
 
     if request.method == 'POST':
         user.name = request.form.get('name', user.name)
@@ -1598,6 +1611,12 @@ def save_mood():
 
         # Update user's last assessment time
         user = User.query.get(user_id)
+        if not user:
+            return jsonify({
+                'success': False,
+                'message': 'User not found. Please log in again.'
+            }), 400
+
         user.last_assessment_at = datetime.utcnow()
         
         print("DEBUG: Attempting to commit changes to database.")
@@ -1646,7 +1665,7 @@ def blog_create():
         content = request.form.get('content')
         category = request.form.get('category')
         tags = request.form.get('tags')
-        is_published = bool(request.form.get('is_published'))
+        is_published = bool(request.form.get('is_published', 'True'))
         author_id = session.get('user_id')
         try:
             post = BlogPost(

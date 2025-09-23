@@ -27,7 +27,7 @@
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" as="style">
 
     <title>{% block title %}Mindful Horizon - Mental Wellness Platform{% endblock %}</title>
-    <link rel="icon" href="https://theme-color.zobj.net/source/twitter/376/brain_1f9e0.png">
+    
 
     <!-- Fonts with display swap for performance -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -112,6 +112,9 @@
                                 <i class="fas fa-user nav-icon"></i>
                                 <span>Profile</span>
                             </a>
+
+                            <!-- Google Translate Element -->
+                            <div id="google_translate_element" class="google-translate-element"></div>
 
                             <!-- User Menu with Advanced Dropdown -->
                             <div class="relative user-menu-container">
@@ -339,8 +342,12 @@
                 initializeChartJS();
             }
 
-            // Initialize advanced UI features
-            initializeAdvancedUI();
+            // Initialize advanced UI features after scripts are loaded
+            setTimeout(function() {
+                if (typeof initializeAdvancedUI === 'function') {
+                    initializeAdvancedUI();
+                }
+            }, 100);
 
             // Show loading overlay for dynamic content
             hideLoadingOverlay();
@@ -358,10 +365,14 @@
             initializeAnimations();
 
             // Initialize mobile menu
-            initializeMobileMenu();
+            if (typeof initializeMobileMenu === 'function') {
+                initializeMobileMenu();
+            }
 
             // Initialize user menu
-            initializeUserMenu();
+            if (typeof initializeUserMenu === 'function') {
+                initializeUserMenu();
+            }
 
             // Initialize alerts
             initializeAlerts();
@@ -498,6 +509,17 @@
         });
     </script>
 
-    {% block extra_scripts %}{% endblock %}
+        {% block extra_scripts %}
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    {% endblock %}
 </body>
 </html>
