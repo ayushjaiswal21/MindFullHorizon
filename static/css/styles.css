@@ -46,16 +46,68 @@ body {
 .logo {
     font-family: 'Inter', sans-serif;
     font-weight: 700;
-    font-size: 1.5rem;
+    font-size: 2.5rem;
     display: flex;
     align-items: center;
     text-decoration: none;
-    color: inherit;
+    color: white;
 }
 
 .logo-icon {
     margin-right: 0.5rem;
-    font-size: 1.8rem;
+    font-size: 3.8rem;
+}
+
+/* Header/Nav Bar Lavender Purple Theme */
+.advanced-nav {
+    background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%) !important;
+    color: #f8fafc;
+}
+
+.advanced-nav .nav-link-item,
+.advanced-nav .nav-link-item-secondary,
+.advanced-nav .user-menu-btn,
+.advanced-nav .user-name {
+    color: #f8fafc !important;
+    transition: background 0.2s, color 0.2s;
+}
+
+.advanced-nav .nav-link-item:hover,
+.advanced-nav .nav-link-item-secondary:hover,
+.advanced-nav .user-menu-btn:hover {
+    background: linear-gradient(90deg, #a78bfa 0%, #c4b5fd 100%) !important;
+    color: #6d28d9 !important;
+}
+
+/* Mobile menu lavender purple theme */
+.mobile-menu-content {
+    background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%) !important;
+}
+.mobile-menu-item {
+    color: #f8fafc !important;
+    transition: background 0.2s, color 0.2s;
+}
+.mobile-menu-item:hover {
+    background: linear-gradient(90deg, #a78bfa 0%, #c4b5fd 100%) !important;
+    color: #6d28d9 !important;
+}
+
+/* Ensure dropdown and avatar text stays visible */
+.user-menu-dropdown {
+    background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%) !important;
+    color: #f8fafc !important;
+}
+.user-menu-item {
+    color: #f8fafc !important;
+}
+.user-menu-item:hover {
+    background: linear-gradient(90deg, #a78bfa 0%, #c4b5fd 100%) !important;
+    color: #6d28d9 !important;
+}
+
+/* Logo icon color for contrast */
+.logo-icon {
+    color: #ffffff !important;
 }
 
 /* Animations */
@@ -102,29 +154,12 @@ body {
 }
 
 /* Chart containers */
-.chat-container {
-    /* ... existing styles ... */
+.chart-container {
+    position: relative;
+    height: 400px;
+    width: 100%;
+    margin: 20px 0;
 }
-
-.chat-message.user .chat-bubble {
-    background-color: #3B82F6;
-    color: white;
-    border-bottom-right-radius: 0.25rem;
-}
-
-.chat-message.bot .chat-bubble {
-    background-color: #F3F4F6;
-    color: #1F2937;
-    border-bottom-left-radius: 0.25rem;
-}
-
-.chat-bubble {
-    max-width: 75%;
-    padding: 0.75rem 1rem;
-    border-radius: 1rem;
-    line-height: 1.5;
-}
-
 
 .chart-container canvas {
     max-height: 400px !important;
@@ -136,10 +171,6 @@ body {
     height: 300px;
     width: 100%;
     margin: 15px 0;
-}
-
-.assessment-chart-fill {
-    @apply bg-blue-600 h-full transition-all duration-500 ease-out;
 }
 
 /* Status badges */
@@ -212,12 +243,4 @@ span[style*="color"] {
     transform: translateY(-4px);
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease-in-out;
-}
-
-/* Google Translate Widget */
-#google_translate_element {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    z-index: 1000;
 }
