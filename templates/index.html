@@ -2,15 +2,15 @@
 
 {% block content %}
 <!-- Hero Dashboard Section -->
-<section class="hero-dashboard" style="position: relative; padding: 16px 0; max-width: 1400px; margin: 32px auto; background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%); border-radius: 32px; box-shadow: 0 2px 16px rgba(102,126,234,0.08); overflow: hidden;">
+<section class="hero-dashboard" style="position: relative; padding: 40px 0; max-width: 1400px; margin: 32px auto; background: linear-gradient(135deg, #6b7280 0%, #9ca3af 30%, #3b82f6 70%, #60a5fa 100%); border-radius: 32px; box-shadow: 0 2px 16px rgba(102,126,234,0.08); overflow: hidden; min-height: 500px; height: 75vh;">
     <!-- Watermark background logo -->
-    <img src="{{ url_for('static', filename='images/hero_image.png') }}" alt="MindFullHorizon Watermark" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 90vw; max-width: 1800px; opacity: 0.18; z-index: 0; pointer-events: none;" />
-    <div class="hero-content" style="text-align: center; position: relative; z-index: 1;">
+    <img src="{{ url_for('static', filename='images/hero_image.png') }}" alt="MindFullHorizon Watermark" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100vw; max-width: 2200px; opacity: 0.15; z-index: 0; pointer-events: none;" />
+    <div class="hero-content" style="text-align: center; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
         <h1 class="hero-main-headline" style="font-size: 2.8rem; margin-bottom: 12px; color: #fff; text-shadow: 0 2px 8px rgba(38,99,235,0.18); transition: color 0.2s, text-shadow 0.2s; cursor: pointer;">A Better Way to Care for Your Mind</h1>
         <p class="hero-sub-headline" style="font-size: 1.5rem; margin-bottom: 16px; color: #e3f0ff; text-shadow: 0 1px 4px rgba(38,99,235,0.12); transition: color 0.2s, text-shadow 0.2s; cursor: pointer;">Tools and support designed for your modern life.</p>
         <a href="{{ url_for('signup') }}" class="hero-cta-button" style="padding: 8px 24px; font-size: 0.95rem; background: #2563eb; color: #fff; border-radius: 8px; box-shadow: 0 2px 8px rgba(38,99,235,0.12); transition: background 0.2s, color 0.2s, box-shadow 0.2s; cursor: pointer;">Get Started Today</a>
     </div>
-    <div class="hero-company-name" style="font-size: 1rem; margin-top: 6px; color: #e3f0ff; position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(38,99,235,0.12);">MindFullHorizon</div>
+    <div class="hero-company-name" style="font-size: 1rem; margin-top: 6px; color: #e3f0ff; position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(38,99,235,0.12); align-self: flex-end;">MindFullHorizon</div>
 </section>
 
 <!-- Student Dashboard Section -->
