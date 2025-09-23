@@ -753,23 +753,33 @@ pip install memory-profiler
 # Add @profile decorator to functions
 ```
 
-### Python Version Compatibility Issues
+### Alternative Worker Classes for Python 3.13
+
+If eventlet continues to have compatibility issues with Python 3.13, try these alternatives:
+
+**Test available worker classes:**
 ```bash
-# If you encounter eventlet threading issues with Python 3.13:
-# The project uses eventlet 0.37.0 which is fully compatible with Python 3.13+
-# This version resolves the start_joinable_thread compatibility issues
-
-# Test Python version compatibility
-python --version
-# Should show Python 3.9+ (3.13+ recommended)
-
-# Install with specific Python version if needed
-pip install --python-version 3.13 -r requirements.txt
-
-# Verify eventlet installation
-python -c "import eventlet; print(f'Eventlet version: {eventlet.__version__}')"
-# Should show 0.37.0 or higher
+python worker_test.py
 ```
+
+**Alternative deployment commands:**
+
+1. **Sync Workers** (Basic functionality, no WebSocket):
+   ```bash
+   gunicorn --workers 1 --bind 0.0.0.0:$PORT app:app
+   ```
+
+2. **Gevent Workers** (If gevent is available):
+   ```bash
+   gunicorn --worker-class gevent --workers 1 --bind 0.0.0.0:$PORT app:app
+   ```
+
+3. **Tornado Workers** (If tornado is available):
+   ```bash
+   gunicorn --worker-class tornado --workers 1 --bind 0.0.0.0:$PORT app:app
+   ```
+
+**For Render.com deployment, update your start command** to use one of the alternatives above if eventlet fails.
 
 ---
 

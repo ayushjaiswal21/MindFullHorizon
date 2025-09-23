@@ -35,7 +35,7 @@ PyJWT==2.8.0
 
 # Production Server - Python 3.13 compatible versions
 gunicorn==22.0.0
-eventlet==0.37.0               # Updated for Python 3.13 compatibility
+eventlet==0.38.0               # Latest version for Python 3.13 compatibility
 
 # Monitoring and Logging
 sentry-sdk[flask]==1.45.0       # Error tracking for production

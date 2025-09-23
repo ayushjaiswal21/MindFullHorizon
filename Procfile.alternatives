@@ -1,0 +1,14 @@
+# Alternative Procfile configurations for different worker classes
+# Use these if eventlet has compatibility issues with Python 3.13
+
+# Option 1: Sync workers (no WebSocket support, basic functionality only)
+# web: gunicorn --workers 1 --bind 0.0.0.0:$PORT app:app
+
+# Option 2: Gevent workers (if gevent is available)
+# web: gunicorn --worker-class gevent --workers 1 --bind 0.0.0.0:$PORT app:app
+
+# Option 3: Tornado workers (if tornado is available)
+# web: gunicorn --worker-class tornado --workers 1 --bind 0.0.0.0:$PORT app:app
+
+# Current: Eventlet workers (recommended for WebSocket support)
+web: gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app
