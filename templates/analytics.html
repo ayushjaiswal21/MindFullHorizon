@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Advanced Analytics - Mindful Horizon</title>
+    <link rel="stylesheet" href="/static/css/main.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Advanced Analytics</h1>
+      <p>This is a placeholder analytics page for providers. Summary data and visualizations will appear here.</p>
+
+      {% if summary %}
+        <h2>Institution Summary</h2>
+        <ul>
+          <li>Total Users: {{ summary.total_users if summary.total_users is defined else summary.get('total_users', 'N/A') }}</li>
+          <li>Engagement Rate: {{ summary.engagement_rate if summary.engagement_rate is defined else summary.get('engagement_rate', 'N/A') }}</li>
+          <li>High Risk Users: {{ summary.high_risk_users if summary.high_risk_users is defined else summary.get('high_risk_users', 'N/A') }}</li>
+        </ul>
+      {% else %}
+        <p>No summary data available.</p>
+      {% endif %}
+
+      <p><a href="{{ url_for('provider_dashboard') }}">Back to Provider Dashboard</a></p>
+    </div>
+  </body>
+</html>

@@ -1,3 +1,36 @@
+    <div id="yoga-videos-section" class="card p-6 mb-8 hidden">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-video text-red-500 mr-2"></i>Yoga Video Library (Free for All)
+        </h3>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="aspect-w-16 aspect-h-9">
+                <iframe class="rounded-lg shadow" width="100%" height="215" src="https://www.youtube.com/embed/v7AYKMP6rOE" title="Yoga For Complete Beginners - 20 Minute Home Yoga Workout!" frameborder="0" allowfullscreen></iframe>
+                <div class="mt-2 text-sm text-gray-700 font-medium">Yoga For Complete Beginners</div>
+            </div>
+            <div class="aspect-w-16 aspect-h-9">
+                <iframe class="rounded-lg shadow" width="100%" height="215" src="https://www.youtube.com/embed/4pKly2JojMw" title="10-Minute Morning Yoga for Beginners" frameborder="0" allowfullscreen></iframe>
+                <div class="mt-2 text-sm text-gray-700 font-medium">10-Minute Morning Yoga</div>
+            </div>
+            <div class="aspect-w-16 aspect-h-9">
+                <iframe class="rounded-lg shadow" width="100%" height="215" src="https://www.youtube.com/embed/sTANio_2E0Q" title="Yoga For Flexibility" frameborder="0" allowfullscreen></iframe>
+                <div class="mt-2 text-sm text-gray-700 font-medium">Yoga For Flexibility</div>
+            </div>
+        </div>
+        <div class="mt-4 text-xs text-gray-500">All videos are embedded from YouTube and free to access for everyone.</div>
+    </div>
+    <script>
+    function toggleYogaVideos() {
+        const section = document.getElementById('yoga-videos-section');
+        const btn = document.getElementById('show-videos-btn');
+        if (section.classList.contains('hidden')) {
+            section.classList.remove('hidden');
+            btn.innerHTML = '<i class="fas fa-video mr-2"></i>Hide Yoga Video Library';
+        } else {
+            section.classList.add('hidden');
+            btn.innerHTML = '<i class="fas fa-video mr-2"></i>Show Yoga Video Library';
+        }
+    }
+    </script>
 {% extends 'base.html' %}
 
 {% block title %}Yoga & Mindfulness - MindFull Horizon{% endblock %}
@@ -66,6 +99,13 @@
             <button onclick="setQuickSession(15)" class="quick-session-btn">15 min</button>
             <button onclick="setQuickSession(30)" class="quick-session-btn">30 min</button>
         </div>
+    </div>
+
+    <!-- Yoga Video Library Button (opens new page) -->
+    <div class="flex justify-center mb-8">
+        <a href="/yoga-videos" target="_blank" id="show-videos-btn" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded shadow" rel="noopener">
+            <i class="fas fa-video mr-2"></i>Show Yoga Video Library
+        </a>
     </div>
 
     <!-- Guided Yoga Sessions -->
