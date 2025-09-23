@@ -9,7 +9,7 @@ from flask_wtf.csrf import CSRFProtect
 # Initialize extensions
 db = SQLAlchemy()
 migrate = Migrate()
-session = Session()
+flask_session = Session()
 compress = Compress()
 csrf = CSRFProtect()
 
@@ -19,7 +19,7 @@ def init_extensions(app):
     os.makedirs(os.path.join(app.root_path, 'instance'), exist_ok=True)
     
     # Initialize SQLAlchemy first
-    db.init_app(app)
+    # db.init_app(app)  # Already initialized in app.py
     
     # Then initialize Flask-Migrate
     migrate.init_app(app, db)
@@ -27,7 +27,7 @@ def init_extensions(app):
     # Initialize session after database
     if not os.path.exists(app.config['SESSION_FILE_DIR']):
         os.makedirs(app.config['SESSION_FILE_DIR'])
-    session.init_app(app)
+    flask_session.init_app(app)
     
     # Initialize security features
     csrf.init_app(app)

@@ -1,6 +1,9 @@
 
 import json
 
+from werkzeug.utils import secure_filename
+import uuid
+
 import logging
 import os
 from datetime import datetime, timedelta, date, timezone
@@ -16,9 +19,9 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
 from ai_service import ai_service
-from database import db
+from extensions import db, migrate, flask_session, compress, csrf
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary
-from models import BlogPost, BlogComment, BlogLike, BlogInsight  # Ensure BlogPost and related models are imported
+from models import BlogPost, BlogComment, BlogLike, BlogInsight, Prescription  # Ensure BlogPost and related models are imported
 
 # Load environment variables from .env file
 try:
@@ -40,17 +43,8 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
 
-# Initialize Flask-Session
-Session(app)
-
 # Initialize CSRF protection
-csrf = CSRFProtect()
-csrf.init_app(app)
-
-# Disable CSRF for all views by default
 app.config['WTF_CSRF_ENABLED'] = False
-
-# Enable CSRF only for specific forms that need it
 app.config['WTF_CSRF_TIME_LIMIT'] = None  # No time limit for CSRF tokens
 
 # Configure logging
@@ -76,7 +70,6 @@ app.config['COMPRESS_ALGORITHM'] = ['gzip']
 app.config['COMPRESS_LEVEL'] = 6
 app.config['COMPRESS_MIN_SIZE'] = 500  # Only compress responses > 500 bytes
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(days=30)  # Cache static assets for 30 days
-compress = Compress(app)
 
 # Database configuration
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -85,9 +78,22 @@ os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(basedir, "instance", "mindful_horizon.db")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Upload folder for profile pictures
+UPLOAD_FOLDER = os.path.join(basedir, 'static/profile_pics')
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+# Ensure the upload folder exists
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
 # Initialize database and migrations
 db.init_app(app)
 migrate = Migrate(app, db)
+
+# Initialize all extensions
+from extensions import init_extensions
+init_extensions(app)
 
 # Stub for get_blog_insights (replace with real logic as needed)
 def get_blog_insights():
@@ -98,6 +104,10 @@ def get_blog_insights():
         'total_views': 0,
         'most_popular_post': None
     }
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 # Stub for award_points (replace with real logic as needed)
 def award_points(user_id, points, reason):
@@ -319,9 +329,10 @@ def patient_dashboard():
         if rpm_data.mood_score and rpm_data.mood_score < 4:
             alerts.append('Low mood score detected')
 
-    return render_template('patient_dashboard.html', 
-                         user_name=session['user_name'], 
-                         data=data, 
+    return render_template('patient_dashboard.html',
+                         user_name=session['user_name'],
+                         user=User.query.get(user_id),
+                         data=data,
                          alerts=alerts,
                          upcoming_appointments=upcoming_appointments,
                          past_appointments=past_appointments)
@@ -1210,30 +1221,63 @@ def wellness_report(user_id):
                          ai_medication_adherence_insights=ai_medication_adherence_insights,
                          datetime=datetime)
 
-@app.route('/profile')
+@app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
     user_id = session['user_id']
-    user = User.query.filter_by(email=session['user_email']).first()
-    
+    user = User.query.get(user_id)
+
+    if request.method == 'POST':
+        user.name = request.form.get('name', user.name)
+        user.email = request.form.get('email', user.email)
+        user.institution = request.form.get('institution', user.institution)
+
+        # Handle password change
+        password = request.form.get('password')
+        if password:
+            user.set_password(password)
+
+        # Handle profile picture upload
+        if 'profile_pic' in request.files:
+            file = request.files['profile_pic']
+            if file and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                # Ensure unique filename to prevent overwrites
+                unique_filename = str(uuid.uuid4()) + '_' + filename
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                file.save(file_path)
+                user.profile_pic = unique_filename
+                flash('Profile picture updated successfully!', 'success')
+            elif file.filename != '':
+                flash('Invalid file type for profile picture.', 'error')
+
+        try:
+            db.session.commit()
+            session['user_name'] = user.name  # Update session name if changed
+            flash('Profile updated successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error updating profile for user {user_id}: {e}")
+            flash('Failed to update profile.', 'error')
+        return redirect(url_for('profile'))
+
     gamification = Gamification.query.filter_by(user_id=user_id).first()
-    
     digital_detox_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).all()
-    
+
     avg_screen_time_7_days = None
     avg_screen_time_30_days = None
-    
+
     if digital_detox_logs:
         recent_7_days = digital_detox_logs[:7]
         if recent_7_days:
             avg_screen_time_7_days = sum(log.screen_time_hours for log in recent_7_days) / len(recent_7_days)
-        
+
         recent_30_days = digital_detox_logs[:30]
         if recent_30_days:
             avg_screen_time_30_days = sum(log.screen_time_hours for log in recent_30_days) / len(recent_30_days)
-    
-    return render_template('profile.html', 
-                         user_name=session['user_name'], 
+
+    return render_template('profile.html',
+                         user_name=session['user_name'],
                          user=user,
                          gamification=gamification,
                          digital_detox_logs=digital_detox_logs,
