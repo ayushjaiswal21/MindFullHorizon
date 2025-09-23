@@ -1,61 +1,244 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Mindful Horizon{% endblock %}</title>
-    <link rel="icon" href="https://em-content.zobj.net/source/twitter/376/brain_1f9e0.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="MindFullHorizon - Your personal path to mental wellness with AI-powered tools, progress tracking, and professional support">
+    <meta name="keywords" content="mental health, wellness, AI therapy, progress tracking, telehealth, mindfulness">
+    <meta name="author" content="MindFullHorizon Team">
+    <meta property="og:title" content="MindFullHorizon - Mental Wellness Platform">
+    <meta property="og:description" content="AI-powered mental health companion with progress tracking and professional support">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MindFullHorizon - Mental Wellness Platform">
+    <meta name="twitter:description" content="AI-powered mental health companion with progress tracking and professional support">
+    <meta name="theme-color" content="#667eea">
+    <meta name="msapplication-TileColor" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="//translate.google.com">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" as="style">
+
+    <title>{% block title %}Mindful Horizon - Mental Wellness Platform{% endblock %}</title>
+    <link rel="icon" href="https://theme-color.zobj.net/source/twitter/376/brain_1f9e0.png">
+
+    <!-- Fonts with display swap for performance -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Advanced CSS with modern features -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=20250923-1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced.css') }}?v=20250923-1">
+
+    <!-- Advanced meta tags for better performance -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="application-name" content="MindFullHorizon">
+    <meta name="apple-mobile-web-app-title" content="MindFullHorizon">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+
     {% block extra_head %}{% endblock %}
 </head>
+
 {% from '_macros.html' import back_to_dashboard_button %}
-<body class="bg-gray-100 min-h-screen flex flex-col">
-    <nav class="fixed top-0 left-0 w-full header-bg text-white shadow-lg z-50">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            {% if session.user_email %}
-                {% if session.user_role == 'patient' %}
-                    <a href="{{ url_for('patient_dashboard') }}" class="logo">
-                        <i class="fas fa-brain logo-icon"></i> Mindful Horizon
-                    </a>
-                {% else %}
-                    <a href="{{ url_for('provider_dashboard') }}" class="logo">
-                        <i class="fas fa-brain logo-icon"></i> Mindful Horizon
-                    </a>
-                {% endif %}
-            {% else %}
-                <a href="{{ url_for('index') }}" class="logo">
-                    <i class="fas fa-brain logo-icon"></i> Mindful Horizon
-                </a>
-            {% endif %}
-            <div id="nav-links" class="space-x-4 flex items-center">
+<body class="advanced-ui antialiased text-gray-900 bg-gradient-to-br from-white via-blue-50 to-purple-50 min-h-screen">
+    <!-- Advanced Navigation with Blue Gradient -->
+    <nav class="advanced-nav fixed top-0 left-0 w-full z-50 backdrop-blur-xl bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 border-b border-blue-300 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo with Advanced Styling -->
+                <div class="flex-shrink-0">
+                    {% if session.user_email %}
+                        {% if session.user_role == 'patient' %}
+                            <a href="{{ url_for('patient_dashboard') }}" class="advanced-logo group">
+                                <div class="logo-icon-container">
+                                    <i class="fas fa-brain logo-icon"></i>
+                                </div>
+                                <span class="logo-text">MindFull<span class="text-blue-600">Horizon</span></span>
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('provider_dashboard') }}" class="advanced-logo group">
+                                <div class="logo-icon-container">
+                                    <i class="fas fa-brain logo-icon"></i>
+                                </div>
+                                <span class="logo-text">MindFull<span class="text-blue-600">Horizon</span></span>
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('index') }}" class="advanced-logo group">
+                            <div class="logo-icon-container">
+                                <i class="fas fa-brain logo-icon"></i>
+                            </div>
+                            <span class="logo-text">MindFull<span class="text-blue-600">Horizon</span></span>
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Advanced Navigation Menu -->
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-1">
+                        {% if session.user_email %}
+                            {% if session.user_role == 'patient' %}
+                                <a href="{{ url_for('medication') }}" class="nav-link-item">
+                                    <i class="fas fa-pills nav-icon"></i>
+                                    <span>Medications</span>
+                                </a>
+                                <a href="{{ url_for('breathing') }}" class="nav-link-item">
+                                    <i class="fas fa-wind nav-icon"></i>
+                                    <span>Breathe</span>
+                                </a>
+                                <a href="{{ url_for('yoga') }}" class="nav-link-item">
+                                    <i class="fas fa-child nav-icon"></i>
+                                    <span>Yoga</span>
+                                </a>
+                            {% endif %}
+                            <a href="{{ url_for('blog_list') }}" class="nav-link-item">
+                                <i class="fas fa-blog nav-icon"></i>
+                                <span>Blog</span>
+                            </a>
+                            <a href="{{ url_for('progress') }}" class="nav-link-item">
+                                <i class="fas fa-chart-line nav-icon"></i>
+                                <span>Progress</span>
+                            </a>
+                            <a href="{{ url_for('profile') }}" class="nav-link-item">
+                                <i class="fas fa-user nav-icon"></i>
+                                <span>Profile</span>
+                            </a>
+
+                            <!-- User Menu with Advanced Dropdown -->
+                            <div class="relative user-menu-container">
+                                <button class="user-menu-btn" onclick="toggleUserMenu()">
+                                    <div class="user-avatar">
+                                        {{ session.user_name[0].upper() if session.user_name else 'U' }}
+                                    </div>
+                                    <span class="user-name">{{ session.user_name or 'User' }}</span>
+                                    <i class="fas fa-chevron-down transition-transform duration-200"></i>
+                                </button>
+                                <div id="user-menu" class="user-menu-dropdown">
+                                    <div class="user-menu-header">
+                                        <div class="user-avatar-large">
+                                            {{ session.user_name[0].upper() if session.user_name else 'U' }}
+                                        </div>
+                                        <div>
+                                            <div class="user-name-large">{{ session.user_name or 'User' }}</div>
+                                            <div class="user-email">{{ session.user_email }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="user-menu-divider"></div>
+                                    <a href="{{ url_for('profile') }}" class="user-menu-item">
+                                        <i class="fas fa-user"></i>
+                                        <span>Profile Settings</span>
+                                    </a>
+                                    <a href="{{ url_for('progress') }}" class="user-menu-item">
+                                        <i class="fas fa-chart-line"></i>
+                                        <span>Progress Report</span>
+                                    </a>
+                                    <a href="{{ url_for('logout') }}" class="user-menu-item">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        <span>Sign Out</span>
+                                    </a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <a href="{{ url_for('blog_list') }}" class="nav-link-item">
+                                <i class="fas fa-blog nav-icon"></i>
+                                <span>Blog</span>
+                            </a>
+                            <a href="{{ url_for('login') }}" class="nav-link-item-secondary">Login</a>
+                            <a href="{{ url_for('signup') }}" class="advanced-cta-btn">
+                                <span>Get Started</span>
+                                <i class="fas fa-rocket ml-2"></i>
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button type="button" class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                        <span class="sr-only">Open main menu</span>
+                        <div class="hamburger">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="mobile-menu">
+            <div class="mobile-menu-content bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400">
                 {% if session.user_email %}
                     {% if session.user_role == 'patient' %}
-                        <a href="{{ url_for('medication') }}" class="nav-link">Medications</a>
-                        <a href="{{ url_for('breathing') }}" class="nav-link">Breathe</a>
-                        <a href="{{ url_for('yoga') }}" class="nav-link">Yoga</a>
+                        <a href="{{ url_for('medication') }}" class="mobile-menu-item">
+                            <i class="fas fa-pills"></i>
+                            <span>Medications</span>
+                        </a>
+                        <a href="{{ url_for('breathing') }}" class="mobile-menu-item">
+                            <i class="fas fa-wind"></i>
+                            <span>Breathe</span>
+                        </a>
+                        <a href="{{ url_for('yoga') }}" class="mobile-menu-item">
+                            <i class="fas fa-child"></i>
+                            <span>Yoga</span>
+                        </a>
                     {% endif %}
-                    <a href="{{ url_for('blog_list') }}" class="nav-link">Blog</a>
-                    <a href="{{ url_for('progress') }}" class="nav-link">Progress</a>
-                    <a href="{{ url_for('profile') }}" class="nav-link">Profile</a>
-                    <span class="text-sm">Welcome, {{ session.user_name }}</span>
-                    <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+                    <a href="{{ url_for('blog_list') }}" class="mobile-menu-item">
+                        <i class="fas fa-blog"></i>
+                        <span>Blog</span>
+                    </a>
+                    <a href="{{ url_for('progress') }}" class="mobile-menu-item">
+                        <i class="fas fa-chart-line"></i>
+                        <span>Progress</span>
+                    </a>
+                    <a href="{{ url_for('profile') }}" class="mobile-menu-item">
+                        <i class="fas fa-user"></i>
+                        <span>Profile</span>
+                    </a>
+                    <div class="mobile-menu-divider"></div>
+                    <a href="{{ url_for('logout') }}" class="mobile-menu-item text-red-600">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>Sign Out</span>
+                    </a>
                 {% else %}
-                    <a href="{{ url_for('blog_list') }}" class="nav-link">Blog</a>
-                    <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                    <a href="{{ url_for('blog_list') }}" class="mobile-menu-item">Blog</a>
+                    <a href="{{ url_for('login') }}" class="mobile-menu-item">Login</a>
+                    <a href="{{ url_for('signup') }}" class="mobile-menu-item advanced-cta-btn">
+                        <span>Get Started</span>
+                        <i class="fas fa-rocket ml-2"></i>
+                    </a>
                 {% endif %}
             </div>
         </div>
     </nav>
 
-    <main class="w-full pt-24 p-4 flex-grow">
+    <!-- Main Content Area -->
+    <main id="main-content" class="main-content">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                <div class="max-w-4xl mx-auto mb-4">
+                <div class="message-container">
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ 'success' if category == 'success' else 'error' }} mb-2 p-4 rounded-lg">
-                            {{ message }}
+                        <div class="advanced-alert alert-{{ 'success' if category == 'success' else 'error' if category == 'error' else 'warning' if category == 'warning' else 'info' }}">
+                            <div class="alert-icon">
+                                <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' if category == 'error' else 'exclamation-triangle' if category == 'warning' else 'info-circle' }}"></i>
+                            </div>
+                            <div class="alert-content">
+                                <div class="alert-title">{{ category.title() if category else 'Notice' }}</div>
+                                <div class="alert-message">{{ message }}</div>
+                            </div>
+                            <button class="alert-close" onclick="closeAlert(this)">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     {% endfor %}
                 </div>
@@ -65,24 +248,256 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Advanced Footer -->
+    <footer class="advanced-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3 class="footer-title">MindFullHorizon</h3>
+                <p class="footer-description">Your personal path to mental wellness with AI-powered tools and professional support.</p>
+                <div class="footer-social">
+                    <a href="#" class="social-link" aria-label="Facebook">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Twitter">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="LinkedIn">
+                        <i class="fab fa-linkedin-in"></i>
+                    </a>
+                    <a href="#" class="social-link" aria-label="Instagram">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h4 class="footer-subtitle">Quick Links</h4>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                    <li><a href="{{ url_for('blog_list') }}">Blog</a></li>
+                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                    <li><a href="{{ url_for('signup') }}">Sign Up</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4 class="footer-subtitle">Support</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                    <li><a href="#">Help Center</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-section">
+                <h4 class="footer-subtitle">Resources</h4>
+                <ul class="footer-links">
+                    <li><a href="#">Mental Health Resources</a></li>
+                    <li><a href="#">Crisis Support</a></li>
+                    <li><a href="#">Professional Help</a></li>
+                    <li><a href="#">Community Guidelines</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <div class="footer-bottom-content">
+                <p>&copy; 2024 MindFullHorizon. All rights reserved.</p>
+                <p class="footer-made-with">
+                    Made with <i class="fas fa-heart text-red-500"></i> for mental wellness
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Advanced Scroll to Top Button -->
+    <button id="scroll-to-top" class="scroll-to-top" onclick="scrollToTop()" aria-label="Scroll to top">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    <!-- Skip to main content link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- Advanced Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p class="loading-text">Loading your experience...</p>
+        </div>
+    </div>
+
+    <!-- Advanced Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ url_for('static', filename='js/scripts.js') }}" defer></script>
+    <script src="{{ url_for('static', filename='js/scripts.js') }}?v=20250923-1" defer></script>
+
+    <!-- Advanced Inline Scripts -->
     <script>
-        // Initialize Chart.js charts on page load
+        // Initialize advanced features on page load
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof initializeChartJS === 'function') {
                 initializeChartJS();
             }
+
+            // Initialize advanced UI features
+            initializeAdvancedUI();
+
+            // Show loading overlay for dynamic content
+            hideLoadingOverlay();
+        });
+
+        // Advanced UI Functions
+        function initializeAdvancedUI() {
+            // Initialize smooth scrolling
+            initializeSmoothScrolling();
+
+            // Initialize tooltips
+            initializeTooltips();
+
+            // Initialize animations
+            initializeAnimations();
+
+            // Initialize mobile menu
+            initializeMobileMenu();
+
+            // Initialize user menu
+            initializeUserMenu();
+
+            // Initialize alerts
+            initializeAlerts();
+        }
+
+        function initializeSmoothScrolling() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
+
+        function initializeTooltips() {
+            // Advanced tooltip functionality
+            const tooltipElements = document.querySelectorAll('[data-tooltip]');
+            tooltipElements.forEach(element => {
+                element.addEventListener('mouseenter', showTooltip);
+                element.addEventListener('mouseleave', hideTooltip);
+            });
+        }
+
+        function showTooltip(e) {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'advanced-tooltip';
+            tooltip.textContent = e.target.getAttribute('data-tooltip');
+            document.body.appendChild(tooltip);
+
+            const rect = e.target.getBoundingClientRect();
+            tooltip.style.left = rect.left + rect.width / 2 + 'px';
+            tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
+        }
+
+        function hideTooltip() {
+            const tooltip = document.querySelector('.advanced-tooltip');
+            if (tooltip) {
+                tooltip.remove();
+            }
+        }
+
+        function initializeAnimations() {
+            // Intersection Observer for animations
+            const observerOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-in');
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.animate-on-scroll').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        function toggleMobileMenu() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            const isOpen = mobileMenu.classList.contains('open');
+
+            if (isOpen) {
+                mobileMenu.classList.remove('open');
+            } else {
+                mobileMenu.classList.add('open');
+            }
+        }
+
+        function toggleUserMenu() {
+            const userMenu = document.getElementById('user-menu');
+            userMenu.classList.toggle('open');
+        }
+
+        function initializeAlerts() {
+            // Auto-hide alerts after 5 seconds
+            setTimeout(() => {
+                document.querySelectorAll('.advanced-alert').forEach(alert => {
+                    if (!alert.classList.contains('dismissed')) {
+                        closeAlert(alert.querySelector('.alert-close'));
+                    }
+                });
+            }, 5000);
+        }
+
+        function closeAlert(button) {
+            const alert = button.closest('.advanced-alert');
+            alert.classList.add('dismissed');
+            setTimeout(() => alert.remove(), 300);
+        }
+
+        function scrollToTop() {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        }
+
+        function showLoadingOverlay() {
+            document.getElementById('loading-overlay').style.display = 'flex';
+        }
+
+        function hideLoadingOverlay() {
+            setTimeout(() => {
+                document.getElementById('loading-overlay').style.display = 'none';
+            }, 1000);
+        }
+
+        // Close user menu when clicking outside
+        document.addEventListener('click', function(e) {
+            const userMenu = document.getElementById('user-menu');
+            const userMenuBtn = document.querySelector('.user-menu-btn');
+
+            if (!userMenu.contains(e.target) && !userMenuBtn.contains(e.target)) {
+                userMenu.classList.remove('open');
+            }
+        });
+
+        // Advanced keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('user-menu')?.classList.remove('open');
+                document.getElementById('mobile-menu')?.classList.remove('open');
+            }
         });
     </script>
-    {% block extra_scripts %}
-<div id="google_translate_element"></div>
-<script type="text/javascript">
-    function googleTranslateElementInit() {
-        new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
-    }
-</script>
-<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-{% endblock %}
+
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

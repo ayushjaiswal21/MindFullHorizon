@@ -1,337 +1,615 @@
 {% extends "base.html" %}
 
 {% block content %}
-<!--
-  This is the new, completely redesigned homepage for MindFullHorizon.
-  It's structured in sections to guide the user, build trust, and encourage them to sign up.
--->
-
-<!-- 1. Hero Section -->
-<!-- This is the main welcoming area. It uses a background image for engagement. -->
-<!-- IMPORTANT: You need to find a suitable background image. Search for "calm nature" or "serene landscape" on a free stock photo site like Unsplash or Pexels. -->
-<!-- Then, create a folder 'static/img' and save the image there as 'hero-background.jpg' -->
-<div class="relative bg-white overflow-hidden">
-  <div class="absolute inset-0">
-    <img src="{{ url_for('static', filename='images/hero_image.png') }}" 
-         onerror="this.onerror=null;this.src='https://placehold.co/1920x1080/a7f3d0/1e3a8a?text=MindFullHorizon';" 
-         alt="A brain logo with a sun and waves, representing mental wellness." class="hero-image">
-    <!-- This overlay darkens the image slightly so the white text on top is easy to read. -->
-    <div class="absolute inset-0 hero-overlay" aria-hidden="true"></div>
-  </div>
-  <div class="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
-    <h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">Your Personal Path to Mental Wellness</h1>
-    <p class="mt-6 max-w-3xl text-xl text-indigo-100">MindFullHorizon offers AI-powered tools, progress tracking, and professional support to help you navigate your mental health journey with confidence and clarity.</p>
-    <div class="mt-10">
-      <a href="{{ url_for('signup') }}" class="inline-block bg-white border border-transparent rounded-md py-3 px-8 text-base font-medium text-sky-700 hover:bg-sky-50">Get Started for Free</a>
-    </div>
-  </div>
-</div>
-
-
-<!-- 2. Features / "Why Choose Us?" Section -->
-<!-- This section quickly communicates the core benefits of your platform using icons. -->
-<div class="bg-slate-50 py-16 sm:py-24">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center">
-      <h2 class="text-base font-semibold text-sky-600 tracking-wide uppercase">Our Features</h2>
-      <p class="mt-1 text-3xl font-extrabold text-gray-900 sm:text-4xl sm:tracking-tight lg:text-5xl">A Better Way to Care for Your Mind</p>
-      <p class="max-w-xl mt-5 mx-auto text-xl text-gray-500">Tools and support designed for your modern life.</p>
-    </div>
-    
-    <!-- Quick Benefits with Emojis -->
-    <div class="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6">
-      <div class="feature-tile text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-        <div class="emoji-tile mb-3 text-4xl bg-indigo-100 w-16 h-16 mx-auto rounded-full flex items-center justify-center">🧠</div>
-        <p class="text-sm font-medium text-gray-900">AI-Powered</p>
-      </div>
-      <div class="feature-tile text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-        <div class="emoji-tile mb-3 text-4xl bg-green-100 w-16 h-16 mx-auto rounded-full flex items-center justify-center">📊</div>
-        <p class="text-sm font-medium text-gray-900">Progress Tracking</p>
-      </div>
-      <div class="feature-tile text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-        <div class="emoji-tile mb-3 text-4xl bg-red-100 w-16 h-16 mx-auto rounded-full flex items-center justify-center">❤️</div>
-        <p class="text-sm font-medium text-gray-900">Mental Wellness</p>
-      </div>
-      <div class="feature-tile text-center p-6 bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-        <div class="emoji-tile mb-3 text-4xl bg-purple-100 w-16 h-16 mx-auto rounded-full flex items-center justify-center">🔒</div>
-        <p class="text-sm font-medium text-gray-900">Secure & Private</p>
-      </div>
-    </div>
-    <div class="mt-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
-      <!-- Feature 1: AI Chat -->
-      <div class="pt-6">
-        <div class="flow-root bg-white rounded-lg px-6 pb-8 shadow-lg">
-          <div class="-mt-6">
-            <div>
-              <span class="inline-flex items-center justify-center p-3 bg-sky-500 rounded-md shadow-lg">
-                <!-- SVG Icon from Heroicons (heroicons.com) -->
-                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-              </span>
-            </div>
-            <h3 class="mt-8 text-lg font-medium text-gray-900 tracking-tight">AI-Powered Companion</h3>
-            <p class="mt-5 text-base text-gray-500">Chat with our intelligent AI anytime you need to talk, reflect, or work through your thoughts in a safe, private space.</p>
-          </div>
+<!-- Hero Dashboard Section - Student Focused & Professional -->
+<section class="hero-dashboard" style="position: relative; padding: 40px 0; max-width: 1400px; margin: 32px auto; background: linear-gradient(135deg, #6b7280 0%, #9ca3af 30%, #3b82f6 70%, #60a5fa 100%); border-radius: 32px; box-shadow: 0 2px 16px rgba(102,126,234,0.08); overflow: hidden; min-height: 500px; height: 75vh;">
+    <!-- Watermark background logo -->
+    <img src="{{ url_for('static', filename='images/hero_image.png') }}" alt="MindFullHorizon Watermark" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 100vw; max-width: 2200px; opacity: 0.15; z-index: 0; pointer-events: none;" />
+    <div class="hero-content" style="text-align: center; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
+        <h1 class="hero-main-headline" style="font-size: 3.2rem; margin-bottom: 16px; color: #fff; text-shadow: 0 2px 8px rgba(38,99,235,0.18); transition: color 0.2s, text-shadow 0.2s; cursor: pointer; line-height: 1.2;">Your Mental Health Companion for College Life</h1>
+        <p class="hero-sub-headline" style="font-size: 1.6rem; margin-bottom: 24px; color: #e3f0ff; text-shadow: 0 1px 4px rgba(38,99,235,0.12); transition: color 0.2s, text-shadow 0.2s; cursor: pointer; max-width: 800px; line-height: 1.4;">AI-powered support, progress tracking, and professional counseling - all designed for busy students like you.</p>
+        <div class="hero-actions" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 16px;">
+            <a href="{{ url_for('signup') }}" class="hero-cta-button primary" style="padding: 12px 32px; font-size: 1.1rem; background: #2563eb; color: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(38,99,235,0.18); transition: background 0.2s, color 0.2s, box-shadow 0.2s; cursor: pointer; text-decoration: none; font-weight: 600;">Get Started Free</a>
+            <a href="#features" class="hero-cta-button secondary" style="padding: 12px 32px; font-size: 1.1rem; background: transparent; color: #fff; border: 2px solid #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(255,255,255,0.2); transition: background 0.2s, color 0.2s, box-shadow 0.2s; cursor: pointer; text-decoration: none; font-weight: 600;">Learn More</a>
         </div>
-      </div>
-      <!-- Feature 2: Progress Tracking -->
-      <div class="pt-6">
-        <div class="flow-root bg-white rounded-lg px-6 pb-8 shadow-lg">
-          <div class="-mt-6">
-            <div>
-              <span class="inline-flex items-center justify-center p-3 bg-sky-500 rounded-md shadow-lg">
-                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </span>
+        <div class="hero-stats" style="display: flex; gap: 32px; justify-content: center; margin-top: 20px;">
+            <div class="hero-stat" style="text-align: center; color: #e3f0ff;">
+                <div style="font-size: 2.4rem; font-weight: 700; color: #fff;">52K+</div>
+                <div style="font-size: 1rem; opacity: 0.9;">Students Helped</div>
             </div>
-            <h3 class="mt-8 text-lg font-medium text-gray-900 tracking-tight">Track Your Progress</h3>
-            <p class="mt-5 text-base text-gray-500">Complete assessments and monitor your mental wellness over time with easy-to-understand visualizations and insights.</p>
-          </div>
+            <div class="hero-stat" style="text-align: center; color: #e3f0ff;">
+                <div style="font-size: 2.4rem; font-weight: 700; color: #fff;">4.9★</div>
+                <div style="font-size: 1rem; opacity: 0.9;">Average Rating</div>
+            </div>
+            <div class="hero-stat" style="text-align: center; color: #e3f0ff;">
+                <div style="font-size: 2.4rem; font-weight: 700; color: #fff;">24/7</div>
+                <div style="font-size: 1rem; opacity: 0.9;">AI Support</div>
+            </div>
         </div>
-      </div>
-      <!-- Feature 3: Scheduling -->
-      <div class="pt-6">
-        <div class="flow-root bg-white rounded-lg px-6 pb-8 shadow-lg">
-          <div class="-mt-6">
-            <div>
-              <span class="inline-flex items-center justify-center p-3 bg-sky-500 rounded-md shadow-lg">
-                <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </span>
-            </div>
-            <h3 class="mt-8 text-lg font-medium text-gray-900 tracking-tight">Connect with Providers</h3>
-            <p class="mt-5 text-base text-gray-500">Easily schedule telehealth appointments with licensed professionals for when you need to speak with a human expert.</p>
-          </div>
-        </div>
-      </div>
     </div>
-  </div>
-</div>
-
-
-<!-- 3. "How It Works" Section -->
-<!-- This makes the service feel simple and accessible. -->
-<div class="bg-white py-16 sm:py-24">
-    <div class="max-w-xl mx-auto px-4 sm:px-6 lg:max-w-7xl lg:px-8">
-        <h2 class="sr-only">How it works</h2>
-        <dl class="space-y-10 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-8">
-            <div>
-                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-sky-500 text-white">
-                    <span class="text-xl font-bold">1</span>
-                </div>
-                <div class="mt-5">
-                    <dt class="text-lg leading-6 font-medium text-gray-900">Create Your Account</dt>
-                    <dd class="mt-2 text-base text-gray-500">Sign up in minutes to create your secure, private profile and begin your journey.</dd>
-                </div>
-            </div>
-            <div>
-                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-sky-500 text-white">
-                    <span class="text-xl font-bold">2</span>
-                </div>
-                <div class="mt-5">
-                    <dt class="text-lg leading-6 font-medium text-gray-900">Take an Assessment</dt>
-                    <dd class="mt-2 text-base text-gray-500">Answer a few questions to help us understand your needs and establish a baseline for your progress.</dd>
-                </div>
-            </div>
-            <div>
-                <div class="flex items-center justify-center h-12 w-12 rounded-md bg-sky-500 text-white">
-                    <span class="text-xl font-bold">3</span>
-                </div>
-                <div class="mt-5">
-                    <dt class="text-lg leading-6 font-medium text-gray-900">Engage with Tools</dt>
-                    <dd class="mt-2 text-base text-gray-500">Use the AI companion, track your mood, and connect with providers, all from your personal dashboard.</dd>
-                </div>
-            </div>
-        </dl>
-    </div>
-</div>
-
-
-<!-- 4. Testimonial Section -->
-<!-- Social proof is critical for trust. Even with a placeholder, this shows professionalism. -->
-<section class="bg-slate-50 py-16 sm:py-24">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="lg:grid lg:grid-cols-10 lg:gap-8">
-      <div class="lg:col-span-4">
-        <figure>
-          <blockquote class="text-2xl font-semibold text-gray-900">
-            <p>“MindFullHorizon gave me a space to organize my thoughts without judgment. The AI companion is surprisingly helpful, and tracking my progress has been incredibly motivating.”</p>
-          </blockquote>
-          <figcaption class="mt-6 flex items-center gap-x-4">
-            <img class="h-12 w-12 rounded-full bg-gray-200" src="https://placehold.co/100x100/e0e7ff/3730a3?text=A.P." alt="Placeholder for user photo">
-            <div>
-              <div class="font-semibold text-gray-900">Alex P.</div>
-              <div class="text-gray-600">User since 2024</div>
-            </div>
-          </figcaption>
-        </figure>
-      </div>
-      <div class="mt-12 lg:mt-0 lg:col-span-6 lg:col-start-5">
-        <div class="text-base text-gray-500">
-          <h2 class="text-base font-semibold text-sky-600">Confidential & Secure</h2>
-          <p class="mt-4 text-3xl font-extrabold text-gray-900">Your privacy is our priority</p>
-          <p class="mt-4">We understand the sensitivity of mental health. All your data, from assessments to chat logs, is encrypted and stored securely. We provide the tools for your journey; you are always in control of your information.</p>
-          <ul role="list" class="mt-6 space-y-4">
-            <li class="flex items-start">
-              <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-              </div>
-              <p class="ml-3 text-base text-gray-500">End-to-end encryption for all communications</p>
-            </li>
-            <li class="flex items-start">
-              <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-              </div>
-              <p class="ml-3 text-base text-gray-500">Anonymous and private assessments</p>
-            </li>
-            <li class="flex items-start">
-              <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-green-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-              </div>
-              <p class="ml-3 text-base text-gray-500">You control who sees your data</p>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </div>
+    <div class="hero-company-name" style="font-size: 1.2rem; margin-top: 16px; color: #e3f0ff; position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(38,99,235,0.12); align-self: flex-end;">MindFullHorizon</div>
 </section>
 
-<!-- Blog Insights Section -->
-{% if blog_insights and featured_posts %}
-<section class="bg-white py-16 sm:py-24">
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center mb-12">
-      <h2 class="text-base font-semibold text-sky-600 tracking-wide uppercase">Community Blog</h2>
-      <p class="mt-1 text-3xl font-extrabold text-gray-900 sm:text-4xl">Stories, Insights & Support</p>
-      <p class="max-w-2xl mt-5 mx-auto text-xl text-gray-500">Real experiences and expert advice from our mental health community</p>
-    </div>
-    
-    <!-- Blog Stats -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-      <div class="text-center p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
-        <div class="text-3xl font-bold text-blue-600">{{ blog_insights.total_posts }}</div>
-        <div class="text-sm text-gray-600 mt-1">Blog Posts</div>
-      </div>
-      <div class="text-center p-6 bg-gradient-to-r from-red-50 to-pink-50 rounded-lg">
-        <div class="text-3xl font-bold text-red-500">{{ blog_insights.total_likes }}</div>
-        <div class="text-sm text-gray-600 mt-1">Community Likes</div>
-      </div>
-      <div class="text-center p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
-        <div class="text-3xl font-bold text-green-600">{{ blog_insights.total_comments }}</div>
-        <div class="text-sm text-gray-600 mt-1">Discussions</div>
-      </div>
-      <div class="text-center p-6 bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg">
-        <div class="text-3xl font-bold text-purple-600">{{ blog_insights.total_views }}</div>
-        <div class="text-sm text-gray-600 mt-1">Total Views</div>
-      </div>
-    </div>
-    
-    <!-- Featured Posts -->
-    <div class="grid gap-8 md:grid-cols-3">
-      {% for post in featured_posts %}
-      <div class="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-shadow duration-300">
-        <div class="p-6">
-          <div class="flex items-center space-x-3 mb-4">
-            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-              {{ post.author.name[0].upper() if post.author else 'U' }}
+<!-- Student Dashboard Section -->
+
+<!-- Redesigned Student Wellness Dashboard Section -->
+<section class="student-dashboard" id="features" style="background: #fff; border-radius: 0px; margin: 32px auto; max-width: 1400px; box-shadow: 0 2px 16px rgba(102,126,234,0.08); padding: 40px 0;">
+    <div class="dashboard-container" style="max-width: 1200px; margin: 0 auto;">
+        <div class="dashboard-header" style="text-align: center; margin-bottom: 48px;">
+            <h2 class="dashboard-title" style="font-size: 2.8rem; color: #222; font-weight: 700; margin-bottom: 16px; text-shadow: none;">
+                <span class="title-emoji" style="font-size:2.8rem;">🎓</span>
+                <span class="title-text">Student Wellness Dashboard</span>
+            </h2>
+            <p class="dashboard-subtitle" style="font-size: 1.3rem; color: #444; margin-bottom: 0; text-shadow: none; line-height: 1.4; max-width: 600px; margin-left: auto; margin-right: auto;">Everything you need for mental wellness, designed specifically for college life. From quick stress relief to professional counseling - all in one place.</p>
+            <div class="dashboard-stats" style="display: flex; gap: 24px; justify-content: center; margin-top: 24px; flex-wrap: wrap;">
+                <div class="mini-stat" style="text-align: center; padding: 12px 20px; background: #f0f9ff; border-radius: 12px; border: 1px solid #e0f2fe;">
+                    <div style="font-size: 1.4rem; font-weight: 700; color: #2563eb;">1M+</div>
+                    <div style="font-size: 0.9rem; color: #444;">Daily Check-ins</div>
+                </div>
+                <div class="mini-stat" style="text-align: center; padding: 12px 20px; background: #f0f9ff; border-radius: 12px; border: 1px solid #e0f2fe;">
+                    <div style="font-size: 1.4rem; font-weight: 700; color: #2563eb;">150+</div>
+                    <div style="font-size: 0.9rem; color: #444;">Universities</div>
+                </div>
+                <div class="mini-stat" style="text-align: center; padding: 12px 20px; background: #f0f9ff; border-radius: 12px; border: 1px solid #e0f2fe;">
+                    <div style="font-size: 1.4rem; font-weight: 700; color: #2563eb;">98%</div>
+                    <div style="font-size: 0.9rem; color: #444;">Satisfaction</div>
+                </div>
             </div>
-            <div>
-              <p class="font-medium text-gray-900 text-sm">{{ post.author.name if post.author else 'Anonymous' }}</p>
-              <p class="text-xs text-gray-500">{{ post.created_at.strftime('%B %d, %Y') }}</p>
-            </div>
-          </div>
-          
-          <h3 class="text-lg font-semibold text-gray-900 mb-3 line-clamp-2">
-            <a href="{{ url_for('blog_detail', post_id=post.id) }}" class="hover:text-blue-600 transition-colors">
-              {{ post.title }}
-            </a>
-          </h3>
-          
-          <p class="text-gray-600 text-sm mb-4 line-clamp-3">
-            {{ post.content[:150] }}{% if post.content|length > 150 %}...{% endif %}
-          </p>
-          
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-4 text-xs text-gray-500">
-              <div class="flex items-center space-x-1">
-                <i class="far fa-heart"></i>
-                <span>{{ post.like_count }}</span>
-              </div>
-              <div class="flex items-center space-x-1">
-                <i class="far fa-comment"></i>
-                <span>{{ post.comment_count }}</span>
-              </div>
-              <div class="flex items-center space-x-1">
-                <i class="far fa-eye"></i>
-                <span>{{ post.views }}</span>
-              </div>
-            </div>
-            
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              {{ post.category.title() if post.category else 'General' }}
-            </span>
-          </div>
         </div>
-      </div>
-      {% endfor %}
-    </div>
-    
-    <!-- Most Popular Post Highlight -->
-    {% if blog_insights.most_popular_post %}
-    <div class="mt-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-white">
-      <div class="text-center">
-        <div class="inline-flex items-center px-4 py-2 bg-white/20 rounded-full text-sm font-medium mb-4">
-          <i class="fas fa-fire mr-2 text-orange-300"></i>
-          Most Popular Post
+
+        <!-- Quick Actions Row - Enhanced for Students -->
+        <div class="quick-actions-row" style="display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; margin-bottom: 48px;">
+            <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
+                <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🧘‍♂️</div>
+                <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">1-Min Breathing</h3>
+                <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Quick stress relief between classes and study sessions</p>
+                <a href="{{ url_for('breathing') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Start Now</a>
+            </div>
+            <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
+                <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">📊</div>
+                <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">Mood Check-in</h3>
+                <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Track how you're feeling today with our quick assessment</p>
+                <a href="{{ url_for('assessment') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Check In</a>
+            </div>
+            <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
+                <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🧎</div>
+                <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">Yoga Timer</h3>
+                <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Guided sessions designed for busy student schedules</p>
+                <a href="{{ url_for('yoga') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Begin</a>
+            </div>
+            <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
+                <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">💬</div>
+                <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">AI Chat</h3>
+                <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Talk to your wellness companion 24/7</p>
+                <a href="{{ url_for('chat') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Chat</a>
+            </div>
         </div>
-        <h3 class="text-2xl font-bold mb-4">
-          <a href="{{ url_for('blog_detail', post_id=blog_insights.most_popular_post.id) }}" 
-             class="hover:text-blue-200 transition-colors">
-            {{ blog_insights.most_popular_post.title }}
-          </a>
-        </h3>
-        <p class="text-lg text-blue-100 mb-6">
-          by {{ blog_insights.most_popular_post.author_name }} • 
-          Engagement Score: {{ "%.1f"|format(blog_insights.most_popular_post.engagement_score) }}
-        </p>
-        <a href="{{ url_for('blog_detail', post_id=blog_insights.most_popular_post.id) }}" 
-           class="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors">
-          Read This Post
-          <i class="fas fa-arrow-right ml-2"></i>
-        </a>
-      </div>
+
+        <!-- Main Features Grid - Enhanced for Students -->
+        <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 36px; justify-content: center; margin-bottom: 48px;">
+            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
+                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🤖</div>
+                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">AI Wellness Companion</h3>
+                </div>
+                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">24/7 support for exam stress, relationship issues, and academic pressure. Get instant, personalized advice tailored to your student life.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">⚡ Instant responses</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🎯 Student-focused</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🔒 100% private</span>
+                </div>
+            </div>
+            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
+                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">📈</div>
+                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">Progress Tracking</h3>
+                </div>
+                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">Visual charts showing your mental wellness journey. See patterns, celebrate wins, and stay motivated throughout your academic year.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">📊 Weekly insights</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🎯 Goal tracking</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🏆 Achievement badges</span>
+                </div>
+            </div>
+            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
+                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">👨‍⚕️</div>
+                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">Campus Counseling</h3>
+                </div>
+                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">Connect with your college's mental health professionals. Schedule sessions that fit your class schedule perfectly.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🏫 Campus integration</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">⏰ Flexible scheduling</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">💻 Online sessions</span>
+                </div>
+            </div>
+            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
+                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">📱</div>
+                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">Study Break Sessions</h3>
+                </div>
+                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">Guided meditations and breathing exercises designed for busy student schedules. Perfect for exam prep and study breaks.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">⏱️ 1-5 min sessions</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">📚 Study-friendly</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🎧 Audio guided</span>
+                </div>
+            </div>
+            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
+                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🔒</div>
+                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">Privacy First</h3>
+                </div>
+                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">Your data stays private and secure. Share only what you want with counselors. You have complete control over your information.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🛡️ End-to-end encryption</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">👤 Anonymous options</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🎛️ Full control</span>
+                </div>
+            </div>
+            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
+                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
+                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">👥</div>
+                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">Student Community</h3>
+                </div>
+                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">Connect with peers facing similar challenges. Share experiences, tips, and support each other's mental health journey.</p>
+                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🎓 Student-only groups</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">💬 Safe discussions</span>
+                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🤝 Peer support</span>
+                </div>
+            </div>
+        </div>
     </div>
-    {% endif %}
-    
-    <!-- CTA to Blog -->
-    <div class="mt-12 text-center">
-      <a href="{{ url_for('blog_list') }}" 
-         class="inline-flex items-center px-8 py-4 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors">
-        Explore All Posts
-        <i class="fas fa-arrow-right ml-3"></i>
-      </a>
-    </div>
-  </div>
 </section>
-{% endif %}
 
-<!-- 5. Final Call to Action (CTA) Section -->
-<!-- A final prompt for the user to sign up before the footer. -->
-<div class="bg-white">
-    <div class="max-w-4xl mx-auto text-center py-16 px-4 sm:py-20 sm:px-6 lg:px-8">
-        <h2 class="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            <span class="block">Ready to take the first step?</span>
-        </h2>
-        <p class="mt-4 text-lg leading-6 text-gray-500">Create your free account today and start your journey towards a healthier mind.</p>
-        <a href="{{ url_for('signup') }}" class="mt-8 w-full inline-flex items-center justify-center px-5 py-3 border border-transparent text-base font-medium rounded-md text-white bg-sky-600 hover:bg-sky-700 sm:w-auto">
-            Sign Up Now
-        </a>
+<!-- Enhanced Advanced Statistics Section -->
+<section class="advanced-stats" style="display: flex; justify-content: center;">
+    <div class="container" style="width: 100%; display: flex; justify-content: center;">
+        <div class="stats-background" style="width: 100%; display: flex; justify-content: center;">
+        <div class="stats-grid-horizontal" style="justify-content: center;">
+                <div class="stat-card enhanced" style="transition: box-shadow 0.2s, transform 0.2s;">
+                    <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" style="color:#2563eb; font-size:2.2rem; font-weight:700;">52K+</div>
+                        <div class="stat-label">Students Helped</div>
+                        <div class="stat-description">From 150+ universities across India</div>
+                    </div>
+                </div>
+                <div class="stat-card enhanced" style="transition: box-shadow 0.2s, transform 0.2s;">
+                    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" style="color:#2563eb; font-size:2.2rem; font-weight:700;">24/7</div>
+                        <div class="stat-label">AI Support</div>
+                        <div class="stat-description">Available during exam nights & study sessions</div>
+                    </div>
+                </div>
+                <div class="stat-card enhanced" style="transition: box-shadow 0.2s, transform 0.2s;">
+                    <div class="stat-icon"><i class="fas fa-star"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" style="color:#fbbf24; font-size:2.2rem; font-weight:700;">4.9</div>
+                        <div class="stat-label">Student Rating</div>
+                        <div class="stat-description">Based on 25,000+ student reviews</div>
+                    </div>
+                </div>
+                <div class="stat-card enhanced" style="transition: box-shadow 0.2s, transform 0.2s;">
+                    <div class="stat-icon"><i class="fas fa-brain"></i></div>
+                    <div class="stat-content">
+                        <div class="stat-number" style="color:#2563eb; font-size:2.2rem; font-weight:700;">1M+</div>
+                        <div class="stat-label">Daily Check-ins</div>
+                        <div class="stat-description">Students tracking their mental wellness</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+</section>
+
+<!-- Ratings & Reviews Section (Indian names, logo avatar, centered) -->
+<section class="advanced-testimonials" style="display: flex; justify-content: center;">
+    <div class="container" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <div style="text-align: center; margin-bottom: 32px;">
+            <h2 class="section-title" style="font-size: 2.8rem; color: #2563eb; margin-bottom: 12px; font-weight: 700;">What Students Say</h2>
+            <p class="section-description" style="font-size: 1.2rem; color: #444; line-height: 1.4;">Real experiences from college students across India using MindFullHorizon</p>
+            <div style="display: flex; gap: 16px; justify-content: center; margin-top: 16px; flex-wrap: wrap;">
+                <div style="text-align: center; padding: 8px 16px; background: #f0f9ff; border-radius: 20px; border: 1px solid #e0f2fe;">
+                    <div style="font-size: 1.2rem; font-weight: 700; color: #2563eb;">4.9★</div>
+                    <div style="font-size: 0.9rem; color: #444;">Average Rating</div>
+                </div>
+                <div style="text-align: center; padding: 8px 16px; background: #f0f9ff; border-radius: 20px; border: 1px solid #e0f2fe;">
+                    <div style="font-size: 1.2rem; font-weight: 700; color: #2563eb;">25K+</div>
+                    <div style="font-size: 0.9rem; color: #444;">Student Reviews</div>
+                </div>
+                <div style="text-align: center; padding: 8px 16px; background: #f0f9ff; border-radius: 20px; border: 1px solid #e0f2fe;">
+                    <div style="font-size: 1.2rem; font-weight: 700; color: #2563eb;">95%</div>
+                    <div style="font-size: 0.9rem; color: #444;">Would Recommend</div>
+                </div>
+            </div>
+        </div>
+        <div class="testimonials-grid" style="display: flex; flex-wrap: wrap; gap: 32px; justify-content: center;">
+            <div class="testimonial-card" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 28px 32px; min-width: 220px; max-width: 340px; flex: 1 1 220px; text-align: center; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="testimonial-content">
+                    <p>"MindFullHorizon's AI companion helped me develop coping strategies that actually work. The progress tracking shows me real improvement over time."</p>
+                </div>
+                <div class="testimonial-author" style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="author-avatar" style="width: 54px; height: 54px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                        <img src="{{ url_for('static', filename='images/hero_image.png') }}" alt="Logo Avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #fff;" />
+                    </div>
+                    <div class="author-info">
+                        <h4>Priya Sharma</h4>
+                        <p>Software Engineer</p>
+                        <div class="author-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span>5.0</span>
+                        </div>
+                        <div class="author-rating">
+                            <div class="stars">
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                            </div>
+                            <span class="rating-value" style="background: linear-gradient(90deg,#2563eb,#60a5fa); color: white; padding: 2px 10px; border-radius: 12px; font-weight: bold; margin-left: 8px;">5.0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 28px 32px; min-width: 220px; max-width: 340px; flex: 1 1 220px; text-align: center; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="testimonial-content">
+                    <p>"The meditation and yoga timers are perfect for my busy schedule. I feel more focused and calm before exams."</p>
+                </div>
+                <div class="testimonial-author" style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="author-avatar" style="width: 54px; height: 54px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                        <img src="{{ url_for('static', filename='images/hero_image.png') }}" alt="Logo Avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #fff;" />
+                    </div>
+                    <div class="author-info">
+                        <h4>Amit Patel</h4>
+                        <p>Engineering Student</p>
+                        <div class="author-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                            <span>4.7</span>
+                        </div>
+                        <div class="author-rating">
+                            <div class="stars">
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="far fa-star" style="color:#fbbf24;"></i>
+                            </div>
+                            <span class="rating-value" style="background: linear-gradient(90deg,#2563eb,#60a5fa); color: white; padding: 2px 10px; border-radius: 12px; font-weight: bold; margin-left: 8px;">4.7</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 28px 32px; min-width: 220px; max-width: 340px; flex: 1 1 220px; text-align: center; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="testimonial-content">
+                    <p>"The combination of AI support and professional therapy through this platform has been life-changing. I finally feel in control of my mental health."</p>
+                </div>
+                <div class="testimonial-author" style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="author-avatar" style="width: 54px; height: 54px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                        <img src="{{ url_for('static', filename='images/hero_image.png') }}" alt="Logo Avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #fff;" />
+                    </div>
+                    <div class="author-info">
+                        <h4>Rohan Verma</h4>
+                        <p>College Student</p>
+                        <div class="author-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span>5.0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 28px 32px; min-width: 220px; max-width: 340px; flex: 1 1 220px; text-align: center; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="testimonial-content">
+                    <p>"I love the privacy controls and the option to stay anonymous. It makes me feel safe sharing my feelings."</p>
+                </div>
+                <div class="testimonial-author" style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="author-avatar" style="width: 54px; height: 54px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                        <img src="{{ url_for('static', filename='images/hero_image.png') }}" alt="Logo Avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #fff;" />
+                    </div>
+                    <div class="author-info">
+                        <h4>Neha Singh</h4>
+                        <p>Postgraduate Student</p>
+                        <div class="author-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                            <span>4.6</span>
+                        </div>
+                        <div class="author-rating">
+                            <div class="stars">
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="far fa-star" style="color:#fbbf24;"></i>
+                            </div>
+                            <span class="rating-value" style="background: linear-gradient(90deg,#2563eb,#60a5fa); color: white; padding: 2px 10px; border-radius: 12px; font-weight: bold; margin-left: 8px;">4.6</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="testimonial-card" style="background: #fff; border-radius: 18px; box-shadow: 0 2px 16px rgba(102,126,234,0.10); padding: 28px 32px; min-width: 220px; max-width: 340px; flex: 1 1 220px; text-align: center; transition: box-shadow 0.2s, transform 0.2s; cursor: pointer;">
+                <div class="testimonial-content">
+                    <p>"As a busy professional, I appreciate the 24/7 availability and the quality of both AI and human support. It's exactly what I needed."</p>
+                </div>
+                <div class="testimonial-author" style="display: flex; flex-direction: column; align-items: center;">
+                    <div class="author-avatar" style="width: 54px; height: 54px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+                        <img src="{{ url_for('static', filename='images/hero_image.png') }}" alt="Logo Avatar" style="width: 32px; height: 32px; border-radius: 50%; background: #fff;" />
+                    </div>
+                    <div class="author-info">
+                        <h4>Dr. Anjali Mehra</h4>
+                        <p>Medical Doctor</p>
+                        <div class="author-rating">
+                            <div class="stars">
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="fas fa-star"></i>
+                                <i class="far fa-star"></i>
+                            </div>
+                            <span>4.8</span>
+                        </div>
+                        <div class="author-rating">
+                            <div class="stars">
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="fas fa-star" style="color:#fbbf24;"></i>
+                                <i class="far fa-star" style="color:#fbbf24;"></i>
+                            </div>
+                            <span class="rating-value" style="background: linear-gradient(90deg,#2563eb,#60a5fa); color: white; padding: 2px 10px; border-radius: 12px; font-weight: bold; margin-left: 8px;">4.8</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ Section (Accordion Dropdown) - Student Focused -->
+<section class="faq-section">
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 32px;">
+            <h2 style="color: #2563eb; font-size: 2.4rem; margin-bottom: 12px; font-weight: 700;">Student FAQ</h2>
+            <p style="color: #444; font-size: 1.1rem; line-height: 1.4;">Common questions students ask about mental wellness support</p>
+        </div>
+        <div class="faq-accordion">
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span>🎓 How does MindFullHorizon help with exam stress?</span>
+                    <span class="faq-arrow">&#9662;</span>
+                </button>
+                <div class="faq-answer">Our AI companion provides instant coping strategies, breathing exercises, and study break reminders. Many students use our 1-minute breathing exercises between study sessions to stay calm and focused.</div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span>⏰ Is this available during late-night study sessions?</span>
+                    <span class="faq-arrow">&#9662;</span>
+                </button>
+                <div class="faq-answer">Absolutely! Our AI support is available 24/7, perfect for late-night study sessions, exam anxiety, or when you need someone to talk to at 2 AM. No appointments needed.</div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span>📚 Can I connect with my campus counselor?</span>
+                    <span class="faq-arrow">&#9662;</span>
+                </button>
+                <div class="faq-answer">Yes! You can easily connect with your college's mental health professionals through our platform. Schedule sessions that fit your class timetable, and share progress reports with your counselor.</div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span>🔒 How private is my information?</span>
+                    <span class="faq-arrow">&#9662;</span>
+                </button>
+                <div class="faq-answer">Your privacy is our priority. All data is encrypted, and you control what information to share. Many students appreciate our anonymous chat options for discussing sensitive topics.</div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span>💰 Is this covered by student insurance?</span>
+                    <span class="faq-arrow">&#9662;</span>
+                </button>
+                <div class="faq-answer">Many universities include mental health services in student health plans. Check with your campus health center - over 150 universities across India partner with us.</div>
+            </div>
+            <div class="faq-item">
+                <button class="faq-question" onclick="toggleFaq(this)">
+                    <span>👥 Can I connect with other students?</span>
+                    <span class="faq-arrow">&#9662;</span>
+                </button>
+                <div class="faq-answer">Yes! Our student community feature lets you connect with peers facing similar challenges. Share study tips, stress management techniques, and support each other's mental health journey.</div>
+            </div>
+        </div>
+    </div>
+</section>
 
 
+<!-- Inline Styles for Static Homepage (Simple FAQ/Testimonials), Hero Hover Effects, Enhanced Stats, and FAQ Accordion -->
+<style>
+/* Enhanced Student-Focused Hover Effects */
+.quick-action-card:hover {
+    box-shadow: 0 8px 32px rgba(37,99,235,0.2);
+    transform: translateY(-4px) scale(1.02);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.feature-card.student-focused:hover {
+    box-shadow: 0 8px 32px rgba(37,99,235,0.2);
+    transform: translateY(-4px);
+}
+
+.testimonial-card:hover {
+    box-shadow: 0 8px 32px rgba(37,99,235,0.15);
+    transform: translateY(-2px);
+}
+
+.action-btn:hover {
+    background: linear-gradient(90deg, #1d4ed8, #2563eb);
+    box-shadow: 0 4px 16px rgba(37,99,235,0.3);
+}
+.hero-sub-headline:hover {
+    color: #2563eb;
+    text-shadow: 0 2px 8px rgba(38,99,235,0.18);
+}
+.hero-cta-button:hover {
+    background: #60a5fa;
+    color: #2563eb;
+    box-shadow: 0 4px 16px rgba(38,99,235,0.18);
+}
+.stats-grid-horizontal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    justify-content: center;
+    align-items: stretch;
+    margin: 32px 0;
+}
+.stat-card.enhanced {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 2px 16px rgba(102,126,234,0.10);
+    padding: 32px 36px 28px 36px;
+    min-width: 220px;
+    max-width: 320px;
+    flex: 1 1 220px;
+    text-align: center;
+    transition: box-shadow 0.2s, transform 0.2s;
+    cursor: pointer;
+}
+.stat-card.enhanced:hover {
+    box-shadow: 0 8px 32px rgba(38,99,235,0.18);
+    transform: translateY(-6px) scale(1.04);
+}
+.stat-card .stat-icon {
+    font-size: 2.2rem;
+    color: #2563eb;
+    margin-bottom: 10px;
+    transition: color 0.2s;
+}
+.stat-card.enhanced:hover .stat-icon {
+    color: #60a5fa;
+}
+.stat-label {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #222;
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+.stat-description {
+    font-size: 0.98rem;
+    color: #444;
+    margin-top: 2px;
+}
+.faq-section {
+    background: #f8fafc;
+    padding: 40px 0;
+}
+.faq-accordion {
+    max-width: 700px;
+    margin: 0 auto;
+}
+.faq-item {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+.faq-question {
+    width: 100%;
+    background: none;
+    border: none;
+    outline: none;
+    font-size: 1.08rem;
+    font-weight: 600;
+    color: #2563eb;
+    padding: 18px 24px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.faq-question:hover {
+    background: #e3f0ff;
+}
+.faq-arrow {
+    font-size: 1.2rem;
+    transition: transform 0.2s;
+}
+.faq-item.active .faq-arrow {
+    transform: rotate(180deg);
+}
+.faq-answer {
+    display: none;
+    padding: 0 24px 18px 24px;
+    font-size: 1rem;
+    color: #444;
+    background: #f8fafc;
+    border-top: 1px solid #e3e8ee;
+}
+.faq-item.active .faq-answer {
+    display: block;
+}
+.testimonials-section {
+    background: #f1f5f9;
+    padding: 40px 0;
+}
+.testimonials-section h2 {
+    color: #2563eb;
+    font-size: 2rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.testimonial {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+    margin-bottom: 16px;
+    padding: 18px 24px;
+    font-size: 1rem;
+}
+</style>
+<script>
+function toggleFaq(btn) {
+    var item = btn.parentElement;
+    var isActive = item.classList.contains('active');
+    document.querySelectorAll('.faq-item').forEach(function(faq) {
+        faq.classList.remove('active');
+    });
+    if (!isActive) {
+        item.classList.add('active');
+    }
+}
+</script>
 {% endblock %}
