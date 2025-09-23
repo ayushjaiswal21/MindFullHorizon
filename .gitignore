@@ -139,3 +139,4 @@ test_*.py
 *_db.py
 fix_*.py
 manual_*.py
+flask_session/

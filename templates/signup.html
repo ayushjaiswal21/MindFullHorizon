@@ -3,126 +3,404 @@
 {% block title %}Sign Up - Mindful Horizon{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-        <div>
-            <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100">
-                <i class="fas fa-user-plus text-indigo-600 text-xl"></i>
+<div class="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <!-- Hero Section -->
+    <div class="relative overflow-hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="text-center">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full mb-8 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-brain text-white text-3xl animate-pulse"></i>
+                </div>
+                <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 mb-6">
+                    Join Mindful Horizon
+                </h1>
+                <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                    Start your journey to better mental wellness with AI-powered tools, progress tracking, and professional support
+                </p>
+                <div class="flex flex-wrap justify-center gap-4 mb-8">
+                    <div class="bg-white/80 backdrop-blur-sm rounded-full px-6 py-2 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+                        <span class="text-indigo-600 font-semibold">🎓 52K+ Students</span>
+                    </div>
+                    <div class="bg-white/80 backdrop-blur-sm rounded-full px-6 py-2 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+                        <span class="text-purple-600 font-semibold">⭐ 4.9 Rating</span>
+                    </div>
+                    <div class="bg-white/80 backdrop-blur-sm rounded-full px-6 py-2 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
+                        <span class="text-green-600 font-semibold">⚡ 24/7 AI Support</span>
+                    </div>
+                </div>
             </div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Create your account
-            </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
-                Join the Mindful Horizon community
-            </p>
-            <p class="mt-2 text-center text-sm">
-                Already have an account?
-                <a href="{{ url_for('login') }}" class="font-medium text-indigo-600 hover:text-indigo-500">
-                    Sign in here
-                </a>
-            </p>
         </div>
-        
-        <form class="mt-8 space-y-6" method="POST">
-            <div class="space-y-4">
-                <div>
-                    <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input id="name" name="name" type="text" required 
-                           class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
-                           placeholder="Enter your full name">
+    </div>
+
+    <!-- Main Content Container -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div class="grid lg:grid-cols-2 gap-12 items-start">
+
+            <!-- Signup Form Section -->
+            <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 hover:shadow-3xl transition-all duration-500">
+                <div class="text-center mb-8">
+                    <h2 class="text-3xl font-bold text-gray-900 mb-2">Create Your Account</h2>
+                    <p class="text-gray-600">Join thousands of students improving their mental wellness</p>
+                    <div class="flex justify-center mt-4">
+                        <span class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+                            Free Forever
+                        </span>
+                    </div>
                 </div>
-                
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <input id="email" name="email" type="email" required 
-                           class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
-                           placeholder="Enter your email address">
-                </div>
-                
-                <div>
-                    <label for="institution" class="block text-sm font-medium text-gray-700">Institution/University</label>
-                    <input id="institution" name="institution" type="text" 
-                           class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
-                           placeholder="Enter your institution name">
-                </div>
-                
-                <div>
-                    <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
-                    <select id="role" name="role" required 
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="">Select your role</option>
-                        <option value="patient">Student (Patient)</option>
-                        <option value="provider">Mental Health Provider</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input id="password" name="password" type="password" required 
-                           class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
-                           placeholder="Create a password (min 6 characters)">
-                </div>
-                
-                <div>
-                    <label for="confirm_password" class="block text-sm font-medium text-gray-700">Confirm Password</label>
-                    <input id="confirm_password" name="confirm_password" type="password" required 
-                           class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
-                           placeholder="Confirm your password">
+
+                <form class="space-y-6" method="POST">
+                    <!-- Name Field -->
+                    <div class="group">
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-2 group-hover:text-indigo-600 transition-colors duration-200">
+                            <i class="fas fa-user mr-2 text-indigo-500"></i>Full Name
+                        </label>
+                        <div class="relative">
+                            <input id="name" name="name" type="text" required
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 hover:border-indigo-300 bg-gray-50/50 hover:bg-white"
+                                   placeholder="Enter your full name">
+                            <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"></div>
+                        </div>
+                    </div>
+
+                    <!-- Email Field -->
+                    <div class="group">
+                        <label for="email" class="block text-sm font-medium text-gray-700 mb-2 group-hover:text-indigo-600 transition-colors duration-200">
+                            <i class="fas fa-envelope mr-2 text-indigo-500"></i>Email Address
+                        </label>
+                        <div class="relative">
+                            <input id="email" name="email" type="email" required
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 hover:border-indigo-300 bg-gray-50/50 hover:bg-white"
+                                   placeholder="Enter your email address">
+                            <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"></div>
+                        </div>
+                    </div>
+
+                    <!-- Institution Field -->
+                    <div class="group">
+                        <label for="institution" class="block text-sm font-medium text-gray-700 mb-2 group-hover:text-indigo-600 transition-colors duration-200">
+                            <i class="fas fa-university mr-2 text-indigo-500"></i>Institution/University
+                        </label>
+                        <div class="relative">
+                            <input id="institution" name="institution" type="text"
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 hover:border-indigo-300 bg-gray-50/50 hover:bg-white"
+                                   placeholder="Enter your institution name">
+                            <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"></div>
+                        </div>
+                    </div>
+
+                    <!-- Role Selection -->
+                    <div class="group">
+                        <label for="role" class="block text-sm font-medium text-gray-700 mb-2 group-hover:text-indigo-600 transition-colors duration-200">
+                            <i class="fas fa-user-tag mr-2 text-indigo-500"></i>I am a...
+                        </label>
+                        <div class="relative">
+                            <select id="role" name="role" required
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 hover:border-indigo-300 bg-gray-50/50 hover:bg-white appearance-none cursor-pointer">
+                                <option value="">Choose your role</option>
+                                <option value="patient">🎓 Student (Mental Wellness Tools)</option>
+                                <option value="provider">👨‍⚕️ Mental Health Provider</option>
+                            </select>
+                            <div class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"></div>
+                        </div>
+                    </div>
+
+                    <!-- Password Field -->
+                    <div class="group">
+                        <label for="password" class="block text-sm font-medium text-gray-700 mb-2 group-hover:text-indigo-600 transition-colors duration-200">
+                            <i class="fas fa-lock mr-2 text-indigo-500"></i>Password
+                        </label>
+                        <div class="relative">
+                            <input id="password" name="password" type="password" required
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 hover:border-indigo-300 bg-gray-50/50 hover:bg-white"
+                                   placeholder="Create a strong password">
+                            <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"></div>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password Field -->
+                    <div class="group">
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-700 mb-2 group-hover:text-indigo-600 transition-colors duration-200">
+                            <i class="fas fa-lock mr-2 text-indigo-500"></i>Confirm Password
+                        </label>
+                        <div class="relative">
+                            <input id="confirm_password" name="confirm_password" type="password" required
+                                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 hover:border-indigo-300 bg-gray-50/50 hover:bg-white"
+                                   placeholder="Confirm your password">
+                            <div class="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"></div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="pt-4">
+                        <button type="submit"
+                                class="group relative w-full flex justify-center py-4 px-6 border border-transparent text-lg font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 transform hover:scale-105 hover:shadow-xl">
+                            <span class="absolute left-0 inset-y-0 flex items-center pl-4">
+                                <i class="fas fa-user-plus text-indigo-200 group-hover:text-indigo-100 transition-colors duration-200"></i>
+                            </span>
+                            <span class="flex items-center">
+                                Create Your Account
+                                <i class="fas fa-arrow-right ml-2 group-hover:translate-x-1 transition-transform duration-200"></i>
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- Terms -->
+                    <div class="text-center pt-4">
+                        <p class="text-xs text-gray-500">
+                            By creating an account, you agree to our
+                            <a href="#" class="text-indigo-600 hover:text-indigo-500 font-medium hover:underline transition-colors duration-200">Terms of Service</a>
+                            and
+                            <a href="#" class="text-indigo-600 hover:text-indigo-500 font-medium hover:underline transition-colors duration-200">Privacy Policy</a>
+                        </p>
+                    </div>
+                </form>
+
+                <!-- Sign In Link -->
+                <div class="text-center pt-6 border-t border-gray-200">
+                    <p class="text-sm text-gray-600">
+                        Already have an account?
+                        <a href="{{ url_for('login') }}" class="font-medium text-indigo-600 hover:text-indigo-500 ml-1 group inline-flex items-center">
+                            Sign in here
+                            <i class="fas fa-arrow-right ml-1 group-hover:translate-x-1 transition-transform duration-200"></i>
+                        </a>
+                    </p>
                 </div>
             </div>
 
-            <div>
-                <button type="submit" 
-                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
-                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                        <i class="fas fa-user-plus text-indigo-500 group-hover:text-indigo-400"></i>
-                    </span>
-                    Create Account
-                </button>
+            <!-- Features Section -->
+            <div class="space-y-8">
+                <!-- Features Grid -->
+                <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 hover:shadow-3xl transition-all duration-500">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Why Choose Mindful Horizon?</h3>
+                    <div class="grid gap-6">
+                        <div class="group p-4 rounded-xl hover:bg-indigo-50 transition-all duration-300 hover:shadow-md border border-transparent hover:border-indigo-100">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                                        <i class="fas fa-robot text-white text-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <h4 class="text-lg font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">AI-Powered Support</h4>
+                                    <p class="text-gray-600 group-hover:text-gray-700 transition-colors duration-200">24/7 intelligent companion for mental wellness guidance</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="group p-4 rounded-xl hover:bg-green-50 transition-all duration-300 hover:shadow-md border border-transparent hover:border-green-100">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                                        <i class="fas fa-chart-line text-white text-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <h4 class="text-lg font-semibold text-gray-900 group-hover:text-green-600 transition-colors duration-200">Progress Tracking</h4>
+                                    <p class="text-gray-600 group-hover:text-gray-700 transition-colors duration-200">Visual charts and insights to monitor your wellness journey</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="group p-4 rounded-xl hover:bg-purple-50 transition-all duration-300 hover:shadow-md border border-transparent hover:border-purple-100">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                                        <i class="fas fa-shield-alt text-white text-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <h4 class="text-lg font-semibold text-gray-900 group-hover:text-purple-600 transition-colors duration-200">Privacy First</h4>
+                                    <p class="text-gray-600 group-hover:text-gray-700 transition-colors duration-200">Your data is secure with end-to-end encryption</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="group p-4 rounded-xl hover:bg-orange-50 transition-all duration-300 hover:shadow-md border border-transparent hover:border-orange-100">
+                            <div class="flex items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
+                                        <i class="fas fa-users text-white text-lg"></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
+                                    <h4 class="text-lg font-semibold text-gray-900 group-hover:text-orange-600 transition-colors duration-200">Community Support</h4>
+                                    <p class="text-gray-600 group-hover:text-gray-700 transition-colors duration-200">Connect with peers and mental health professionals</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Testimonials Section -->
+                <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 hover:shadow-3xl transition-all duration-500">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">What Students Say</h3>
+                    <div class="space-y-4">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100 hover:shadow-md transition-all duration-300 hover:scale-105">
+                            <div class="flex items-center mb-2">
+                                <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-user text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-900">Priya Sharma</p>
+                                    <p class="text-sm text-gray-600">Engineering Student</p>
+                                </div>
+                                <div class="ml-auto flex text-yellow-400">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 italic">"Mindful Horizon helped me manage exam stress with their AI companion and progress tracking."</p>
+                        </div>
+
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-100 hover:shadow-md transition-all duration-300 hover:scale-105">
+                            <div class="flex items-center mb-2">
+                                <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center mr-3">
+                                    <i class="fas fa-user text-white text-sm"></i>
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-gray-900">Arjun Patel</p>
+                                    <p class="text-sm text-gray-600">Medical Student</p>
+                                </div>
+                                <div class="ml-auto flex text-yellow-400">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </div>
+                            <p class="text-gray-700 italic">"The 24/7 AI support and privacy features make this platform perfect for students."</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Role Benefits Section -->
+                <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 hover:shadow-3xl transition-all duration-500">
+                    <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Choose Your Role</h3>
+                    <div class="space-y-4">
+                        <div class="group relative overflow-hidden bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border border-indigo-100 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                            <div class="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative">
+                                <div class="flex items-center mb-3">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                                        <i class="fas fa-graduation-cap text-white"></i>
+                                    </div>
+                                    <h4 class="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200">Student Features</h4>
+                                </div>
+                                <ul class="space-y-2 text-gray-700">
+                                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Personal wellness dashboard</li>
+                                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> AI-powered mood tracking</li>
+                                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Digital detox tools</li>
+                                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Campus counselor access</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="group relative overflow-hidden bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border border-green-100 hover:shadow-lg transition-all duration-300 hover:scale-105">
+                            <div class="absolute inset-0 bg-gradient-to-r from-green-500/5 to-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <div class="relative">
+                                <div class="flex items-center mb-3">
+                                    <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                                        <i class="fas fa-user-md text-white"></i>
+                                    </div>
+                                    <h4 class="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors duration-200">Provider Features</h4>
+                                </div>
+                                <ul class="space-y-2 text-gray-700">
+                                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Patient caseload management</li>
+                                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> AI documentation tools</li>
+                                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Institutional analytics</li>
+                                    <li class="flex items-center"><i class="fas fa-check text-green-500 mr-2"></i> Telehealth integration</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            
-            <div class="text-center">
-                <p class="text-xs text-gray-500">
-                    By creating an account, you agree to our terms of service and privacy policy.
-                </p>
-            </div>
-        </form>
-        
-        <!-- Role Information -->
-        <div class="mt-6 bg-gray-50 rounded-lg p-4">
-            <h3 class="text-sm font-medium text-gray-900 mb-2">Role Information:</h3>
-            <div class="text-xs text-gray-600 space-y-1">
-                <p><strong>Student (Patient):</strong> Access personal wellness dashboard, digital detox tools, assessments, and progress tracking.</p>
-                <p><strong>Mental Health Provider:</strong> Access patient caseload, AI-powered documentation, analytics, and institutional insights.</p>
+        </div>
+    </div>
+
+    <!-- Bottom CTA Section -->
+    <div class="bg-gradient-to-r from-indigo-600 to-purple-700 py-16">
+        <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+            <h2 class="text-3xl font-bold text-white mb-4">Ready to Start Your Wellness Journey?</h2>
+            <p class="text-xl text-indigo-100 mb-8">Join over 52,000 students who trust Mindful Horizon with their mental health</p>
+            <div class="flex flex-wrap justify-center gap-4">
+                <div class="bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 text-white hover:bg-white/20 transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-shield-alt mr-2"></i>100% Private & Secure
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 text-white hover:bg-white/20 transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-clock mr-2"></i>24/7 AI Support
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-full px-6 py-3 text-white hover:bg-white/20 transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-mobile-alt mr-2"></i>Mobile Friendly
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-// Password confirmation validation
-document.getElementById('confirm_password').addEventListener('input', function() {
-    const password = document.getElementById('password').value;
-    const confirmPassword = this.value;
-    
-    if (password !== confirmPassword) {
-        this.setCustomValidity('Passwords do not match');
-    } else {
-        this.setCustomValidity('');
-    }
-});
+// Enhanced interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Password confirmation validation
+    document.getElementById('confirm_password').addEventListener('input', function() {
+        const password = document.getElementById('password').value;
+        const confirmPassword = this.value;
 
-// Password strength indicator
-document.getElementById('password').addEventListener('input', function() {
-    const password = this.value;
-    const strength = getPasswordStrength(password);
-    
-    // You could add visual feedback here
-    if (password.length > 0 && password.length < 6) {
-        this.setCustomValidity('Password must be at least 6 characters long');
-    } else {
-        this.setCustomValidity('');
-    }
+        if (password !== confirmPassword) {
+            this.setCustomValidity('Passwords do not match');
+            this.classList.add('border-red-300');
+            this.classList.remove('border-green-300');
+        } else {
+            this.setCustomValidity('');
+            this.classList.remove('border-red-300');
+            this.classList.add('border-green-300');
+        }
+    });
+
+    // Password strength indicator
+    document.getElementById('password').addEventListener('input', function() {
+        const password = this.value;
+        const strength = getPasswordStrength(password);
+
+        if (password.length > 0 && password.length < 6) {
+            this.setCustomValidity('Password must be at least 6 characters long');
+            this.classList.add('border-red-300');
+        } else {
+            this.setCustomValidity('');
+            this.classList.remove('border-red-300');
+            this.classList.add('border-green-300');
+        }
+
+        // Update form sections on role change
+        document.getElementById('role').addEventListener('change', function() {
+            const roleCards = document.querySelectorAll('.group');
+            roleCards.forEach(card => {
+                card.classList.add('animate-pulse');
+                setTimeout(() => card.classList.remove('animate-pulse'), 500);
+            });
+        });
+    });
+
+    // Add smooth scroll behavior for internal links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
 });
 
 function getPasswordStrength(password) {
@@ -135,4 +413,50 @@ function getPasswordStrength(password) {
     return strength;
 }
 </script>
+
+<style>
+/* Custom animations */
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+}
+
+.floating-element {
+    animation: float 3s ease-in-out infinite;
+}
+
+/* Enhanced hover effects */
+.group:hover .group-hover\:scale-110 {
+    transform: scale(1.1);
+}
+
+.group:hover .group-hover\:text-indigo-600 {
+    color: #6366f1;
+}
+
+/* Smooth transitions for all interactive elements */
+* {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+}
+</style>
 {% endblock %}
