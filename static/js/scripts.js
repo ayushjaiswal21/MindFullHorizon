@@ -1,3 +1,144 @@
+// Breathing Session Controls
+let breathingSessionActive = false;
+let breathingSessionPaused = false;
+let breathingSessionTimer = null;
+let breathingSessionDuration = 60; // default 60s, can be customized
+let breathingSessionRemaining = 60;
+
+function startSession() {
+    if (breathingSessionActive && !breathingSessionPaused) return;
+    breathingSessionActive = true;
+    breathingSessionPaused = false;
+    document.getElementById('timer-display').classList.remove('hidden');
+    document.getElementById('start-btn').classList.add('hidden');
+    document.getElementById('pause-btn').classList.remove('hidden');
+    document.getElementById('stop-btn').classList.remove('hidden');
+    if (!breathingSessionTimer) {
+        breathingSessionRemaining = breathingSessionDuration;
+    }
+    updateBreathingTimerDisplay();
+    breathingSessionTimer = setInterval(() => {
+        if (!breathingSessionPaused && breathingSessionRemaining > 0) {
+            breathingSessionRemaining--;
+            updateBreathingTimerDisplay();
+        } else if (breathingSessionRemaining <= 0) {
+            stopSession();
+            alert('Session complete!');
+        }
+    }, 1000);
+}
+
+function pauseSession() {
+    if (!breathingSessionActive || breathingSessionPaused) return;
+    breathingSessionPaused = true;
+    clearInterval(breathingSessionTimer);
+    breathingSessionTimer = null;
+    document.getElementById('start-btn').classList.remove('hidden');
+    document.getElementById('pause-btn').classList.add('hidden');
+}
+
+function stopSession() {
+    breathingSessionActive = false;
+    breathingSessionPaused = false;
+    clearInterval(breathingSessionTimer);
+    breathingSessionTimer = null;
+    breathingSessionRemaining = breathingSessionDuration;
+    document.getElementById('timer-display').classList.add('hidden');
+    document.getElementById('start-btn').classList.remove('hidden');
+    document.getElementById('pause-btn').classList.add('hidden');
+    document.getElementById('stop-btn').classList.add('hidden');
+}
+
+function updateBreathingTimerDisplay() {
+    const timerDisplay = document.getElementById('timer-display');
+    if (timerDisplay) {
+        const min = Math.floor(breathingSessionRemaining / 60).toString().padStart(2, '0');
+        const sec = (breathingSessionRemaining % 60).toString().padStart(2, '0');
+        timerDisplay.textContent = `${min}:${sec}`;
+    }
+}
+// Breathing Exercise Logic
+// --- Breathing Animation Logic ---
+let breathingPhases = [];
+let breathingPhaseIndex = 0;
+let breathingPhaseTimeout = null;
+
+function startBreathing(type) {
+    clearBreathingAnimation();
+    const instruction = document.getElementById('breathing-instruction');
+    const text = document.getElementById('breathing-text');
+    const circle = document.getElementById('breathing-circle');
+    let guide = '';
+    switch(type) {
+        case 'box':
+            guide = 'Inhale 4s, Hold 4s, Exhale 4s, Hold 4s';
+            breathingPhases = [
+                {label: 'Inhale', duration: 4000, scale: 2},
+                {label: 'Hold', duration: 4000, scale: 2},
+                {label: 'Exhale', duration: 4000, scale: 1},
+                {label: 'Hold', duration: 4000, scale: 1}
+            ];
+            break;
+        case '478':
+            guide = 'Inhale 4s, Hold 7s, Exhale 8s';
+            breathingPhases = [
+                {label: 'Inhale', duration: 4000, scale: 2},
+                {label: 'Hold', duration: 7000, scale: 2},
+                {label: 'Exhale', duration: 8000, scale: 1}
+            ];
+            break;
+        case 'triangle':
+            guide = 'Inhale 3s, Hold 3s, Exhale 3s';
+            breathingPhases = [
+                {label: 'Inhale', duration: 3000, scale: 2},
+                {label: 'Hold', duration: 3000, scale: 2},
+                {label: 'Exhale', duration: 3000, scale: 1}
+            ];
+            break;
+        case 'coherence':
+            guide = 'Inhale 5s, Exhale 5s';
+            breathingPhases = [
+                {label: 'Inhale', duration: 5000, scale: 2},
+                {label: 'Exhale', duration: 5000, scale: 1}
+            ];
+            break;
+        default:
+            guide = 'Follow the instructions.';
+            breathingPhases = [
+                {label: 'Inhale', duration: 4000, scale: 2},
+                {label: 'Exhale', duration: 4000, scale: 1}
+            ];
+    }
+    breathingPhaseIndex = 0;
+    if (instruction) instruction.textContent = `Selected: ${guide}`;
+    runBreathingPhase();
+}
+
+function runBreathingPhase() {
+    const phase = breathingPhases[breathingPhaseIndex];
+    const text = document.getElementById('breathing-text');
+    const circle = document.getElementById('breathing-circle');
+    if (text) text.textContent = phase.label;
+    if (circle) {
+        circle.style.transition = 'transform ' + (phase.duration/1000) + 's ease-in-out';
+        circle.style.transform = `scale(${phase.scale})`;
+    }
+    breathingPhaseTimeout = setTimeout(() => {
+        breathingPhaseIndex = (breathingPhaseIndex + 1) % breathingPhases.length;
+        runBreathingPhase();
+    }, phase.duration);
+}
+
+function clearBreathingAnimation() {
+    clearTimeout(breathingPhaseTimeout);
+    const circle = document.getElementById('breathing-circle');
+    if (circle) {
+        circle.style.transition = '';
+        circle.style.transform = 'scale(1)';
+    }
+    const text = document.getElementById('breathing-text');
+    if (text) text.textContent = 'Breathe';
+}
 // Enhanced JavaScript for Flask Mental Health Application with AI Integration
 
 // Global variables for real-time updates
