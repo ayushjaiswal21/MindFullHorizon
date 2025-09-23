@@ -58,6 +58,58 @@ body {
     font-size: 3.8rem;
 }
 
+/* Google Translate Element Styling */
+.google-translate-element {
+    margin-left: 1rem; /* Adjust as needed for spacing */
+    margin-right: 1rem;
+}
+
+.goog-te-gadget {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.875rem;
+    color: #f8fafc; /* Light text color for contrast */
+    white-space: nowrap;
+}
+
+.goog-te-gadget img {
+    display: none; /* Hide Google Translate branding image */
+}
+
+.goog-te-gadget div {
+    color: #f8fafc !important;
+}
+
+.goog-te-gadget .goog-te-combo {
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 6px 10px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #f8fafc;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.goog-te-gadget .goog-te-combo:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.goog-te-gadget .goog-te-combo option {
+    background-color: #667eea; /* Background for dropdown options */
+    color: #f8fafc;
+}
+
+/* Hide the Google Translate banner */
+.goog-te-banner-frame.skiptranslate {
+    display: none !important;
+}
+body {
+    top: 0px !important;
+}
+
 /* Header/Nav Bar Lavender Purple Theme */
 .advanced-nav {
     background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%) !important;

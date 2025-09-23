@@ -448,8 +448,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Initialize real-time features
-    initializeRealTimeFeatures();
-    initializeAIInteractionCues();
+    // initializeRealTimeFeatures();
+    // initializeAIInteractionCues();
 
     // Highlight active nav link
     const navLinks = document.querySelectorAll('.nav-item');
@@ -504,83 +504,6 @@ function hideMessageBox() {
     if (window.currentMessageBox) {
         window.currentMessageBox.remove();
         window.currentMessageBox = null;
-    }
-}
-
-    try {
-        const response = await fetch('/api/digital-detox-data');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const screenTimeData = await response.json();
-
-        if (!screenTimeData || screenTimeData.length === 0) {
-            const canvasCtx = ctx.getContext('2d');
-            canvasCtx.font = '16px Inter';
-            canvasCtx.textAlign = 'center';
-            canvasCtx.fillStyle = '#6b7280';
-            canvasCtx.fillText('No screen time data available yet.', ctx.width / 2, ctx.height / 2);
-            canvasCtx.fillText('Add data using the form below to see your trends.', ctx.width / 2, ctx.height / 2 + 25);
-            return;
-        }
-
-        const dates = screenTimeData.map(item => new Date(item.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }));
-        const hours = screenTimeData.map(item => item.hours);
-
-        screenTimeChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: dates,
-                datasets: [{
-                    label: 'Screen Time (Hours)',
-                    data: hours,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                    tension: 0.3,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    title: {
-                        display: false,
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                    },
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    x: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    },
-                    y: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Hours'
-                        },
-                        beginAtZero: true
-                    }
-                }
-            }
-        });
-    } catch (error) {
-        console.error('Error fetching screen time data:', error);
-        const canvasCtx = ctx.getContext('2d');
-        canvasCtx.font = '16px Inter';
-        canvasCtx.textAlign = 'center';
-        canvasCtx.fillStyle = '#ef4444';
-        canvasCtx.fillText('Error loading chart data.', ctx.width / 2, ctx.height / 2);
     }
 }
 
@@ -1838,7 +1761,7 @@ window.hideMessageBox = hideMessageBox;
 window.initializeAdvancedUI = initializeAdvancedUI;
 window.toggleMobileMenu = toggleMobileMenu;
 window.toggleUserMenu = toggleUserMenu;
-    const width = canvas.width - 2 * padding;
+function drawChart(canvas, ctx, yData, xLabels, color, label, padding) {    const width = canvas.width - 2 * padding;
     const height = canvas.height - 2 * padding;
 
     // Clear canvas
@@ -1924,6 +1847,8 @@ window.toggleUserMenu = toggleUserMenu;
     ctx.fillText(label, 0, 0);
     ctx.restore();
 }
+window.drawChart = drawChart;
+window.initializeChartJS = initializeChartJS;
 
 // FAQ helpers for accordion behavior
 function openFAQ(item, animate = true) {
