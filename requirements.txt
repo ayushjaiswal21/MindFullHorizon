@@ -55,7 +55,7 @@ google-cloud-storage==2.16.0    # Google Cloud storage
 # Utility Libraries
 python-dateutil==2.9.0
 pytz==2024.1                    # Timezone support
-Pillow==10.3.0                  # Image processing
+Pillow==10.4.0                  # Image processing - Updated for Python 3.13
 reportlab==4.2.0               # PDF generation for reports
 
 # Note: Standard library modules (json, logging, os, datetime, functools)
