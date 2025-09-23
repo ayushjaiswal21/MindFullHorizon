@@ -3,294 +3,309 @@
 {% block title %}Patient Dashboard - Mindful Horizon{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-        <h1 class="text-4xl font-extrabold text-gray-800 mb-2 animate-fade-in">Welcome back, {{ user_name }}!</h1>
-        <p class="text-lg text-gray-600 animate-fade-in-delay">Here's your mental health journey overview.</p>
-    </div>
+<div class="patient-dashboard-container">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="mb-8">
+            <h1 class="text-5xl font-extrabold dashboard-welcome animate-fade-in">Welcome back, {{ user_name }}!</h1>
+            <p class="text-xl text-gray-600 dashboard-subtitle animate-fade-in-delay">Here's your mental health journey overview.</p>
+        </div>
 
-    <!-- Alerts Section -->
-    {% if alerts %}
-    <div class="mb-8 p-4 bg-red-100 border border-red-400 text-red-700 rounded-xl shadow-lg">
-        <div class="flex items-center">
-            <i class="fas fa-exclamation-triangle text-xl mr-4"></i>
+        <!-- Enhanced Alerts Section -->
+        {% if alerts %}
+        <div class="health-alert mb-8 flex items-center">
+            <i class="fas fa-exclamation-triangle text-2xl mr-4 text-red-500"></i>
             <div>
-                <h4 class="font-bold text-lg mb-1">Health Alerts</h4>
-                <ul class="list-disc list-inside space-y-1">
+                <h4 class="font-bold text-lg mb-2 text-red-800">Health Alerts</h4>
+                <ul class="list-disc list-inside space-y-1 text-red-700">
                     {% for alert in alerts %}
                     <li>{{ alert }}</li>
                     {% endfor %}
                 </ul>
             </div>
         </div>
-    </div>
-    {% endif %}
+        {% endif %}
 
-    <!-- Overview Grid -->
-    <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-8 mb-8">
-        <!-- Gamification Card -->
-        <div class="card p-6 flex flex-col justify-between">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold text-gray-800">Your Progress</h3>
-                    <i class="fas fa-trophy text-yellow-500 text-2xl"></i>
+        <!-- Enhanced Overview Grid -->
+        <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-8 mb-8">
+            <!-- Enhanced Gamification Card -->
+            <div class="patient-card p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-bold dashboard-title">Your Progress</h3>
+                        <i class="fas fa-trophy text-yellow-500 text-3xl card-icon-glow"></i>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="progress-metric">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 font-medium">Total Points</span>
+                                <span class="metric-value text-4xl">{{ data.points or 0 }}</span>
+                            </div>
+                        </div>
+                        <div class="progress-metric">
+                            <div class="flex justify-between items-center">
+                                <span class="text-gray-600 font-medium">Current Streak</span>
+                                <span class="metric-value text-4xl">{{ data.streak or 0 }} days</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-gray-600">Total Points</span>
-                    <span class="text-3xl font-bold text-blue-600">{{ data.points or 0 }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Current Streak</span>
-                    <span class="text-3xl font-bold text-green-600">{{ data.streak or 0 }} days</span>
+                <div class="mt-6 pt-4 border-t border-gray-100">
+                    <h4 class="font-bold text-gray-700 mb-3 section-title">Badges Earned</h4>
+                    <div class="flex flex-wrap gap-2">
+                        {% for badge in data.badges or [] %}
+                        <span class="wellness-badge">
+                            <i class="fas fa-medal mr-1"></i>{{ badge }}
+                        </span>
+                        {% endfor %}
+                        {% if not data.badges or not data.badges %}
+                        <span class="wellness-badge opacity-50">
+                            <i class="fas fa-plus mr-1"></i>Start earning badges!
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-            <div class="mt-6 pt-4 border-t border-gray-100">
-                <h4 class="font-semibold text-gray-700 mb-2">Badges Earned</h4>
-                <div class="flex flex-wrap gap-2">
-                    {% for badge in data.badges or [] %}
-                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
-                        <i class="fas fa-medal mr-1"></i>{{ badge }}
-                    </span>
-                    {% endfor %}
+
+            <!-- Enhanced Real-time Health Monitoring Card -->
+            <div class="patient-card p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h3 class="text-2xl font-bold dashboard-title">Real-time Health Monitoring</h3>
+                    <div class="flex items-center">
+                        <span class="status-indicator status-online mr-3" title="Live Data"></span>
+                        <i class="fas fa-heartbeat text-red-500 text-3xl metric-icon"></i>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <div class="health-metric">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 font-medium">Heart Rate</span>
+                            <span class="metric-value text-2xl">{{ data.rpm_data.heart_rate or 72 }} bpm</span>
+                        </div>
+                    </div>
+                    <div class="health-metric">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 font-medium">Sleep Duration</span>
+                            <span class="metric-value text-2xl">{{ data.rpm_data.sleep_duration or 7.5 }}h</span>
+                        </div>
+                    </div>
+                    <div class="health-metric">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 font-medium">Daily Steps</span>
+                            <span class="metric-value text-2xl">{{ (data.rpm_data.steps or 8500)|int|string|replace(',', ',') }}</span>
+                        </div>
+                    </div>
+                    <div class="health-metric">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-600 font-medium">Mood Score</span>
+                            <span class="metric-value text-2xl">{{ data.rpm_data.mood_score or 7 }}/10</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <p class="text-xs text-gray-500 text-center">
+                        <i class="fas fa-sync-alt mr-1"></i>Last updated: Live
+                    </p>
+                </div>
+            </div>
+
+            <!-- Enhanced Quick Actions Card -->
+            <div class="patient-card p-6 flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-bold dashboard-title">Quick Actions</h3>
+                        <i class="fas fa-bolt text-blue-500 text-3xl card-icon-glow"></i>
+                    </div>
+                    <div class="space-y-3">
+                        <a href="{{ url_for('goals') }}" class="action-button w-full bg-gradient-to-r from-indigo-600 to-indigo-700">
+                            <i class="fas fa-bullseye"></i>Manage Goals
+                        </a>
+                        <a href="{{ url_for('chat') }}" class="action-button w-full bg-gradient-to-r from-blue-600 to-blue-700">
+                            <i class="fas fa-comment-dots"></i>Chat with Support
+                        </a>
+                        <a href="{{ url_for('telehealth') }}" class="action-button w-full bg-gradient-to-r from-green-600 to-green-700">
+                            <i class="fas fa-video"></i>Start Telehealth Session
+                        </a>
+                        <a href="{{ url_for('schedule') }}" class="action-button w-full bg-gradient-to-r from-purple-600 to-purple-700">
+                            <i class="fas fa-plus"></i>Schedule Appointment
+                        </a>
+                    </div>
+                </div>
+                <div class="mt-6 pt-4 border-t border-gray-100">
+                    <a href="{{ url_for('digital_detox') }}" class="w-full text-center text-sm font-medium text-red-600 hover:text-red-800 transition duration-200 block">
+                        <i class="fas fa-mobile-alt mr-1"></i>Digital Wellness Check-in
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!-- Real-time Health Monitoring Card -->
-        <div class="card p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-xl font-semibold text-gray-800">Real-time Health Monitoring</h3>
-                <div class="flex items-center">
-                    <span class="status-indicator status-online mr-2" title="Live Data"></span>
-                    <i class="fas fa-heartbeat text-red-500 text-2xl"></i>
-                </div>
-            </div>
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Heart Rate</span>
-                    <span id="heart-rate" class="rpm-metric font-semibold text-lg text-green-600">
-                        {{ data.rpm_data.heart_rate or 72 }} bpm
-                    </span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Sleep Duration</span>
-                    <span id="sleep-duration" class="rpm-metric font-semibold text-lg text-green-600">
-                        {{ data.rpm_data.sleep_duration or 7.5 }}h
-                    </span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Daily Steps</span>
-                    <span id="steps" class="rpm-metric font-semibold text-lg text-blue-600">{{ (data.rpm_data.steps or 8500)|int|string|replace(',', ',') }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600">Mood Score</span>
-                    <span id="mood-score" class="rpm-metric font-semibold text-lg text-purple-600">{{ data.rpm_data.mood_score or 7 }}/10</span>
-                </div>
-            </div>
-            <div class="mt-4 pt-4 border-t border-gray-100">
-                <p id="rpm-timestamp" class="text-xs text-gray-500 text-center">
-                    <i class="fas fa-sync-alt mr-1"></i>Last updated: Live
-                </p>
-            </div>
-        </div>
+        <!-- Enhanced Wellness Toolkit Section -->
+        <div class="patient-card toolkit-section p-8 mb-8">
+            <h3 class="text-3xl font-bold mb-4 section-title">
+                <i class="fas fa-heart-pulse text-teal-500 mr-3"></i>Wellness Toolkit
+            </h3>
+            <p class="text-gray-600 mb-6 text-lg">Engage with tools designed to support your daily well-being and mindfulness practices.</p>
 
-        <!-- Quick Actions Card -->
-        <div class="card p-6 flex flex-col justify-between">
-            <div>
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-xl font-semibold text-gray-800">Quick Actions</h3>
-                    <i class="fas fa-bolt text-blue-500 text-2xl"></i>
-                </div>
-                <div class="space-y-3">
-                    <a href="{{ url_for('goals') }}" class="btn-primary w-full bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center">
-                        <i class="fas fa-bullseye mr-2"></i>Manage Goals
-                    </a>
-                    <a href="{{ url_for('chat') }}" class="btn-primary w-full flex items-center justify-center">
-                        <i class="fas fa-comment-dots mr-2"></i>Chat with Support
-                    </a>
-                    <a href="{{ url_for('telehealth') }}" class="btn-primary w-full bg-green-600 hover:bg-green-700 flex items-center justify-center">
-                        <i class="fas fa-video mr-2"></i>Start Telehealth Session
-                    </a>
-                    <a href="{{ url_for('schedule') }}" class="btn-primary w-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center">
-                        <i class="fas fa-plus mr-2"></i>Schedule Appointment
-                    </a>
+            <!-- Enhanced Progress Overview -->
+            <div class="progress-overview mb-8">
+                <h4 class="font-bold text-gray-800 mb-4 text-xl">This Week's Progress</h4>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="progress-stat">
+                        <div class="progress-value text-3xl">{{ data.streak or 0 }}</div>
+                        <div class="text-sm text-gray-600 font-medium">Day Streak</div>
+                    </div>
+                    <div class="progress-stat">
+                        <div class="progress-value text-3xl">{{ data.points or 0 }}</div>
+                        <div class="text-sm text-gray-600 font-medium">Total Points</div>
+                    </div>
+                    <div class="progress-stat">
+                        <div class="progress-value text-3xl">{{ (data.badges or [])|length }}</div>
+                        <div class="text-sm text-gray-600 font-medium">Badges Earned</div>
+                    </div>
+                    <div class="progress-stat">
+                        <div class="progress-value text-3xl">{{ data.rpm_data.mood_score or 7 }}/10</div>
+                        <div class="text-sm text-gray-600 font-medium">Avg Mood</div>
+                    </div>
                 </div>
             </div>
-            <div class="mt-6 pt-4 border-t border-gray-100">
-                <a href="{{ url_for('digital_detox') }}" class="w-full text-center text-sm font-medium text-red-600 hover:text-red-800 transition duration-200 block">
-                    <i class="fas fa-mobile-alt mr-1"></i>Digital Wellness Check-in
+
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Enhanced Medication Card -->
+                <a href="{{ url_for('medication') }}" class="toolkit-card">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                            <i class="fas fa-pills text-blue-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg">Medication Tracker</h4>
+                            <p class="text-gray-600">Log and manage your medications.</p>
+                        </div>
+                    </div>
+                </a>
+                <!-- Enhanced Breathing Card -->
+                <a href="{{ url_for('breathing') }}" class="toolkit-card">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                            <i class="fas fa-wind text-green-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg">Breathing Exercises</h4>
+                            <p class="text-gray-600">Practice guided breathing.</p>
+                        </div>
+                    </div>
+                </a>
+                <!-- Enhanced Yoga Card -->
+                <a href="{{ url_for('yoga') }}" class="toolkit-card">
+                    <div class="flex items-center">
+                        <div class="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                            <i class="fas fa-person-praying text-yellow-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg">Yoga Sessions</h4>
+                            <p class="text-gray-600">Follow guided yoga practices.</p>
+                        </div>
+                    </div>
                 </a>
             </div>
         </div>
-    </div>
 
-    <!-- Wellness Toolkit Section -->
-    <div class="card p-6 mb-8">
-        <h3 class="text-xl font-semibold mb-4 text-gray-800">
-            <i class="fas fa-heart-pulse text-teal-500 mr-2"></i>Wellness Toolkit
-        </h3>
-        <p class="text-gray-600 mb-4">Engage with tools designed to support your daily well-being and mindfulness practices.</p>
-        
-        <!-- Progress Overview -->
-        <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
-            <h4 class="font-semibold text-gray-800 mb-3">This Week's Progress</h4>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-blue-600">{{ data.streak or 0 }}</div>
-                    <div class="text-sm text-gray-600">Day Streak</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-green-600">{{ data.points or 0 }}</div>
-                    <div class="text-sm text-gray-600">Total Points</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-purple-600">{{ (data.badges or [])|length }}</div>
-                    <div class="text-sm text-gray-600">Badges Earned</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-orange-600">{{ data.rpm_data.mood_score or 7 }}/10</div>
-                    <div class="text-sm text-gray-600">Avg Mood</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="grid md:grid-cols-3 gap-4">
-            <!-- Medication Card -->
-            <a href="{{ url_for('medication') }}" class="block p-4 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition duration-200">
-                <div class="flex items-center">
-                    <div class="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                        <i class="fas fa-pills text-blue-600"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-800">Medication Tracker</h4>
-                        <p class="text-sm text-gray-600">Log and manage your medications.</p>
-                    </div>
-                </div>
-            </a>
-            <!-- Breathing Card -->
-            <a href="{{ url_for('breathing') }}" class="block p-4 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition duration-200">
-                <div class="flex items-center">
-                    <div class="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                        <i class="fas fa-wind text-green-600"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-800">Breathing Exercises</h4>
-                        <p class="text-sm text-gray-600">Practice guided breathing.</p>
-                    </div>
-                </div>
-            </a>
-            <!-- Yoga Card -->
-            <a href="{{ url_for('yoga') }}" class="block p-4 bg-yellow-50 hover:bg-yellow-100 rounded-lg border border-yellow-200 transition duration-200">
-                <div class="flex items-center">
-                    <div class="bg-yellow-100 rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                        <i class="fas fa-person-praying text-yellow-600"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-800">Yoga Sessions</h4>
-                        <p class="text-sm text-gray-600">Follow guided yoga practices.</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </div>
+        <!-- Enhanced Appointment History Section -->
+        <div class="patient-card p-8 mb-8">
+            <h3 class="text-3xl font-bold mb-6 section-title">
+                <i class="fas fa-calendar-alt text-purple-500 mr-3"></i>Your Appointments
+            </h3>
 
-    <!-- Appointment History Section -->
-    <div class="card p-6 mb-8">
-        <h3 class="text-xl font-semibold mb-4 text-gray-800">
-            <i class="fas fa-calendar-alt text-purple-500 mr-2"></i>Your Appointments
-        </h3>
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mb-4 p-4 rounded-lg text-sm {% if category == 'success' %}bg-green-100 text-green-800 border border-green-200{% elif category == 'error' %}bg-red-100 text-red-800 border border-red-200{% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }} mb-4 p-3 rounded-lg text-sm {% if category == 'success' %}bg-green-100 text-green-800{% elif category == 'error' %}bg-red-100 text-red-800{% else %}bg-blue-100 text-blue-800{% endif %}">
-                {{ message }}
-            </div>
-            {% endfor %}
-        {% endif %}
-        {% endwith %}
-
-        <div class="grid md:grid-cols-2 gap-6">
-            <div>
-                <h4 class="font-semibold text-gray-700 mb-3">Upcoming Appointments</h4>
-                {% if upcoming_appointments %}
-                <ul class="space-y-3">
-                    {% for appt in upcoming_appointments %}
-                    <li class="bg-blue-50 p-3 rounded-lg border border-blue-200 flex items-center justify-between">
-                        <div>
-                            <p class="font-medium text-gray-800">{{ appt.date.strftime('%B %d, %Y') }} at {{ appt.time }}</p>
-                            <p class="text-sm text-gray-600">{{ appt.appointment_type | capitalize }} - Status: <span class="text-blue-600 font-semibold">{{ appt.status | capitalize }}</span></p>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <h4 class="font-bold text-gray-700 mb-4 text-lg">Upcoming Appointments</h4>
+                    {% if upcoming_appointments %}
+                    <div class="space-y-4">
+                        {% for appt in upcoming_appointments %}
+                        <div class="appointment-card upcoming">
+                            <div>
+                                <p class="font-semibold text-gray-800 text-lg">{{ appt.date.strftime('%B %d, %Y') }} at {{ appt.time }}</p>
+                                <p class="text-gray-600">{{ appt.appointment_type | capitalize }} - Status: <span class="text-green-600 font-semibold">{{ appt.status | capitalize }}</span></p>
+                            </div>
+                            <i class="fas fa-chevron-right text-green-500 text-lg"></i>
                         </div>
-                        <i class="fas fa-chevron-right text-blue-500"></i>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-gray-600">No upcoming appointments.</p>
-                {% endif %}
-            </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-600 italic">No upcoming appointments.</p>
+                    {% endif %}
+                </div>
 
-            <div>
-                <h4 class="font-semibold text-gray-700 mb-3">Past Appointments</h4>
-                {% if past_appointments %}
-                <ul class="space-y-3">
-                    {% for appt in past_appointments %}
-                    <li class="bg-gray-50 p-3 rounded-lg border border-gray-200 flex items-center justify-between">
-                        <div>
-                            <p class="font-medium text-gray-800">{{ appt.date.strftime('%B %d, %Y') }} at {{ appt.time }}</p>
-                            <p class="text-sm text-gray-600">{{ appt.appointment_type | capitalize }} - Status: <span class="text-gray-500 font-semibold">{{ appt.status | capitalize }}</span></p>
+                <div>
+                    <h4 class="font-bold text-gray-700 mb-4 text-lg">Past Appointments</h4>
+                    {% if past_appointments %}
+                    <div class="space-y-4">
+                        {% for appt in past_appointments %}
+                        <div class="appointment-card past">
+                            <div>
+                                <p class="font-semibold text-gray-800 text-lg">{{ appt.date.strftime('%B %d, %Y') }} at {{ appt.time }}</p>
+                                <p class="text-gray-600">{{ appt.appointment_type | capitalize }} - Status: <span class="text-gray-500 font-semibold">{{ appt.status | capitalize }}</span></p>
+                            </div>
+                            <i class="fas fa-history text-gray-400 text-lg"></i>
                         </div>
-                        <i class="fas fa-history text-gray-400"></i>
-                    </li>
-                    {% endfor %}
-                </ul>
-                {% else %}
-                <p class="text-gray-600">No past appointments.</p>
-                {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-gray-600 italic">No past appointments.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Mental Health Assessment Section -->
-    <div class="card p-6 mb-8">
-        <h3 class="text-xl font-semibold mb-4 text-gray-800">
-            <i class="fas fa-clipboard-check text-indigo-500 mr-2"></i>Mental Health Assessment
-        </h3>
-        <p class="text-gray-600 mb-4">Take standardized assessments to track your mental health progress and get personalized insights.</p>
-        <div class="grid md:grid-cols-3 gap-4">
-            <a href="{{ url_for('assessment') }}" class="block p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg border border-indigo-200 transition duration-200">
-                <div class="flex items-center">
-                    <div class="bg-indigo-100 rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                        <i class="fas fa-brain text-indigo-600"></i>
+        <!-- Enhanced Mental Health Assessment Section -->
+        <div class="patient-card p-8 mb-8">
+            <h3 class="text-3xl font-bold mb-6 section-title">
+                <i class="fas fa-clipboard-check text-indigo-500 mr-3"></i>Mental Health Assessment
+            </h3>
+            <p class="text-gray-600 mb-6 text-lg">Take standardized assessments to track your mental health progress and get personalized insights.</p>
+            <div class="grid md:grid-cols-3 gap-6">
+                <a href="{{ url_for('assessment') }}" class="assessment-card">
+                    <div class="flex items-center">
+                        <div class="bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                            <i class="fas fa-brain text-indigo-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg">Take Assessment</h4>
+                            <p class="text-gray-600">GAD-7, PHQ-9 & Daily Mood</p>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-800">Take Assessment</h4>
-                        <p class="text-sm text-gray-600">GAD-7, PHQ-9 & Daily Mood</p>
+                </a>
+                <a href="{{ url_for('progress') }}" class="assessment-card">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                            <i class="fas fa-chart-line text-green-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg">View Progress</h4>
+                            <p class="text-gray-600">Trends & AI Insights</p>
+                        </div>
                     </div>
-                </div>
-            </a>
-            <a href="{{ url_for('progress') }}" class="block p-4 bg-green-50 hover:bg-green-100 rounded-lg border border-green-200 transition duration-200">
-                <div class="flex items-center">
-                    <div class="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                        <i class="fas fa-chart-line text-green-600"></i>
+                </a>
+                <a href="{{ url_for('digital_detox') }}" class="assessment-card">
+                    <div class="flex items-center">
+                        <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                            <i class="fas fa-mobile-alt text-purple-600 text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg">Digital Detox</h4>
+                            <p class="text-gray-600">Screen Time & Wellness</p>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-800">View Progress</h4>
-                        <p class="text-sm text-gray-600">Trends & AI Insights</p>
-                    </div>
-                </div>
-            </a>
-            <a href="{{ url_for('digital_detox') }}" class="block p-4 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition duration-200">
-                <div class="flex items-center">
-                    <div class="bg-purple-100 rounded-full w-12 h-12 flex items-center justify-center mr-4">
-                        <i class="fas fa-mobile-alt text-purple-600"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-gray-800">Digital Detox</h4>
-                        <p class="text-sm text-gray-600">Screen Time & Wellness</p>
-                    </div>
-                </div>
-            </a>
+                </a>
+            </div>
         </div>
     </div>
 </div>

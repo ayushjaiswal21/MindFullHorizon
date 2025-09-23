@@ -1388,6 +1388,18 @@ def blog_edit(post_id):
     return render_template('blog_edit.html', post=post)
 
 
+# Serve manifest.json from root directory
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory(os.path.join(app.root_path), 'manifest.json', mimetype='application/manifest+json')
+
+# Serve other static files from root directory if needed
+@app.route('/<path:filename>')
+def serve_static(filename):
+    if filename.endswith('.json') or filename.endswith('.txt') or filename.endswith('.xml'):
+        return send_from_directory(app.root_path, filename)
+    return "File not found", 404
+
 # --- SocketIO Chat Handler ---
 @socketio.on('chat_message')
 def handle_chat_message(data):
