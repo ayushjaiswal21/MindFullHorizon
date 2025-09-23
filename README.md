@@ -674,6 +674,16 @@ option_settings:
 
 ## 🔧 Troubleshooting Common Issues
 
+### WebSocket Connection Issues
+```bash
+# Use eventlet workers for WebSocket support (Python 3.13+ compatible)
+gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app
+
+# Test WebSocket connectivity
+# Use browser developer tools to check WebSocket connections
+# eventlet provides reliable WebSocket support without Cython compilation issues
+```
+
 ### Database Connection Issues
 ```bash
 # Test database connectivity
@@ -698,8 +708,8 @@ pip install memory-profiler
 ### Python Version Compatibility Issues
 ```bash
 # If you encounter gevent compilation issues with Python 3.13:
-# The project uses eventlet which is more compatible with newer Python versions
-# Make sure your requirements.txt has: eventlet==0.36.1
+# The project now uses ONLY eventlet which is fully compatible with Python 3.13+
+# eventlet==0.36.1 provides excellent WebSocket support without Cython issues
 
 # Test Python version compatibility
 python --version

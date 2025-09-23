@@ -35,8 +35,7 @@ PyJWT==2.8.0
 
 # Production Server - Python 3.13 compatible versions
 gunicorn==22.0.0
-gevent==23.9.1                  # Downgraded for Python 3.13 compatibility
-eventlet==0.36.1               # Alternative for WebSocket
+eventlet==0.36.1               # WebSocket support for Python 3.13+
 
 # Monitoring and Logging
 sentry-sdk[flask]==1.45.0       # Error tracking for production
@@ -66,6 +65,6 @@ reportlab==4.2.0               # PDF generation for reports
 # - Use PostgreSQL for production database (psycopg2-binary included)
 # - Configure Redis for session storage and caching
 # - Set up proper environment variables for all API keys
-# - Use gunicorn with gevent workers for production deployment
+# - Use gunicorn with eventlet workers for production deployment
 # - Enable Flask-Compress for bandwidth optimization
 # - Configure rate limiting with Flask-Limiter
