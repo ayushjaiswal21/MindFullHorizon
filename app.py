@@ -154,25 +154,81 @@ def index():
     # Get blog insights for the landing page
     try:
         blog_insights = get_blog_insights()
-        
+
         # Get featured/recent blog posts for display
         featured_posts = BlogPost.query.filter_by(
-            is_published=True, 
+            is_published=True,
             is_featured=True
         ).order_by(BlogPost.created_at.desc()).limit(3).all()
-        
+
         # If no featured posts, get recent ones
         if not featured_posts:
             featured_posts = BlogPost.query.filter_by(
                 is_published=True
             ).order_by(BlogPost.created_at.desc()).limit(3).all()
-            
+
+        # Student-focused homepage theme data
+        landing_theme = {
+            "hero_title": "Welcome to MindFull Horizon",
+            "hero_subtitle": "Empowering Students for Better Mental Wellness",
+            "hero_message": "Track your mood, set goals, join wellness challenges, and connect with campus providers. Your journey to a healthier mind starts here!",
+            "features": [
+                {
+                    "title": "Daily Mood Tracker",
+                    "desc": "Check in with your feelings and see your progress over time."
+                },
+                {
+                    "title": "Digital Detox",
+                    "desc": "Reduce screen time and boost your academic and social life."
+                },
+                {
+                    "title": "Gamified Wellness",
+                    "desc": "Earn points, badges, and rewards for healthy habits and activities."
+                }
+            ]
+        }
+
+        # FAQ section data
+        faqs = [
+            {
+                "question": "What is MindFull Horizon?",
+                "answer": "MindFull Horizon is a student wellness platform designed to help you track your mood, set goals, and improve your mental health."
+            },
+            {
+                "question": "How do I join wellness challenges?",
+                "answer": "Sign up and visit your dashboard to participate in ongoing wellness challenges and earn rewards."
+            },
+            {
+                "question": "Is my data private?",
+                "answer": "Yes, your data is securely stored and only accessible to you and authorized campus providers."
+            },
+            {
+                "question": "Can I connect with campus counselors?",
+                "answer": "Absolutely! Use the telehealth feature to book appointments and chat with campus counselors."
+            }
+        ]
+
     except Exception as e:
         logger.error(f"Error getting blog insights for homepage: {e}")
         blog_insights = None
         featured_posts = []
-    
-    return render_template('index.html', blog_insights=blog_insights, featured_posts=featured_posts)
+        landing_theme = {
+            "hero_title": "Welcome to MindFull Horizon",
+            "hero_subtitle": "Empowering Students for Better Mental Wellness",
+            "hero_message": "Track your mood, set goals, join wellness challenges, and connect with campus providers. Your journey to a healthier mind starts here!",
+            "features": []
+        }
+        faqs = []
+
+    from datetime import datetime
+    return render_template(
+        'index.html',
+        blog_insights=blog_insights,
+        featured_posts=featured_posts,
+        landing_theme=landing_theme,
+        faqs=faqs,
+        datetime=datetime
+    )
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1632,6 +1688,18 @@ def blog_edit(post_id):
             flash('Failed to update blog post.', 'error')
     return render_template('blog_edit.html', post=post)
 
+
+# Serve manifest.json from root directory
+@app.route('/manifest.json')
+def manifest():
+    return send_from_directory(os.path.join(app.root_path), 'manifest.json', mimetype='application/manifest+json')
+
+# Serve other static files from root directory if needed
+@app.route('/<path:filename>')
+def serve_static(filename):
+    if filename.endswith('.json') or filename.endswith('.txt') or filename.endswith('.xml'):
+        return send_from_directory(app.root_path, filename)
+    return "File not found", 404
 
 # --- SocketIO Chat Handler ---
 @socketio.on('chat_message')
