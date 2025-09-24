@@ -11,11 +11,11 @@
         "SECRET_KEY": "${{ secrets.SECRET_KEY }}",
         "GEMINI_API_KEY": "${{ secrets.GEMINI_API_KEY }}",
         "DATABASE_URL": "${{ secrets.DATABASE_URL }}",
-        "REDIS_URL": "${{ secrets.REDIS_URL }}"
+        "DISABLE_LOCAL_AI": "true"
       }
     }
   ],
   "buildFilter": {
-    "ignoredPaths": ["/.git", "/.github", "/docs", "/tests", "/*.md"]
+    "ignoredPaths": ["/.git", "/.github", "/docs", "/tests", "/*.md", "/.ebextensions", "/docker-compose.yml", "/nginx.conf", "/deploy_helper.sh", "/Procfile.alternatives"]
   }
 }
