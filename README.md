@@ -972,7 +972,9 @@ Set the following environment variables in your Render service:
 | `SECRET_KEY` | Flask secret key for session management | Yes |
 | `GEMINI_API_KEY` | Google Gemini API key for AI features | Yes |
 | `DATABASE_URL` | PostgreSQL database URL | Yes |
-| `DISABLE_LOCAL_AI` | Set to `true` to disable local AI services | Yes |
+| `DISABLE_LOCAL_AI` | Set to `true` to disable local AI services | **Yes** (for production) |
+
+**Note**: The application will work without local AI services (like Ollama) in production. All AI features will use the Gemini API when available, with fallback responses when AI services are unavailable.
 
 ### Database Setup
 The application automatically uses PostgreSQL when `DATABASE_URL` is provided. Render will automatically provision a PostgreSQL database when you create a new service.
@@ -1004,14 +1006,20 @@ curl https://your-app.render.com/health
 2. **AI Service Unavailable**
    - Verify `GEMINI_API_KEY` is set correctly
    - Check API key permissions in Google AI Studio
+   - The app will work with fallback responses if AI services are unavailable
 
 3. **Build Failures**
    - Ensure all dependencies in `requirements.txt` are compatible
    - Check Python version compatibility
+   - Note: Ollama is not required for production deployment
 
 4. **Port Binding Issues**
    - The app automatically binds to `$PORT` environment variable
    - No manual port configuration needed
+
+5. **Module Import Errors**
+   - If you see "ModuleNotFoundError: No module named 'ollama'", this is expected
+   - The application handles this gracefully and will use Gemini API or fallback responses
 
 #### Local Development
 ```bash
