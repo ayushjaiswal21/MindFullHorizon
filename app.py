@@ -1719,34 +1719,23 @@ def blog_edit(post_id):
 # Health check endpoint for monitoring
 @app.route('/health')
 def health_check():
-    """Health check endpoint for load balancers and monitoring systems."""
+    """Health check endpoint for monitoring and load balancers."""
     try:
-        # Check database connectivity
-        db.session.execute('SELECT 1')
+        # Test database connection
+        db.session.execute(db.text('SELECT 1'))
         db_status = 'healthy'
     except Exception as e:
         db_status = f'unhealthy: {str(e)}'
 
-    # Check Redis connectivity if configured
-    redis_status = 'not_configured'
-    if os.getenv('REDIS_URL'):
-        try:
-            # Simple Redis connectivity check would go here
-            redis_status = 'healthy'
-        except Exception as e:
-            redis_status = f'unhealthy: {str(e)}'
+    # Test AI services
+    ai_status = 'available' if ai_service.gemini_model else 'unavailable'
 
-    health_data = {
-        'status': 'healthy' if db_status == 'healthy' else 'unhealthy',
-        'timestamp': datetime.now(timezone.utc).isoformat(),
-        'version': '2.0.0',
+    return jsonify({
+        'status': 'healthy',
         'database': db_status,
-        'redis': redis_status,
-        'environment': os.getenv('FLASK_ENV', 'development')
-    }
-
-    status_code = 200 if health_data['status'] == 'healthy' else 503
-    return jsonify(health_data), status_code
+        'ai_service': ai_status,
+        'timestamp': datetime.now().isoformat()
+    }), 200
 
 # Serve other static files from root directory if needed
 @app.route('/<path:filename>')
@@ -1795,26 +1784,6 @@ def on_leave(data):
     leave_room(room)
     emit('_disconnect', to=room, include_self=False)
     emit('message', f'User has left the room {room}.', to=room)
-
-@app.route('/health')
-def health_check():
-    """Health check endpoint for monitoring and load balancers."""
-    try:
-        # Test database connection
-        db.session.execute(db.text('SELECT 1'))
-        db_status = 'healthy'
-    except Exception as e:
-        db_status = f'unhealthy: {str(e)}'
-
-    # Test AI services
-    ai_status = 'available' if ai_service.gemini_model else 'unavailable'
-
-    return jsonify({
-        'status': 'healthy',
-        'database': db_status,
-        'ai_service': ai_status,
-        'timestamp': datetime.now().isoformat()
-    }), 200
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)
