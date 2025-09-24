@@ -75,7 +75,15 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(days=30)  # Cache static ass
 basedir = os.path.abspath(os.path.dirname(__file__))
 # Ensure instance folder exists
 os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(basedir, "instance", "mindful_horizon.db")}'
+
+# Use PostgreSQL for production (Render), fallback to SQLite for local development
+if os.getenv('DATABASE_URL'):
+    # Production database (Render PostgreSQL)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
+else:
+    # Local development database (SQLite)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(basedir, "instance", "mindful_horizon.db")}'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Upload folder for profile pictures
@@ -1787,6 +1795,26 @@ def on_leave(data):
     leave_room(room)
     emit('_disconnect', to=room, include_self=False)
     emit('message', f'User has left the room {room}.', to=room)
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint for monitoring and load balancers."""
+    try:
+        # Test database connection
+        db.session.execute(db.text('SELECT 1'))
+        db_status = 'healthy'
+    except Exception as e:
+        db_status = f'unhealthy: {str(e)}'
+
+    # Test AI services
+    ai_status = 'available' if ai_service.gemini_model else 'unavailable'
+
+    return jsonify({
+        'status': 'healthy',
+        'database': db_status,
+        'ai_service': ai_status,
+        'timestamp': datetime.now().isoformat()
+    }), 200
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)

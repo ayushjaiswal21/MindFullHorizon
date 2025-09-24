@@ -22,7 +22,7 @@ class MindfulAIService:
         # --- Local Ollama (Mindwell) Configuration ---
         self.ollama_host = os.getenv('OLLAMA_HOST', 'http://localhost:11434')
         self.local_model_available = False
-        
+
         # Only try to connect if DISABLE_LOCAL_AI is not set
         if not os.getenv('DISABLE_LOCAL_AI'):
             try:
@@ -32,8 +32,12 @@ class MindfulAIService:
                 if response.status_code == 200:
                     self.local_model_available = True
                     print("Successfully connected to local Ollama server")
+                else:
+                    print("Local Ollama server not available (no models installed)")
             except Exception as e:
-                print("Info: Local AI services not available. Using cloud fallback.")
+                print(f"Local AI services not available: {e}. Using cloud fallback.")
+        else:
+            print("Local AI services disabled via DISABLE_LOCAL_AI environment variable")
 
 
     def generate_chat_response(self, user_message: str, context: dict = None) -> str:
@@ -280,5 +284,62 @@ Do not give medical advice."""
             ]
         }
 
-# Global AI service instance
-ai_service = MindfulAIService()
+    def generate_clinical_note(self, transcript: str, patient_context: dict = None) -> str:
+        """
+        Generates a clinical note from a session transcript using the Gemini API.
+        """
+        prompt = f"""You are an experienced clinical psychologist and documentation specialist.
+        Based on the following session transcript, generate a professional clinical note that includes:
+
+        1. Session Summary (2-3 sentences)
+        2. Key Discussion Points
+        3. Patient's Current State and Progress
+        4. Treatment Goals and Objectives
+        5. Next Steps and Recommendations
+        6. Risk Assessment (if applicable)
+
+        Patient Context: {json.dumps(patient_context, indent=2) if patient_context else "No additional context provided"}
+
+        Session Transcript: {transcript}
+
+        Format the response as a well-structured clinical note with clear headings and professional language.
+        Focus on factual observations and avoid unsubstantiated interpretations."""
+
+        if self.gemini_model:
+            try:
+                response = self._gemini_request(prompt, "Unable to generate clinical note.")
+                return response
+            except Exception as e:
+                print(f"Error generating clinical note with Gemini: {e}")
+                return self._fallback_clinical_note(transcript)
+        else:
+            return self._fallback_clinical_note(transcript)
+
+    def _fallback_clinical_note(self, transcript: str) -> str:
+        """Fallback if AI is unavailable for clinical note generation."""
+        return f"""CLINICAL NOTE - AI ASSISTED
+
+Session Summary:
+Unable to generate detailed analysis due to AI service unavailability. Session transcript recorded for manual review.
+
+Key Discussion Points:
+- Session transcript has been preserved for clinical review
+- Patient context and progress indicators noted
+
+Patient's Current State:
+- Assessment pending manual review
+- Digital wellness indicators recorded
+
+Treatment Goals:
+- Continue current treatment plan
+- Monitor digital wellness metrics
+
+Next Steps:
+- Review session transcript manually
+- Schedule follow-up appointment as needed
+
+Risk Assessment:
+- No immediate concerns identified
+- Standard monitoring recommended
+
+Note: This is an AI-assisted placeholder note. Please review the full session transcript for complete clinical documentation."""

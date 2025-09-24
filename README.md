@@ -957,6 +957,75 @@ We welcome contributions to improve the MindFull Horizon platform:
 - Document all API endpoints
 - Ensure HIPAA compliance in all features
 
+## 🚀 Deployment to Render
+
+### Prerequisites
+1. Create a [Render](https://render.com) account
+2. Fork this repository to your GitHub account
+3. Get a Gemini API key from [Google AI Studio](https://makersuite.google.com/app/apikey)
+
+### Environment Variables
+Set the following environment variables in your Render service:
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `SECRET_KEY` | Flask secret key for session management | Yes |
+| `GEMINI_API_KEY` | Google Gemini API key for AI features | Yes |
+| `DATABASE_URL` | PostgreSQL database URL | Yes |
+| `DISABLE_LOCAL_AI` | Set to `true` to disable local AI services | Yes |
+
+### Database Setup
+The application automatically uses PostgreSQL when `DATABASE_URL` is provided. Render will automatically provision a PostgreSQL database when you create a new service.
+
+### Deployment Steps
+1. **Connect Repository**: Connect your GitHub repository to Render
+2. **Create Web Service**:
+   - **Name**: mindful-horizon
+   - **Runtime**: Python 3
+   - **Build Command**: `pip install --no-cache-dir --upgrade pip setuptools wheel && pip install --no-cache-dir -r requirements.txt`
+   - **Start Command**: `gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app`
+3. **Set Environment Variables**: Add all required environment variables
+4. **Deploy**: Click "Create Web Service"
+
+### Health Check
+The application includes a `/health` endpoint for monitoring:
+```bash
+curl https://your-app.render.com/health
+```
+
+### Troubleshooting
+
+#### Common Issues
+
+1. **Database Connection Errors**
+   - Ensure `DATABASE_URL` is correctly set
+   - Check that the database is provisioned and running
+
+2. **AI Service Unavailable**
+   - Verify `GEMINI_API_KEY` is set correctly
+   - Check API key permissions in Google AI Studio
+
+3. **Build Failures**
+   - Ensure all dependencies in `requirements.txt` are compatible
+   - Check Python version compatibility
+
+4. **Port Binding Issues**
+   - The app automatically binds to `$PORT` environment variable
+   - No manual port configuration needed
+
+#### Local Development
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your local configuration
+
+# Run locally
+python app.py
+```
+
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
@@ -972,31 +1041,3 @@ For technical support or questions about the Mindful Horizon Framework:
 ---
 
 **Built with ❤️ for college student mental health and well-being**
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For technical support or questions about implementation:
-- Create an issue in the repository
-- Contact the development team
-- Check the documentation for common solutions
-
-## Future Enhancements
-
-- Real-time notifications with WebSocket
-- Mobile app development with React Native
-- Advanced AI/ML models for predictive analytics
-- Integration with wearable devices
-- Multi-language support
-- Advanced reporting and analytics dashboard
