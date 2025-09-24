@@ -2,6 +2,7 @@
 
 import os
 import json
+import requests
 import google.generativeai as genai
 from dotenv import load_dotenv
 
@@ -28,7 +29,6 @@ class MindfulAIService:
                 # Import ollama only when needed
                 import ollama
                 # Set a short timeout for the connection attempt
-                import requests
                 response = requests.get(f"{self.ollama_host}/api/tags", timeout=2)
                 if response.status_code == 200:
                     self.local_model_available = True
@@ -351,3 +351,6 @@ Risk Assessment:
 - Standard monitoring recommended
 
 Note: This is an AI-assisted placeholder note. Please review the full session transcript for complete clinical documentation."""
+
+# Global AI service instance
+ai_service = MindfulAIService()
