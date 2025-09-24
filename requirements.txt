@@ -26,6 +26,9 @@ google-generativeai==0.4.1
 requests==2.32.3
 httpx==0.27.0                   # Async HTTP client
 
+# Optional: Local AI service (ollama) - not required for production
+# ollama==0.1.8                   # Commented out - optional dependency
+
 # Security and Authentication
 Flask-Security-Too==5.3.3
 Flask-Bcrypt==1.0.1

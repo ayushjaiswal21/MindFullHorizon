@@ -2,7 +2,6 @@
 
 import os
 import json
-import ollama
 import google.generativeai as genai
 from dotenv import load_dotenv
 
@@ -26,6 +25,8 @@ class MindfulAIService:
         # Only try to connect if DISABLE_LOCAL_AI is not set
         if not os.getenv('DISABLE_LOCAL_AI'):
             try:
+                # Import ollama only when needed
+                import ollama
                 # Set a short timeout for the connection attempt
                 import requests
                 response = requests.get(f"{self.ollama_host}/api/tags", timeout=2)
@@ -34,6 +35,8 @@ class MindfulAIService:
                     print("Successfully connected to local Ollama server")
                 else:
                     print("Local Ollama server not available (no models installed)")
+            except ImportError:
+                print("Ollama module not installed. Local AI services disabled.")
             except Exception as e:
                 print(f"Local AI services not available: {e}. Using cloud fallback.")
         else:
@@ -61,6 +64,8 @@ class MindfulAIService:
         
         if self.local_model_available:
             try:
+                # Import ollama only when needed
+                import ollama
                 response = ollama.chat(
                     model='ALIENTELLIGENCE/mindwell:latest',
                     messages=[
@@ -71,6 +76,9 @@ class MindfulAIService:
                     options={"num_predict": 512, "timeout": 120}
                 )
                 return response['message']['content']
+            except ImportError:
+                print("Ollama module not available. Falling back to Gemini.")
+                return self._gemini_request(prompt, "Error generating chat response.")
             except Exception as e:
                 print(f"Error with local model: {e}. Falling back to Gemini.")
                 return self._gemini_request(prompt, "Error generating chat response.")
