@@ -53,33 +53,18 @@
 
     <!-- Caseload Management -->
     <div class="card mb-8">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold text-gray-800">
-                <i class="fas fa-users text-green-500 mr-2"></i>Patient Caseload
-            </h3>
-            <div class="flex space-x-2">
-                <select class="px-3 py-1 border border-gray-300 rounded text-sm">
-                    <option>All Risk Levels</option>
-                    <option>High Risk</option>
-                    <option>Medium Risk</option>
-                    <option>Low Risk</option>
-                </select>
-                <select class="px-3 py-1 border border-gray-300 rounded text-sm">
-                    <option>All Status</option>
-                    <option>Active</option>
-                    <option>Inactive</option>
-                </select>
-            </div>
-        </div>
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">
+            <i class="fas fa-users text-green-500 mr-2"></i>Patient Caseload
+        </h3>
         <div class="overflow-x-auto">
             <table class="w-full table-auto">
                 <thead>
                     <tr class="bg-gray-50">
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Patient Name</th>
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Age</th>
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Risk Level</th>
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Last Session</th>
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Digital Score</th>
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
                     </tr>
                 </thead>
@@ -103,16 +88,12 @@
                                 {{ patient.status }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-700">{{ patient.digital_score }}</td>
                         <td class="px-4 py-3 text-sm">
                             <a href="{{ url_for('wellness_report', user_id=patient.user_id) }}" class="text-blue-600 hover:text-blue-800 mr-2" title="View Wellness Report">
                                 <i class="fas fa-chart-bar"></i>
                             </a>
-                            <button class="text-green-600 hover:text-green-800 mr-2" title="Edit Patient">
+                            <button class="text-green-600 hover:text-green-800" title="Edit Patient">
                                 <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="text-purple-600 hover:text-purple-800" title="Send Message">
-                                <i class="fas fa-comment"></i>
                             </button>
                         </td>
                     </tr>
@@ -128,6 +109,10 @@
             <h3 class="text-xl font-semibold mb-4 text-gray-800">
                 <i class="fas fa-exchange-alt text-blue-500 mr-2"></i>Interoperability
             </h3>
+            <p class="text-gray-600 mb-4">
+                Our platform integrates seamlessly with major EHR systems and healthcare networks, 
+                ensuring secure data exchange and continuity of care.
+            </p>
             <ul class="text-sm text-gray-600 space-y-2">
                 <li><i class="fas fa-check text-green-500 mr-2"></i>FHIR R4 Compliance</li>
                 <li><i class="fas fa-check text-green-500 mr-2"></i>HL7 Integration</li>
