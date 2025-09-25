@@ -9,6 +9,7 @@ import os
 from datetime import datetime, timedelta, date, timezone
 from functools import wraps
 from sqlalchemy import func
+from sqlalchemy.exc import SQLAlchemyError
 
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, abort
@@ -71,18 +72,63 @@ app.config['COMPRESS_LEVEL'] = 6
 app.config['COMPRESS_MIN_SIZE'] = 500  # Only compress responses > 500 bytes
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(days=30)  # Cache static assets for 30 days
 
-# Database configuration
 basedir = os.path.abspath(os.path.dirname(__file__))
-# Ensure instance folder exists
-os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
+# Ensure instance folder exists (use Flask instance path)
+try:
+    os.makedirs(app.instance_path, exist_ok=True)
+except Exception:
+    # Fallback to project-level instance directory
+    os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
 
 # Use PostgreSQL for production (Render), fallback to SQLite for local development
 if os.getenv('DATABASE_URL'):
     # Production database (Render PostgreSQL)
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
 else:
-    # Local development database (SQLite)
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(basedir, "instance", "mindful_horizon.db")}'
+    # Local development database (SQLite) - robust writable path selection
+    def _first_writable_dir(paths):
+        for p in paths:
+            try:
+                os.makedirs(p, exist_ok=True)
+                testfile = os.path.join(p, '.writetest')
+                with open(testfile, 'w') as f:
+                    f.write('ok')
+                os.remove(testfile)
+                return p
+            except Exception as e:
+                logger.warning(f"Dir not writable, skipping: {p} ({e})")
+        return None
+
+    local_appdata = os.environ.get('LOCALAPPDATA')
+    candidates = [
+        os.environ.get('MINDFULL_DB_DIR'),
+        (os.path.join(local_appdata, 'MindFullHorizon') if local_appdata else None),
+        (app.instance_path if app.instance_path else None),
+        os.path.join(basedir, 'instance'),
+        os.path.join(os.path.expanduser('~'), '.mindfullhorizon')
+    ]
+    candidates = [c for c in candidates if c]
+    writable_dir = _first_writable_dir(candidates)
+    if not writable_dir:
+        raise RuntimeError('No writable directory found for SQLite database')
+
+    db_path = os.path.join(writable_dir, 'mindful_horizon.db')
+    try:
+        if not os.path.exists(db_path):
+            open(db_path, 'a').close()
+    except Exception as e:
+        logger.error(f"Failed to prepare SQLite database file at {db_path}: {e}")
+    normalized_path = os.path.abspath(db_path).replace('\\', '/')
+    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{normalized_path}'
+    logger.info(f"Using SQLite database at: {app.config['SQLALCHEMY_DATABASE_URI']}")
+
+
+
+# Improve SQLite compatibility with threaded servers (e.g., SocketIO)
+if app.config.get('SQLALCHEMY_DATABASE_URI', '').startswith('sqlite:///'):
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'connect_args': {'check_same_thread': False}
+    }
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -103,6 +149,31 @@ migrate = Migrate(app, db)
 from extensions import init_extensions
 init_extensions(app)
 
+# Validate DB connectivity after extensions are initialized
+try:
+    from sqlalchemy.exc import OperationalError as _OpErr
+    with app.app_context():
+        db.engine.connect().close()
+        logger.info(f"Database connected successfully: {app.config['SQLALCHEMY_DATABASE_URI']}")
+        # Ensure tables exist in development
+        try:
+            from flask_migrate import upgrade as _upgrade
+            # Attempt Alembic upgrade; if migrations are not configured, fallback to create_all
+            try:
+                _upgrade()  # type: ignore
+                logger.info('Applied database migrations successfully.')
+            except Exception:
+                db.create_all()
+                logger.info('Database tables created with create_all().')
+        except Exception as _ee:
+            try:
+                db.create_all()
+                logger.info('Database tables created with create_all().')
+            except Exception as _eee:
+                logger.error(f'Failed to create database tables: {_eee}')
+except Exception as _e:
+    logger.error(f"Database connectivity check failed: {_e}")
+
 # Stub for get_blog_insights (replace with real logic as needed)
 def get_blog_insights():
     return {
@@ -119,7 +190,33 @@ def allowed_file(filename):
 
 # Stub for award_points (replace with real logic as needed)
 def award_points(user_id, points, reason):
-    pass
+    """Award gamification points to a user and return the Gamification record.
+
+    Ensures a Gamification row exists, increments points, updates streak basics,
+    and persists changes. Keeps logic lightweight to avoid side effects.
+    """
+    try:
+        gamification = Gamification.query.filter_by(user_id=user_id).first()
+        if not gamification:
+            gamification = Gamification(user_id=user_id, points=0, streak=0, badges=[])
+            db.session.add(gamification)
+
+        # Increment points
+        gamification.points = (gamification.points or 0) + int(points or 0)
+
+        # Minimal streak handling: ensure last_activity set; streak mgmt happens elsewhere
+        if not gamification.last_activity:
+            gamification.streak = max(gamification.streak or 0, 1)
+        db.session.commit()
+        return gamification
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to award points to user {user_id} for {reason}: {e}")
+        # Return a safe object-like fallback
+        class _GF:
+            points = 0
+            streak = 0
+        return _GF()
 
 def login_required(f):
     @wraps(f)
@@ -1728,7 +1825,7 @@ def health_check():
         db_status = f'unhealthy: {str(e)}'
 
     # Test AI services
-    ai_status = 'available' if ai_service.gemini_model else 'unavailable'
+    ai_status = 'available' if getattr(ai_service, 'external_enabled', False) and getattr(ai_service, 'client', None) else 'unavailable'
 
     return jsonify({
         'status': 'healthy',
@@ -1749,10 +1846,18 @@ def serve_static(filename):
 def handle_chat_message(data):
     user_message = data.get('message')
     try:
-        reply = ai_service.generate_chat_response(user_message)
+        ai_resp = ai_service.generate_chat_response(user_message)
+        if isinstance(ai_resp, dict):
+            reply_text = ai_resp.get('response') or ai_resp.get('reply') or str(ai_resp)
+            is_crisis = bool(ai_resp.get('needs_followup')) or bool(ai_resp.get('is_crisis'))
+        else:
+            reply_text = str(ai_resp)
+            is_crisis = False
     except Exception as e:
-        reply = "Sorry, the AI is currently unavailable."
-    emit('chat_response', {'reply': reply, 'is_crisis': False})
+        logger.error(f"Chat handler error: {e}")
+        reply_text = "Sorry, the AI is currently unavailable."
+        is_crisis = False
+    emit('chat_response', {'reply': reply_text, 'is_crisis': is_crisis})
 
 # --- SocketIO Telehealth Handlers ---
 @socketio.on('join')

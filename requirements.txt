@@ -10,7 +10,6 @@ Flask-Session==0.5.0
 Flask-Compress==1.15
 Flask-SocketIO==5.3.6
 Flask-CORS==4.0.0
-Flask-Limiter==3.5.0
 
 # Database and Data Processing
 SQLAlchemy==2.0.35
@@ -26,26 +25,11 @@ google-generativeai==0.4.1
 requests==2.32.3
 httpx==0.27.0                   # Async HTTP client
 
-# Optional: Local AI service (ollama) - not required for production
-# ollama==0.1.8                   # Commented out - optional dependency
-
-# Security and Authentication
-Flask-Security-Too==5.3.3
-Flask-Bcrypt==1.0.1
-PyJWT==2.8.0
-
 # Production Server
 gunicorn==22.0.0
 eventlet==0.38.0               # For Python 3.13 compatibility
-
-# Monitoring and Logging
-sentry-sdk[flask]==1.45.0       # Error tracking for production
 
 # Utility Libraries
 python-dateutil==2.9.0
 pytz==2024.1                    # Timezone support
 Pillow==10.4.0                  # Image processing
-reportlab==4.2.0               # PDF generation for reports
-
-# Note: Standard library modules (json, logging, os, datetime, functools)
-# are included with Python and do not need to be listed here.
