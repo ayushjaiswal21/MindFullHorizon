@@ -1617,7 +1617,6 @@ function initializeAdvancedUI() {
     initializeFormValidation();
     initializeTooltips();
     initializeLazyLoading();
-    preloadCriticalResources();
 }
 
 // Utility function to check if element is in viewport
