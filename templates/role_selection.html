@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Your Role</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8">What brings you here?</h1>
+    
+    <div class="flex flex-col md:flex-row gap-8">
+        <form action="{{ url_for('save_role') }}" method="POST">
+            <input type="hidden" name="role" value="patient">
+            <button type="submit" class="bg-white rounded-lg shadow-md p-8 text-center w-64 hover:shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800">Patient</h2>
+                <p class="text-gray-500 mt-2">I'm here to improve my mental wellness.</p>
+            </button>
+        </form>
+        
+        <form action="{{ url_for('save_role') }}" method="POST">
+            <input type="hidden" name="role" value="provider">
+            <button type="submit" class="bg-white rounded-lg shadow-md p-8 text-center w-64 hover:shadow-lg">
+                <h2 class="text-2xl font-bold text-gray-800">Provider</h2>
+                <p class="text-gray-500 mt-2">I'm here to help and provide care.</p>
+            </button>
+        </form>
+    </div>
+</body>
+</html>

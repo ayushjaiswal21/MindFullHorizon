@@ -10,6 +10,7 @@ Flask-Session==0.5.0
 Flask-Compress==1.15
 Flask-SocketIO==5.3.6
 Flask-CORS==4.0.0
+Flask-Dance>=5.0
 
 # Database and Data Processing
 SQLAlchemy==2.0.35

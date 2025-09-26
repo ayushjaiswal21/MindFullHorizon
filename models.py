@@ -9,13 +9,14 @@ class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
-    password_hash = db.Column(db.String(255), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=True)
     name = db.Column(db.String(100), nullable=False)
-    role = db.Column(db.String(20), nullable=False)  # 'patient' or 'provider'
+    role = db.Column(db.String(20), nullable=True)  # 'patient' or 'provider'
     institution = db.Column(db.String(100), nullable=True)  # For institutional aggregation
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_assessment_at = db.Column(db.DateTime, nullable=True)
     profile_pic = db.Column(db.String(255), nullable=True)  # Path to profile picture
+    google_id = db.Column(db.String(120), unique=True, nullable=True)
     
     # Relationships
     assessments = db.relationship('Assessment', backref='user', lazy=True)

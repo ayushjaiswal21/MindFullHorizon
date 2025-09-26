@@ -32,6 +32,8 @@ except Exception as e:
     print("Continuing with default configuration...")
 
 
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
@@ -49,14 +51,7 @@ app.config['WTF_CSRF_ENABLED'] = False
 app.config['WTF_CSRF_TIME_LIMIT'] = None  # No time limit for CSRF tokens
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('mindful_horizon.log'),
-        logging.StreamHandler()
-    ]
-)
+logging.basicConfig(filename='mindful_horizon.log', level=logging.DEBUG)
 
 logger = logging.getLogger(__name__)
 
@@ -81,46 +76,9 @@ except Exception:
     os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
 
 # Use PostgreSQL for production (Render), fallback to SQLite for local development
-if os.getenv('DATABASE_URL'):
-    # Production database (Render PostgreSQL)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-else:
-    # Local development database (SQLite) - robust writable path selection
-    def _first_writable_dir(paths):
-        for p in paths:
-            try:
-                os.makedirs(p, exist_ok=True)
-                testfile = os.path.join(p, '.writetest')
-                with open(testfile, 'w') as f:
-                    f.write('ok')
-                os.remove(testfile)
-                return p
-            except Exception as e:
-                logger.warning(f"Dir not writable, skipping: {p} ({e})")
-        return None
-
-    local_appdata = os.environ.get('LOCALAPPDATA')
-    candidates = [
-        os.environ.get('MINDFULL_DB_DIR'),
-        (os.path.join(local_appdata, 'MindFullHorizon') if local_appdata else None),
-        (app.instance_path if app.instance_path else None),
-        os.path.join(basedir, 'instance'),
-        os.path.join(os.path.expanduser('~'), '.mindfullhorizon')
-    ]
-    candidates = [c for c in candidates if c]
-    writable_dir = _first_writable_dir(candidates)
-    if not writable_dir:
-        raise RuntimeError('No writable directory found for SQLite database')
-
-    db_path = os.path.join(writable_dir, 'mindful_horizon.db')
-    try:
-        if not os.path.exists(db_path):
-            open(db_path, 'a').close()
-    except Exception as e:
-        logger.error(f"Failed to prepare SQLite database file at {db_path}: {e}")
-    normalized_path = os.path.abspath(db_path).replace('\\', '/')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{normalized_path}'
-    logger.info(f"Using SQLite database at: {app.config['SQLALCHEMY_DATABASE_URI']}")
+db_path = os.path.join(basedir, 'instance', 'mindful_horizon.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+logger.info(f"Using SQLite database at: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
 
 
@@ -141,38 +99,19 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# Initialize database and migrations
+# Initialize extensions
 db.init_app(app)
-migrate = Migrate(app, db)
+migrate.init_app(app, db)
+flask_session.init_app(app)
+compress.init_app(app)
+csrf.init_app(app)
 
-# Initialize all extensions
-from extensions import init_extensions
-init_extensions(app)
-
-# Validate DB connectivity after extensions are initialized
-try:
-    from sqlalchemy.exc import OperationalError as _OpErr
-    with app.app_context():
-        db.engine.connect().close()
-        logger.info(f"Database connected successfully: {app.config['SQLALCHEMY_DATABASE_URI']}")
-        # Ensure tables exist in development
-        try:
-            from flask_migrate import upgrade as _upgrade
-            # Attempt Alembic upgrade; if migrations are not configured, fallback to create_all
-            try:
-                _upgrade()  # type: ignore
-                logger.info('Applied database migrations successfully.')
-            except Exception:
-                db.create_all()
-                logger.info('Database tables created with create_all().')
-        except Exception as _ee:
-            try:
-                db.create_all()
-                logger.info('Database tables created with create_all().')
-            except Exception as _eee:
-                logger.error(f'Failed to create database tables: {_eee}')
-except Exception as _e:
-    logger.error(f"Database connectivity check failed: {_e}")
+# Create database tables if they don't exist
+with app.app_context():
+    try:
+        db.create_all()
+    except Exception as e:
+        app.logger.error(f"Error creating database tables: {e}")
 
 # Stub for get_blog_insights (replace with real logic as needed)
 def get_blog_insights():
@@ -970,91 +909,95 @@ def digital_detox():
 @login_required
 @role_required('patient')
 def progress():
-    user_id = session['user_id']
-    goals = Goal.query.filter_by(user_id=user_id).all()
-    
-    achievements = [goal.title for goal in goals if goal.status == 'completed']
-    
-    assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
-    
-    latest_gad7 = next((a for a in assessments if a.assessment_type == 'GAD-7'), None)
-    latest_phq9 = next((a for a in assessments if a.assessment_type == 'PHQ-9'), None)
-    latest_mood = next((a for a in assessments if a.assessment_type == 'Daily Mood'), None)
+    try:
+        user_id = session['user_id']
+        goals = Goal.query.filter_by(user_id=user_id).all()
+        
+        achievements = [goal.title for goal in goals if goal.status == 'completed']
+        
+        assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+        
+        latest_gad7 = next((a for a in assessments if a.assessment_type == 'GAD-7'), None)
+        latest_phq9 = next((a for a in assessments if a.assessment_type == 'PHQ-9'), None)
+        latest_mood = next((a for a in assessments if a.assessment_type == 'Daily Mood'), None)
 
-    mood_assessments = sorted([a for a in assessments if a.assessment_type == 'Daily Mood'], key=lambda x: x.created_at)[-30:]
-    mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
-    
-    gad7_assessments = sorted([a for a in assessments if a.assessment_type == 'GAD-7'], key=lambda x: x.created_at)
-    phq9_assessments = sorted([a for a in assessments if a.assessment_type == 'PHQ-9'], key=lambda x: x.created_at)
+        mood_assessments = sorted([a for a in assessments if a.assessment_type == 'Daily Mood'], key=lambda x: x.created_at)[-30:]
+        mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
+        
+        gad7_assessments = sorted([a for a in assessments if a.assessment_type == 'GAD-7'], key=lambda x: x.created_at)
+        phq9_assessments = sorted([a for a in assessments if a.assessment_type == 'PHQ-9'], key=lambda x: x.created_at)
 
-    assessment_chart_labels = sorted(list(set([a.created_at.strftime('%Y-%m-%d') for a in gad7_assessments + phq9_assessments])))
-    assessment_chart_gad7_data = [next((a.score for a in gad7_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
-    assessment_chart_phq9_data = [next((a.score for a in phq9_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
+        assessment_chart_labels = sorted(list(set([a.created_at.strftime('%Y-%m-%d') for a in gad7_assessments + phq9_assessments])))
+        assessment_chart_gad7_data = [next((a.score for a in gad7_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
+        assessment_chart_phq9_data = [next((a.score for a in phq9_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
 
-    days_since_assessment = (datetime.now() - assessments[0].created_at).days if assessments else 'N/A'
-    
-    user_data_for_ai = {
-        'gad7_score': latest_gad7.score if latest_gad7 else 'N/A',
-        'phq9_score': latest_phq9.score if latest_phq9 else 'N/A',
-        'wellness_score': 'calculating...',
-        'completed_goals': len(achievements),
-        'total_goals': len(goals),
-        'days_since_assessment': days_since_assessment
-    }
-    
-    user = User.query.get(user_id)
-    if not user:
-        flash('User not found. Please log in again.', 'error')
-        return redirect(url_for('login'))
+        days_since_assessment = (datetime.now() - assessments[0].created_at).days if assessments else 'N/A'
+        
+        user_data_for_ai = {
+            'gad7_score': latest_gad7.score if latest_gad7 else 'N/A',
+            'phq9_score': latest_phq9.score if latest_phq9 else 'N/A',
+            'wellness_score': 'calculating...',
+            'completed_goals': len(achievements),
+            'total_goals': len(goals),
+            'days_since_assessment': days_since_assessment
+        }
+        
+        user = User.query.get(user_id)
+        if not user:
+            flash('User not found. Please log in again.', 'error')
+            return redirect(url_for('login'))
 
-    last_assessment_at = user.last_assessment_at
+        last_assessment_at = user.last_assessment_at
 
-    latest_recommendation = ProgressRecommendation.query.filter_by(user_id=user_id).order_by(ProgressRecommendation.created_at.desc()).first()
+        latest_recommendation = ProgressRecommendation.query.filter_by(user_id=user_id).order_by(ProgressRecommendation.created_at.desc()).first()
 
-    ai_recommendations = None
-    if latest_recommendation and last_assessment_at and latest_recommendation.created_at > last_assessment_at:
-        ai_recommendations = latest_recommendation.recommendations
-    
-    if not ai_recommendations:
-        try:
-            ai_recommendations = ai_service.generate_progress_recommendations(user_data_for_ai)
-            new_recommendation = ProgressRecommendation(
-                user_id=user_id,
-                recommendations=ai_recommendations
-            )
-            db.session.add(new_recommendation)
-            db.session.commit()
-        except Exception as ai_error:
-            logger.error(f"AI service error in progress page: {ai_error}")
-            ai_recommendations = {
-                'summary': 'Your progress data has been recorded.',
-                'recommendations': ['Continue with your current mental health routine.'],
-                'priority_actions': []
-            }
+        ai_recommendations = None
+        if latest_recommendation and last_assessment_at and latest_recommendation.created_at > last_assessment_at:
+            ai_recommendations = latest_recommendation.recommendations
+        
+        if not ai_recommendations:
+            try:
+                ai_recommendations = ai_service.generate_progress_recommendations(user_data_for_ai)
+                new_recommendation = ProgressRecommendation(
+                    user_id=user_id,
+                    recommendations=ai_recommendations
+                )
+                db.session.add(new_recommendation)
+                db.session.commit()
+            except Exception as ai_error:
+                logger.error(f"AI service error in progress page: {ai_error}")
+                ai_recommendations = {
+                    'summary': 'Your progress data has been recorded.',
+                    'recommendations': ['Continue with your current mental health routine.'],
+                    'priority_actions': []
+                }
 
-    scores_to_average = []
-    if latest_gad7 and latest_gad7.score is not None:
-        scores_to_average.append(10 - (latest_gad7.score / 21 * 9))
-    if latest_phq9 and latest_phq9.score is not None:
-        scores_to_average.append(10 - (latest_phq9.score / 27 * 9))
-    if latest_mood and latest_mood.score is not None:
-        scores_to_average.append(latest_mood.score)
+        scores_to_average = []
+        if latest_gad7 and latest_gad7.score is not None:
+            scores_to_average.append(10 - (latest_gad7.score / 21 * 9))
+        if latest_phq9 and latest_phq9.score is not None:
+            scores_to_average.append(10 - (latest_phq9.score / 27 * 9))
+        if latest_mood and latest_mood.score is not None:
+            scores_to_average.append(latest_mood.score)
 
-    overall_wellness_score = round(sum(scores_to_average) / len(scores_to_average), 1) if scores_to_average else 0
-    user_data_for_ai['wellness_score'] = overall_wellness_score
+        overall_wellness_score = round(sum(scores_to_average) / len(scores_to_average), 1) if scores_to_average else 0
+        user_data_for_ai['wellness_score'] = overall_wellness_score
 
-    return render_template('progress.html', 
-                         user_name=session['user_name'], 
-                         goals=goals, 
-                         achievements=achievements,
-                         latest_gad7=latest_gad7,
-                         latest_phq9=latest_phq9,
-                         overall_wellness_score=overall_wellness_score,
-                         mood_data=mood_data,
-                         assessment_chart_labels=assessment_chart_labels,
-                         assessment_chart_gad7_data=assessment_chart_gad7_data,
-                         assessment_chart_phq9_data=assessment_chart_phq9_data,
-                         ai_recommendations=ai_recommendations)
+        return render_template('progress.html', 
+                             user_name=session['user_name'], 
+                             goals=goals, 
+                             achievements=achievements,
+                             latest_gad7=latest_gad7,
+                             latest_phq9=latest_phq9,
+                             overall_wellness_score=overall_wellness_score,
+                             mood_data=mood_data,
+                             assessment_chart_labels=assessment_chart_labels,
+                             assessment_chart_gad7_data=assessment_chart_gad7_data,
+                             assessment_chart_phq9_data=assessment_chart_phq9_data,
+                             ai_recommendations=ai_recommendations)
+    except Exception as e:
+        logger.exception(f"An error occurred in the progress route: {e}")
+        return "An internal error occurred. Please try again later.", 500
 
 @app.route('/goals', methods=['GET', 'POST'])
 @login_required
@@ -1889,6 +1832,121 @@ def on_leave(data):
     leave_room(room)
     emit('_disconnect', to=room, include_self=False)
     emit('message', f'User has left the room {room}.', to=room)
+
+# Google OAuth Configuration
+app.config["GOOGLE_OAUTH_CLIENT_ID"] = os.environ.get("GOOGLE_OAUTH_CLIENT_ID")
+app.config["GOOGLE_OAUTH_CLIENT_SECRET"] = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET")
+
+from flask_dance.contrib.google import make_google_blueprint, google
+
+google_bp = make_google_blueprint(
+    scope=["openid", "https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"],
+    redirect_to='login_google'
+)
+app.register_blueprint(google_bp, url_prefix="/login")
+
+from flask_dance.consumer import oauth_authorized
+
+@oauth_authorized.connect_via(google_bp)
+def google_logged_in(blueprint, token):
+    """Handles the logic after a user logs in with Google."""
+    if not token:
+        flash("Failed to log in with Google.", "danger")
+        return redirect(url_for("login"))
+
+    try:
+        logger.info("Google authorized, fetching user info.")
+        resp = blueprint.session.get("/oauth2/v2/userinfo")
+        assert resp.ok, resp.text
+        user_info = resp.json()
+        logger.info(f"Google user info: {user_info}")
+        google_id = user_info['id']
+        email = user_info['email']
+        name = user_info.get('name', 'User')
+
+        logger.info(f"Looking for user with google_id={google_id}")
+        user = User.query.filter_by(google_id=google_id).first()
+
+        if not user:
+            logger.info(f"User not found with google_id, looking for user with email={email}")
+            user = User.query.filter_by(email=email).first()
+            if user:
+                logger.info(f"User found with email, linking google_id")
+                user.google_id = google_id
+                db.session.commit()
+                logger.info("google_id linked to existing user.")
+            else:
+                logger.info("No existing user found, creating a new user.")
+                user = User(email=email, google_id=google_id, name=name)
+                db.session.add(user)
+                db.session.commit()
+                logger.info("New user created.")
+
+        logger.info(f"Logging in user: {user.email} (id={user.id})")
+        session.clear()
+        session.permanent = True
+        session['user_id'] = user.id
+        session['user_email'] = user.email
+        session['user_name'] = user.name
+        session['user_role'] = user.role
+        session.modified = True
+        logger.info("Session created for user.")
+
+        if not user.role:
+            logger.info("User has no role, redirecting to role_selection.")
+            return redirect(url_for('role_selection'))
+        
+        if user.role == 'patient':
+            logger.info("User is a patient, redirecting to patient_dashboard.")
+            return redirect(url_for('patient_dashboard'))
+        else:
+            logger.info("User is a provider, redirecting to provider_dashboard.")
+            return redirect(url_for('provider_dashboard'))
+
+    except Exception as e:
+        logger.error(f"An error occurred during Google login: {e}", exc_info=True)
+        flash(f"An error occurred: {e}", "danger")
+        return redirect(url_for('login'))
+
+@app.route('/login/google')
+def login_google():
+    """Redirects to Google to initiate OAuth authentication."""
+    return redirect(url_for("google.login"))
+
+
+@app.route('/role_selection')
+def role_selection():
+    """Renders the role selection page for new users."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('role_selection.html')
+
+@app.route('/save_role', methods=['POST'])
+def save_role():
+    """Saves the user's chosen role to the database."""
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+    role = request.form.get('role')
+
+    if role in ['patient', 'provider']:
+        try:
+            user = User.query.get(user_id)
+            user.role = role
+            db.session.commit()
+            session['user_role'] = role
+            if role == 'patient':
+                return redirect(url_for('patient_dashboard'))
+            else:
+                return redirect(url_for('provider_dashboard'))
+        except Exception as e:
+            logger.error(f"Could not save user role: {e}")
+            flash(f"Could not save your role: {e}", "danger")
+            return redirect(url_for('role_selection'))
+    else:
+        flash("Invalid role selected.", "warning")
+        return redirect(url_for('role_selection'))
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)
