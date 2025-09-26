@@ -11,6 +11,7 @@
     
     <div class="flex flex-col md:flex-row gap-8">
         <form action="{{ url_for('save_role') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="role" value="patient">
             <button type="submit" class="bg-white rounded-lg shadow-md p-8 text-center w-64 hover:shadow-lg">
                 <h2 class="text-2xl font-bold text-gray-800">Patient</h2>
@@ -19,6 +20,7 @@
         </form>
         
         <form action="{{ url_for('save_role') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="role" value="provider">
             <button type="submit" class="bg-white rounded-lg shadow-md p-8 text-center w-64 hover:shadow-lg">
                 <h2 class="text-2xl font-bold text-gray-800">Provider</h2>
