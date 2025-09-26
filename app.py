@@ -1,3 +1,5 @@
+import eventlet
+eventlet.monkey_patch(os=False)
 
 import json
 
@@ -46,9 +48,7 @@ app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
 
-# Initialize CSRF protection
-app.config['WTF_CSRF_ENABLED'] = False
-app.config['WTF_CSRF_TIME_LIMIT'] = None  # No time limit for CSRF tokens
+
 
 # Configure logging
 logging.basicConfig(filename='mindful_horizon.log', level=logging.DEBUG)
@@ -61,12 +61,6 @@ def yoga_videos():
     return render_template('yoga_videos.html')
 
 
-# Enable gzip compression and static caching for low-bandwidth optimization
-app.config['COMPRESS_ALGORITHM'] = ['gzip']
-app.config['COMPRESS_LEVEL'] = 6
-app.config['COMPRESS_MIN_SIZE'] = 500  # Only compress responses > 500 bytes
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = timedelta(days=30)  # Cache static assets for 30 days
-
 basedir = os.path.abspath(os.path.dirname(__file__))
 # Ensure instance folder exists (use Flask instance path)
 try:
@@ -75,7 +69,6 @@ except Exception:
     # Fallback to project-level instance directory
     os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
 
-# Use PostgreSQL for production (Render), fallback to SQLite for local development
 db_path = os.path.join(basedir, 'instance', 'mindful_horizon.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 logger.info(f"Using SQLite database at: {app.config['SQLALCHEMY_DATABASE_URI']}")
