@@ -45,16 +45,48 @@ app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')  # Use environment va
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # Session expires after 1 day
 app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
-app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
 
 
 
-# Configure logging
-logging.basicConfig(filename='mindful_horizon.log', level=logging.DEBUG)
+# Temporarily disable CSRF protection for debugging
+# csrf.init_app(app)
 
+# Comment out the CSRF error handler temporarily
+# @app.errorhandler(CSRFError)
+# def handle_csrf_error(e):
+#     logger.warning(f"CSRF error: {e}")
+#     logger.warning(f"CSRF token in session: {session.get('_csrf_token', 'NOT FOUND')}")
+#     logger.warning(f"Request method: {request.method}")
+#     logger.warning(f"Request endpoint: {request.endpoint}")
+#     logger.warning(f"Request headers: {dict(request.headers)}")
+#     logger.warning(f"Form data: {dict(request.form)}")
+#     flash('Session expired or invalid request. Please try again.', 'error')
+#     return redirect(url_for('login'))
+
+# Configure logging
+# Create a custom logger that outputs to both file and console
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# Remove any existing handlers to avoid duplicates
+for handler in logger.handlers[:]:
+    logger.removeHandler(handler)
+
+# File handler
+file_handler = logging.FileHandler('mindful_horizon.log')
+file_handler.setLevel(logging.DEBUG)
+file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
+
+# Console handler for terminal output
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_formatter = logging.Formatter('%(levelname)s - %(message)s')
+console_handler.setFormatter(console_formatter)
+logger.addHandler(console_handler)
 
 # Yoga Video Library Page (correct placement)
 @app.route('/yoga-videos')
@@ -325,7 +357,7 @@ def login():
             return redirect(url_for('patient_dashboard'))
         else:
             return redirect(url_for('provider_dashboard'))
-    
+
     return render_template('login.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -337,25 +369,25 @@ def signup():
         confirm_password = request.form['confirm_password']
         role = request.form['role']
         institution = request.form.get('institution', 'Default University')
-        
+
         if not all([name, email, password, confirm_password, role]):
             flash('All fields are required.', 'error')
             return render_template('signup.html')
-        
+
         if password != confirm_password:
             flash('Passwords do not match.', 'error')
             return render_template('signup.html')
-        
+
         is_strong, message = is_strong_password(password)
         if not is_strong:
             flash(message, 'error')
             return render_template('signup.html')
-        
+
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
             flash('Email already registered. Please use a different email or login.', 'error')
             return render_template('signup.html')
-        
+
         new_user = User(
             name=name,
             email=email,
@@ -363,11 +395,11 @@ def signup():
             institution=institution
         )
         new_user.set_password(password)
-        
+
         try:
             db.session.add(new_user)
             db.session.commit()
-            
+
             if role == 'patient':
                 gamification = Gamification(
                     user_id=new_user.id,
@@ -378,15 +410,15 @@ def signup():
                 )
                 db.session.add(gamification)
                 db.session.commit()
-            
+
             flash('Registration successful! Please login with your credentials.', 'success')
             return redirect(url_for('login'))
-            
+
         except Exception:
             db.session.rollback()
             flash('Registration failed. Please try again.', 'error')
             return render_template('signup.html')
-    
+
     return render_template('signup.html')
 
 @app.route('/logout')
@@ -1961,4 +1993,18 @@ def save_role():
         return redirect(url_for('role_selection'))
 
 if __name__ == '__main__':
+    logger.info(f"Starting MindFullHorizon server...")
+    logger.info(f"Server will be available at: http://localhost:5000")
+    logger.info(f"Debug mode: False")
+    logger.info(f"SocketIO enabled: True")
+    logger.info(f"CSRF Protection: Temporarily Disabled")
+    print("\n" + "="*50)
+    print(" MINDFULLHORIZON SERVER STARTING")
+    print("="*50)
+    print(f"  Server URL: http://localhost:5000")
+    print(f"  Debug Mode: Disabled")
+    print(f"  SocketIO: Enabled")
+    print(f"  CSRF Protection: Temporarily Disabled")
+    print(f"  Logs: Check terminal and mindful_horizon.log")
+    print("="*50 + "\n")
     socketio.run(app, debug=False, port=5000)
