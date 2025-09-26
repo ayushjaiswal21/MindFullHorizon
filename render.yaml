@@ -10,7 +10,20 @@
         "PYTHONPATH": ".",
         "SECRET_KEY": "${{ secrets.SECRET_KEY }}",
         "GEMINI_API_KEY": "${{ secrets.GEMINI_API_KEY }}",
-        "DATABASE_URL": "${{ secrets.DATABASE_URL }}",
+services:
+  - type: web
+    name: mindful-horizon
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: FLASK_APP
+        value: app.py
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
         "DISABLE_LOCAL_AI": "true"
       }
     }

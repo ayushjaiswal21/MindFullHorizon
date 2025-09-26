@@ -229,9 +229,9 @@ Set these in Render.com dashboard:
 FLASK_ENV=production
 SECRET_KEY=your-256-bit-secret-key-here
 GEMINI_API_KEY=your-google-gemini-api-key
-DATABASE_URL=your-postgresql-database-url
-REDIS_URL=your-redis-url (optional)
 ```
+
+**Note on Database:** For a simple deployment, you do not need to set a `DATABASE_URL`. The application will automatically create and use a self-contained SQLite database. If you want to use a more robust database like PostgreSQL, you can add a `DATABASE_URL` environment variable with your database connection string.
 
 #### Step 4: Deploy
 - **Click "Create Web Service"**
