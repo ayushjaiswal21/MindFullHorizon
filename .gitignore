@@ -140,6 +140,7 @@ test_*.py
 fix_*.py
 manual_*.py
 flask_session/
+static/profile_pics/
 
 # Deployment files (keep these in git for easy deployment)
 # .ebextensions/

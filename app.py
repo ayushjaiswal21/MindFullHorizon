@@ -2,6 +2,7 @@ import eventlet
 eventlet.monkey_patch(os=False)
 
 import json
+import re
 
 from werkzeug.utils import secure_filename
 import uuid
@@ -120,6 +121,19 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def is_strong_password(password):
+    if len(password) < 8:
+        return False, "Password must be at least 8 characters long."
+    if not re.search(r"[a-z]", password):
+        return False, "Password must contain at least one lowercase letter."
+    if not re.search(r"[A-Z]", password):
+        return False, "Password must contain at least one uppercase letter."
+    if not re.search(r"[0-9]", password):
+        return False, "Password must contain at least one number."
+    if not re.search(r"[\W_]", password):
+        return False, "Password must contain at least one special character."
+    return True, ""
+
 # Stub for award_points (replace with real logic as needed)
 def award_points(user_id, points, reason):
     """Award gamification points to a user and return the Gamification record.
@@ -154,6 +168,8 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_email' not in session:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return jsonify(success=False, message='Authentication required'), 401
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
@@ -180,6 +196,8 @@ def role_required(role):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if 'user_role' not in session or session['user_role'] != role:
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return jsonify(success=False, message='Insufficient permissions'), 403
                 flash('Access denied. Insufficient permissions.', 'error')
                 return redirect(url_for('login'))
             return f(*args, **kwargs)
@@ -328,8 +346,9 @@ def signup():
             flash('Passwords do not match.', 'error')
             return render_template('signup.html')
         
-        if len(password) < 6:
-            flash('Password must be at least 6 characters long.', 'error')
+        is_strong, message = is_strong_password(password)
+        if not is_strong:
+            flash(message, 'error')
             return render_template('signup.html')
         
         existing_user = User.query.filter_by(email=email).first()
@@ -1345,6 +1364,10 @@ def profile():
         # Handle password change
         password = request.form.get('password')
         if password:
+            is_strong, message = is_strong_password(password)
+            if not is_strong:
+                flash(message, 'error')
+                return redirect(url_for('profile'))
             user.set_password(password)
 
         # Handle profile picture upload
@@ -1771,11 +1794,7 @@ def health_check():
     }), 200
 
 # Serve other static files from root directory if needed
-@app.route('/<path:filename>')
-def serve_static(filename):
-    if filename.endswith('.json') or filename.endswith('.txt') or filename.endswith('.xml'):
-        return send_from_directory(app.root_path, filename)
-    return "File not found", 404
+
 
 # --- SocketIO Chat Handler ---
 @socketio.on('chat_message')
@@ -1942,4 +1961,4 @@ def save_role():
         return redirect(url_for('role_selection'))
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, port=5000)
+    socketio.run(app, debug=False, port=5000)

@@ -254,6 +254,7 @@
 </div>
 
 <script>
+const csrfToken = '{{ csrf_token() }}';
 let currentAssessment = null;
 let currentQuestion = 0;
 let assessmentAnswers = [];
@@ -420,7 +421,8 @@ async function completeAssessment() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': csrfToken
             },
             body: JSON.stringify({
                 assessment_type: currentAssessment.type,
@@ -693,7 +695,8 @@ async function saveDailyMood() {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'  // For CSRF protection
+                'X-Requested-With': 'XMLHttpRequest',  // For CSRF protection
+                'X-CSRFToken': csrfToken
             },
             body: JSON.stringify({
                 mood: mood,
