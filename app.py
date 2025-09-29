@@ -19,7 +19,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_session import Session
 from flask_compress import Compress
 from flask_migrate import Migrate
-from flask_wtf.csrf import CSRFProtect, CSRFError
+# from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
 from ai_service import ai_service
@@ -51,7 +51,7 @@ app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
 
 
 # Temporarily disable CSRF protection for debugging
-# csrf.init_app(app)
+# # csrf.init_app(app)
 
 # Comment out the CSRF error handler temporarily
 # @app.errorhandler(CSRFError)
@@ -130,7 +130,7 @@ db.init_app(app)
 migrate.init_app(app, db)
 flask_session.init_app(app)
 compress.init_app(app)
-csrf.init_app(app)
+# csrf.init_app(app)
 
 # Create database tables if they don't exist
 with app.app_context():
