@@ -15,7 +15,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 from dotenv import load_dotenv
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, abort, get_flashed_messages
 from flask_session import Session
 from flask_compress import Compress
 from flask_migrate import Migrate
@@ -103,8 +103,8 @@ except Exception:
     os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
 
 db_path = os.path.join(basedir, 'instance', 'mindful_horizon.db')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
-logger.info(f"Using SQLite database at: {app.config['SQLALCHEMY_DATABASE_URI']}")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or f'sqlite:///{db_path}'
+logger.info(f"Using database at: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
 
 
@@ -356,28 +356,34 @@ def login():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
+        logger.info('Signup form submitted')
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
         confirm_password = request.form['confirm_password']
         role = request.form['role']
         institution = request.form.get('institution', 'Default University')
+        logger.info(f'Form data: {name}, {email}, {role}, {institution}')
 
         if not all([name, email, password, confirm_password, role]):
+            logger.warning('All fields are required')
             flash('All fields are required.', 'error')
             return render_template('signup.html')
 
         if password != confirm_password:
+            logger.warning('Passwords do not match')
             flash('Passwords do not match.', 'error')
             return render_template('signup.html')
 
         is_strong, message = is_strong_password(password)
         if not is_strong:
+            logger.warning(f'Weak password: {message}')
             flash(message, 'error')
             return render_template('signup.html')
 
         existing_user = User.query.filter_by(email=email).first()
         if existing_user:
+            logger.warning(f'Email already registered: {email}')
             flash('Email already registered. Please use a different email or login.', 'error')
             return render_template('signup.html')
 
@@ -392,6 +398,7 @@ def signup():
         try:
             db.session.add(new_user)
             db.session.commit()
+            logger.info(f'New user created: {email}')
 
             if role == 'patient':
                 gamification = Gamification(
@@ -403,13 +410,15 @@ def signup():
                 )
                 db.session.add(gamification)
                 db.session.commit()
+                logger.info(f'Gamification profile created for user: {email}')
 
             flash('Registration successful! Please login with your credentials.', 'success')
-            print("Flash message set")
+            logger.info('Flash message set for successful registration')
             return redirect(url_for('login'))
 
-        except Exception:
+        except Exception as e:
             db.session.rollback()
+            logger.error(f'Error creating new user: {e}')
             flash('Registration failed. Please try again.', 'error')
             return render_template('signup.html')
 
