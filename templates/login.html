@@ -49,7 +49,7 @@
         </div>
 
         <form class="mt-8 space-y-6" method="POST">
-            <!-- {{ csrf_token() }} -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="space-y-4">
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>

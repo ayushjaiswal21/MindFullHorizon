@@ -702,7 +702,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     chatMessages.appendChild(userMsg);
                     chatMessages.scrollTop = chatMessages.scrollHeight;
 
-                socket.emit('chat_message', { 'message': message });
+                socket.emit('chat_message', { 'message': message, 'csrf_token': document.querySelector('meta[name="csrf-token"]').getAttribute('content') });
                 chatInput.value = '';
             }
         });
@@ -752,7 +752,8 @@ function setupDigitalDetoxForm() {
             const response = await fetch('/api/submit-digital-detox', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify(data)
             });
@@ -766,7 +767,12 @@ function setupDigitalDetoxForm() {
                 
                 form.reset();
                 
-                const analysisResponse = await fetch('/api/analyze-digital-detox', { method: 'POST' });
+                const analysisResponse = await fetch('/api/analyze-digital-detox', { 
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    } 
+                });
                 const analysisResult = await analysisResponse.json();
 
                 if (analysisResult.success) {
