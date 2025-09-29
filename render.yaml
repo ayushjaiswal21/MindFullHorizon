@@ -1,6 +1,6 @@
 {
   "name": "MindFull Horizon",
-  "buildCommand": "pip install --no-cache-dir --upgrade pip setuptools wheel && pip install --no-cache-dir -r requirements.txt",
+  "buildCommand": "pip install -r requirements.txt",
   "startCommand": "gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app",
   "environments": [
     {
@@ -10,22 +10,36 @@
         "PYTHONPATH": ".",
         "SECRET_KEY": "${{ secrets.SECRET_KEY }}",
         "GEMINI_API_KEY": "${{ secrets.GEMINI_API_KEY }}",
-services:
-  - type: web
-    name: mindful-horizon
-    env: python
-    plan: free
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
-    envVars:
-      - key: FLASK_APP
-        value: app.py
-      - key: FLASK_ENV
-        value: production
-      - key: SECRET_KEY
-        generateValue: true
         "DISABLE_LOCAL_AI": "true"
       }
+    }
+  ],
+  "services": [
+    {
+      "type": "web",
+      "name": "mindful-horizon",
+      "env": "python",
+      "plan": "free",
+      "buildCommand": "pip install -r requirements.txt",
+      "startCommand": "gunicorn app:app",
+      "envVars": [
+        {
+          "key": "FLASK_APP",
+          "value": "app.py"
+        },
+        {
+          "key": "FLASK_ENV",
+          "value": "production"
+        },
+        {
+          "key": "SECRET_KEY",
+          "generateValue": true
+        },
+        {
+          "key": "DISABLE_LOCAL_AI",
+          "value": "true"
+        }
+      ]
     }
   ],
   "buildFilter": {

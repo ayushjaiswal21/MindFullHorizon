@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "app.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "app.py"
+    }
+  ],
+  "env": {
+    "FLASK_ENV": "production",
+    "PYTHONPATH": ".",
+    "DISABLE_LOCAL_AI": "true"
+  },
+  "build": {
+    "env": {
+      "FLASK_ENV": "production"
+    }
+  },
+  "functions": {
+    "app.py": {
+      "runtime": "python3.11"
+    }
+  }
+}
