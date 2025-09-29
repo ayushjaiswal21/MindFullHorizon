@@ -1,6 +1,6 @@
 {
   "name": "MindFull Horizon",
-  "buildCommand": "pip install -r requirements.txt",
+  "buildCommand": "pip install -r requirements.txt && python init_db.py",
   "startCommand": "gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app",
   "environments": [
     {
@@ -20,7 +20,7 @@
       "name": "mindful-horizon",
       "env": "python",
       "plan": "free",
-      "buildCommand": "pip install -r requirements.txt",
+      "buildCommand": "pip install -r requirements.txt && python init_db.py",
       "startCommand": "gunicorn app:app",
       "envVars": [
         {
@@ -38,8 +38,20 @@
         {
           "key": "DISABLE_LOCAL_AI",
           "value": "true"
+        },
+        {
+          "key": "DATABASE_URL",
+          "fromDatabase": {
+            "name": "mindfullhorizon-db",
+            "property": "connectionString"
+          }
         }
       ]
+    },
+    {
+      "type": "psql",
+      "name": "mindfullhorizon-db",
+      "plan": "free"
     }
   ],
   "buildFilter": {
