@@ -43,6 +43,6 @@
     }
   ],
   "buildFilter": {
-    "ignoredPaths": ["/.git", "/.github", "/docs", "/tests", "/*.md", "/.ebextensions", "/docker-compose.yml", "/nginx.conf", "/deploy_helper.sh", "/Procfile.alternatives"]
+    "ignoredPaths": ["/.git", "/.github", "/docs", "/tests", "/*.md", "/.ebextensions", "/docker-compose.yml", "/nginx.conf", "/Procfile.alternatives"]
   }
 }
