@@ -19,7 +19,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from flask_session import Session
 from flask_compress import Compress
 from flask_migrate import Migrate
-# from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_socketio import SocketIO, emit, join_room, leave_room
 
 from ai_service import ai_service
@@ -54,16 +54,16 @@ app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
 # # csrf.init_app(app)
 
 # Comment out the CSRF error handler temporarily
-# @app.errorhandler(CSRFError)
-# def handle_csrf_error(e):
-#     logger.warning(f"CSRF error: {e}")
-#     logger.warning(f"CSRF token in session: {session.get('_csrf_token', 'NOT FOUND')}")
-#     logger.warning(f"Request method: {request.method}")
-#     logger.warning(f"Request endpoint: {request.endpoint}")
-#     logger.warning(f"Request headers: {dict(request.headers)}")
-#     logger.warning(f"Form data: {dict(request.form)}")
-#     flash('Session expired or invalid request. Please try again.', 'error')
-#     return redirect(url_for('login'))
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    logger.warning(f"CSRF error: {e}")
+    logger.warning(f"CSRF token in session: {session.get('_csrf_token', 'NOT FOUND')}")
+    logger.warning(f"Request method: {request.method}")
+    logger.warning(f"Request endpoint: {request.endpoint}")
+    logger.warning(f"Request headers: {dict(request.headers)}")
+    logger.warning(f"Form data: {dict(request.form)}")
+    flash('Session expired or invalid request. Please try again.', 'error')
+    return redirect(url_for('login'))
 
 # Configure logging
 # Create a custom logger that outputs to both file and console
@@ -130,14 +130,7 @@ db.init_app(app)
 migrate.init_app(app, db)
 flask_session.init_app(app)
 compress.init_app(app)
-# csrf.init_app(app)
-
-# Create database tables if they don't exist
-with app.app_context():
-    try:
-        db.create_all()
-    except Exception as e:
-        app.logger.error(f"Error creating database tables: {e}")
+csrf.init_app(app)
 
 # Stub for get_blog_insights (replace with real logic as needed)
 def get_blog_insights():
@@ -1993,16 +1986,14 @@ def save_role():
         return redirect(url_for('role_selection'))
 
 if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     logger.info(f"Starting MindFullHorizon server...")
     logger.info(f"Server will be available at: http://localhost:5000")
     logger.info(f"Debug mode: False")
     logger.info(f"SocketIO enabled: True")
-    logger.info(f"CSRF Protection: Temporarily Disabled")
-    print("\n" + "="*50)
-    print(" MINDFULLHORIZON SERVER STARTING")
-    print("="*50)
-    print(f"  Server URL: http://localhost:5000")
-    print(f"  Debug Mode: Disabled")
+    logger.info(f"CSRF Protection: Enabled")
+    socketio.run(app, debug=False, port=5000)
     print(f"  SocketIO: Enabled")
     print(f"  CSRF Protection: Temporarily Disabled")
     print(f"  Logs: Check terminal and mindful_horizon.log")

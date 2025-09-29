@@ -12,6 +12,7 @@
     <!-- Documentation Form -->
     <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
         <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="mb-4">
                 <label for="patient_email" class="block text-sm font-medium text-gray-700 mb-2">
                     Patient Email (Optional)

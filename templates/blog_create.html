@@ -19,6 +19,7 @@
     <!-- Form -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
         <form method="post" class="p-8">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <!-- Title -->
             <div class="mb-6">
                 <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
