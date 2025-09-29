@@ -405,6 +405,7 @@ def signup():
                 db.session.commit()
 
             flash('Registration successful! Please login with your credentials.', 'success')
+            print("Flash message set")
             return redirect(url_for('login'))
 
         except Exception:
