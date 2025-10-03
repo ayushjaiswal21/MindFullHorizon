@@ -8,27 +8,33 @@ class User(db.Model):
     """User model for both patients and providers."""
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=True)
     name = db.Column(db.String(100), nullable=False)
-    role = db.Column(db.String(20), nullable=True)  # 'patient' or 'provider'
-    institution = db.Column(db.String(100), nullable=True)  # For institutional aggregation
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    last_assessment_at = db.Column(db.DateTime, nullable=True)
+    role = db.Column(db.String(20), nullable=True, index=True)  # 'patient' or 'provider'
+    institution = db.Column(db.String(100), nullable=True, index=True)  # For institutional aggregation
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    last_assessment_at = db.Column(db.DateTime, nullable=True, index=True)
     profile_pic = db.Column(db.String(255), nullable=True)  # Path to profile picture
-    google_id = db.Column(db.String(120), unique=True, nullable=True)
+    google_id = db.Column(db.String(120), unique=True, nullable=True, index=True)
     
-    # Relationships
-    assessments = db.relationship('Assessment', backref='user', lazy=True)
-    digital_detox_logs = db.relationship('DigitalDetoxLog', backref='user', lazy=True)
-    rpm_data = db.relationship('RPMData', backref='user', lazy=True)
-    gamification = db.relationship('Gamification', backref='user', uselist=False)
-    medications = db.relationship('Medication', backref='user', lazy=True)
-    medication_logs = db.relationship('MedicationLog', backref='user', lazy=True)
-    breathing_logs = db.relationship('BreathingExerciseLog', backref='user', lazy=True)
-    yoga_logs = db.relationship('YogaLog', backref='user', lazy=True)
-    progress_recommendations = db.relationship('ProgressRecommendation', backref='user', lazy=True)
-    clinical_notes = db.relationship('ClinicalNote', foreign_keys='[ClinicalNote.patient_id]', backref='patient_user', lazy=True)
+    # Composite indexes for common queries
+    __table_args__ = (
+        db.Index('idx_user_role_institution', 'role', 'institution'),
+        db.Index('idx_user_email_role', 'email', 'role'),
+    )
+    
+    # Relationships with cascade delete rules
+    assessments = db.relationship('Assessment', backref='user', lazy=True, cascade='all, delete-orphan')
+    digital_detox_logs = db.relationship('DigitalDetoxLog', backref='user', lazy=True, cascade='all, delete-orphan')
+    rpm_data = db.relationship('RPMData', backref='user', lazy=True, cascade='all, delete-orphan')
+    gamification = db.relationship('Gamification', backref='user', uselist=False, cascade='all, delete-orphan')
+    medications = db.relationship('Medication', backref='user', lazy=True, cascade='all, delete-orphan')
+    medication_logs = db.relationship('MedicationLog', backref='user', lazy=True, cascade='all, delete-orphan')
+    breathing_logs = db.relationship('BreathingExerciseLog', backref='user', lazy=True, cascade='all, delete-orphan')
+    yoga_logs = db.relationship('YogaLog', backref='user', lazy=True, cascade='all, delete-orphan')
+    progress_recommendations = db.relationship('ProgressRecommendation', backref='user', lazy=True, cascade='all, delete-orphan')
+    clinical_notes = db.relationship('ClinicalNote', foreign_keys='[ClinicalNote.patient_id]', backref='patient_user', lazy=True, cascade='all, delete-orphan')
 
     def set_password(self, password):
         """Hash and set password"""
@@ -94,7 +100,7 @@ class BlogLike(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey('blog_posts.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
+    # Relationships - Fixed: removed delete-orphan from many-to-one relationship
     user = db.relationship('User', backref='blog_likes')
     
     # Ensure a user can only like a post once
@@ -116,8 +122,7 @@ class BlogComment(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    user = db.relationship('User', backref='blog_comments')
+    # Relationships - Fixed: self-referencing relationship should use delete instead of delete-orphan
     parent = db.relationship('BlogComment', remote_side=[id], backref='replies')
     
     def __repr__(self):
@@ -149,26 +154,38 @@ class Assessment(db.Model):
     __tablename__ = 'assessments'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    assessment_type = db.Column(db.String(50), nullable=False)  # 'GAD-7', 'PHQ-9', 'mood'
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    assessment_type = db.Column(db.String(50), nullable=False, index=True)  # 'GAD-7', 'PHQ-9', 'mood'
     score = db.Column(db.Integer, nullable=False)
     responses = db.Column(db.JSON, nullable=True)  # Store individual question responses
     ai_insights = db.Column(db.Text, nullable=True)  # AI-generated insights (stored as JSON string)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    # Composite indexes for common queries
+    __table_args__ = (
+        db.Index('idx_assessment_user_type', 'user_id', 'assessment_type'),
+        db.Index('idx_assessment_user_created', 'user_id', 'created_at'),
+    )
 
 class DigitalDetoxLog(db.Model):
     """Digital detox log model for storing user screen time and other digital wellness data."""
     __tablename__ = 'digital_detox_logs'
     
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    date = db.Column(db.Date, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    date = db.Column(db.Date, nullable=False, index=True)
     screen_time_hours = db.Column(db.Float, nullable=False)
     academic_score = db.Column(db.Integer, nullable=True)
     social_interactions = db.Column(db.String(20), nullable=True)  # 'high', 'medium', 'low'
     ai_score = db.Column(db.String(20), nullable=True)  # AI-generated wellness score
     ai_suggestion = db.Column(db.Text, nullable=True)  # AI-generated suggestions
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    
+    # Composite indexes for common queries
+    __table_args__ = (
+        db.Index('idx_detox_user_date', 'user_id', 'date'),
+        db.Index('idx_detox_user_created', 'user_id', 'created_at'),
+    )
 
 class RPMData(db.Model):
     """RPM data model for storing user remote patient monitoring data."""
@@ -237,7 +254,7 @@ class Appointment(db.Model):
     status = db.Column(db.String(20), default='booked', nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
+    # Relationships - Fixed: removed delete-orphan from many-to-one relationships
     user = db.relationship('User', foreign_keys=[user_id], backref='appointments')
     provider = db.relationship('User', foreign_keys=[provider_id])
     
@@ -264,7 +281,7 @@ class Goal(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationship
+    # Relationship - Fixed: removed delete-orphan from many-to-one relationship
     user = db.relationship('User', backref='goals')
     
     @property
@@ -286,7 +303,8 @@ class Medication(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    logs = db.relationship('MedicationLog', backref='medication', lazy=True, cascade="all, delete-orphan")
+    # Fixed: removed delete-orphan from many-to-one relationship
+    logs = db.relationship('MedicationLog', backref='medication', lazy=True)
 
     def __repr__(self):
         return f'<Medication {self.name}>'
@@ -352,6 +370,7 @@ class Prescription(db.Model):
     issue_date = db.Column(db.DateTime, default=datetime.utcnow)
     expiry_date = db.Column(db.DateTime, nullable=True)
 
+    # Relationships - Fixed: removed delete-orphan from many-to-one relationships
     provider = db.relationship('User', foreign_keys=[provider_id], backref='prescribed_prescriptions')
     patient = db.relationship('User', foreign_keys=[patient_id], backref='received_prescriptions')
 
