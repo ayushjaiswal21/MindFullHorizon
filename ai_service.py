@@ -391,7 +391,7 @@ Return JSON:
             }
         ]
         
-        response = self._make_request(messages, model=self.models['fast'], temperature=0.3, max_tokens=350)
+        response = self._make_request(messages, model=self.models['primary'], temperature=0.3, max_tokens=350)
         
         if response:
             try:

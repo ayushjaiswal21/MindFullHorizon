@@ -1762,11 +1762,188 @@ window.hideLoadingOverlay = hideLoadingOverlay;
 window.showMessageBox = showMessageBox;
 window.hideMessageBox = hideMessageBox;
 
+// Loading state management
+function showLoading(elementId, message = 'Loading...') {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.innerHTML = `
+            <div class="flex items-center justify-center p-4">
+                <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                <span class="ml-2 text-gray-600">${message}</span>
+            </div>
+        `;
+    }
+}
+
+function hideLoading(elementId, originalContent) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.innerHTML = originalContent;
+    }
+}
+
+// Enhanced form validation
+function validateForm(formId) {
+    const form = document.getElementById(formId);
+    if (!form) return false;
+    
+    const inputs = form.querySelectorAll('input[required], textarea[required], select[required]');
+    let isValid = true;
+    
+    inputs.forEach(input => {
+        const value = input.value.trim();
+        const fieldName = input.name || input.id;
+        
+        // Remove existing error styling
+        input.classList.remove('border-red-500', 'bg-red-50');
+        const existingError = input.parentNode.querySelector('.field-error');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Validate required fields
+        if (!value) {
+            showFieldError(input, `${fieldName} is required`);
+            isValid = false;
+            return;
+        }
+        
+        // Email validation
+        if (input.type === 'email' && value) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+                showFieldError(input, 'Please enter a valid email address');
+                isValid = false;
+                return;
+            }
+        }
+        
+        // Password validation
+        if (input.type === 'password' && value) {
+            if (value.length < 8) {
+                showFieldError(input, 'Password must be at least 8 characters long');
+                isValid = false;
+                return;
+            }
+        }
+        
+        // Number validation
+        if (input.type === 'number' && value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+                showFieldError(input, 'Please enter a valid number');
+                isValid = false;
+                return;
+            }
+        }
+    });
+    
+    return isValid;
+}
+
+function showFieldError(input, message) {
+    input.classList.add('border-red-500', 'bg-red-50');
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'field-error text-red-500 text-sm mt-1';
+    errorDiv.textContent = message;
+    input.parentNode.appendChild(errorDiv);
+}
+
+// Enhanced form submission with loading states and validation
+function submitFormWithLoading(formId, submitButtonId) {
+    const form = document.getElementById(formId);
+    const submitButton = document.getElementById(submitButtonId);
+    
+    if (form && submitButton) {
+        const originalText = submitButton.textContent;
+        
+        form.addEventListener('submit', function(e) {
+            // Validate form before submission
+            if (!validateForm(formId)) {
+                e.preventDefault();
+                return false;
+            }
+            
+            submitButton.disabled = true;
+            submitButton.innerHTML = `
+                <div class="flex items-center justify-center">
+                    <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Processing...
+                </div>
+            `;
+        });
+    }
+}
+
 // Make functions available globally
 window.initializeAdvancedUI = initializeAdvancedUI;
 window.toggleMobileMenu = toggleMobileMenu;
 window.toggleUserMenu = toggleUserMenu;
-function drawChart(canvas, ctx, yData, xLabels, color, label, padding) {    const width = canvas.width - 2 * padding;
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
+window.submitFormWithLoading = submitFormWithLoading;
+window.validateForm = validateForm;
+window.showFieldError = showFieldError;
+
+// Global error handling
+window.addEventListener('error', function(e) {
+    console.error('Global JavaScript error:', e.error);
+    // Log error to server if needed
+    if (typeof fetch !== 'undefined') {
+        fetch('/api/log-error', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: e.message,
+                filename: e.filename,
+                lineno: e.lineno,
+                colno: e.colno,
+                stack: e.error ? e.error.stack : null
+            })
+        }).catch(err => console.error('Failed to log error:', err));
+    }
+});
+
+// Handle unhandled promise rejections
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('Unhandled promise rejection:', e.reason);
+    // Log error to server if needed
+    if (typeof fetch !== 'undefined') {
+        fetch('/api/log-error', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: 'Unhandled promise rejection',
+                reason: e.reason ? e.reason.toString() : 'Unknown',
+                stack: e.reason && e.reason.stack ? e.reason.stack : null
+            })
+        }).catch(err => console.error('Failed to log promise rejection:', err));
+    }
+});
+
+// Safe async function wrapper
+function safeAsync(fn) {
+    return async function(...args) {
+        try {
+            return await fn.apply(this, args);
+        } catch (error) {
+            console.error('Async function error:', error);
+            // Show user-friendly error message
+            if (typeof showMessageBox === 'function') {
+                showMessageBox('An error occurred. Please try again.', 'error');
+            }
+            throw error;
+        }
+    };
+}
+
+window.safeAsync = safeAsync;
+function drawChart(canvas, ctx, yData, xLabels, color, label, padding) {
+    const width = canvas.width - 2 * padding;
     const height = canvas.height - 2 * padding;
 
     // Clear canvas

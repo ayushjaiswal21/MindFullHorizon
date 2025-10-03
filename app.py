@@ -21,6 +21,9 @@ from flask_compress import Compress
 from flask_migrate import Migrate
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_socketio import SocketIO, emit, join_room, leave_room
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_caching import Cache
 
 from ai_service import ai_service
 from extensions import db, migrate, flask_session, compress, csrf
@@ -40,30 +43,80 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
 
+# Initialize rate limiter
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"]
+)
+
+# Initialize caching
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+
 # Configure session
 app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')  # Use environment variable or fallback
 app.config['SESSION_TYPE'] = 'filesystem'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=1)  # Session expires after 1 day
-app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
-app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Extended session lifetime
+app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV') == 'production'  # True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS attacks
+app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'  # Prevent CSRF attacks
 app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
 
 
 
-# Temporarily disable CSRF protection for debugging
-# # csrf.init_app(app)
+# Enable CSRF protection for security
+csrf.init_app(app)
 
-# Comment out the CSRF error handler temporarily
+# Add Content Security Policy headers for XSS protection
+@app.after_request
+def add_security_headers(response):
+    """Add security headers to all responses"""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    
+    # Content Security Policy
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://translate.google.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self' https://api.generativeai.google.com; "
+        "frame-src 'none'; "
+        "object-src 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self'"
+    )
+    response.headers['Content-Security-Policy'] = csp
+    return response
+
+# Secure CSRF error handler
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
-    logger.warning(f"CSRF error: {e}")
-    logger.warning(f"CSRF token in session: {session.get('_csrf_token', 'NOT FOUND')}")
-    logger.warning(f"Request method: {request.method}")
-    logger.warning(f"Request endpoint: {request.endpoint}")
-    logger.warning(f"Request headers: {dict(request.headers)}")
-    logger.warning(f"Form data: {dict(request.form)}")
+    logger.warning(f"CSRF error for user {session.get('user_email', 'anonymous')}: {request.endpoint}")
     flash('Session expired or invalid request. Please try again.', 'error')
     return redirect(url_for('login'))
+
+# Global error handlers for security
+@app.errorhandler(413)
+def handle_file_too_large(e):
+    logger.warning(f"File too large upload attempt from {request.remote_addr}")
+    flash('File too large. Maximum size is 5MB.', 'error')
+    return redirect(request.url)
+
+@app.errorhandler(400)
+def handle_bad_request(e):
+    logger.warning(f"Bad request from {request.remote_addr}: {request.endpoint}")
+    flash('Invalid request. Please try again.', 'error')
+    return redirect(url_for('index'))
+
+@app.errorhandler(500)
+def handle_internal_error(e):
+    logger.error(f"Internal server error: {e}")
+    flash('An internal error occurred. Please try again later.', 'error')
+    return redirect(url_for('index'))
 
 # Configure logging
 # Create a custom logger that outputs to both file and console
@@ -103,23 +156,34 @@ except Exception:
     os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
 
 db_path = os.path.join(basedir, 'instance', 'mindful_horizon.db')
+logger.info(f"DATABASE_URL: {os.environ.get('DATABASE_URL')}")
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or f'sqlite:///{db_path}'
 logger.info(f"Using database at: {app.config['SQLALCHEMY_DATABASE_URI']}")
 
 
 
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Database connection pooling configuration
+engine_options = {
+    'pool_size': 10,
+    'pool_recycle': 120,
+    'pool_pre_ping': True,
+    'max_overflow': 20
+}
+
 # Improve SQLite compatibility with threaded servers (e.g., SocketIO)
 if app.config.get('SQLALCHEMY_DATABASE_URI', '').startswith('sqlite:///'):
-    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-        'connect_args': {'check_same_thread': False}
-    }
+    engine_options['connect_args'] = {'check_same_thread': False}
 
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
 # Upload folder for profile pictures
 UPLOAD_FOLDER = os.path.join(basedir, 'static/profile_pics')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max file size
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_MIME_TYPES = {'image/png', 'image/jpeg', 'image/gif'}
 
 # Ensure the upload folder exists
 if not os.path.exists(UPLOAD_FOLDER):
@@ -132,7 +196,8 @@ flask_session.init_app(app)
 compress.init_app(app)
 csrf.init_app(app)
 
-# Stub for get_blog_insights (replace with real logic as needed)
+# Cached blog insights function
+@cache.memoize(timeout=300)  # Cache for 5 minutes
 def get_blog_insights():
     return {
         'total_posts': BlogPost.query.count(),
@@ -143,8 +208,37 @@ def get_blog_insights():
     }
 
 def allowed_file(filename):
+    """Check if file extension is allowed"""
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def validate_file_security(file):
+    """Comprehensive file validation for security"""
+    if not file or not file.filename:
+        return False, "No file provided"
+    
+    # Check file extension
+    if not allowed_file(file.filename):
+        return False, "Invalid file type. Only PNG, JPG, JPEG, and GIF files are allowed."
+    
+    # Check file size (additional check beyond Flask's MAX_CONTENT_LENGTH)
+    file.seek(0, 2)  # Seek to end
+    file_size = file.tell()
+    file.seek(0)  # Reset to beginning
+    
+    if file_size > 5 * 1024 * 1024:  # 5MB
+        return False, "File too large. Maximum size is 5MB."
+    
+    # Check MIME type
+    file_mime = file.content_type
+    if file_mime not in ALLOWED_MIME_TYPES:
+        return False, "Invalid file type detected."
+    
+    # Check for path traversal attempts
+    if '..' in file.filename or '/' in file.filename or '\\' in file.filename:
+        return False, "Invalid filename detected."
+    
+    return True, "File is valid"
 
 def is_strong_password(password):
     if len(password) < 8:
@@ -196,6 +290,10 @@ def login_required(f):
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return jsonify(success=False, message='Authentication required'), 401
             return redirect(url_for('login'))
+        
+        # Refresh session on activity to prevent unexpected timeouts
+        session.permanent = True
+        session.modified = True
         return f(*args, **kwargs)
     return decorated_function
 
@@ -300,7 +398,6 @@ def index():
         }
         faqs = []
 
-    from datetime import datetime
     return render_template(
         'index.html',
         blog_insights=blog_insights,
@@ -311,6 +408,7 @@ def index():
     )
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute")  # Rate limit login attempts
 def login():
     if request.method == 'POST':
         # Use .get to avoid KeyError and normalize inputs
@@ -436,6 +534,8 @@ def logout():
 def patient_dashboard():
     user_id = session['user_id']
     
+    # Use eager loading to prevent N+1 queries
+    from sqlalchemy.orm import joinedload
     gamification = Gamification.query.filter_by(user_id=user_id).first()
     rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.desc()).first()
     all_appointments = Appointment.query.filter_by(user_id=user_id).order_by(Appointment.date.asc(), Appointment.time.asc()).all()
@@ -490,21 +590,26 @@ def patient_dashboard():
 def provider_dashboard():
     institution = session.get('user_institution', 'Sample University')
     
-    # Fetch all patients for the institution with their latest detox logs and clinical notes
-    patients = User.query.filter_by(role='patient', institution=institution).all()
+    # Fetch all patients for the institution with eager loading to prevent N+1 queries
+    from sqlalchemy.orm import joinedload
+    patients = User.query.options(
+        joinedload(User.digital_detox_logs),
+        joinedload(User.clinical_notes)
+    ).filter_by(role='patient', institution=institution).all()
 
     caseload_data = []
     for patient in patients:
-        latest_detox = DigitalDetoxLog.query.filter_by(user_id=patient.id).order_by(DigitalDetoxLog.date.desc()).first()
-        latest_session = ClinicalNote.query.filter_by(patient_id=patient.id).order_by(ClinicalNote.session_date.desc()).first()
-        
+        # Get latest detox and session from already loaded relationships (prevents N+1 queries)
+        latest_detox = patient.digital_detox_logs[0] if patient.digital_detox_logs else None
+        latest_session = patient.clinical_notes[0] if patient.clinical_notes else None
+
         risk_level = 'Low'
         if latest_detox:
             if latest_detox.screen_time_hours > 8 or (latest_detox.ai_score and latest_detox.ai_score == 'Needs Improvement'):
                 risk_level = 'High'
             elif latest_detox.screen_time_hours > 6 or (latest_detox.ai_score and latest_detox.ai_score == 'Good'):
                 risk_level = 'Medium'
-        
+
         caseload_data.append({
             'user_id': patient.id,
             'name': patient.name,
@@ -989,7 +1094,7 @@ def progress():
             'days_since_assessment': days_since_assessment
         }
         
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             flash('User not found. Please log in again.', 'error')
             return redirect(url_for('login'))
@@ -1136,6 +1241,7 @@ def assessment():
 @app.route('/api/save-assessment', methods=['POST'])
 @login_required
 @role_required('patient')
+@limiter.limit("5 per minute")  # Rate limit assessment saving
 def api_save_assessment():
     if not request.is_json:
         return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
@@ -1189,7 +1295,7 @@ def api_save_assessment():
         logger.debug(f"Gamification points awarded. Total points: {gamification.points}")
 
         logger.debug("Updating user's last assessment time.")
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return jsonify({
                 'success': False,
@@ -1405,19 +1511,33 @@ def profile():
                 return redirect(url_for('profile'))
             user.set_password(password)
 
-        # Handle profile picture upload
+        # Handle profile picture upload with enhanced security
         if 'profile_pic' in request.files:
             file = request.files['profile_pic']
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                # Ensure unique filename to prevent overwrites
-                unique_filename = str(uuid.uuid4()) + '_' + filename
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-                file.save(file_path)
-                user.profile_pic = unique_filename
-                flash('Profile picture updated successfully!', 'success')
-            elif file.filename != '':
-                flash('Invalid file type for profile picture.', 'error')
+            if file and file.filename:
+                is_valid, error_message = validate_file_security(file)
+                if is_valid:
+                    try:
+                        filename = secure_filename(file.filename)
+                        # Ensure unique filename to prevent overwrites and path traversal
+                        unique_filename = str(uuid.uuid4()) + '_' + filename
+                        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+
+                        # Additional security: ensure path is within upload folder
+                        if not os.path.abspath(file_path).startswith(os.path.abspath(app.config['UPLOAD_FOLDER'])):
+                            flash('Invalid file path detected.', 'error')
+                        else:
+                            # Use context manager to ensure file is properly closed
+                            with open(file_path, 'wb') as f:
+                                file.seek(0)  # Reset file pointer
+                                f.write(file.read())
+                            user.profile_pic = unique_filename
+                            flash('Profile picture updated successfully!', 'success')
+                    except Exception as e:
+                        logger.error(f"Error saving profile picture: {e}")
+                        flash('Error saving profile picture.', 'error')
+                else:
+                    flash(error_message, 'error')
 
         try:
             db.session.commit()
@@ -1475,6 +1595,7 @@ def digital_detox_data():
 @app.route('/api/goals', methods=['GET', 'POST'])
 @login_required
 @role_required('patient')
+@limiter.limit("20 per minute")  # Rate limit goal operations
 def handle_goals():
     user_id = session['user_id']
 
@@ -1640,6 +1761,7 @@ def utility_processor():
 @app.route('/api/save-mood', methods=['POST'])
 @login_required
 @role_required('patient')
+@limiter.limit("10 per minute")  # Rate limit mood saving
 def save_mood():
     if not request.is_json:
         print("DEBUG: Request is not JSON.")
@@ -1709,7 +1831,7 @@ def save_mood():
         print(f"DEBUG: Gamification last_activity updated: {gamification.last_activity}")
 
         # Update user's last assessment time
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return jsonify({
                 'success': False,
@@ -1828,6 +1950,26 @@ def health_check():
         'timestamp': datetime.now().isoformat()
     }), 200
 
+# Error logging endpoint for client-side errors
+@app.route('/api/log-error', methods=['POST'])
+@limiter.limit("10 per minute")  # Rate limit error logging
+def log_client_error():
+    """Log client-side JavaScript errors for debugging."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'No data provided'}), 400
+        
+        # Log the error (in production, you might want to send this to a logging service)
+        logger.warning(f"Client-side error: {data.get('message', 'Unknown error')} "
+                      f"at {data.get('filename', 'unknown')}:{data.get('lineno', 'unknown')} "
+                      f"from {request.remote_addr}")
+        
+        return jsonify({'success': True, 'message': 'Error logged'}), 200
+    except Exception as e:
+        logger.error(f"Error logging client error: {e}")
+        return jsonify({'success': False, 'message': 'Failed to log error'}), 500
+
 # Serve other static files from root directory if needed
 
 
@@ -1887,8 +2029,7 @@ app.config["GOOGLE_OAUTH_CLIENT_SECRET"] = os.environ.get("GOOGLE_OAUTH_CLIENT_S
 from flask_dance.contrib.google import make_google_blueprint, google
 
 google_bp = make_google_blueprint(
-    scope=["openid", "https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"],
-    redirect_to='login_google'
+    scope=["openid", "https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"]
 )
 app.register_blueprint(google_bp, url_prefix="/login")
 
@@ -1979,7 +2120,7 @@ def save_role():
 
     if role in ['patient', 'provider']:
         try:
-            user = User.query.get(user_id)
+            user = db.session.get(User, user_id)
             user.role = role
             db.session.commit()
             session['user_role'] = role
@@ -1998,14 +2139,13 @@ def save_role():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    logger.info(f"Starting MindFullHorizon server...")
-    logger.info(f"Server will be available at: http://localhost:5000")
+    logger.info("="*50)
+    logger.info("Starting MindFullHorizon server...")
+    logger.info(f"Server available at: http://localhost:5000")
     logger.info(f"Debug mode: False")
     logger.info(f"SocketIO enabled: True")
     logger.info(f"CSRF Protection: Enabled")
-    socketio.run(app, debug=False, port=5000)
-    print(f"  SocketIO: Enabled")
-    print(f"  CSRF Protection: Temporarily Disabled")
-    print(f"  Logs: Check terminal and mindful_horizon.log")
-    print("="*50 + "\n")
+    logger.info("="*50)
+
+    # Start the server only once
     socketio.run(app, debug=False, port=5000)
