@@ -168,55 +168,74 @@
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-6">
-                <!-- Enhanced Medication Card -->
-                <a href="{{ url_for('medication') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-pills text-blue-600 text-2xl"></i>
+            <div class="grid grid-cols-1 gap-6">
+                <!-- First row: 3 cards -->
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Enhanced Medication Card -->
+                    <a href="{{ url_for('medication') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-pills text-blue-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Medication Tracker</h4>
+                                <p class="text-gray-600">Log and manage your medications.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Medication Tracker</h4>
-                            <p class="text-gray-600">Log and manage your medications.</p>
+                    </a>
+                    <!-- Enhanced My Prescriptions Card -->
+                    <a href="{{ url_for('my_prescriptions') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-file-prescription text-red-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">My Prescriptions</h4>
+                                <p class="text-gray-600">View your active prescriptions.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-                <!-- Enhanced My Prescriptions Card -->
-                <a href="{{ url_for('my_prescriptions') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-file-prescription text-red-600 text-2xl"></i>
+                    </a>
+                    <!-- Enhanced Breathing Card -->
+                    <a href="{{ url_for('breathing') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-wind text-green-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Breathing Exercises</h4>
+                                <p class="text-gray-600">Practice guided breathing.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">My Prescriptions</h4>
-                            <p class="text-gray-600">View your active prescriptions.</p>
+                    </a>
+                </div>
+                
+                <!-- Second row: 2 cards -->
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Enhanced Yoga Card -->
+                    <a href="{{ url_for('yoga') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-person-praying text-yellow-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Yoga Sessions</h4>
+                                <p class="text-gray-600">Follow guided yoga practices.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-                <!-- Enhanced Breathing Card -->
-                <a href="{{ url_for('breathing') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-wind text-green-600 text-2xl"></i>
+                    </a>
+                    <!-- Enhanced Music Therapy Card -->
+                    <a href="{{ url_for('music') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-music text-purple-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Mood Music</h4>
+                                <p class="text-gray-600">Binaural beats for wellness.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Breathing Exercises</h4>
-                            <p class="text-gray-600">Practice guided breathing.</p>
-                        </div>
-                    </div>
-                </a>
-                <!-- Enhanced Yoga Card -->
-                <a href="{{ url_for('yoga') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-person-praying text-yellow-600 text-2xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Yoga Sessions</h4>
-                            <p class="text-gray-600">Follow guided yoga practices.</p>
-                        </div>
-                    </div>
-                </a>
+                    </a>
+                </div>
             </div>
         </div>
 

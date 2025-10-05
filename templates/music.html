@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="max-width:900px; margin:40px auto; text-align:center;">
+  <h1 style="color:#2563eb; font-size:2rem;">Mood Music — Binaural Beats</h1>
+  <p style="color:#475569;">Choose a mood and we'll play matching binaural-beats audio from the local dataset in the page. Use headphones for the best effect.</p>
+
+  <div id="music-buttons" style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:20px;">
+    <button class="mood-btn" data-mood="happy">Happy</button>
+    <button class="mood-btn" data-mood="sad">Sad</button>
+    <button class="mood-btn" data-mood="angry">Angry</button>
+    <button class="mood-btn" data-mood="calm">Calm</button>
+    <button class="mood-btn" data-mood="anxious">Anxious</button>
+    <button class="mood-btn" data-mood="focus">Focus</button>
+  </div>
+
+  <p id="music-note" style="color:#64748b; margin-top:12px;">We'll play matching binaural beats from the local dataset if available.</p>
+
+  <div id="player-container" style="margin-top:18px; text-align:center;">
+    <div id="now-playing" style="color:#1f2937; font-weight:600; margin-bottom:8px; display:none;">Now Playing: <span id="now-playing-label"></span></div>
+    <audio id="mood-audio" controls style="width:100%; max-width:700px; display:none;"></audio>
+    <div id="player-controls" style="margin-top:8px; display:none;">
+      <button id="play-all" class="mood-btn" style="padding:6px 12px;">Play All</button>
+      <button id="next-track" class="mood-btn" style="padding:6px 12px;">Next ▶</button>
+      <button id="clear-playlist" class="mood-btn" style="padding:6px 12px;">Clear</button>
+    </div>
+  </div>
+
+  <div id="playlist-container" style="margin-top:20px; text-align:left; display:none;">
+    <h3 style="color:#2563eb; font-size:1.2rem; margin-bottom:10px;">Select a track</h3>
+
+    <div id="filters" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:10px;">
+      <div>
+        <label for="filter-type" style="font-size:0.9rem; color:#475569;">Type</label><br />
+        <select id="filter-type" style="padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;">
+          <option value="all" selected>All</option>
+          <option value="solfeggio">Solfeggio (Long)</option>
+          <option value="isochronic">Isochronic</option>
+          <option value="pure">Pure</option>
+        </select>
+      </div>
+      <div>
+        <label for="filter-brainwave" style="font-size:0.9rem; color:#475569;">Brainwave</label><br />
+        <select id="filter-brainwave" style="padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;">
+          <option value="all" selected>All</option>
+          <option value="alpha">Alpha (8-12 Hz)</option>
+          <option value="beta">Beta (12-30 Hz)</option>
+          <option value="delta">Delta (0.5-4 Hz)</option>
+          <option value="gamma">Gamma (30+ Hz)</option>
+          <option value="theta">Theta (4-8 Hz)</option>
+        </select>
+      </div>
+      <div>
+        <label for="sort-by" style="font-size:0.9rem; color:#475569;">Sort By</label><br />
+        <select id="sort-by" style="padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;">
+          <option value="default" selected>Relevance</option>
+          <option value="frequency_asc">Frequency (Low to High)</option>
+          <option value="frequency_desc">Frequency (High to Low)</option>
+          <option value="duration">Duration (Long First)</option>
+          <option value="brainwave">Brainwave Type</option>
+        </select>
+      </div>
+      <div style="min-width:140px;">
+        <label for="min-freq" style="font-size:0.9rem; color:#475569;">Min Freq (Hz)</label><br />
+        <input id="min-freq" type="number" placeholder="0.5" min="0.5" max="100" step="0.5" style="width:100%; padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;" />
+      </div>
+      <div style="min-width:140px;">
+        <label for="max-freq" style="font-size:0.9rem; color:#475569;">Max Freq (Hz)</label><br />
+        <input id="max-freq" type="number" placeholder="100" min="0.5" max="100" step="0.5" style="width:100%; padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;" />
+      </div>
+      <div style="flex:1; min-width:220px;">
+        <label for="search-text" style="font-size:0.9rem; color:#475569;">Search</label><br />
+        <input id="search-text" type="text" placeholder="Search label or filename..." style="width:100%; padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;" />
+      </div>
+      <div style="margin-top:20px;">
+        <button id="reset-filters" style="padding:6px 12px; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; color:#475569; cursor:pointer;">Reset Filters</button>
+      </div>
+    </div>
+
+    <div id="playlist" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:10px;"></div>
+  </div>
+</div>
+
+<script>
+async function fetchMoodMap() {
+  try {
+    const res = await fetch('/api/mood-music');
+    const data = await res.json();
+    return data.moods || {};
+  } catch (e) {
+    console.error('Failed to fetch mood map', e);
+    return {};
+  }
+}
+
+async function init() {
+  const audio = document.getElementById('mood-audio');
+  const playlistContainer = document.getElementById('playlist-container');
+  const playlistDiv = document.getElementById('playlist');
+  const nowPlayingWrap = document.getElementById('now-playing');
+  const nowPlayingLabel = document.getElementById('now-playing-label');
+  const playAllBtn = document.getElementById('play-all');
+  const nextBtn = document.getElementById('next-track');
+  const clearBtn = document.getElementById('clear-playlist');
+  const controls = document.getElementById('player-controls');
+
+  // Filters
+  const typeSel = document.getElementById('filter-type');
+  const brainwaveSel = document.getElementById('filter-brainwave');
+  const sortSel = document.getElementById('sort-by');
+  const minFreqInput = document.getElementById('min-freq');
+  const maxFreqInput = document.getElementById('max-freq');
+  const searchInput = document.getElementById('search-text');
+  const resetBtn = document.getElementById('reset-filters');
+
+  // State
+  let allFiles = [];
+  let queue = [];
+  let currentIndex = -1;
+
+  function setVisible(el, show) { el.style.display = show ? 'block' : 'none'; }
+
+  // Load filter preferences from localStorage
+  function loadFilterPreferences() {
+    try {
+      const saved = localStorage.getItem('moodMusicFilters');
+      if (saved) {
+        const prefs = JSON.parse(saved);
+        if (prefs.type) typeSel.value = prefs.type;
+        if (prefs.brainwave) brainwaveSel.value = prefs.brainwave;
+        if (prefs.sortBy) sortSel.value = prefs.sortBy;
+        if (prefs.minFreq !== undefined) minFreqInput.value = prefs.minFreq;
+        if (prefs.maxFreq !== undefined) maxFreqInput.value = prefs.maxFreq;
+        if (prefs.search) searchInput.value = prefs.search;
+      }
+    } catch (e) {
+      console.debug('Failed to load filter preferences', e);
+    }
+  }
+
+  // Save filter preferences to localStorage
+  function saveFilterPreferences() {
+    try {
+      const prefs = {
+        type: typeSel.value,
+        brainwave: brainwaveSel.value,
+        sortBy: sortSel.value,
+        minFreq: minFreqInput.value,
+        maxFreq: maxFreqInput.value,
+        search: searchInput.value
+      };
+      localStorage.setItem('moodMusicFilters', JSON.stringify(prefs));
+    } catch (e) {
+      console.debug('Failed to save filter preferences', e);
+    }
+  }
+
+  // Reset all filters to default
+  function resetFilters() {
+    typeSel.value = 'all';
+    brainwaveSel.value = 'all';
+    sortSel.value = 'default';
+    minFreqInput.value = '';
+    maxFreqInput.value = '';
+    searchInput.value = '';
+    localStorage.removeItem('moodMusicFilters');
+    if (allFiles && allFiles.length > 0) {
+      const filtered = applyFilters();
+      renderPlaylist(filtered);
+    }
+  }
+
+  function applyFilters() {
+    const typeVal = (typeSel.value || 'all').toLowerCase();
+    const bwVal = (brainwaveSel.value || 'all').toLowerCase();
+    const sortVal = sortSel.value || 'default';
+    const minFreq = parseFloat(minFreqInput.value) || null;
+    const maxFreq = parseFloat(maxFreqInput.value) || null;
+    const q = (searchInput.value || '').trim().toLowerCase();
+    
+    let filtered = (allFiles || []).filter(f => {
+      if (typeVal !== 'all' && (f.type || '').toLowerCase() !== typeVal) return false;
+      if (bwVal !== 'all' && (f.brainwave || '').toLowerCase() !== bwVal) return false;
+      if (minFreq !== null && f.frequency && f.frequency < minFreq) return false;
+      if (maxFreq !== null && f.frequency && f.frequency > maxFreq) return false;
+      if (q) {
+        const hay = ((f.label || '') + ' ' + (f.filename || '')).toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    
+    // Apply sorting
+    if (sortVal === 'relevance') {
+      filtered.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
+    } else if (sortVal === 'frequency_asc') {
+      filtered.sort((a, b) => (a.frequency || 1000) - (b.frequency || 1000));
+    } else if (sortVal === 'frequency_desc') {
+      filtered.sort((a, b) => (b.frequency || 0) - (a.frequency || 0));
+    } else if (sortVal === 'duration') {
+      const typeOrder = { solfeggio: 0, isochronic: 1, pure: 2 };
+      filtered.sort((a, b) => (typeOrder[a.type] || 2) - (typeOrder[b.type] || 2));
+    } else if (sortVal === 'brainwave') {
+      const bwOrder = { delta: 0, theta: 1, alpha: 2, beta: 3, gamma: 4 };
+      filtered.sort((a, b) => {
+        const aOrder = bwOrder[a.brainwave] !== undefined ? bwOrder[a.brainwave] : 5;
+        const bOrder = bwOrder[b.brainwave] !== undefined ? bwOrder[b.brainwave] : 5;
+        if (aOrder !== bOrder) return aOrder - bOrder;
+        return (a.frequency || 0) - (b.frequency || 0);
+      });
+    }
+    
+    saveFilterPreferences();
+    return filtered;
+  }
+
+  function renderPlaylist(files) {
+    queue = files.slice();
+    playlistDiv.innerHTML = '';
+    if (!files.length) {
+      playlistDiv.innerHTML = '<div style="padding:10px; color:#64748b;">No tracks match the current filters.</div>';
+      setVisible(playlistContainer, true);
+      setVisible(controls, false);
+      return;
+    }
+
+    files.forEach((file, idx) => {
+      const card = document.createElement('div');
+      card.style.border = '1px solid #e2e8f0';
+      card.style.borderRadius = '12px';
+      card.style.padding = '10px';
+      card.style.background = '#fff';
+      const title = document.createElement('div');
+      title.style.fontWeight = '600';
+      title.style.color = '#1f2937';
+      title.textContent = file.label || file.filename;
+      const meta = document.createElement('div');
+      meta.style.fontSize = '0.9rem';
+      meta.style.color = '#64748b';
+      const lengthHint = file.length_hint === 'long' ? '⏱️ Long' : 'Short';
+      const typeLabel = file.type ? file.type.charAt(0).toUpperCase() + file.type.slice(1) : 'Audio';
+      const brainwaveLabel = file.brainwave ? ` • ${file.brainwave.charAt(0).toUpperCase() + file.brainwave.slice(1)}` : '';
+      const freqLabel = file.frequency ? ` • ${file.frequency} Hz` : '';
+      const relevanceLabel = file.relevance_score > 0 ? ` • ⭐${file.relevance_score}` : '';
+      meta.textContent = `${typeLabel} • ${lengthHint}${brainwaveLabel}${freqLabel}${relevanceLabel}`;
+      const actions = document.createElement('div');
+      actions.style.marginTop = '8px';
+      const playBtn = document.createElement('button');
+      playBtn.className = 'mood-btn';
+      playBtn.style.padding = '6px 12px';
+      playBtn.textContent = 'Play';
+      playBtn.addEventListener('click', () => playAt(idx));
+      actions.appendChild(playBtn);
+      card.appendChild(title);
+      card.appendChild(meta);
+      card.appendChild(actions);
+      playlistDiv.appendChild(card);
+    });
+    setVisible(playlistContainer, files.length > 0);
+    setVisible(controls, files.length > 0);
+  }
+
+  async function playAt(i) {
+    if (i < 0 || i >= queue.length) return;
+    currentIndex = i;
+    const item = queue[i];
+    audio.src = item.url;
+    setVisible(audio, true);
+    nowPlayingLabel.textContent = item.label || item.filename;
+    setVisible(nowPlayingWrap, true);
+    try { await audio.play(); } catch (err) { console.debug('Autoplay prevented', err); }
+  }
+
+  audio.addEventListener('ended', () => {
+    if (currentIndex + 1 < queue.length) {
+      playAt(currentIndex + 1);
+    }
+  });
+
+  playAllBtn.addEventListener('click', () => { if (queue.length) playAt(0); });
+  nextBtn.addEventListener('click', () => { if (currentIndex + 1 < queue.length) playAt(currentIndex + 1); });
+  clearBtn.addEventListener('click', () => {
+    queue = [];
+    currentIndex = -1;
+    setVisible(playlistContainer, false);
+    setVisible(controls, false);
+    setVisible(audio, false);
+    setVisible(nowPlayingWrap, false);
+  });
+
+  function onFilterChange() {
+    const filtered = applyFilters();
+    renderPlaylist(filtered);
+  }
+  
+  // Add event listeners for all filters
+  typeSel.addEventListener('change', onFilterChange);
+  brainwaveSel.addEventListener('change', onFilterChange);
+  sortSel.addEventListener('change', onFilterChange);
+  minFreqInput.addEventListener('input', onFilterChange);
+  maxFreqInput.addEventListener('input', onFilterChange);
+  searchInput.addEventListener('input', onFilterChange);
+  resetBtn.addEventListener('click', resetFilters);
+  
+  // Load saved preferences on initialization
+  loadFilterPreferences();
+
+  document.querySelectorAll('#music-buttons .mood-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const mood = btn.getAttribute('data-mood');
+
+      // CSRF token for POSTs
+      const csrfMeta = document.querySelector('meta[name=\"csrf-token\"]');
+      const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+      try {
+        // Load local files (preferred)
+        // Get current filter settings
+        const minFreq = parseFloat(minFreqInput.value) || null;
+        const maxFreq = parseFloat(maxFreqInput.value) || null;
+        const filterType = typeSel.value === 'all' ? null : typeSel.value;
+        const sortBy = sortSel.value || 'default';
+        
+        const res = await fetch('/api/mood-audio', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(csrfToken && { 'X-CSRFToken': csrfToken })
+          },
+          body: JSON.stringify({ 
+            mood, 
+            min_frequency: minFreq,
+            max_frequency: maxFreq,
+            type: filterType,
+            sort_by: sortBy
+          })
+        });
+        const data = await res.json();
+        if (data && data.success && Array.isArray(data.files) && data.files.length > 0) {
+          allFiles = data.files;
+          const filtered = applyFilters();
+          renderPlaylist(filtered);
+          // Auto-start with first long track if available in filtered list
+          const firstLong = filtered.findIndex(f => f.length_hint === 'long');
+          const startIdx = firstLong >= 0 ? firstLong : 0;
+          if (filtered.length) { await playAt(startIdx); }
+          return;
+        }
+
+        // Fallback: curated search
+        const mapRes = await fetch('/api/mood-music');
+        const mapJson = await mapRes.json();
+        const moods = mapJson.moods || {};
+        const entry = moods[mood] || {};
+        const query = entry.query || ('binaural beats ' + mood);
+        const url = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
+        try { window.open(url, '_blank', 'noopener'); } catch (_) { window.location.href = url; }
+
+        // Log selection (best-effort)
+        try { await fetch('/api/log-mood-selection', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...(csrfToken && { 'X-CSRFToken': csrfToken }) },
+          body: JSON.stringify({ mood, query, video: null })
+        }); } catch (_) {}
+
+      } catch (e) {
+        console.error('Play mood failed', e);
+        alert('Failed to load mood playlist.');
+      }
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+{% endblock %}
