@@ -10,8 +10,8 @@
     </div>
 
     <!-- Business Intelligence Section -->
-    <div class="dashboard-grid mb-8">
-        <div class="card">
+    <div class="dashboard-grid mb-8 gap-6 grid md:grid-cols-2">
+        <div class="card border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
             <h3 class="text-xl font-semibold mb-4 text-gray-800">
                 <i class="fas fa-chart-bar text-blue-500 mr-2"></i>Practice Analytics
             </h3>
@@ -35,7 +35,7 @@
             </div>
         </div>
 
-        <div class="card">
+        <div class="card border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
             <h3 class="text-xl font-semibold mb-4 text-gray-800">
                 <i class="fas fa-robot text-purple-500 mr-2"></i>AI Tools & Analytics
             </h3>
@@ -51,18 +51,59 @@
         </div>
     </div>
 
+    <!-- Search, Filters and Tasks -->
+    <div class="grid md:grid-cols-3 gap-6 mb-6">
+        <div class="col-span-2">
+            <form method="get" action="{{ url_for('provider_dashboard') }}" class="flex items-center space-x-3">
+                <input type="text" name="q" value="{{ search_q|default('') }}" placeholder="Search patients, email..." class="w-2/3 px-4 py-2 border border-gray-200 rounded-md focus:outline-none" />
+                <select name="risk" class="px-3 py-2 border border-gray-200 rounded-md">
+                    <option value="">All Risks</option>
+                    <option value="High" {% if filter_risk == 'High' %}selected{% endif %}>High</option>
+                    <option value="Medium" {% if filter_risk == 'Medium' %}selected{% endif %}>Medium</option>
+                    <option value="Low" {% if filter_risk == 'Low' %}selected{% endif %}>Low</option>
+                </select>
+                <button type="submit" class="btn-primary">Filter</button>
+                <a href="{{ url_for('provider_dashboard') }}" class="text-sm text-gray-500 ml-2">Reset</a>
+            </form>
+        </div>
+
+        <div>
+            <div class="card border border-gray-200 rounded-lg p-4 shadow-sm bg-white">
+                <h4 class="font-semibold mb-3">Tasks</h4>
+                {% if tasks %}
+                <ul class="space-y-2 text-sm">
+                    {% for t in tasks[:5] %}
+                    <li class="flex justify-between items-center">
+                        <span>{{ t.title }}</span>
+                        <div class="flex items-center space-x-2">
+                            {% if t.type == 'appointment' %}
+                            <a href="{{ url_for('patient_dashboard') }}" title="Open appointment" class="text-indigo-600"><i class="fas fa-calendar-alt"></i></a>
+                            {% else %}
+                            <a href="#" title="Message" class="text-indigo-600"><i class="fas fa-envelope"></i></a>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-sm text-gray-500">No pending tasks.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <!-- Caseload Management -->
-    <div class="card mb-8">
+    <div class="card border border-gray-200 rounded-lg p-6 mb-8 bg-white">
         <h3 class="text-xl font-semibold mb-4 text-gray-800">
             <i class="fas fa-users text-green-500 mr-2"></i>Patient Caseload
         </h3>
         <div class="overflow-x-auto">
-            <table class="w-full table-auto">
+            <table class="w-full table-auto border-collapse">
                 <thead>
                     <tr class="bg-gray-50">
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Patient Name</th>
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Age</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Risk Level</th>
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Risk</th>
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Last Session</th>
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
@@ -92,9 +133,12 @@
                             <a href="{{ url_for('wellness_report', user_id=patient.user_id) }}" class="text-blue-600 hover:text-blue-800 mr-2" title="View Wellness Report">
                                 <i class="fas fa-chart-bar"></i>
                             </a>
-                            <button class="text-green-600 hover:text-green-800" title="Edit Patient">
-                                <i class="fas fa-edit"></i>
-                            </button>
+                            <a href="#" onclick="openMessage({{ patient.user_id }})" class="text-indigo-600 hover:text-indigo-800 mr-2" title="Message Patient">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                            <a href="{{ url_for('telehealth_session', user_id=patient.user_id) }}" class="text-purple-600 hover:text-purple-800" title="Start Telehealth">
+                                <i class="fas fa-video"></i>
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -104,8 +148,8 @@
     </div>
 
     <!-- Interoperability & DTx Information -->
-    <div class="dashboard-grid">
-        <div class="card">
+    <div class="dashboard-grid gap-6 grid md:grid-cols-2">
+        <div class="card border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
             <h3 class="text-xl font-semibold mb-4 text-gray-800">
                 <i class="fas fa-exchange-alt text-blue-500 mr-2"></i>Interoperability
             </h3>
@@ -121,7 +165,7 @@
             </ul>
         </div>
 
-        <div class="card">
+        <div class="card border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
             <h3 class="text-xl font-semibold mb-4 text-gray-800">
                 <i class="fas fa-mobile-alt text-purple-500 mr-2"></i>Digital Therapeutics (DTx)
             </h3>
@@ -138,4 +182,31 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openMessage(patientId) {
+    const text = prompt('Send a quick message to patient:');
+    if (!text || !text.trim()) return;
+
+    fetch('{{ url_for("api_message") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ recipient_id: patientId, message: text.trim() })
+    }).then(r => r.json()).then(data => {
+        if (data && data.success) {
+            alert('Message sent successfully.');
+        } else {
+            alert('Failed to send message: ' + (data.error || 'Unknown error'));
+        }
+    }).catch(err => {
+        console.error('Message send failed', err);
+        alert('Failed to send message.');
+    });
+}
+</script>
 {% endblock %}
