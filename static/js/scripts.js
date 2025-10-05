@@ -2010,6 +2010,10 @@ window.addEventListener('error', function(e) {
     }
 });
 
+/* Deprecated: Mood Music YouTube handler removed.
+   The music page (templates/music.html) now handles mood selection and playback using local audio via /api/mood-audio.
+   This block was intentionally removed to avoid double-binding click handlers on .mood-btn elements. */
+
 // Handle unhandled promise rejections
 window.addEventListener('unhandledrejection', function(e) {
     console.error('Unhandled promise rejection:', e.reason);
