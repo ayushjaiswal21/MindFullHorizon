@@ -1068,7 +1068,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                     },
                     body: new URLSearchParams(data)
                 });
@@ -1990,11 +1990,14 @@ window.addEventListener('error', function(e) {
     console.error('Global JavaScript error:', e.error);
     // Log error to server if needed
     if (typeof fetch !== 'undefined') {
+        const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
+
         fetch('/api/log-error', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                ...(csrfToken && { 'X-CSRFToken': csrfToken })
             },
             body: JSON.stringify({
                 message: e.message,
@@ -2012,11 +2015,14 @@ window.addEventListener('unhandledrejection', function(e) {
     console.error('Unhandled promise rejection:', e.reason);
     // Log error to server if needed
     if (typeof fetch !== 'undefined') {
+        const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
+
         fetch('/api/log-error', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                ...(csrfToken && { 'X-CSRFToken': csrfToken })
             },
             body: JSON.stringify({
                 message: 'Unhandled promise rejection',
