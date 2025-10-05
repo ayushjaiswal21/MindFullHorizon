@@ -33,6 +33,7 @@ class User(db.Model):
     medication_logs = db.relationship('MedicationLog', backref='user', lazy=True, cascade='all, delete-orphan')
     breathing_logs = db.relationship('BreathingExerciseLog', backref='user', lazy=True, cascade='all, delete-orphan')
     yoga_logs = db.relationship('YogaLog', backref='user', lazy=True, cascade='all, delete-orphan')
+    music_logs = db.relationship('MusicTherapyLog', backref='user', lazy=True, cascade='all, delete-orphan')
     progress_recommendations = db.relationship('ProgressRecommendation', backref='user', lazy=True, cascade='all, delete-orphan')
     clinical_notes = db.relationship('ClinicalNote', foreign_keys='[ClinicalNote.patient_id]', backref='patient_user', lazy=True, cascade='all, delete-orphan')
 
@@ -348,6 +349,24 @@ class YogaLog(db.Model):
     def __repr__(self):
         return f'<YogaLog {self.session_name} - {self.duration_minutes} minutes>'
 
+class MusicTherapyLog(db.Model):
+    """Music therapy log model for tracking user mood music sessions."""
+    __tablename__ = 'music_therapy_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    mood = db.Column(db.String(50), nullable=False)  # happy, sad, angry, calm, anxious, focus
+    brainwave = db.Column(db.String(20), nullable=True)  # alpha, beta, delta, gamma, theta
+    frequency = db.Column(db.Float, nullable=True)  # Hz
+    type = db.Column(db.String(20), nullable=True)  # pure, isochronic, solfeggio
+    label = db.Column(db.String(255), nullable=True)
+    filename = db.Column(db.String(255), nullable=True)
+    duration_minutes = db.Column(db.Integer, nullable=True)  # optional
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    def __repr__(self):
+        return f'<MusicTherapyLog {self.mood} - {self.label or self.filename}>'
+
 
 class ProgressRecommendation(db.Model):
     """Model for storing AI-generated progress recommendations."""
@@ -376,6 +395,33 @@ class Prescription(db.Model):
 
     def __repr__(self):
         return f'<Prescription {self.medication_name} for patient {self.patient_id}>'
+
+class BinauralTrack(db.Model):
+    """Optional table for storing binaural beats dataset tracks."""
+    __tablename__ = 'binaural_tracks'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(300), nullable=False)
+    artist = db.Column(db.String(200), nullable=True)
+    emotion = db.Column(db.String(100), nullable=True, index=True)
+    youtube_id = db.Column(db.String(100), nullable=True, index=True)
+    tags = db.Column(db.JSON, nullable=True)
+    source_file = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'artist': self.artist,
+            'emotion': self.emotion,
+            'youtube_id': self.youtube_id,
+            'tags': self.tags,
+            'source_file': self.source_file
+        }
+
+    def __repr__(self):
+        return f'<BinauralTrack {self.id} - {self.title}>'
 
 
 # Helper functions for analytics
@@ -445,9 +491,13 @@ def get_institutional_summary(institution, db, days_active=7, days_risk=7, days_
         YogaLog.user_id.in_(user_ids),
         YogaLog.created_at >= datetime.combine(active_start_date, datetime.min.time())
     ).distinct().all()
+    active_music_users = db.session.query(MusicTherapyLog.user_id).filter(
+        MusicTherapyLog.user_id.in_(user_ids),
+        MusicTherapyLog.created_at >= datetime.combine(active_start_date, datetime.min.time())
+    ).distinct().all()
 
     all_active_user_ids = set()
-    for result in active_detox_users + active_assessment_users + active_medication_users + active_breathing_users + active_yoga_users:
+    for result in active_detox_users + active_assessment_users + active_medication_users + active_breathing_users + active_yoga_users + active_music_users:
         all_active_user_ids.add(result[0])
 
     active_users_count = len(all_active_user_ids)
