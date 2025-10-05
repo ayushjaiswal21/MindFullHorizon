@@ -1,8 +1,13 @@
 """Database models for the Mindful Horizon application."""
 from datetime import datetime, timedelta
 from sqlalchemy import func
+from sqlalchemy.exc import OperationalError
 from werkzeug.security import generate_password_hash, check_password_hash
 from extensions import db
+import logging
+
+# Module logger
+logger = logging.getLogger(__name__)
 
 class User(db.Model):
     """User model for both patients and providers."""
@@ -424,6 +429,25 @@ class BinauralTrack(db.Model):
         return f'<BinauralTrack {self.id} - {self.title}>'
 
 
+class Notification(db.Model):
+    """Simple notification/message model for provider->patient quick messages and alerts."""
+    __tablename__ = 'notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    type = db.Column(db.String(50), nullable=False, default='message')
+    payload = db.Column(db.JSON, nullable=True)
+    message = db.Column(db.Text, nullable=True)
+    read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_notifications')
+    recipient = db.relationship('User', foreign_keys=[recipient_id], backref='notifications')
+
+    def __repr__(self):
+        return f'<Notification {self.type} to {self.recipient_id}>'
+
+
 # Helper functions for analytics
 def get_user_wellness_trend(user_id, days=30):
     """Get wellness trend for a specific user over the last N days"""
@@ -491,10 +515,16 @@ def get_institutional_summary(institution, db, days_active=7, days_risk=7, days_
         YogaLog.user_id.in_(user_ids),
         YogaLog.created_at >= datetime.combine(active_start_date, datetime.min.time())
     ).distinct().all()
-    active_music_users = db.session.query(MusicTherapyLog.user_id).filter(
-        MusicTherapyLog.user_id.in_(user_ids),
-        MusicTherapyLog.created_at >= datetime.combine(active_start_date, datetime.min.time())
-    ).distinct().all()
+    try:
+        active_music_users = db.session.query(MusicTherapyLog.user_id).filter(
+            MusicTherapyLog.user_id.in_(user_ids),
+            MusicTherapyLog.created_at >= datetime.combine(active_start_date, datetime.min.time())
+        ).distinct().all()
+    except OperationalError as e:
+        # If the music_therapy_logs table doesn't exist (e.g., migrations not applied),
+        # treat as zero activity instead of crashing the provider dashboard.
+        logger.warning(f"Database table missing or inaccessible when querying music therapy logs: {e}")
+        active_music_users = []
 
     all_active_user_ids = set()
     for result in active_detox_users + active_assessment_users + active_medication_users + active_breathing_users + active_yoga_users + active_music_users:

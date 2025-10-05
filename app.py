@@ -24,7 +24,7 @@ from flask_caching import Cache
 
 from ai_service import ai_service
 from extensions import db, migrate, flask_session, compress, csrf
-from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, MusicTherapyLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary
+from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, MusicTherapyLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary, Notification
 from models import BlogPost, BlogComment, BlogLike, BlogInsight, Prescription  # Ensure BlogPost and related models are imported
 
 # Add this function before the route definitions to help standardize college names
@@ -675,6 +675,37 @@ def provider_dashboard():
             'digital_score': latest_detox.ai_score if latest_detox and latest_detox.ai_score else 'No data'
         })
     
+    # --- Apply client-side filters/search if provided ---
+    search_q = request.args.get('q', '').strip()
+    filter_risk = request.args.get('risk', '').strip()
+
+    filtered_caseload = caseload_data
+    if search_q:
+        q_lower = search_q.lower()
+        filtered_caseload = [c for c in filtered_caseload if q_lower in (c.get('name') or '').lower() or q_lower in (c.get('email') or '').lower()]
+
+    if filter_risk in ('High', 'Medium', 'Low'):
+        filtered_caseload = [c for c in filtered_caseload if c.get('risk_level') == filter_risk]
+
+    # --- Simple Tasks derivation (quick wins): overdue appointments and inactive follow-ups ---
+    tasks = []
+    try:
+        # Overdue appointments assigned to this provider (status 'booked' and date < today)
+        overdue = Appointment.query.filter(Appointment.provider_id == session.get('user_id'), Appointment.status == 'booked', Appointment.date < date.today()).order_by(Appointment.date.desc()).limit(5).all()
+        for o in overdue:
+            tasks.append({'title': f'Complete appointment note for {o.user.name if o.user else o.user_id}', 'patient_id': o.user_id, 'due': o.date.strftime('%Y-%m-%d'), 'type': 'appointment'})
+    except Exception:
+        # If Appointment table/query fails for any reason, ignore tasks generation gracefully
+        tasks = []
+
+    # Also add patients with no recent activity (>7 days)
+    try:
+        for c in caseload_data:
+            if c.get('status') == 'Inactive':
+                tasks.append({'title': f'Check-in with {c.get("name")}', 'patient_id': c.get('user_id'), 'due': '', 'type': 'followup'})
+    except Exception:
+        pass
+
     institutional_data = get_institutional_summary(institution, db)
     
     bi_data = {
@@ -689,15 +720,39 @@ def provider_dashboard():
     
     return render_template('provider_dashboard.html', 
                          user_name=session['user_name'],
-                         caseload=caseload_data,
+                         caseload=filtered_caseload,
                          bi_data=bi_data,
-                         institution=institution)
+                         institution=institution,
+                         search_q=search_q,
+                         filter_risk=filter_risk,
+                         tasks=tasks)
 
 
 @app.route('/chat')
 @login_required
 def chat():
     return render_template('chat.html', user_name=session['user_name'])
+
+
+@app.route('/api/message', methods=['POST'])
+@login_required
+def api_message():
+    try:
+        data = request.get_json() or {}
+        recipient_id = data.get('recipient_id')
+        message = data.get('message', '').strip()
+        if not recipient_id or not message:
+            return jsonify(success=False, error='recipient_id and message are required'), 400
+
+        # create notification
+        notif = Notification(sender_id=session.get('user_id'), recipient_id=recipient_id, message=message, type='message', payload=None)
+        db.session.add(notif)
+        db.session.commit()
+        return jsonify(success=True, id=notif.id)
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to create message: {e}")
+        return jsonify(success=False, error=str(e)), 500
 
 @app.route('/schedule', methods=['GET', 'POST'])
 @login_required
