@@ -550,12 +550,22 @@ async function initializeCorrelationChart() {
     const canvas = document.getElementById('correlation-chart');
     if (!canvas) return;
 
+    // Destroy any existing charts on this canvas
     const existingChart = Chart.getChart(canvas);
     if (existingChart) {
         existingChart.destroy();
     }
 
+    // Additional cleanup: destroy all chart instances associated with this canvas
+    Chart.helpers.each(Chart.instances, function(instance) {
+        if (instance.canvas === canvas) {
+            instance.destroy();
+        }
+    });
+
+    // Clear the canvas to ensure it's clean
     const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     try {
         const response = await fetch('/api/digital-detox-data');
@@ -638,7 +648,12 @@ function initializeChartJS() {
     if (typeof Chart !== 'undefined') {
         initializeScreenTimeChart();
         initializeWellnessChart();
-        initializeCorrelationChart();
+
+        // Only initialize correlation chart if we're not on the digital detox page
+        // The digital detox page handles its own chart initialization
+        if (!document.getElementById('digital-detox-form')) {
+            initializeCorrelationChart();
+        }
     }
 }
 
@@ -685,51 +700,135 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Chat page scripts
     if (document.getElementById('chat-form')) {
-        const socket = io();
+        // Check if socket.io is available
+        if (typeof io === 'undefined') {
+            console.error('Socket.IO library not loaded');
+            showChatError('Chat service is currently unavailable. Please refresh the page.');
+            return;
+        }
+
+        let socket;
+        try {
+            socket = io({
+                transports: ['websocket', 'polling'],
+                timeout: 5000,
+                reconnection: true,
+                reconnectionAttempts: 3
+            });
+        } catch (error) {
+            console.error('Failed to initialize socket connection:', error);
+            showChatError('Failed to connect to chat service.');
+            return;
+        }
 
         const chatForm = document.getElementById('chat-form');
         const chatInput = document.getElementById('chat-input');
         const chatMessages = document.getElementById('chat-messages');
 
+        // Connection status handling
+        socket.on('connect', function() {
+            console.log('Chat connected');
+            hideConnectionError();
+        });
+
+        socket.on('disconnect', function() {
+            console.log('Chat disconnected');
+            showConnectionError('Connection lost. Attempting to reconnect...');
+        });
+
+        socket.on('connect_error', function(error) {
+            console.error('Chat connection error:', error);
+            showConnectionError('Unable to connect to chat service.');
+        });
+
+        socket.on('reconnect', function() {
+            console.log('Chat reconnected');
+            hideConnectionError();
+        });
+
         chatForm.addEventListener('submit', function(e) {
             e.preventDefault();
-            const message = chatInput.value;
-            if (message) {
+            const message = chatInput.value.trim();
+            if (message && socket.connected) {
                 // Show user message immediately
                 const userMsg = document.createElement('div');
-                    userMsg.classList.add('chat-message', 'text-right');
-                    userMsg.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-blue-600 text-white ml-auto text-right"><p>${escapeHtml(message)}</p></div>`;
-                    chatMessages.appendChild(userMsg);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                userMsg.classList.add('chat-message', 'text-right');
+                userMsg.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-blue-600 text-white ml-auto text-right"><p>${escapeHtml(message)}</p></div>`;
+                chatMessages.appendChild(userMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
 
-                socket.emit('chat_message', { 'message': message, 'csrf_token': document.querySelector('meta[name="csrf-token"]').getAttribute('content') });
-                chatInput.value = '';
+                try {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                    socket.emit('chat_message', { 
+                        'message': message, 
+                        'csrf_token': csrfToken 
+                    });
+                    chatInput.value = '';
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    showChatError('Failed to send message. Please try again.');
+                }
+            } else if (!socket.connected) {
+                showChatError('Not connected to chat service. Please wait for reconnection.');
             }
         });
 
         socket.on('chat_response', function(data) {
-            // Split multiline bot responses for better display
-            const botReplies = data.reply.split(/\n+/);
-            botReplies.forEach(function(reply) {
-                if (reply.trim() === '') return;
-                const messageElement = document.createElement('div');
+            try {
+                // Split multiline bot responses for better display
+                const botReplies = (data.reply || 'No response received').split(/\n+/);
+                botReplies.forEach(function(reply) {
+                    if (reply.trim() === '') return;
+                    const messageElement = document.createElement('div');
                     messageElement.classList.add('chat-message', 'text-left');
                     if (data.is_crisis) {
                         messageElement.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-red-200 text-red-800 mr-auto text-left"><p>${escapeHtml(reply)}</p></div>`;
                     } else {
                         messageElement.innerHTML = `<div class="inline-block max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-gray-200 text-gray-800 mr-auto text-left"><p>${escapeHtml(reply)}</p></div>`;
                     }
-                chatMessages.appendChild(messageElement);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-            });
+                    chatMessages.appendChild(messageElement);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                });
+            } catch (error) {
+                console.error('Error handling chat response:', error);
+                showChatError('Error displaying chat response.');
+            }
         });
 
-        // Helper to escape HTML
+        // Helper functions
         function escapeHtml(text) {
             const map = {
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
             };
             return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function showChatError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.id = 'chat-error';
+            errorDiv.className = 'chat-message text-center';
+            errorDiv.innerHTML = `<div class="inline-block px-4 py-2 rounded-lg bg-red-100 text-red-800"><p><i class="fas fa-exclamation-triangle mr-2"></i>${message}</p></div>`;
+            chatMessages.appendChild(errorDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showConnectionError(message) {
+            let errorDiv = document.getElementById('connection-error');
+            if (!errorDiv) {
+                errorDiv = document.createElement('div');
+                errorDiv.id = 'connection-error';
+                errorDiv.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-md z-50';
+                document.body.appendChild(errorDiv);
+            }
+            errorDiv.innerHTML = `<i class="fas fa-wifi mr-2"></i>${message}`;
+            errorDiv.style.display = 'block';
+        }
+
+        function hideConnectionError() {
+            const errorDiv = document.getElementById('connection-error');
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
         }
     }
 });
@@ -968,7 +1067,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response = await fetch('/yoga', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                     },
                     body: new URLSearchParams(data)
                 });
@@ -1890,10 +1990,14 @@ window.addEventListener('error', function(e) {
     console.error('Global JavaScript error:', e.error);
     // Log error to server if needed
     if (typeof fetch !== 'undefined') {
+        const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
+
         fetch('/api/log-error', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                ...(csrfToken && { 'X-CSRFToken': csrfToken })
             },
             body: JSON.stringify({
                 message: e.message,
@@ -1911,10 +2015,14 @@ window.addEventListener('unhandledrejection', function(e) {
     console.error('Unhandled promise rejection:', e.reason);
     // Log error to server if needed
     if (typeof fetch !== 'undefined') {
+        const csrfTokenElement = document.querySelector('meta[name="csrf-token"]');
+        const csrfToken = csrfTokenElement ? csrfTokenElement.getAttribute('content') : '';
+
         fetch('/api/log-error', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                ...(csrfToken && { 'X-CSRFToken': csrfToken })
             },
             body: JSON.stringify({
                 message: 'Unhandled promise rejection',

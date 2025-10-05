@@ -10,6 +10,8 @@
         "PYTHONPATH": ".",
         "SECRET_KEY": "${{ secrets.SECRET_KEY }}",
         "GEMINI_API_KEY": "${{ secrets.GEMINI_API_KEY }}",
+        "GOOGLE_OAUTH_CLIENT_ID": "${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}",
+        "GOOGLE_OAUTH_CLIENT_SECRET": "${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}",
         "DISABLE_LOCAL_AI": "true"
       }
     }
@@ -38,6 +40,14 @@
         {
           "key": "DISABLE_LOCAL_AI",
           "value": "true"
+        },
+        {
+          "key": "GOOGLE_OAUTH_CLIENT_ID",
+          "sync": false
+        },
+        {
+          "key": "GOOGLE_OAUTH_CLIENT_SECRET",
+          "sync": false
         },
         {
           "key": "DATABASE_URL",

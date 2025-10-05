@@ -1,6 +1,3 @@
-import eventlet
-eventlet.monkey_patch(os=False)
-
 import json
 import re
 
@@ -30,15 +27,45 @@ from extensions import db, migrate, flask_session, compress, csrf
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary
 from models import BlogPost, BlogComment, BlogLike, BlogInsight, Prescription  # Ensure BlogPost and related models are imported
 
-# Load environment variables from .env file
-try:
-    load_dotenv(encoding='utf-8-sig')
-except Exception as e:
-    print(f"Warning: Could not load .env file: {e}")
-    print("Continuing with default configuration...")
+# Add this function before the route definitions to help standardize college names
+def normalize_institution_name(name):
+    """Normalize institution names for better matching."""
+    if not name:
+        return ""
 
+    # Convert to lowercase and remove common punctuation
+    normalized = name.lower().strip()
 
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+    # Common abbreviations and expansions
+    replacements = {
+        'iit': 'indian institute of technology',
+        'nit': 'national institute of technology',
+        'iiit': 'indian institute of information technology',
+        'bits': 'birla institute of technology and science',
+        'university': 'university',
+        'college': 'college',
+        'institute': 'institute',
+        'technology': 'technology',
+        'science': 'science',
+        'engineering': 'engineering',
+        'medical': 'medical',
+        'dental': 'dental',
+        'pharmacy': 'pharmacy',
+        'law': 'law',
+        'management': 'management',
+        'arts': 'arts',
+        'commerce': 'commerce'
+    }
+
+    # Apply replacements
+    for abbr, full in replacements.items():
+        normalized = normalized.replace(abbr, full)
+
+    # Remove extra spaces and common suffixes
+    normalized = ' '.join(normalized.split())  # Remove extra spaces
+    normalized = normalized.replace(' and ', ' ')
+
+    return normalized
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -61,6 +88,8 @@ app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV') == 'production'  # 
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS attacks
 app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'  # Prevent CSRF attacks
 app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
+app.config['WTF_CSRF_TIME_LIMIT'] = 604800  # 7 days, for prototype convenience
+
 
 
 
@@ -78,16 +107,13 @@ def add_security_headers(response):
     
     # Content Security Policy
     csp = (
-        "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://translate.google.com; "
-        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-        "font-src 'self' https://fonts.gstatic.com; "
-        "img-src 'self' data: https:; "
-        "connect-src 'self' https://api.generativeai.google.com; "
-        "frame-src 'none'; "
-        "object-src 'none'; "
-        "base-uri 'self'; "
-        "form-action 'self'"
+        "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
+        "script-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
+        "style-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
+        "font-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
+        "img-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
+        "connect-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
+        "frame-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
     )
     response.headers['Content-Security-Policy'] = csp
     return response
@@ -194,7 +220,7 @@ db.init_app(app)
 migrate.init_app(app, db)
 flask_session.init_app(app)
 compress.init_app(app)
-csrf.init_app(app)
+# csrf.init_app(app)  # Already initialized above
 
 # Cached blog insights function
 @cache.memoize(timeout=300)  # Cache for 5 minutes
@@ -589,13 +615,41 @@ def patient_dashboard():
 @role_required('provider')
 def provider_dashboard():
     institution = session.get('user_institution', 'Sample University')
-    
-    # Fetch all patients for the institution with eager loading to prevent N+1 queries
+
+    # Normalize the provider's institution for better matching
+    normalized_provider_institution = normalize_institution_name(institution)
+
+    # More flexible institution matching for better patient-provider visibility
+    # Split institution name into keywords for partial matching
+    institution_keywords = set(normalized_provider_institution.split())
+
+    # Fetch all patients and filter them based on institution similarity
     from sqlalchemy.orm import joinedload
-    patients = User.query.options(
+    all_patients = User.query.options(
         joinedload(User.digital_detox_logs),
         joinedload(User.clinical_notes)
-    ).filter_by(role='patient', institution=institution).all()
+    ).filter_by(role='patient').all()
+
+    # Filter patients based on institution similarity
+    patients = []
+    for patient in all_patients:
+        patient_institution = patient.institution or ''
+        normalized_patient_institution = normalize_institution_name(patient_institution)
+        patient_keywords = set(normalized_patient_institution.split())
+
+        # Check for similarity (partial match, case-insensitive)
+        if institution_keywords & patient_keywords:  # Intersection of keywords
+            patients.append(patient)
+        elif not patient_institution and institution == 'Sample University':
+            # Include patients with no institution if provider is using default
+            patients.append(patient)
+
+    # If no patients found with flexible matching, fall back to exact match for backward compatibility
+    if not patients:
+        patients = User.query.options(
+            joinedload(User.digital_detox_logs),
+            joinedload(User.clinical_notes)
+        ).filter_by(role='patient', institution=institution).all()
 
     caseload_data = []
     for patient in patients:
@@ -1592,6 +1646,71 @@ def digital_detox_data():
     
     return jsonify(data)
 
+@app.route('/api/log-digital-detox', methods=['POST'])
+@login_required
+@role_required('patient')
+def log_digital_detox():
+    user_id = session['user_id']
+    data = request.get_json()
+
+    try:
+        screen_time = float(data.get('screen_time'))
+        academic_score = int(data.get('academic_score'))
+        social_interactions = data.get('social_interactions')
+
+        if not all([screen_time is not None, academic_score is not None, social_interactions]):
+            return jsonify({'success': False, 'message': 'Missing required fields.'}), 400
+
+        # Get historical data for better AI analysis
+        historical_data = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.asc()).limit(30).all()
+        history_for_ai = [{'screen_time_hours': log.screen_time_hours, 'academic_score': log.academic_score} for log in historical_data]
+
+        # Call AI service for digital detox insights
+        detox_data = {
+            'screen_time': screen_time,
+            'academic_score': academic_score,
+            'social_interactions': social_interactions
+        }
+        ai_analysis = ai_service.generate_digital_detox_insights(detox_data)
+
+        # Create new log entry
+        new_log = DigitalDetoxLog(
+            user_id=user_id,
+            date=date.today(),
+            screen_time_hours=screen_time,
+            academic_score=academic_score,
+            social_interactions=social_interactions,
+            ai_score=ai_analysis.get('ai_score', 'N/A'),
+            ai_suggestion=ai_analysis.get('ai_suggestion', 'No suggestion available')
+        )
+
+        db.session.add(new_log)
+        db.session.commit()
+
+        # Award points for logging
+        award_points(user_id, 15, 'digital_detox_log')
+
+        return jsonify({
+            'success': True,
+            'message': 'Digital detox data logged successfully!',
+            'log': {
+                'date': new_log.date.strftime('%Y-%m-%d'),
+                'hours': new_log.screen_time_hours,
+                'academic_score': new_log.academic_score,
+                'social_interactions': new_log.social_interactions,
+                'ai_score': new_log.ai_score
+            },
+            'ai_analysis': ai_analysis
+        })
+
+    except (ValueError, TypeError) as e:
+        logger.error(f"Invalid data for digital detox log: {e}")
+        return jsonify({'success': False, 'message': 'Invalid data format.'}), 400
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error logging digital detox data for user {user_id}: {e}")
+        return jsonify({'success': False, 'message': 'An internal error occurred.'}), 500
+
 @app.route('/api/goals', methods=['GET', 'POST'])
 @login_required
 @role_required('patient')
@@ -1950,8 +2069,16 @@ def health_check():
         'timestamp': datetime.now().isoformat()
     }), 200
 
+@app.route('/api/ai-status')
+@login_required
+def ai_status():
+    """Check the status of the AI service."""
+    status = ai_service.check_api_status()
+    return jsonify(status)
+
 # Error logging endpoint for client-side errors
 @app.route('/api/log-error', methods=['POST'])
+@csrf.exempt
 @limiter.limit("10 per minute")  # Rate limit error logging
 def log_client_error():
     """Log client-side JavaScript errors for debugging."""
@@ -1970,13 +2097,25 @@ def log_client_error():
         logger.error(f"Error logging client error: {e}")
         return jsonify({'success': False, 'message': 'Failed to log error'}), 500
 
-# Serve other static files from root directory if needed
-
-
 # --- SocketIO Chat Handler ---
 @socketio.on('chat_message')
 def handle_chat_message(data):
+    # Basic validation - check if user is logged in via session
+    if 'user_email' not in session:
+        emit('error', {'message': 'Authentication required'})
+        return
+    
     user_message = data.get('message')
+    if not user_message or not isinstance(user_message, str):
+        emit('error', {'message': 'Invalid message format'})
+        return
+    
+    # Sanitize user input
+    user_message = user_message.strip()[:500]  # Limit message length
+    if not user_message:
+        emit('error', {'message': 'Message cannot be empty'})
+        return
+    
     try:
         ai_resp = ai_service.generate_chat_response(user_message)
         if isinstance(ai_resp, dict):
@@ -1985,10 +2124,15 @@ def handle_chat_message(data):
         else:
             reply_text = str(ai_resp)
             is_crisis = False
+        
+        # Log the interaction for monitoring
+        logger.info(f"Chat interaction - User: {session.get('user_email', 'unknown')}, Length: {len(user_message)}, Crisis: {is_crisis}")
+        
     except Exception as e:
         logger.error(f"Chat handler error: {e}")
-        reply_text = "Sorry, the AI is currently unavailable."
+        reply_text = "I apologize, but I'm having trouble responding right now. Please try again in a moment."
         is_crisis = False
+    
     emit('chat_response', {'reply': reply_text, 'is_crisis': is_crisis})
 
 # --- SocketIO Telehealth Handlers ---
@@ -2064,25 +2208,72 @@ def google_logged_in(blueprint, token):
                 db.session.commit()
                 logger.info("google_id linked to existing user.")
             else:
-                logger.info("No existing user found, creating a new user.")
-                user = User(email=email, google_id=google_id, name=name)
+                logger.info("No existing user found, creating a new user with default patient role.")
+                # Create new user with default patient role and institution
+                user = User(
+                    email=email, 
+                    google_id=google_id, 
+                    name=name,
+                    role='patient',  # Default role for Google OAuth users
+                    institution='Default University'
+                )
                 db.session.add(user)
                 db.session.commit()
-                logger.info("New user created.")
+                logger.info("New user created with patient role.")
+                
+                # Create gamification profile for new patient
+                try:
+                    gamification = Gamification(
+                        user_id=user.id,
+                        points=0,
+                        streak=0,
+                        badges=[],
+                        last_activity=None
+                    )
+                    db.session.add(gamification)
+                    db.session.commit()
+                    logger.info(f'Gamification profile created for Google OAuth user: {email}')
+                except Exception as gam_error:
+                    logger.error(f'Error creating gamification profile for Google user: {gam_error}')
+                    db.session.rollback()
 
         logger.info(f"Logging in user: {user.email} (id={user.id})")
+        
+        # Ensure user has a role - assign default if missing
+        if not user.role:
+            logger.warning(f"User {user.email} has no role, assigning default 'patient' role.")
+            user.role = 'patient'
+            user.institution = user.institution or 'Default University'
+            try:
+                db.session.commit()
+                logger.info("Default role assigned to user.")
+                
+                # Create gamification profile if it doesn't exist
+                if not Gamification.query.filter_by(user_id=user.id).first():
+                    gamification = Gamification(
+                        user_id=user.id,
+                        points=0,
+                        streak=0,
+                        badges=[],
+                        last_activity=None
+                    )
+                    db.session.add(gamification)
+                    db.session.commit()
+                    logger.info(f'Gamification profile created for user: {user.email}')
+            except Exception as role_error:
+                logger.error(f'Error assigning default role: {role_error}')
+                db.session.rollback()
+                # Continue with session creation even if role assignment fails
+        
         session.clear()
         session.permanent = True
         session['user_id'] = user.id
         session['user_email'] = user.email
         session['user_name'] = user.name
         session['user_role'] = user.role
+        session['user_institution'] = user.institution or 'Default University'
         session.modified = True
         logger.info("Session created for user.")
-
-        if not user.role:
-            logger.info("User has no role, redirecting to role_selection.")
-            return redirect(url_for('role_selection'))
         
         if user.role == 'patient':
             logger.info("User is a patient, redirecting to patient_dashboard.")
@@ -2137,15 +2328,16 @@ def save_role():
         return redirect(url_for('role_selection'))
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    logger.info("="*50)
-    logger.info("Starting MindFullHorizon server...")
-    logger.info(f"Server available at: http://localhost:5000")
-    logger.info(f"Debug mode: False")
-    logger.info(f"SocketIO enabled: True")
-    logger.info(f"CSRF Protection: Enabled")
-    logger.info("="*50)
+    try:
+        print("INFO - ==================================================")
+        print("INFO - Starting MindFullHorizon server...")
+        print(f"INFO - Server available at: http://localhost:5000")
+        print("INFO - Debug mode: True")
+        print("INFO - CSRF Protection: Enabled")
+        print("INFO - ==================================================")
 
-    # Start the server only once
-    socketio.run(app, debug=False, port=5000)
+        # SocketIO server for real-time features
+        socketio.run(app, host='127.0.0.1', port=5000, debug=True)
+
+    except Exception as e:
+        print(f"ERROR - Failed to start server: {e}")
