@@ -29,8 +29,8 @@ def init_extensions(app):
         os.makedirs(app.config['SESSION_FILE_DIR'])
     flask_session.init_app(app)
     
-    # Initialize security features - DISABLED FOR NOW
-    # csrf.init_app(app)
+    # Initialize security features - CSRF is initialized in app.py
+    # csrf.init_app(app)  # Already initialized in app.py
     
     # Initialize compression last
     compress.init_app(app)
