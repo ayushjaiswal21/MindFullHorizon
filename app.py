@@ -1,10 +1,15 @@
+import logging
+
+# Configure basic logging early to handle import errors
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 import json
 import re
 
 from werkzeug.utils import secure_filename
 import uuid
 
-import logging
 import os
 from datetime import datetime, timedelta, date, timezone
 from functools import wraps
@@ -12,6 +17,31 @@ from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 from dotenv import load_dotenv
+# Configure logging early
+import logging
+
+# Create a custom logger that outputs to both file and console
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# Remove any existing handlers to avoid duplicates
+for handler in logger.handlers[:]:
+    logger.removeHandler(handler)
+
+# File handler
+file_handler = logging.FileHandler('mindful_horizon.log')
+file_handler.setLevel(logging.DEBUG)
+file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(file_formatter)
+logger.addHandler(file_handler)
+
+# Console handler for terminal output
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_formatter = logging.Formatter('%(levelname)s - %(message)s')
+console_handler.setFormatter(console_formatter)
+logger.addHandler(console_handler)
+
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, abort, get_flashed_messages
 from flask_session import Session
 from flask_compress import Compress
@@ -27,47 +57,46 @@ from extensions import db, migrate, flask_session, compress, csrf
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary
 from models import BlogPost, BlogComment, BlogLike, BlogInsight, Prescription  # Ensure BlogPost and related models are imported
 
-# Add this function before the route definitions to help standardize college names
-def normalize_institution_name(name):
-    """Normalize institution names for better matching."""
-    if not name:
-        return ""
+# In-memory storage for patient features (no database required)
+patient_journal_entries = {}  # user_id -> list of journal entries
+patient_voice_logs_data = {}       # user_id -> list of voice log entries
 
-    # Convert to lowercase and remove common punctuation
-    normalized = name.lower().strip()
+# File upload configuration
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'wav', 'mp3', 'ogg'}
+ALLOWED_MIME_TYPES = {
+    'image/png', 'image/jpeg', 'image/jpg', 'image/gif',
+    'audio/wav', 'audio/mpeg', 'audio/ogg'
+}
 
-    # Common abbreviations and expansions
-    replacements = {
-        'iit': 'indian institute of technology',
-        'nit': 'national institute of technology',
-        'iiit': 'indian institute of information technology',
-        'bits': 'birla institute of technology and science',
-        'university': 'university',
-        'college': 'college',
-        'institute': 'institute',
-        'technology': 'technology',
-        'science': 'science',
-        'engineering': 'engineering',
-        'medical': 'medical',
-        'dental': 'dental',
-        'pharmacy': 'pharmacy',
-        'law': 'law',
-        'management': 'management',
-        'arts': 'arts',
-        'commerce': 'commerce'
-    }
+# Import new dependencies for patient features
+try:
+    from textblob import TextBlob
+    import librosa
+    import numpy as np
+    TEXTBLOB_AVAILABLE = True
+    LIBROSA_AVAILABLE = True
+except ImportError as e:
+    logger.warning(f"Some patient feature dependencies not available: {e}")
+    TEXTBLOB_AVAILABLE = False
+    LIBROSA_AVAILABLE = False
 
-    # Apply replacements
-    for abbr, full in replacements.items():
-        normalized = normalized.replace(abbr, full)
-
-    # Remove extra spaces and common suffixes
-    normalized = ' '.join(normalized.split())  # Remove extra spaces
-    normalized = normalized.replace(' and ', ' ')
-
-    return normalized
-
+# Database configuration
 app = Flask(__name__)
+
+# Configure file uploads
+app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'static', 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Ensure upload directory exists
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///mindful_horizon.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_pre_ping': True,
+    'pool_recycle': 300,
+}
+
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Initialize rate limiter
@@ -80,7 +109,7 @@ limiter = Limiter(
 # Initialize caching
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
-# Configure session
+# Configure session BEFORE initializing extensions
 app.secret_key = os.getenv('SECRET_KEY', 'supersecretkey')  # Use environment variable or fallback
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Extended session lifetime
@@ -90,8 +119,11 @@ app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'  # Prevent CSRF attacks
 app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
 app.config['WTF_CSRF_TIME_LIMIT'] = 604800  # 7 days, for prototype convenience
 
+# Initialize database extensions AFTER session configuration
+from extensions import init_extensions
+init_extensions(app)
 
-
+from models import *
 
 # Enable CSRF protection for security
 csrf.init_app(app)
@@ -135,92 +167,27 @@ def handle_file_too_large(e):
 @app.errorhandler(400)
 def handle_bad_request(e):
     logger.warning(f"Bad request from {request.remote_addr}: {request.endpoint}")
+    # For journal-related requests, redirect back to journal instead of index
+    if request.endpoint == 'patient_journal' and request.method == 'POST':
+        flash('Invalid request. Please check your input and try again.', 'error')
+        return redirect(url_for('patient_journal'))
     flash('Invalid request. Please try again.', 'error')
     return redirect(url_for('index'))
 
 @app.errorhandler(500)
 def handle_internal_error(e):
     logger.error(f"Internal server error: {e}")
+    # For journal-related requests, redirect back to journal instead of index
+    if request.endpoint == 'patient_journal' and request.method == 'POST':
+        flash('An error occurred while saving your journal entry. Please try again.', 'error')
+        return redirect(url_for('patient_journal'))
     flash('An internal error occurred. Please try again later.', 'error')
     return redirect(url_for('index'))
-
-# Configure logging
-# Create a custom logger that outputs to both file and console
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-# Remove any existing handlers to avoid duplicates
-for handler in logger.handlers[:]:
-    logger.removeHandler(handler)
-
-# File handler
-file_handler = logging.FileHandler('mindful_horizon.log')
-file_handler.setLevel(logging.DEBUG)
-file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(file_formatter)
-logger.addHandler(file_handler)
-
-# Console handler for terminal output
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-console_formatter = logging.Formatter('%(levelname)s - %(message)s')
-console_handler.setFormatter(console_formatter)
-logger.addHandler(console_handler)
 
 # Yoga Video Library Page (correct placement)
 @app.route('/yoga-videos')
 def yoga_videos():
     return render_template('yoga_videos.html')
-
-
-basedir = os.path.abspath(os.path.dirname(__file__))
-# Ensure instance folder exists (use Flask instance path)
-try:
-    os.makedirs(app.instance_path, exist_ok=True)
-except Exception:
-    # Fallback to project-level instance directory
-    os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
-
-db_path = os.path.join(basedir, 'instance', 'mindful_horizon.db')
-logger.info(f"DATABASE_URL: {os.environ.get('DATABASE_URL')}")
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or f'sqlite:///{db_path}'
-logger.info(f"Using database at: {app.config['SQLALCHEMY_DATABASE_URI']}")
-
-
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Database connection pooling configuration
-engine_options = {
-    'pool_size': 10,
-    'pool_recycle': 120,
-    'pool_pre_ping': True,
-    'max_overflow': 20
-}
-
-# Improve SQLite compatibility with threaded servers (e.g., SocketIO)
-if app.config.get('SQLALCHEMY_DATABASE_URI', '').startswith('sqlite:///'):
-    engine_options['connect_args'] = {'check_same_thread': False}
-
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
-
-# Upload folder for profile pictures
-UPLOAD_FOLDER = os.path.join(basedir, 'static/profile_pics')
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB max file size
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-ALLOWED_MIME_TYPES = {'image/png', 'image/jpeg', 'image/gif'}
-
-# Ensure the upload folder exists
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
-# Initialize extensions
-db.init_app(app)
-migrate.init_app(app, db)
-flask_session.init_app(app)
-compress.init_app(app)
-# csrf.init_app(app)  # Already initialized above
 
 # Cached blog insights function
 @cache.memoize(timeout=300)  # Cache for 5 minutes
@@ -279,35 +246,14 @@ def is_strong_password(password):
         return False, "Password must contain at least one special character."
     return True, ""
 
-# Stub for award_points (replace with real logic as needed)
-def award_points(user_id, points, reason):
-    """Award gamification points to a user and return the Gamification record.
+# Import gamification functions
+from gamification_engine import award_points
 
-    Ensures a Gamification row exists, increments points, updates streak basics,
-    and persists changes. Keeps logic lightweight to avoid side effects.
-    """
-    try:
-        gamification = Gamification.query.filter_by(user_id=user_id).first()
-        if not gamification:
-            gamification = Gamification(user_id=user_id, points=0, streak=0, badges=[])
-            db.session.add(gamification)
-
-        # Increment points
-        gamification.points = (gamification.points or 0) + int(points or 0)
-
-        # Minimal streak handling: ensure last_activity set; streak mgmt happens elsewhere
-        if not gamification.last_activity:
-            gamification.streak = max(gamification.streak or 0, 1)
-        db.session.commit()
-        return gamification
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Failed to award points to user {user_id} for {reason}: {e}")
-        # Return a safe object-like fallback
-        class _GF:
-            points = 0
-            streak = 0
-        return _GF()
+def normalize_institution_name(institution_name):
+    """Normalize institution name for better matching."""
+    if not institution_name:
+        return ''
+    return institution_name.lower().strip()
 
 def login_required(f):
     @wraps(f)
@@ -2048,6 +1994,437 @@ def blog_edit(post_id):
     return render_template('blog_edit.html', post=post)
 
 
+# --- PATIENT JOURNAL ROUTES ---
+
+@app.route('/patient/journal', methods=['GET', 'POST'])
+@login_required
+@role_required('patient')
+def patient_journal():
+    """Journal entries page for patients."""
+    # Ensure user is logged in and has valid session
+    if 'user_id' not in session:
+        flash('Please log in to access your journal.', 'error')
+        return redirect(url_for('login'))
+
+    user_id = session['user_id']
+
+    if request.method == 'POST':
+        title = request.form.get('title', '').strip()
+        content = request.form.get('content', '').strip()
+
+        if not title or not content:
+            flash('Both title and content are required.', 'error')
+            return redirect(url_for('patient_journal'))
+
+        if len(title) > 100:
+            flash('Title must be less than 100 characters.', 'error')
+            return redirect(url_for('patient_journal'))
+
+        if len(content) > 5000:
+            flash('Content must be less than 5000 characters.', 'error')
+            return redirect(url_for('patient_journal'))
+
+        # Perform sentiment analysis
+        sentiment_result = 'Neutral'  # Default fallback
+        if TEXTBLOB_AVAILABLE:
+            try:
+                blob = TextBlob(content)
+                polarity = blob.sentiment.polarity
+                if polarity > 0.1:
+                    sentiment_result = 'Positive'
+                elif polarity < -0.1:
+                    sentiment_result = 'Negative'
+                else:
+                    sentiment_result = 'Neutral'
+            except Exception as e:
+                logger.warning(f"Sentiment analysis failed: {e}")
+                sentiment_result = 'Neutral'
+
+        # Get AI suggestions for the journal entry
+        ai_suggestions = get_ai_journal_suggestions(title, content)
+
+        # Create journal entry
+        journal_entry = {
+            'id': str(uuid.uuid4()),
+            'title': title,
+            'content': content,
+            'sentiment': sentiment_result,
+            'ai_suggestions': ai_suggestions,
+            'created_at': datetime.now(),
+            'updated_at': datetime.now()
+        }
+
+        # Initialize user's journal entries if not exists
+        if user_id not in patient_journal_entries:
+            patient_journal_entries[user_id] = []
+
+        patient_journal_entries[user_id].append(journal_entry)
+
+        # Award points for journaling
+        award_points(user_id, 15, 'journal_entry')
+
+        flash('Journal entry saved successfully!', 'success')
+        return redirect(url_for('patient_journal'))
+
+    # GET request - display journal entries
+    user_entries = patient_journal_entries.get(user_id, [])
+
+    return render_template('patient_journal.html',
+                         user_name=session['user_name'],
+                         journal_entries=user_entries)
+
+
+def get_ai_journal_suggestions(title, content):
+    """Get AI-powered suggestions for journal entries with optimized prompts."""
+    try:
+        # Enhanced prompt with better structure and context
+        prompt = f"""
+        You are Dr. Anya, a compassionate AI wellness coach. Analyze this journal entry and provide supportive, actionable insights.
+
+        JOURNAL ENTRY:
+        Title: {title}
+        Content: {content}
+
+        Please provide a structured response in this exact format:
+
+        INSIGHTS:
+        [2-3 sentences identifying key themes, emotions, or patterns]
+
+        SUGGESTIONS:
+        [3 specific, actionable suggestions for wellbeing, each on a new line]
+
+        COPING STRATEGIES:
+        [2-3 relevant coping strategies or techniques]
+
+        ENCOURAGEMENT:
+        [1-2 sentences of supportive, empathetic encouragement]
+
+        Keep your response concise (under 800 characters total), supportive, and focused on wellness and growth.
+        Use bullet points for suggestions and strategies. Be empathetic and non-judgmental.
+        """
+
+        # Use the AI service to get suggestions with optimized parameters
+        ai_response = ai_service.generate_chat_response(prompt)
+
+        if isinstance(ai_response, dict):
+            suggestions = ai_response.get('response') or ai_response.get('reply') or str(ai_response)
+        else:
+            suggestions = str(ai_response)
+
+        # Clean up and format the response for better readability
+        suggestions = suggestions.strip()[:800]  # Limit length
+
+        # Ensure we have meaningful content
+        if len(suggestions) < 50:  # Too short, probably error
+            suggestions = "Thank you for sharing your thoughts. Consider discussing these feelings with a trusted friend or mental health professional."
+
+        return suggestions
+
+    except Exception as e:
+        logger.warning(f"AI suggestion generation failed: {e}")
+        return "Thank you for sharing your thoughts. Consider discussing these feelings with a trusted friend or mental health professional."
+
+@app.route('/api/delete-journal-entry/<entry_id>', methods=['DELETE'])
+@login_required
+@role_required('patient')
+def delete_journal_entry(entry_id):
+    """Delete a specific journal entry."""
+    user_id = session['user_id']
+
+    # Find the journal entry
+    if user_id not in patient_journal_entries:
+        return jsonify({'success': False, 'message': 'No journal entries found'}), 404
+
+    journal_entries = patient_journal_entries[user_id]
+    journal_entry = None
+
+    for entry in journal_entries:
+        if entry['id'] == entry_id:
+            journal_entry = entry
+            break
+
+    if not journal_entry:
+        return jsonify({'success': False, 'message': 'Journal entry not found'}), 404
+
+    try:
+        # Remove the journal entry from the list
+        patient_journal_entries[user_id].remove(journal_entry)
+
+        return jsonify({
+            'success': True,
+            'message': 'Journal entry deleted successfully'
+        })
+
+    except Exception as e:
+        logger.error(f"Error deleting journal entry {entry_id}: {e}")
+        return jsonify({'success': False, 'message': 'Failed to delete journal entry'}), 500
+
+
+@app.route('/patient/voice-logs')
+@login_required
+@role_required('patient')
+def patient_voice_logs():
+    """Voice logs page for patients."""
+    user_id = session['user_id']
+    user_logs = patient_voice_logs_data.get(user_id, [])
+
+    return render_template('patient_voice_logs.html',
+                         user_name=session['user_name'],
+                         voice_logs=user_logs)
+
+
+@app.route('/api/delete-voice-log/<voice_log_id>', methods=['DELETE'])
+@login_required
+@role_required('patient')
+def delete_voice_log(voice_log_id):
+    """Delete a specific voice log entry."""
+    user_id = session['user_id']
+
+    # Find the voice log entry
+    if user_id not in patient_voice_logs_data:
+        return jsonify({'success': False, 'message': 'No voice logs found'}), 404
+
+    voice_logs = patient_voice_logs_data[user_id]
+    voice_log = None
+
+    for log in voice_logs:
+        if log['id'] == voice_log_id:
+            voice_log = log
+            break
+
+    if not voice_log:
+        return jsonify({'success': False, 'message': 'Voice log not found'}), 404
+
+    try:
+        # Remove the voice log from the list
+        patient_voice_logs_data[user_id].remove(voice_log)
+
+        # Delete the audio file if it exists
+        try:
+            if 'file_path' in voice_log and os.path.exists(voice_log['file_path']):
+                os.remove(voice_log['file_path'])
+                logger.info(f"Deleted audio file: {voice_log['file_path']}")
+        except Exception as file_error:
+            logger.warning(f"Could not delete audio file: {file_error}")
+
+        return jsonify({
+            'success': True,
+            'message': 'Voice log deleted successfully'
+        })
+
+    except Exception as e:
+        logger.error(f"Error deleting voice log {voice_log_id}: {e}")
+        return jsonify({'success': False, 'message': 'Failed to delete voice log'}), 500
+
+
+@app.route('/api/upload-voice', methods=['POST'])
+@login_required
+@role_required('patient')
+@limiter.limit("5 per hour")  # Limit voice uploads
+def upload_voice():
+    """Upload and process voice recording."""
+    user_id = session['user_id']
+
+    if 'audio' not in request.files:
+        return jsonify({'success': False, 'message': 'No audio file provided'}), 400
+
+    audio_file = request.files['audio']
+
+    if audio_file.filename == '':
+        return jsonify({'success': False, 'message': 'No audio file selected'}), 400
+
+    if not audio_file.content_type.startswith('audio/'):
+        return jsonify({'success': False, 'message': 'Invalid file type. Please upload an audio file.'}), 400
+
+    try:
+        # Ensure uploads directory exists
+        uploads_dir = app.config['UPLOAD_FOLDER']
+        os.makedirs(uploads_dir, exist_ok=True)
+
+        # Generate unique filename
+        filename = secure_filename(f"{user_id}_{uuid.uuid4()}.wav")
+        file_path = os.path.join(uploads_dir, filename)
+        
+        # Store relative path for serving
+        relative_path = os.path.join('uploads', filename)
+
+        # Save the file
+        audio_file.save(file_path)
+
+        # Process audio features if librosa is available
+        audio_features = {}
+        emotion_result = 'neutral'  # Default fallback
+
+        if LIBROSA_AVAILABLE:
+            try:
+                # Load audio file
+                y, sr = librosa.load(file_path, duration=120)  # Max 2 minutes
+
+                # Extract basic features
+                audio_features = {
+                    'duration': len(y) / sr,
+                    'sample_rate': sr
+                }
+
+                # Extract acoustic features
+                try:
+                    # Pitch (fundamental frequency)
+                    pitches, magnitudes = librosa.piptrack(y=y, sr=sr)
+                    pitch_values = pitches[pitches > 0]
+                    if len(pitch_values) > 0:
+                        audio_features['mean_pitch'] = float(np.mean(pitch_values))
+                        audio_features['pitch_std'] = float(np.std(pitch_values))
+
+                    # Energy (RMS)
+                    rms = librosa.feature.rms(y=y)
+                    audio_features['mean_energy'] = float(np.mean(rms))
+                    audio_features['energy_std'] = float(np.std(rms))
+
+                    # Zero-crossing rate (related to voice quality)
+                    zcr = librosa.feature.zero_crossing_rate(y)
+                    audio_features['mean_zcr'] = float(np.mean(zcr))
+                    audio_features['zcr_std'] = float(np.std(zcr))
+
+                    # Spectral features
+                    spectral_centroid = librosa.feature.spectral_centroid(y=y, sr=sr)
+                    audio_features['mean_spectral_centroid'] = float(np.mean(spectral_centroid))
+                    audio_features['spectral_centroid_std'] = float(np.std(spectral_centroid))
+
+                except Exception as feature_error:
+                    logger.warning(f"Feature extraction error: {feature_error}")
+
+                # Simple emotion classification based on features
+                emotion_result = classify_emotion(audio_features)
+            except Exception as audio_error:
+                logger.warning(f"Audio processing error: {audio_error}")
+                emotion_result = 'neutral'
+
+        # Get AI-powered emotion analysis for voice
+        emotion_result = get_ai_voice_emotion_analysis(file_path, audio_features)
+
+        # Create voice log entry
+        voice_log = {
+            'id': str(uuid.uuid4()),
+            'filename': filename,
+            'file_path': file_path,
+            'audio_features': audio_features,
+            'emotion': emotion_result,
+            'ai_analysis': emotion_result,  # Store AI analysis result
+            'created_at': datetime.now()
+        }
+
+        # Initialize user's voice logs if not exists
+        if user_id not in patient_voice_logs_data:
+            patient_voice_logs_data[user_id] = []
+            
+        patient_voice_logs_data[user_id].append(voice_log)
+
+        # Award points for voice logging
+        award_points(user_id, 20, 'voice_log')
+
+        return jsonify({
+            'success': True,
+            'message': 'Voice log uploaded and processed successfully!',
+            'voice_log': {
+                'id': voice_log['id'],
+                'emotion': voice_log['emotion'],
+                'audio_features': voice_log['audio_features']
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error uploading voice file: {e}")
+        return jsonify({'success': False, 'message': f'Upload failed: {str(e)}'}), 500
+
+
+def get_ai_voice_emotion_analysis(file_path, audio_features):
+    """Get AI-powered emotion analysis for voice recordings with optimized prompts."""
+    try:
+        # Enhanced prompt with better structure and audio features
+        prompt = f"""
+        You are Dr. Anya, an AI wellness coach analyzing voice recordings for emotional insights.
+
+        AUDIO ANALYSIS:
+        Duration: {audio_features.get('duration', 0):.1f}s
+        Mean Pitch: {audio_features.get('mean_pitch', 0):.0f} Hz
+        Mean Energy: {audio_features.get('mean_energy', 0):.4f}
+        Spectral Centroid: {audio_features.get('mean_spectral_centroid', 0):.0f} Hz
+
+        Based on these acoustic features, determine the primary emotion expressed:
+
+        EMOTIONS: happy, sad, stressed, angry, calm, excited, neutral, anxious, confident
+
+        Respond in this exact format:
+
+        EMOTION: [primary emotion]
+        CONFIDENCE: [high/medium/low]
+        INSIGHTS: [2-3 sentences explaining the emotion based on audio features]
+        SUGGESTIONS: [2 specific wellness suggestions based on detected emotion]
+
+        Keep response concise and supportive.
+        """
+
+        # Use the AI service to get emotion analysis with optimized parameters
+        ai_response = ai_service.generate_chat_response(prompt)
+
+        if isinstance(ai_response, dict):
+            analysis = ai_response.get('response') or ai_response.get('reply') or str(ai_response)
+        else:
+            analysis = str(ai_response)
+
+        # Extract the primary emotion from the response
+        analysis_lower = analysis.lower()
+
+        # Look for emotion keywords in the response
+        emotions = ['happy', 'sad', 'stressed', 'angry', 'calm', 'excited', 'neutral', 'anxious', 'confident']
+        detected_emotion = 'neutral'  # default fallback
+
+        for emotion in emotions:
+            if emotion in analysis_lower:
+                detected_emotion = emotion
+                break
+
+        # Clean up the response and limit length
+        analysis = analysis.strip()[:400]  # Limit to 400 characters
+
+        return f"{detected_emotion.capitalize()}: {analysis}"
+
+    except Exception as e:
+        logger.warning(f"AI voice emotion analysis failed: {e}")
+        return "Neutral: Voice analysis completed. Consider how you're feeling and what might be affecting your emotional state."
+
+
+def classify_emotion(audio_features):
+    """Simple emotion classification based on acoustic features."""
+    if not audio_features:
+        return 'neutral'
+
+    try:
+        # Simple heuristic-based classification
+        pitch = audio_features.get('mean_pitch', 0)
+        energy = audio_features.get('mean_energy', 0)
+        zcr = audio_features.get('mean_zcr', 0)
+
+        # Higher pitch and energy might indicate excitement/happiness
+        if pitch > 200 and energy > 0.1:
+            return 'happy'
+        # Lower pitch and energy might indicate sadness
+        elif pitch < 150 and energy < 0.05:
+            return 'sad'
+        # Higher zero-crossing rate might indicate stress/agitation
+        elif zcr > 0.1:
+            return 'stressed'
+        # Medium pitch and energy might indicate calmness
+        elif 150 <= pitch <= 200 and 0.05 <= energy <= 0.1:
+            return 'calm'
+        else:
+            return 'neutral'
+
+    except Exception as e:
+        logger.warning(f"Emotion classification error: {e}")
+        return 'neutral'
+
+
 # Health check endpoint for monitoring
 @app.route('/health')
 def health_check():
@@ -2060,7 +2437,11 @@ def health_check():
         db_status = f'unhealthy: {str(e)}'
 
     # Test AI services
-    ai_status = 'available' if getattr(ai_service, 'external_enabled', False) and getattr(ai_service, 'client', None) else 'unavailable'
+    try:
+        ai_check = ai_service.check_api_status()
+        ai_status = 'available' if ai_check.get('model_available') else 'unavailable'
+    except Exception as e:
+        ai_status = f'error: {str(e)}'
 
     return jsonify({
         'status': 'healthy',
@@ -2337,7 +2718,10 @@ if __name__ == '__main__':
         print("INFO - ==================================================")
 
         # SocketIO server for real-time features
-        socketio.run(app, host='127.0.0.1', port=5000, debug=True)
+        # On Windows, the Flask reloader can start two processes, causing a port-in-use error with SocketIO/eventlet.
+        # Disable the reloader on Windows to avoid binding twice.
+        use_reloader = False if os.name == 'nt' else True
+        socketio.run(app, host='127.0.0.1', port=5000, debug=True, use_reloader=use_reloader)
 
     except Exception as e:
         print(f"ERROR - Failed to start server: {e}")
