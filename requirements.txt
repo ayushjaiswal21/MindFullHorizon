@@ -24,6 +24,7 @@ Flask-Limiter==3.8.0
 
 # AI and External APIs
 google-generativeai==0.4.1
+ollama==0.1.8                   # Added for local Ollama integration
 requests==2.32.4
 httpx==0.27.0                   # Async HTTP client
 
