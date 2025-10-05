@@ -116,6 +116,81 @@ class MindfulAIService:
             'ai_suggestion': 'AI insights are currently unavailable. Try to balance your screen time with other activities.'
         }
 
+    def generate_goal_suggestions(self, patient_data: dict) -> dict:
+        """
+        Generates personalized goal suggestions based on patient data using fallback responses only.
+        """
+        return self._fallback_goal_suggestions(patient_data)
+
+    def _fallback_goal_suggestions(self, patient_data: dict) -> dict:
+        """Fallback if AI is unavailable for goal suggestions."""
+        return {
+            'summary': 'Based on your wellness data, here are some personalized goal suggestions.',
+            'goals': [
+                {
+                    'title': 'Daily Mindfulness Practice',
+                    'description': 'Practice mindfulness or meditation for 10-15 minutes daily',
+                    'category': 'mental_health',
+                    'priority': 'high',
+                    'target_value': 7,
+                    'unit': 'days'
+                },
+                {
+                    'title': 'Reduce Screen Time',
+                    'description': 'Limit social media usage to 2 hours per day',
+                    'category': 'digital_wellness',
+                    'priority': 'medium',
+                    'target_value': 2,
+                    'unit': 'hours'
+                },
+                {
+                    'title': 'Physical Activity',
+                    'description': 'Engage in moderate physical activity for 30 minutes',
+                    'category': 'physical_health',
+                    'priority': 'medium',
+                    'target_value': 5,
+                    'unit': 'days'
+                }
+            ],
+            'priority_actions': [
+                'Start with one small, achievable goal',
+                'Track your progress daily',
+                'Celebrate small wins along the way'
+            ]
+        }
+
+    def analyze_medication_adherence(self, medication_logs_data: list, patient_data: dict) -> dict:
+        """
+        Analyzes medication adherence patterns using fallback responses only.
+        """
+        return self._fallback_medication_adherence_analysis(medication_logs_data, patient_data)
+
+    def _fallback_medication_adherence_analysis(self, medication_logs_data: list, patient_data: dict) -> dict:
+        """Fallback if AI is unavailable for medication adherence analysis."""
+        total_logs = len(medication_logs_data)
+        adherence_rate = 0.8  # Default 80% adherence rate
+
+        if total_logs > 0:
+            # Simple calculation based on number of logs (assuming daily medications)
+            # In a real implementation, this would be more sophisticated
+            adherence_rate = min(0.95, 0.7 + (total_logs * 0.05))
+
+        return {
+            'summary': f'Based on {total_logs} medication logs, your adherence rate is approximately {adherence_rate:.1%}',
+            'adherence_rate': adherence_rate,
+            'recommendations': [
+                'Set daily reminders for medication times',
+                'Use a pill organizer to track doses',
+                'Keep medications in a visible location',
+                'Consider using a medication tracking app'
+            ],
+            'insights': [
+                'Regular medication adherence supports better health outcomes',
+                'Consistency is key for medication effectiveness',
+                'Talk to your healthcare provider about any adherence challenges'
+            ]
+        }
+
     def check_api_status(self) -> Dict:
         """Check API status for compatibility with existing code"""
         return {

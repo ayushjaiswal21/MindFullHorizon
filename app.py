@@ -27,15 +27,45 @@ from extensions import db, migrate, flask_session, compress, csrf
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary
 from models import BlogPost, BlogComment, BlogLike, BlogInsight, Prescription  # Ensure BlogPost and related models are imported
 
-# Load environment variables from .env file
-try:
-    load_dotenv(encoding='utf-8-sig')
-except Exception as e:
-    print(f"Warning: Could not load .env file: {e}")
-    print("Continuing with default configuration...")
+# Add this function before the route definitions to help standardize college names
+def normalize_institution_name(name):
+    """Normalize institution names for better matching."""
+    if not name:
+        return ""
 
+    # Convert to lowercase and remove common punctuation
+    normalized = name.lower().strip()
 
-os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+    # Common abbreviations and expansions
+    replacements = {
+        'iit': 'indian institute of technology',
+        'nit': 'national institute of technology',
+        'iiit': 'indian institute of information technology',
+        'bits': 'birla institute of technology and science',
+        'university': 'university',
+        'college': 'college',
+        'institute': 'institute',
+        'technology': 'technology',
+        'science': 'science',
+        'engineering': 'engineering',
+        'medical': 'medical',
+        'dental': 'dental',
+        'pharmacy': 'pharmacy',
+        'law': 'law',
+        'management': 'management',
+        'arts': 'arts',
+        'commerce': 'commerce'
+    }
+
+    # Apply replacements
+    for abbr, full in replacements.items():
+        normalized = normalized.replace(abbr, full)
+
+    # Remove extra spaces and common suffixes
+    normalized = ' '.join(normalized.split())  # Remove extra spaces
+    normalized = normalized.replace(' and ', ' ')
+
+    return normalized
 
 app = Flask(__name__)
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -585,13 +615,41 @@ def patient_dashboard():
 @role_required('provider')
 def provider_dashboard():
     institution = session.get('user_institution', 'Sample University')
-    
-    # Fetch all patients for the institution with eager loading to prevent N+1 queries
+
+    # Normalize the provider's institution for better matching
+    normalized_provider_institution = normalize_institution_name(institution)
+
+    # More flexible institution matching for better patient-provider visibility
+    # Split institution name into keywords for partial matching
+    institution_keywords = set(normalized_provider_institution.split())
+
+    # Fetch all patients and filter them based on institution similarity
     from sqlalchemy.orm import joinedload
-    patients = User.query.options(
+    all_patients = User.query.options(
         joinedload(User.digital_detox_logs),
         joinedload(User.clinical_notes)
-    ).filter_by(role='patient', institution=institution).all()
+    ).filter_by(role='patient').all()
+
+    # Filter patients based on institution similarity
+    patients = []
+    for patient in all_patients:
+        patient_institution = patient.institution or ''
+        normalized_patient_institution = normalize_institution_name(patient_institution)
+        patient_keywords = set(normalized_patient_institution.split())
+
+        # Check for similarity (partial match, case-insensitive)
+        if institution_keywords & patient_keywords:  # Intersection of keywords
+            patients.append(patient)
+        elif not patient_institution and institution == 'Sample University':
+            # Include patients with no institution if provider is using default
+            patients.append(patient)
+
+    # If no patients found with flexible matching, fall back to exact match for backward compatibility
+    if not patients:
+        patients = User.query.options(
+            joinedload(User.digital_detox_logs),
+            joinedload(User.clinical_notes)
+        ).filter_by(role='patient', institution=institution).all()
 
     caseload_data = []
     for patient in patients:
