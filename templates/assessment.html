@@ -260,6 +260,7 @@ let currentQuestion = 0;
 let assessmentAnswers = [];
 let selectedMood = null;
 let assessmentChart = null;
+let assessmentHistoryChart = null; // Keep track of the chart instance
 
 // Assessment data
 const assessments = {
@@ -783,143 +784,51 @@ function showNotification(message, type) {
 
 // Initialize assessment history chart
 function initializeAssessmentHistoryChart() {
-    const ctx = document.getElementById('assessment-history-chart');
-    if (!ctx) return;
+    const ctx = document.getElementById('assessment-history-chart').getContext('2d');
+    const assessmentData = JSON.parse(document.getElementById('assessment-data').dataset.assessments || '[]');
 
-    // Destroy existing chart if it exists
-    if (assessmentChart) {
-        assessmentChart.destroy();
+    // Destroy the old chart instance if it exists
+    if (assessmentHistoryChart) {
+        assessmentHistoryChart.destroy();
     }
 
     if (!assessmentData || assessmentData.length === 0) {
-        // Show placeholder chart with sample data if no assessments exist
-        const sampleData = [
-            { date: '2025-08-25', type: 'GAD-7', score: 8 },
-            { date: '2025-08-26', type: 'PHQ-9', score: 6 },
-            { date: '2025-08-27', type: 'Mood', score: 4 },
-            { date: '2025-08-28', type: 'GAD-7', score: 5 },
-            { date: '2025-08-29', type: 'Mood', score: 5 }
-        ];
-        
-        const labels = sampleData.map(item => item.date);
-        const scores = sampleData.map(item => item.score);
-        const colors = sampleData.map(item => {
-            if (item.type === 'GAD-7') return '#3b82f6';
-            if (item.type === 'PHQ-9') return '#8b5cf6';
-            return '#10b981'; // Default color for mood
-        });
-        
-        assessmentChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Assessment Score',
-                    data: scores,
-                    backgroundColor: colors,
-                    borderColor: '#9ca3af',
-                    borderWidth: 1,
-                    tension: 0.3,
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return `${sampleData[context.dataIndex].type}: ${context.raw}`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 27, // Max score for GAD-7 (21) + some padding
-                        title: { display: true, text: 'Score' }
-                    },
-                    x: { title: { display: true, text: 'Date' } }
-                }
-            }
-        });
+        // Placeholder for no data
         return;
     }
-    
-    // Process real assessment data
-    const sortedAssessments = [...assessmentData].sort((a, b) => 
-        new Date(a.created_at) - new Date(b.created_at)
-    );
-    
-    const labels = sortedAssessments.map(assessment => {
-        const date = new Date(assessment.created_at);
-        return date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric' 
-        });
-    });
-    
-    const scores = sortedAssessments.map(assessment => assessment.score);
-    
-    const colors = sortedAssessments.map(assessment => {
-        if (assessment.assessment_type === 'anxiety') return '#3b82f6'; // Blue for anxiety
-        if (assessment.assessment_type === 'depression') return '#8b5cf6'; // Purple for depression
-        if (assessment.assessment_type === 'mood') return '#10b981'; // Green for mood
-        return '#9ca3af'; // Gray for unknown types
-    });
-    
-    new Chart(ctx, {
+
+    const labels = assessmentData.map(a => new Date(a.created_at).toLocaleDateString()).reverse();
+    const gad7Scores = assessmentData.map(a => a.assessment_type === 'GAD-7' ? a.score : null).reverse();
+    const phq9Scores = assessmentData.map(a => a.assessment_type === 'PHQ-9' ? a.score : null).reverse();
+
+    assessmentHistoryChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: labels,
             datasets: [{
-                label: 'Assessment Score',
-                data: scores,
-                backgroundColor: colors,
-                borderColor: '#9ca3af',
-                borderWidth: 1,
-                pointBackgroundColor: colors,
-                pointBorderColor: '#fff',
-                pointHoverBackgroundColor: '#fff',
-                pointHoverBorderColor: colors,
-                tension: 0.3,
-                fill: false
+                label: 'GAD-7 Score',
+                data: gad7Scores,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                fill: false,
+                spanGaps: true,
+            }, {
+                label: 'PHQ-9 Score',
+                data: phq9Scores,
+                borderColor: 'rgba(54, 162, 235, 1)',
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                fill: false,
+                spanGaps: true,
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const assessment = sortedAssessments[context.dataIndex];
-                            const type = assessment.assessment_type === 'anxiety' ? 'GAD-7' : 
-                                        assessment.assessment_type === 'depression' ? 'PHQ-9' : 
-                                        'Mood';
-                            return `${type}: ${context.raw}`;
-                        }
-                    }
-                }
-            },
             scales: {
                 y: {
                     beginAtZero: true,
-                    max: 27, // Max score for GAD-7 (21) + some padding
-                    title: { display: true, text: 'Score' },
-                    grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                },
-                x: { 
-                    title: { display: true, text: 'Date' },
-                    grid: { display: false }
+                    max: 27
                 }
-            },
-            elements: {
-                line: { borderWidth: 2 },
-                point: { radius: 4, hoverRadius: 6 }
             }
         }
     });
