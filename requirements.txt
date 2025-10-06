@@ -1,7 +1,8 @@
-# requirements.txt - Production-ready dependencies for MindFullHorizon
-# Optimized for Render and Vercel deployment
+# requirements.txt - MindFullHorizon Mental Health Platform
+# Updated: December 2024
+# Tested with Python 3.11+
 
-# Core Flask Dependencies
+# ===== CORE FLASK FRAMEWORK =====
 Flask==3.0.3
 Flask-WTF==1.2.1
 Flask-SQLAlchemy==3.1.1
@@ -10,37 +11,133 @@ Flask-Session==0.5.0
 Flask-Compress==1.15
 Flask-SocketIO==5.3.6
 Flask-CORS==6.0.0
-Flask-Dance>=5.0
-
-# Database and Data Processing
-SQLAlchemy==2.0.35
-Werkzeug==3.0.6
-psycopg2-binary==2.9.10         # PostgreSQL adapter for production
-
-# Configuration and Environment
-python-dotenv==1.0.1
+Flask-Dance==7.1.0
 Flask-Caching==2.3.0
 Flask-Limiter==3.8.0
 
-# AI and External APIs
+# ===== DATABASE & ORM =====
+SQLAlchemy==2.0.35
+Werkzeug==3.0.6
+psycopg2-binary==2.9.10
+alembic==1.16.5
+
+# ===== AI & CHATBOT SERVICES =====
+# Google Gemini AI (fallback)
 google-generativeai==0.4.1
-ollama==0.1.8                   # Added for local Ollama integration
+google-ai-generativelanguage==0.4.0
+google-api-core==2.25.2
+google-auth==2.41.1
+googleapis-common-protos==1.70.0
+
+# Ollama Local LLM (primary)
+ollama==0.1.8
+
+# HTTP & API clients
 requests==2.32.4
-httpx==0.27.0                   # Async HTTP client
+httpx==0.27.0
+requests-oauthlib==2.0.0
+oauthlib==3.3.1
 
-# Production Server
-gunicorn==23.0.0
-eventlet==0.40.3               # For Python 3.13 compatibility
+# ===== TEXT PROCESSING & NLP =====
+textblob==0.18.0.post0          # Sentiment analysis for journals
+nltk==3.9.2                     # Natural language toolkit
+regex==2025.9.18                 # Advanced regex
 
-# Utility Libraries
-python-dateutil==2.9.0
-pytz==2024.1                    # Timezone support
-Pillow==10.4.0                  # Image processing
-dnspython>=2.6.1 # not directly required, pinned by Snyk to avoid a vulnerability
-h11>=0.16.0 # not directly required, pinned by Snyk to avoid a vulnerability
-urllib3>=2.5.0 # not directly required, pinned by Snyk to avoid a vulnerability
-zipp>=3.19.1 # not directly required, pinned by Snyk to avoid a vulnerability
+# ===== CORE UTILITIES =====
+python-dotenv==1.0.1             # Environment variables
+python-dateutil==2.9.0           # Date utilities
+python-multipart==0.0.6          # Form data parsing
+pytz==2024.1                     # Timezone support
+Pillow==10.4.0                   # Image processing
+Jinja2==3.1.3                    # Template engine
+WTForms==3.2.1                   # Form handling
+MarkupSafe==3.0.3                # Safe string handling
 
-# Additional dependencies for Vercel compatibility
-python-multipart==0.0.6
-jinja2==3.1.3
+# ===== PRODUCTION SERVER =====
+gunicorn==23.0.0                 # WSGI server
+eventlet==0.40.3                 # Async networking
+
+# ===== REAL-TIME COMMUNICATION =====
+python-socketio==5.14.1          # WebSocket server
+python-engineio==4.12.3          # Engine.IO server
+simple-websocket==1.1.0          # WebSocket utilities
+wsproto==1.2.0                   # WebSocket protocol
+bidict==0.23.1                   # Bidirectional dict
+
+# ===== SECURITY & NETWORKING =====
+certifi==2025.8.3                # SSL certificates
+idna==3.10                       # International domain names
+urllib3==2.5.0                   # HTTP library
+dnspython==2.8.0                 # DNS toolkit
+h11==0.16.0                      # HTTP/1.1 protocol
+httpcore==1.0.9                  # HTTP core
+sniffio==1.3.1                   # Async library detection
+
+# ===== DATA PROCESSING =====
+joblib==1.5.2                    # Parallel processing
+tqdm==4.67.1                     # Progress bars
+markdown-it-py==4.0.0            # Markdown processing
+rich==13.9.4                     # Rich text output
+Pygments==2.19.2                 # Syntax highlighting
+
+# ===== ASYNC & CONCURRENCY =====
+anyio==4.11.0                    # Async utilities
+greenlet==3.2.4                 # Lightweight threads
+grpcio==1.75.1                   # gRPC framework
+grpcio-status==1.62.3            # gRPC status
+annotated-types==0.7.0           # Type annotations
+pydantic==2.11.10                # Data validation
+pydantic_core==2.33.10          # Pydantic core
+typing_extensions==4.15.0        # Typing extensions
+typing-inspection==0.4.2         # Runtime type inspection
+
+# ===== COMPRESSION & ENCODING =====
+Brotli==1.1.0                    # Compression
+zstandard==0.25.0                # Zstd compression
+zipp==3.23.0                     # ZIP utilities
+charset-normalizer==3.4.3        # Character encoding
+
+# ===== CACHING & RATE LIMITING =====
+cachelib==0.9.0                  # Caching library
+cachetools==6.2.0                # Cache utilities
+limits==5.6.0                    # Rate limiting
+
+# ===== UTILITY LIBRARIES =====
+blinker==1.9.0                   # Signal/slot system
+click==8.3.0                     # CLI framework
+colorama==0.4.6                  # Colored output
+Deprecated==1.2.18               # Deprecation warnings
+itsdangerous==2.2.0              # Secure data signing
+Mako==1.3.10                     # Template engine
+mdurl==0.1.2                     # Markdown URL utilities
+ordered-set==4.1.0               # Ordered sets
+packaging==25.0                  # Package utilities
+proto-plus==1.26.1               # Protocol buffers
+protobuf==4.25.8                 # Protocol buffers
+pyasn1==0.6.1                    # ASN.1 library
+pyasn1_modules==0.4.2            # ASN.1 modules
+rsa==4.9.1                       # RSA cryptography
+six==1.17.0                      # Python 2/3 compatibility
+URLObject==3.0.0                 # URL manipulation
+wrapt==1.17.3                    # Decorator utilities
+
+# ===== OPTIONAL AUDIO PROCESSING =====
+# Uncomment these for advanced voice analysis features:
+# librosa==0.10.2.post1          # Audio feature extraction
+# scipy==1.14.0                  # Scientific computing
+# numpy==1.26.4                  # Numerical computing
+# praat-parselmouth==0.4.3       # Acoustic analysis
+
+# ===== INSTALLATION INSTRUCTIONS =====
+# 1. Basic installation:
+#    pip install -r requirements.txt
+#
+# 2. For audio features, also install:
+#    pip install librosa scipy numpy
+#
+# 3. For development:
+#    pip install -r requirements.txt
+#    pip install pytest black flake8
+#
+# 4. For production deployment:
+#    All packages above are included
