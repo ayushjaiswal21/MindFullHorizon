@@ -257,8 +257,10 @@ class Appointment(db.Model):
     time = db.Column(db.String(10), nullable=False)
     appointment_type = db.Column(db.String(50), nullable=False)
     notes = db.Column(db.Text, nullable=True)
-    status = db.Column(db.String(20), default='booked', nullable=False)
+    status = db.Column(db.String(20), default='pending', nullable=False)  # pending, accepted, rejected, booked
+    rejection_reason = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships - Fixed: removed delete-orphan from many-to-one relationships
     user = db.relationship('User', foreign_keys=[user_id], backref='appointments')

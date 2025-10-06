@@ -32,15 +32,27 @@
                 </div>
             </div>
             
-            <div>
-                <label for="appointment-type" class="block text-gray-700 font-medium mb-2">Appointment Type</label>
-                <select id="appointment-type" name="appointment_type" class="input-field" required>
-                    <option value="" disabled selected>Select appointment type</option>
-                    <option value="therapy">Therapy Session</option>
-                    <option value="consultation">Initial Consultation</option>
-                    <option value="follow-up">Follow-up Session</option>
-                    <option value="crisis">Crisis Intervention</option>
-                </select>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <label for="appointment-type" class="block text-gray-700 font-medium mb-2">Appointment Type</label>
+                    <select id="appointment-type" name="appointment_type" class="input-field" required>
+                        <option value="" disabled selected>Select appointment type</option>
+                        <option value="therapy">Therapy Session</option>
+                        <option value="consultation">Initial Consultation</option>
+                        <option value="follow-up">Follow-up Session</option>
+                        <option value="crisis">Crisis Intervention</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="provider" class="block text-gray-700 font-medium mb-2">Select Provider (Optional)</label>
+                    <select id="provider" name="provider_id" class="input-field">
+                        <option value="">Any available provider</option>
+                        {% for provider in providers %}
+                        <option value="{{ provider.id }}">{{ provider.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
             
             <div>
