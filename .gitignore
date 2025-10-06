@@ -141,6 +141,22 @@ fix_*.py
 manual_*.py
 flask_session/
 static/profile_pics/
+static/uploads/
+
+# Test and setup files (added during development)
+test_ollama.py
+setup_*.py
+setup_*.ps1
+*_test.py
+*_example.py
+*.example
+*GUIDE*.md
+*STATUS*.md
+*SUMMARY*.md
+*FIX*.md
+quick_*.py
+temp_*.py
+debug_*.py
 
 # Deployment files (keep these in git for easy deployment)
 # .ebextensions/
