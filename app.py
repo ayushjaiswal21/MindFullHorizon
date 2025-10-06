@@ -762,6 +762,7 @@ def schedule():
         time_str = request.form['time']
         appointment_type = request.form['appointment_type']
         notes = request.form.get('notes', '')
+        provider_id = request.form.get('provider_id')  # Optional provider selection
         user_id = session['user_id']
 
         try:
@@ -769,14 +770,48 @@ def schedule():
 
             new_appointment = Appointment(
                 user_id=user_id,
+                provider_id=int(provider_id) if provider_id else None,
                 date=appointment_date,
                 time=time_str,
                 appointment_type=appointment_type,
                 notes=notes,
-                status='booked'
+                status='pending'  # Changed to pending for provider approval
             )
             db.session.add(new_appointment)
             db.session.commit()
+            
+            logger.info(f"Appointment created successfully: ID={new_appointment.id}, User={user_id}, Provider={provider_id}, Status={new_appointment.status}")
+            
+            # Notify provider via SocketIO if provider is selected, or all providers if none selected
+            if provider_id:
+                # Notify specific provider
+                socketio.emit('new_appointment', {
+                    'appointment_id': new_appointment.id,
+                    'patient_name': session['user_name'],
+                    'patient_id': user_id,
+                    'date': date_str,
+                    'time': time_str,
+                    'type': appointment_type,
+                    'notes': notes,
+                    'urgency': 'normal'
+                }, room=f'user_{provider_id}')
+            else:
+                # Notify all providers in the same institution
+                user_institution = session.get('user_institution', 'Sample University')
+                providers = User.query.filter_by(role='provider', institution=user_institution).all()
+                for provider in providers:
+                    socketio.emit('new_appointment', {
+                        'appointment_id': new_appointment.id,
+                        'patient_name': session['user_name'],
+                        'patient_id': user_id,
+                        'date': date_str,
+                        'time': time_str,
+                        'type': appointment_type,
+                        'notes': notes,
+                        'urgency': 'normal',
+                        'unassigned': True
+                    }, room=f'user_{provider.id}')
+            
             flash(f'Appointment successfully booked for {date_str} at {time_str}!', 'success')
             return redirect(url_for('patient_dashboard'))
         except Exception as e:
@@ -785,7 +820,174 @@ def schedule():
             logger.error(f"Error booking appointment for user {user_id}: {e}")
             return redirect(url_for('schedule'))
     
-    return render_template('schedule.html', user_name=session['user_name'])
+    # Get list of providers for the dropdown
+    user_institution = session.get('user_institution', 'Sample University')
+    providers = User.query.filter_by(role='provider', institution=user_institution).all()
+    
+    return render_template('schedule.html', user_name=session['user_name'], providers=providers)
+
+@app.route('/appointments/accept/<int:appointment_id>', methods=['POST'])
+@login_required
+@role_required('provider')
+def accept_appointment(appointment_id):
+    try:
+        appointment = Appointment.query.get_or_404(appointment_id)
+        provider_id = session['user_id']
+        
+        # Verify the provider has access to this appointment
+        # Allow if it's assigned to this provider OR if it's unassigned (provider_id is None)
+        if appointment.provider_id is not None and appointment.provider_id != provider_id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        # If appointment was unassigned, assign it to this provider
+        if appointment.provider_id is None:
+            appointment.provider_id = provider_id
+            
+        appointment.status = 'accepted'
+        appointment.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        # Notify patient via SocketIO
+        socketio.emit('appointment_accepted', {
+            'appointment_id': appointment.id,
+            'date': appointment.date.strftime('%Y-%m-%d'),
+            'time': appointment.time,
+            'type': appointment.appointment_type
+        }, room=f'user_{appointment.user_id}')
+        
+        return jsonify({'success': True, 'message': 'Appointment accepted successfully'})
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error accepting appointment {appointment_id}: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/appointments/reject/<int:appointment_id>', methods=['POST'])
+@login_required
+@role_required('provider')
+def reject_appointment(appointment_id):
+    try:
+        data = request.get_json() or {}
+        rejection_reason = data.get('reason', 'No reason provided')
+        
+        appointment = Appointment.query.get_or_404(appointment_id)
+        provider_id = session['user_id']
+        
+        # Verify the provider has access to this appointment
+        # Allow if it's assigned to this provider OR if it's unassigned (provider_id is None)
+        if appointment.provider_id is not None and appointment.provider_id != provider_id:
+            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+        appointment.status = 'rejected'
+        appointment.rejection_reason = rejection_reason
+        appointment.updated_at = datetime.utcnow()
+        db.session.commit()
+        
+        # Notify patient via SocketIO
+        socketio.emit('appointment_rejected', {
+            'appointment_id': appointment.id,
+            'date': appointment.date.strftime('%Y-%m-%d'),
+            'time': appointment.time,
+            'type': appointment.appointment_type,
+            'reason': rejection_reason
+        }, room=f'user_{appointment.user_id}')
+        
+        return jsonify({'success': True, 'message': 'Appointment rejected successfully'})
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error rejecting appointment {appointment_id}: {e}")
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@app.route('/appointments/provider', methods=['GET'])
+@login_required
+@role_required('provider')
+def provider_appointments():
+    """Get provider's appointments with optional status filter"""
+    status_filter = request.args.get('status', 'all')
+    provider_id = session['user_id']
+    
+    logger.info(f"Provider {provider_id} requesting appointments with status filter: {status_filter}")
+    
+    # Show appointments assigned to this provider OR unassigned appointments from same institution
+    from sqlalchemy import or_, and_
+    provider_institution = session.get('user_institution', 'Sample University')
+    
+    # Get user IDs from the same institution for filtering unassigned appointments
+    same_institution_users = User.query.filter_by(role='patient', institution=provider_institution).with_entities(User.id).all()
+    same_institution_user_ids = [user.id for user in same_institution_users]
+    logger.info(f"Provider institution: {provider_institution}, Same institution patient IDs: {same_institution_user_ids}")
+    
+    query = Appointment.query.filter(
+        or_(
+            Appointment.provider_id == provider_id,
+            and_(
+                Appointment.provider_id.is_(None),
+                Appointment.user_id.in_(same_institution_user_ids)
+            )
+        )
+    )
+    
+    if status_filter != 'all':
+        query = query.filter_by(status=status_filter)
+    
+    appointments = query.order_by(Appointment.date.asc(), Appointment.time.asc()).all()
+    logger.info(f"Found {len(appointments)} appointments for provider {provider_id}")
+    
+    appointments_data = []
+    for appt in appointments:
+        # Get patient's recent health data for provider decision-making
+        patient_health_data = None
+        if appt.user:
+            # Get latest assessment
+            latest_assessment = Assessment.query.filter_by(user_id=appt.user.id).order_by(Assessment.created_at.desc()).first()
+            # Get latest digital detox data
+            latest_detox = DigitalDetoxLog.query.filter_by(user_id=appt.user.id).order_by(DigitalDetoxLog.date.desc()).first()
+            # Get latest RPM data
+            latest_rpm = RPMData.query.filter_by(user_id=appt.user.id).order_by(RPMData.date.desc()).first()
+            
+            patient_health_data = {
+                'latest_assessment': {
+                    'type': latest_assessment.assessment_type if latest_assessment else None,
+                    'score': latest_assessment.score if latest_assessment else None,
+                    'date': latest_assessment.created_at.strftime('%Y-%m-%d') if latest_assessment else None
+                } if latest_assessment else None,
+                'digital_wellness': {
+                    'screen_time': latest_detox.screen_time_hours if latest_detox else None,
+                    'ai_score': latest_detox.ai_score if latest_detox else None,
+                    'date': latest_detox.date.strftime('%Y-%m-%d') if latest_detox else None
+                } if latest_detox else None,
+                'vital_signs': {
+                    'heart_rate': latest_rpm.heart_rate if latest_rpm else None,
+                    'sleep_duration': latest_rpm.sleep_duration if latest_rpm else None,
+                    'mood_score': latest_rpm.mood_score if latest_rpm else None,
+                    'date': latest_rpm.date.strftime('%Y-%m-%d') if latest_rpm else None
+                } if latest_rpm else None
+            }
+
+        appointments_data.append({
+            'id': appt.id,
+            'patient_name': appt.user.name if appt.user else 'Unknown',
+            'patient_email': appt.user.email if appt.user else 'Unknown',
+            'patient_id': appt.user.id if appt.user else None,
+            'date': appt.date.strftime('%Y-%m-%d'),
+            'time': appt.time,
+            'type': appt.appointment_type,
+            'status': appt.status,
+            'notes': appt.notes,
+            'rejection_reason': appt.rejection_reason,
+            'provider_id': appt.provider_id,
+            'patient_health_data': patient_health_data,
+            'created_at': appt.created_at.strftime('%Y-%m-%d %H:%M:%S') if appt.created_at else None,
+            'updated_at': appt.updated_at.strftime('%Y-%m-%d %H:%M:%S') if appt.updated_at else None,
+            'urgency_level': 'high' if patient_health_data and patient_health_data.get('latest_assessment') and patient_health_data['latest_assessment'].get('score', 0) > 15 else 'normal'
+        })
+    
+    logger.info(f"Returning {len(appointments_data)} appointments to provider {provider_id}")
+    
+    # Debug: Print the actual appointments data being returned
+    for appt_data in appointments_data:
+        logger.info(f"Appointment data: ID={appt_data['id']}, Patient={appt_data['patient_name']}, Status={appt_data['status']}")
+    
+    return jsonify({'success': True, 'appointments': appointments_data})
 
 @app.route('/ai-documentation', methods=['GET', 'POST'])
 @login_required
@@ -2704,6 +2906,24 @@ def log_client_error():
     except Exception as e:
         logger.error(f"Error logging client error: {e}")
         return jsonify({'success': False, 'message': 'Failed to log error'}), 500
+
+# --- SocketIO User Room Management ---
+@socketio.on('connect')
+def handle_connect():
+    """Handle user connection and join their personal room"""
+    if 'user_id' in session:
+        user_room = f'user_{session["user_id"]}'
+        join_room(user_room)
+        logger.info(f"User {session['user_id']} connected and joined room {user_room}")
+        emit('connected', {'message': 'Connected to notification system'})
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    """Handle user disconnection"""
+    if 'user_id' in session:
+        user_room = f'user_{session["user_id"]}'
+        leave_room(user_room)
+        logger.info(f"User {session['user_id']} disconnected from room {user_room}")
 
 # --- SocketIO Chat Handler ---
 @socketio.on('chat_message')
