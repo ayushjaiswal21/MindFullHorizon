@@ -1151,24 +1151,23 @@ function handleNavScroll() {
     lastScrollTop = scrollTop;
 }
 
-function handleSmoothScroll(e) {
-    e.preventDefault();
-    const targetId = this.getAttribute('href');
-    const targetElement = document.querySelector(targetId);
-
-    if (targetElement) {
-        const navHeight = document.querySelector('.advanced-nav').offsetHeight;
-        const targetPosition = targetElement.offsetTop - navHeight - 20;
-
-        window.scrollTo({
-            top: targetPosition,
-            behavior: 'smooth'
-        });
-
-        // Update URL hash
-        history.pushState(null, null, targetId);
-    }
-}
+        function initializeSmoothScrolling() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#') {
+                        const target = document.querySelector(href);
+                        if (target) {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    }
+                });
+            });
+        }
 
 function initializeMobileMenu() {
     const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
@@ -2143,6 +2142,29 @@ function drawChart(canvas, ctx, yData, xLabels, color, label, padding) {
 }
 window.drawChart = drawChart;
 window.initializeChartJS = initializeChartJS;
+
+function openMessage(patientId) {
+    const text = prompt('Send a quick message to patient:');
+    if (!text || !text.trim()) return;
+
+    fetch('/api/message', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ recipient_id: patientId, message: text.trim() })
+    }).then(r => r.json()).then(data => {
+        if (data && data.success) {
+            alert('Message sent successfully.');
+        } else {
+            alert('Failed to send message: ' + (data.error || 'Unknown error'));
+        }
+    }).catch(err => {
+        console.error('Message send failed', err);
+        alert('Failed to send message.');
+    });
+}
 
 // FAQ helpers for accordion behavior
 function openFAQ(item, animate = true) {
