@@ -19,7 +19,7 @@ def init_extensions(app):
     os.makedirs(os.path.join(app.root_path, 'instance'), exist_ok=True)
     
     # Initialize SQLAlchemy first
-    # db.init_app(app)  # Already initialized in app.py
+    db.init_app(app)
     
     # Then initialize Flask-Migrate
     migrate.init_app(app, db)
