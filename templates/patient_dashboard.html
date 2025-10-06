@@ -26,7 +26,7 @@
         {% endif %}
 
         <!-- Enhanced Overview Grid -->
-        <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-8 mb-8">
+        <div class="grid grid-cols-3 gap-8 mb-8">
             <!-- Enhanced Gamification Card -->
             <div class="patient-card p-6 flex flex-col justify-between">
                 <div>
@@ -175,8 +175,8 @@
             </div>
 
             <div class="grid grid-cols-1 gap-6">
-                <!-- First row: 3 cards -->
-                <div class="grid md:grid-cols-3 gap-6">
+                <!-- First row: 4 cards -->
+                <div class="grid grid-cols-4 gap-6">
                     <!-- Enhanced Medication Card -->
                     <a href="{{ url_for('medication') }}" class="toolkit-card">
                         <div class="flex items-center">
@@ -213,10 +213,6 @@
                             </div>
                         </div>
                     </a>
-                </div>
-                
-                <!-- Second row: 2 cards -->
-                <div class="grid md:grid-cols-2 gap-6">
                     <!-- Enhanced Yoga Card -->
                     <a href="{{ url_for('yoga') }}" class="toolkit-card">
                         <div class="flex items-center">
@@ -229,6 +225,10 @@
                             </div>
                         </div>
                     </a>
+                </div>
+
+                <!-- Second row: 3 cards -->
+                <div class="grid grid-cols-3 gap-6">
                     <!-- Enhanced Music Therapy Card -->
                     <a href="{{ url_for('music') }}" class="toolkit-card">
                         <div class="flex items-center">
@@ -240,48 +240,32 @@
                                 <p class="text-gray-600">Binaural beats for wellness.</p>
                             </div>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Breathing Exercises</h4>
-                            <p class="text-gray-600">Practice guided breathing.</p>
+                    </a>
+                    <!-- Journal Entries Card -->
+                    <a href="{{ url_for('patient_journal') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-pink-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-book text-pink-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Journal Entries</h4>
+                                <p class="text-gray-600">Write and track your thoughts with sentiment analysis.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-                <!-- Enhanced Yoga Card -->
-                <a href="{{ url_for('yoga') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-person-praying text-yellow-600 text-2xl"></i>
+                    </a>
+                    <!-- Voice Logs Card -->
+                    <a href="{{ url_for('patient_voice_logs') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-microphone text-emerald-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Voice Logs</h4>
+                                <p class="text-gray-600">Record and analyze your voice for emotional insights.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Yoga Sessions</h4>
-                            <p class="text-gray-600">Follow guided yoga practices.</p>
-                        </div>
-                    </div>
-                </a>
-                <!-- New Journal Entries Card -->
-                <a href="{{ url_for('patient_journal') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-pink-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-book text-pink-600 text-2xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Journal Entries</h4>
-                            <p class="text-gray-600">Write and track your thoughts with sentiment analysis.</p>
-                        </div>
-                    </div>
-                </a>
-                <!-- New Voice Logs Card -->
-                <a href="{{ url_for('patient_voice_logs') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-microphone text-emerald-600 text-2xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Voice Logs</h4>
-                            <p class="text-gray-600">Record and analyze your voice for emotional insights.</p>
-                        </div>
-                    </div>
-                </a>
+                    </a>
+                </div>
             </div>
         </div>
 
