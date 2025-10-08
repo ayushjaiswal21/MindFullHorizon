@@ -213,6 +213,13 @@ body {
     margin: 20px 0;
 }
 
+.chart-container-sm {
+    position: relative;
+    height: 250px;
+    width: 100%;
+    margin: 20px 0;
+}
+
 .chart-container canvas {
     max-height: 400px !important;
 }

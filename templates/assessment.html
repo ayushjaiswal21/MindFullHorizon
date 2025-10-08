@@ -160,13 +160,13 @@
             </div>
 
             <!-- AI Insights Content -->
-            <div id="aiInsightsContent" class="{% if not latest_insights %}hidden{% endif %} space-y-4">
+            <div id="aiInsightsContent" class="{% if latest_insights and latest_insights.get('summary') %}space-y-4{% else %}hidden{% endif %} space-y-4">
                 <div class="bg-white p-4 rounded-lg border border-gray-200">
                     <h5 class="font-medium text-gray-800 mb-2 flex items-center">
                         <i class="fas fa-comment-alt text-blue-500 mr-2"></i> Summary
                     </h5>
                     <p id="aiSummary" class="text-gray-700">
-                        {% if latest_insights and latest_insights.summary %}
+                        {% if latest_insights and latest_insights.get('summary') %}
                             {{ latest_insights.summary }}
                         {% else %}
                             No summary available.
@@ -179,7 +179,7 @@
                         <i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Recommendations
                     </h5>
                     <ul id="aiRecommendations" class="space-y-2">
-                        {% if latest_insights and latest_insights.recommendations %}
+                        {% if latest_insights and latest_insights.get('recommendations') %}
                             {% for rec in latest_insights.recommendations %}
                                 <li class="flex items-start">
                                     <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
@@ -199,7 +199,7 @@
                         <i class="fas fa-book-open text-green-500 mr-2"></i> Resources
                     </h5>
                     <ul id="aiResources" class="space-y-2">
-                        {% if latest_insights and latest_insights.resources %}
+                        {% if latest_insights and latest_insights.get('resources') %}
                             {% for res in latest_insights.resources %}
                                 <li class="flex items-start">
                                     <i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i>

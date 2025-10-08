@@ -2188,3 +2188,141 @@ function closeFAQ(item) {
     panel.style.overflow = 'hidden';
     panel.style.maxHeight = '0px';
 }
+
+// Chat functionality
+let socket = null;
+let chatInitialized = false;
+
+function initializeChat() {
+    if (chatInitialized || typeof io === 'undefined') {
+        return;
+    }
+
+    try {
+        // Initialize SocketIO connection
+        socket = io();
+
+        // Handle connection
+        socket.on('connect', function() {
+            console.log('Connected to chat server');
+            chatInitialized = true;
+
+            // Show welcome message
+            addChatMessage('Dr. Anya', 'Hello! I\'m Dr. Anya, your AI wellness coach. How are you feeling today? I\'m here to listen and support you.', 'ai');
+        });
+
+        // Handle disconnection
+        socket.on('disconnect', function() {
+            console.log('Disconnected from chat server');
+            chatInitialized = false;
+        });
+
+        // Handle chat responses
+        socket.on('chat_response', function(data) {
+            console.log('Received chat response:', data);
+            const reply = data.reply || 'I\'m sorry, I didn\'t understand that.';
+            const isCrisis = data.is_crisis || false;
+
+            addChatMessage('Dr. Anya', reply, 'ai', isCrisis);
+
+            // Re-enable chat input
+            const chatInput = document.getElementById('chat-input');
+            const chatButton = document.getElementById('chat-form').querySelector('button');
+            if (chatInput) chatInput.disabled = false;
+            if (chatButton) chatButton.disabled = false;
+        });
+
+        // Handle errors
+        socket.on('error', function(data) {
+            console.error('Chat error:', data);
+            addChatMessage('System', 'Sorry, there was an error with the chat. Please try again.', 'error');
+        });
+
+        chatInitialized = true;
+        console.log('Chat initialized successfully');
+
+    } catch (error) {
+        console.error('Failed to initialize chat:', error);
+        showChatError('Failed to connect to chat service. Please refresh the page.');
+    }
+}
+
+function addChatMessage(sender, message, type = 'user', isCrisis = false) {
+    const chatMessages = document.getElementById('chat-messages');
+    if (!chatMessages) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message mb-4 ${type === 'ai' ? 'text-left' : 'text-right'}`;
+
+    let messageClass = 'inline-block px-4 py-2 rounded-lg max-w-xs lg:max-w-md';
+    if (type === 'ai') {
+        messageClass += isCrisis ? ' bg-red-100 text-red-800 border border-red-200' : ' bg-blue-100 text-blue-800';
+    } else if (type === 'user') {
+        messageClass += ' bg-gray-200 text-gray-800';
+    } else {
+        messageClass += ' bg-red-100 text-red-800 border border-red-200';
+    }
+
+    messageDiv.innerHTML = `
+        <div class="${messageClass}">
+            <div class="font-semibold text-sm mb-1">${sender}</div>
+            <div>${message}</div>
+        </div>
+    `;
+
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function sendChatMessage(message) {
+    if (!socket || !chatInitialized) {
+        showChatError('Chat not connected. Please refresh the page.');
+        return;
+    }
+
+    if (!message.trim()) {
+        return;
+    }
+
+    // Disable input while processing
+    const chatInput = document.getElementById('chat-input');
+    const chatButton = document.getElementById('chat-form').querySelector('button');
+    if (chatInput) chatInput.disabled = true;
+    if (chatButton) chatButton.disabled = true;
+
+    // Add user message to chat
+    addChatMessage('You', message, 'user');
+
+    // Send message to server
+    socket.emit('chat_message', { message: message });
+}
+
+// Initialize chat when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize chat on chat page
+    if (window.location.pathname.includes('/chat') || document.getElementById('chat-messages')) {
+        initializeChat();
+    }
+
+    // Handle chat form submission
+    const chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const chatInput = document.getElementById('chat-input');
+            const message = chatInput ? chatInput.value.trim() : '';
+
+            if (message) {
+                sendChatMessage(message);
+                if (chatInput) chatInput.value = '';
+            }
+        });
+    }
+});
+
+// Export functions for use in other scripts if needed
+window.ChatUtils = {
+    initializeChat,
+    sendChatMessage,
+    addChatMessage
+};

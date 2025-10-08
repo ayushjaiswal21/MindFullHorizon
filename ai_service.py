@@ -42,7 +42,6 @@ class MindfulAIService:
         self.chat_options = {
             # Increased defaults for longer responses and slower machines
             "num_predict": _env_int('OLLAMA_NUM_PREDICT', 512),
-            "timeout": _env_int('OLLAMA_TIMEOUT', 120),    # seconds
             "temperature": _env_float('OLLAMA_TEMPERATURE', 0.7),
             "top_p": _env_float('OLLAMA_TOP_P', 0.9),
             "repeat_penalty": _env_float('OLLAMA_REPEAT_PENALTY', 1.2)
@@ -122,7 +121,6 @@ class MindfulAIService:
             print("Ollama not available for chat.")
             return "I'm currently unable to connect to my knowledge base. Please try again in a moment or speak with a mental health professional for immediate support."
 
-        print("Using local 'mindwell' model for chat.")
         try:
             # Use centralized, configurable options (longer timeout/length by default)
             response = ollama.chat(
@@ -186,7 +184,7 @@ class MindfulAIService:
                     {'role': 'system', 'content': prompt}
                 ],
                 stream=False,
-                options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 384), 640), "timeout": max(self.chat_options.get("timeout", 90), 180), "temperature": 0.6, "top_p": 0.85}
+                options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 384), 640), "temperature": 0.6, "top_p": 0.85}
             )
             ai_response = response['message']['content']
 
@@ -273,7 +271,7 @@ class MindfulAIService:
                     {'role': 'system', 'content': prompt}
                 ],
                 stream=False,
-                options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 512), 768), "timeout": max(self.chat_options.get("timeout", 120), 180)}
+                options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 512), 768), }
             )
             ai_response = response['message']['content']
 
@@ -355,7 +353,7 @@ class MindfulAIService:
                     {'role': 'system', 'content': prompt}
                 ],
                 stream=False,
-                options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 512), 768), "timeout": max(self.chat_options.get("timeout", 120), 180)}
+                options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 512), 768), }
             )
             ai_response = response['message']['content']
 
@@ -440,7 +438,7 @@ class MindfulAIService:
                     {'role': 'system', 'content': prompt}
                 ],
                 stream=False,
-                options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 768), 1024), "timeout": max(self.chat_options.get("timeout", 120), 200)}
+                options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 768), 1024), }
             )
             ai_response = response['message']['content']
 
@@ -565,7 +563,7 @@ class MindfulAIService:
                     {'role': 'system', 'content': prompt}
                 ],
                 stream=False,
-                options={"num_predict": 768, "timeout": 120}
+                options={"num_predict": 768, }
             )
             ai_response = response['message']['content']
 
@@ -707,7 +705,7 @@ Please consider this context when generating the clinical note."""
                     {'role': 'system', 'content': prompt}
                 ],
                 stream=False,
-                options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 1024), 1280), "timeout": max(self.chat_options.get("timeout", 120), 240)}
+                options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 1024), 1280), }
             )
             return response['message']['content']
         except Exception as e:
@@ -745,7 +743,119 @@ Please consider this context when generating the clinical note."""
         Note: This is an AI-generated summary based on session transcript analysis.
         """
 
-    def check_api_status(self) -> dict:
+    def generate_mood_insights(self, mood_score: int, notes: str = '') -> dict:
+        """
+        Generates insights for daily mood tracking using Ollama LLM.
+        """
+        # Check if Ollama is available before generating response
+        if not self._check_ollama_connection():
+            print("Ollama not available for mood insights.")
+            return self._fallback_mood_insights(mood_score, notes)
+
+        print("Using local 'mindwell' model for mood insights.")
+
+        mood_descriptions = {
+            1: "Very Low",
+            2: "Low",
+            3: "Neutral",
+            4: "Good",
+            5: "Excellent"
+        }
+
+        prompt = f"""
+        You are Dr. Anya, a compassionate wellness coach helping students understand their daily mood patterns.
+
+        Today's Mood: {mood_descriptions.get(mood_score, 'Unknown')}
+        Notes: {notes or 'No additional notes'}
+
+        Please provide:
+        1. A brief, supportive summary of their current mood state
+        2. 2-3 gentle suggestions for maintaining or improving their wellbeing today
+        3. 1-2 positive affirmations or encouraging thoughts
+
+        Keep responses supportive, encouraging, and focused on self-compassion and wellness.
+        """
+
+        try:
+            response = ollama.chat(
+                model=self.model_name,
+                messages=[
+                    {'role': 'system', 'content': prompt}
+                ],
+                stream=False,
+                options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 384), 512), "temperature": 0.7, "top_p": 0.9}
+            )
+            ai_response = response['message']['content']
+
+            # Parse the AI response into structured format
+            lines = ai_response.strip().split('\n')
+            summary = ""
+            suggestions = []
+            affirmations = []
+
+            current_section = None
+            for line in lines:
+                line = line.strip()
+                if not line:
+                    continue
+
+                # Look for section indicators
+                if any(word in line.lower() for word in ['summary', 'mood', 'feeling']):
+                    summary = line
+                elif any(word in line.lower() for word in ['suggest', 'recommend', 'try', 'consider']):
+                    suggestions.append(line.strip('•-* '))
+                elif any(word in line.lower() for word in ['affirmation', 'remember', 'you are', 'you can']):
+                    affirmations.append(line.strip('•-* '))
+
+            # Ensure we have content for each section
+            if not summary:
+                summary = f"You reported feeling {mood_descriptions.get(mood_score, 'neutral')} today. Every mood is valid and provides insight into your wellbeing."
+
+            if not suggestions:
+                suggestions = [
+                    'Take a few deep breaths and notice how your body feels',
+                    'Consider doing one small thing that brings you comfort today',
+                    'Remember that moods naturally fluctuate throughout the day'
+                ]
+
+            if not affirmations:
+                affirmations = [
+                    'You are doing your best, and that is enough',
+                    'Your feelings are valid and important'
+                ]
+
+            return {
+                'summary': summary[:200],  # Limit length
+                'recommendations': suggestions[:3],  # Limit to 3 suggestions
+                'resources': affirmations[:2]  # Use affirmations as resources
+            }
+
+        except Exception as e:
+            print(f"Error with local model for mood insights: {e}")
+            return self._fallback_mood_insights(mood_score, notes)
+
+    def _fallback_mood_insights(self, mood_score: int, notes: str = '') -> dict:
+        """Fallback if AI is unavailable for mood insights."""
+        mood_descriptions = {
+            1: "Very Low",
+            2: "Low",
+            3: "Neutral",
+            4: "Good",
+            5: "Excellent"
+        }
+
+        return {
+            'summary': f"You reported feeling {mood_descriptions.get(mood_score, 'neutral')} today. Remember that all moods are valid and provide insight into your wellbeing.",
+            'recommendations': [
+                'Take a few deep breaths and notice how your body feels',
+                'Consider doing one small thing that brings you comfort today',
+                'Remember that moods naturally fluctuate throughout the day'
+            ],
+            'resources': [
+                'You are doing your best, and that is enough',
+                'Your feelings are valid and important'
+            ]
+        }
         """Check the current status of the AI service and Ollama connection."""
         status = {
             'ollama_available': OLLAMA_AVAILABLE,

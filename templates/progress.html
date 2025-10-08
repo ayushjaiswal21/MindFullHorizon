@@ -73,7 +73,7 @@
             <h3 class="text-xl font-semibold text-gray-800 mb-4">
                 <i class="fas fa-smile text-yellow-500 mr-2"></i>Mood Trends (Last 30 Days)
             </h3>
-            <div class="bg-gray-50 p-4 rounded-lg mb-4" style="height: 250px;">
+            <div class="bg-gray-50 p-4 rounded-lg mb-4 chart-container-sm">
                 <canvas id="moodChart"></canvas>
             </div>
             <div class="text-sm text-gray-600">
@@ -86,7 +86,7 @@
             <h3 class="text-xl font-semibold text-gray-800 mb-4">
                 <i class="fas fa-chart-bar text-blue-500 mr-2"></i>Assessment Score History
             </h3>
-            <div class="bg-gray-50 p-4 rounded-lg mb-4" style="height: 250px;">
+            <div class="bg-gray-50 p-4 rounded-lg mb-4 chart-container-sm">
                 <canvas id="assessmentChart"></canvas>
             </div>
             <div class="text-sm text-gray-600">
@@ -125,7 +125,7 @@
                 {% for goal in goals %}
                 <div class="flex items-center justify-between p-3 rounded-lg {% if goal.status == 'completed' %}bg-green-100{% else %}bg-gray-100{% endif %} hover:shadow-md transition-shadow">
                     <div class="flex items-center">
-                        <input type="checkbox" data-goal-id="{{ goal.id }}" class="goal-checkbox form-checkbox h-5 w-5 text-blue-600" {% if goal.status == 'completed' %}checked{% endif %}>
+                        <input type="checkbox" id="goal-{{ goal.id }}" name="goal-{{ goal.id }}" data-goal-id="{{ goal.id }}" class="goal-checkbox form-checkbox h-5 w-5 text-blue-600" {% if goal.status == 'completed' %}checked{% endif %} aria-label="Mark goal '{{ goal.title }}' as {{ 'completed' if goal.status != 'completed' else 'incomplete' }}">
                         <div class="ml-3">
                             <span class="text-gray-800 font-medium">{{ goal.title }}</span>
                             {% if goal.description %}

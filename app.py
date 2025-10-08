@@ -136,16 +136,22 @@ def add_security_headers(response):
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    
-    # Content Security Policy
+
+    # Add cache control for static files and API responses
+    if request.endpoint:
+        if 'static' in request.endpoint or request.endpoint.startswith('api'):
+            response.headers['Cache-Control'] = 'public, max-age=3600'  # Cache for 1 hour
+        else:
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+
+    # Content Security Policy (simplified for production)
     csp = (
-        "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "script-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "style-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "font-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "img-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "connect-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "frame-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://code.jquery.com https://cdnjs.cloudflare.com; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
+        "img-src 'self' data: https:; "
+        "connect-src 'self' https://api.github.com; "
     )
     response.headers['Content-Security-Policy'] = csp
     return response
@@ -1229,14 +1235,11 @@ def assessment():
         
         assessments.append(assessment_dict)
     
-    latest_insights = None
-    if assessments:
-        latest_insights = assessments[0].get('ai_insights')
-
     return render_template('assessment.html', 
-                           user_name=session['user_name'], 
-                           assessments=assessments,
-                           latest_insights=latest_insights)
+                         user_name=session['user_name'], 
+                         assessments=assessments,
+                         latest_insights=latest_insights if 'latest_insights' in locals() and latest_insights else {},
+                         get_severity_info=get_severity_info)
 
 @app.route('/api/save-assessment', methods=['POST'])
 @login_required
@@ -2707,6 +2710,27 @@ def save_role():
     else:
         flash("Invalid role selected.", "warning")
         return redirect(url_for('role_selection'))
+
+@socketio.on('delete_blog')
+@login_required
+def delete_blog(blog_id):
+    """Delete a blog post"""
+    if not request.is_json:
+        return jsonify(success=False, message='Invalid request format'), 400
+
+    try:
+        blog = BlogPost.query.get_or_404(blog_id)
+        if blog.author_id != session['user_id']:
+            return jsonify(success=False, message='Unauthorized'), 403
+
+        db.session.delete(blog)
+        db.session.commit()
+        return jsonify(success=True, message='Blog post deleted')
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error deleting blog post: {e}")
+        return jsonify(success=False, message='Failed to delete blog post'), 500
 
 if __name__ == '__main__':
     try:
