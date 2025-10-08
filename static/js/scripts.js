@@ -1,6 +1,211 @@
 // MindFullHorizon - Complete JavaScript functionality
 // Fixed version - October 2025
 
+// Assessment variables
+let currentAssessmentType = null;
+let currentQuestionIndex = 0;
+let assessmentQuestions = [];
+let assessmentResponses = {};
+
+async function fetchAssessmentQuestions(assessmentType) {
+    console.log(`Fetching questions for: ${assessmentType}`);
+    try {
+        const response = await fetch(`/api/assessment/questions/${assessmentType}`);
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        console.log('Received data:', data);
+        if (data.success && data.questions) {
+            console.log('Successfully fetched questions.');
+            return data.questions;
+        } else {
+            console.error('API call successful, but no questions returned:', data.message);
+            return [];
+        }
+    } catch (error) {
+        console.error('Error fetching or parsing assessment questions:', error);
+        return [];
+    }
+}
+
+function previousQuestion() {
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        renderQuestion();
+    }
+}
+
+function renderQuestion() {
+    const questionContainer = document.getElementById('assessment-question-container');
+    const questionText = document.getElementById('assessment-question');
+    const optionsContainer = document.getElementById('assessment-options');
+    const progressText = document.getElementById('assessment-progress');
+
+    if (!questionContainer || !questionText || !optionsContainer || !progressText) {
+        console.error('Assessment modal elements not found');
+        return;
+    }
+
+    // Clear previous options
+    optionsContainer.innerHTML = '';
+
+    // Get the current question
+    const question = assessmentQuestions[currentQuestionIndex];
+    questionText.textContent = question.question;
+
+    // Render options
+    question.options.forEach((option, index) => {
+        const optionElement = document.createElement('div');
+        optionElement.className = 'assessment-option';
+        optionElement.innerHTML = `
+            <input type="radio" id="option-${index}" name="assessment-option" value="${index}" onchange="selectAnswer(${index})">
+            <label for="option-${index}">${option}</label>
+        `;
+        optionsContainer.appendChild(optionElement);
+    });
+
+    // Update progress text
+    progressText.textContent = `Question ${currentQuestionIndex + 1} of ${assessmentQuestions.length}`;
+
+        // Check the previously selected answer for this question
+    const selectedValue = assessmentResponses[currentQuestionIndex];
+    if (selectedValue !== undefined) {
+        const selectedRadio = optionsContainer.querySelector(`input[value="${selectedValue}"]`);
+        if (selectedRadio) {
+            selectedRadio.checked = true;
+        }
+    }
+
+    // Update button visibility
+    const nextButton = document.getElementById('assessment-next-btn');
+    const prevButton = document.getElementById('assessment-prev-btn');
+    const submitButton = document.getElementById('assessment-submit-btn');
+
+    if (prevButton) {
+        prevButton.classList.toggle('hidden', currentQuestionIndex === 0);
+    }
+
+    if (currentQuestionIndex === assessmentQuestions.length - 1) {
+        if(nextButton) nextButton.classList.add('hidden');
+        if(submitButton) submitButton.classList.remove('hidden');
+    } else {
+        if(nextButton) nextButton.classList.remove('hidden');
+        if(submitButton) submitButton.classList.add('hidden');
+    }
+}
+
+function selectAnswer(value) {
+    assessmentResponses[currentQuestionIndex] = value;
+}
+
+function nextQuestion() {
+    if (assessmentResponses[currentQuestionIndex] === undefined) {
+        alert('Please select an answer before continuing.');
+        return;
+    }
+
+    if (currentQuestionIndex < assessmentQuestions.length - 1) {
+        currentQuestionIndex++;
+        renderQuestion();
+    }
+}
+
+async function completeAssessment() {
+    const submitButton = document.getElementById('assessment-submit-btn');
+    submitButton.disabled = true;
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+    // Manually get the value of the last question's response
+    const lastAnswer = document.querySelector('input[name="assessment-option"]:checked');
+    if (lastAnswer) {
+        selectAnswer(parseInt(lastAnswer.value));
+    }
+
+    if (assessmentResponses[currentQuestionIndex] === undefined) {
+        alert('Please select an answer before completing the assessment.');
+        return;
+    }
+
+    const totalScore = Object.values(assessmentResponses).reduce((sum, value) => sum + value, 0);
+
+    const payload = {
+        assessment_type: currentAssessmentType,
+        score: totalScore,
+        responses: assessmentResponses
+    };
+
+    try {
+        const response = await fetch('/api/save-assessment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert('Assessment submitted successfully!');
+            closeAssessment();
+            location.reload(); // Reload to update history
+        } else {
+            throw new Error(data.message || 'Failed to save assessment.');
+        }
+    } catch (error) {
+        console.error('Error submitting assessment:', error);
+        alert(`An error occurred: ${error.message}`);
+        // Re-enable the button if submission fails
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-check mr-2"></i>Complete Assessment';
+    }
+}
+
+function closeAssessment() {
+    const modal = document.getElementById('assessmentModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+    // Reset state
+    currentAssessmentType = null;
+    currentQuestionIndex = 0;
+    assessmentQuestions = [];
+    assessmentResponses = {};
+}
+
+async function startAssessment(assessmentType) {
+    currentAssessmentType = assessmentType;
+    currentQuestionIndex = 0;
+    assessmentResponses = {};
+
+    // Show loading state
+    const questionContainer = document.getElementById('assessment-question-container');
+    const loadingIndicator = document.getElementById('assessment-loading');
+    const modal = document.getElementById('assessmentModal');
+
+    if (loadingIndicator) loadingIndicator.classList.remove('hidden');
+    if (questionContainer) questionContainer.classList.add('hidden');
+    if (modal) modal.style.display = 'block';
+
+    // Fetch questions
+    assessmentQuestions = await fetchAssessmentQuestions(assessmentType);
+
+    // Hide loading state
+    if (loadingIndicator) loadingIndicator.classList.add('hidden');
+
+    if (assessmentQuestions.length > 0) {
+        if (questionContainer) questionContainer.classList.remove('hidden');
+        renderQuestion();
+    } else {
+        // Handle error
+        const errorContainer = document.getElementById('assessment-error');
+        if (errorContainer) errorContainer.classList.remove('hidden');
+    }
+}
+// Fixed version - October 2025
+
 // ========================
 // GLOBAL VARIABLES
 // ========================
@@ -564,7 +769,14 @@ function initializeModals() {
 
     // Add click listeners to all 'Start Assessment' buttons
     startAssessmentButtons.forEach(button => {
-        button.addEventListener('click', openModal);
+        button.addEventListener('click', () => {
+            const assessmentType = button.dataset.assessmentType;
+            if (assessmentType) {
+                startAssessment(assessmentType);
+            } else {
+                console.error('No assessment type specified on the button.');
+            }
+        });
     });
 
     // When the user clicks on the close button (x), close the modal

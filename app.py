@@ -1490,6 +1490,35 @@ def goals():
     goals = Goal.query.filter_by(user_id=user_id).all()
     return render_template('goals.html', user_name=session['user_name'], goals=goals)
 
+@app.route('/api/assessment/questions/<assessment_type>')
+@login_required
+@role_required('patient')
+def get_assessment_questions(assessment_type):
+    try:
+        # Construct the full path to the questions.json file
+        questions_file_path = os.path.join(app.static_folder, 'questions.json')
+        
+        # Check if the file exists
+        if not os.path.exists(questions_file_path):
+            logger.error(f"questions.json not found at {questions_file_path}")
+            return jsonify({'success': False, 'message': 'Assessment questions file not found.'}), 500
+
+        # Load the questions from the JSON file
+        with open(questions_file_path, 'r') as f:
+            all_questions = json.load(f)
+        
+        # Get the questions for the requested assessment type
+        questions = all_questions.get(assessment_type)
+        
+        if questions:
+            return jsonify({'success': True, 'questions': questions})
+        else:
+            return jsonify({'success': False, 'message': 'Invalid assessment type.'}), 404
+            
+    except Exception as e:
+        logger.error(f"Error fetching assessment questions: {e}")
+        return jsonify({'success': False, 'message': 'An internal error occurred.'}), 500
+
 @app.route('/assessment')
 @login_required
 @role_required('patient')
