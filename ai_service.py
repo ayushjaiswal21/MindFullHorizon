@@ -66,19 +66,20 @@ class MindfulAIService:
         if not OLLAMA_AVAILABLE:
             print("Ollama library not available")
             return False
-
         try:
-            # Try to list models with a timeout
-            models = ollama.list()
-            if not models or 'models' not in models:
-                print("No models found in Ollama response")
-                return False
-
-            # Check if our specific model is available
-            model_available = any(
-                model.get('name') == self.model_name
-                for model in models['models']
+            print("[Ollama] Checking connection to Ollama model: {}".format(self.model_name))
+            # Try a minimal request to Ollama
+            ollama.chat(
+                model=self.model_name,
+                messages=[{'role': 'system', 'content': 'ping'}],
+                stream=False,
+                options={'num_predict': 1, 'timeout': 5}
             )
+            print("[Ollama] Connection successful.")
+            return True
+        except Exception as e:
+            print(f"[Ollama] Connection failed: {e}")
+            return False
 
             if model_available:
                 print("Mindwell model found and available")
@@ -119,10 +120,12 @@ class MindfulAIService:
 
         # Check if Ollama is available before generating response
         if not self._check_ollama_connection():
-            print("Ollama not available for chat.")
+            print("[Chat] Ollama not available for chat.")
             return "I'm currently unable to connect to my knowledge base. Please try again in a moment or speak with a mental health professional for immediate support."
 
-        print("Using local 'mindwell' model for chat.")
+        print("[Chat] Using local 'mindwell' model for chat.")
+        print(f"[Chat] System prompt: {system_prompt}")
+        print(f"[Chat] User message: {user_message}")
         try:
             # Use centralized, configurable options (longer timeout/length by default)
             response = ollama.chat(
@@ -135,15 +138,17 @@ class MindfulAIService:
                 options=self.chat_options
             )
             response_text = response['message']['content'].strip()
+            print(f"[Chat] Raw AI response: {response_text}")
 
             # Clean up response - remove extra whitespace and limit length
             response_text = ' '.join(response_text.split())  # Normalize whitespace
             if len(response_text) > 500:  # Limit length for better UX
                 response_text = response_text[:497] + "..."
 
+            print(f"[Chat] Final response: {response_text}")
             return response_text
         except Exception as e:
-            print(f"Error with local model: {e}")
+            print(f"[Chat] Error with local model: {e}")
             return "I'm having some technical difficulties right now. Please try again in a moment, or consider reaching out to a trusted friend or mental health professional."
 
     def generate_assessment_insights(self, assessment_type: str, score: int, responses: dict) -> dict:
@@ -330,10 +335,10 @@ class MindfulAIService:
         """
         # Check if Ollama is available before generating response
         if not self._check_ollama_connection():
-            print("Ollama not available for digital detox insights.")
+            print("[DigitalDetox] Ollama not available for digital detox insights.")
             return self._fallback_digital_detox_insights()
 
-        print("Using local 'mindwell' model for digital detox insights.")
+        print("[DigitalDetox] Using local 'mindwell' model for digital detox insights.")
 
         prompt = f"""
         You are Dr. Anya, a digital wellness coach helping students achieve better balance with technology.
@@ -347,6 +352,7 @@ class MindfulAIService:
 
         Focus on being supportive and practical for student life.
         """
+        print(f"[DigitalDetox] Prompt sent to Ollama:\n{prompt}")
 
         try:
             response = ollama.chat(
@@ -358,16 +364,20 @@ class MindfulAIService:
                 options={**self.chat_options, "num_predict": max(self.chat_options.get("num_predict", 512), 768), "timeout": max(self.chat_options.get("timeout", 120), 180)}
             )
             ai_response = response['message']['content']
+            print(f"[DigitalDetox] Raw AI response:\n{ai_response}")
 
             # Parse the AI response into structured format
             lines = ai_response.strip().split('\n')
             ai_score = "Good"  # default
             ai_suggestion = ""
+            print(f"[DigitalDetox] Parsing AI response lines: {lines}")
 
             for line in lines:
                 line = line.strip()
                 if not line:
                     continue
+
+                print(f"[DigitalDetox] Parsing line: {line}")
 
                 # Look for score indicators
                 if any(word in line.lower() for word in ['excellent', 'good', 'fair', 'needs improvement', 'poor']):
@@ -391,6 +401,9 @@ class MindfulAIService:
             # Ensure we have a suggestion
             if not ai_suggestion:
                 ai_suggestion = 'AI insights are currently unavailable. Try to balance your screen time with other activities.'
+
+            print(f"[DigitalDetox] Final parsed score: {ai_score}")
+            print(f"[DigitalDetox] Final parsed suggestion: {ai_suggestion}")
 
             return {
                 'ai_score': ai_score,
