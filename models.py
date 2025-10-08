@@ -431,6 +431,23 @@ class BinauralTrack(db.Model):
         return f'<BinauralTrack {self.id} - {self.title}>'
 
 
+class MoodLog(db.Model):
+    """Mood log model for storing user mood entries."""
+    __tablename__ = 'mood_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    mood_score = db.Column(db.Integer, nullable=False)  # e.g., 1-10 scale
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+
+    # Relationship - Fixed: removed delete-orphan from many-to-one relationship
+    user = db.relationship('User', backref='mood_logs')
+
+    def __repr__(self):
+        return f'<MoodLog {self.id} for user {self.user_id}>'
+
+
 class Notification(db.Model):
     """Simple notification/message model for provider->patient quick messages and alerts."""
     __tablename__ = 'notifications'

@@ -55,7 +55,7 @@ from flask_caching import Cache
 from ai_service import ai_service
 from extensions import db, migrate, flask_session, compress, csrf
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, MusicTherapyLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary, Notification
-from models import BlogPost, BlogComment, BlogLike, BlogInsight, Prescription  # Ensure BlogPost and related models are imported
+from models import BlogPost, BlogComment, BlogLike, BlogInsight, Prescription, MoodLog  # Ensure BlogPost and related models are imported
 
 # In-memory storage for patient features (no database required)
 patient_journal_entries = {}  # user_id -> list of journal entries
@@ -529,11 +529,11 @@ def logout():
 def patient_dashboard():
     user_id = session['user_id']
     
-    # Use eager loading to prevent N+1 queries
     from sqlalchemy.orm import joinedload
     gamification = Gamification.query.filter_by(user_id=user_id).first()
     rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.desc()).first()
     all_appointments = Appointment.query.filter_by(user_id=user_id).order_by(Appointment.date.asc(), Appointment.time.asc()).all()
+    latest_mood = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.created_at.desc()).first()
 
     upcoming_appointments = []
     past_appointments = []
@@ -547,7 +547,6 @@ def patient_dashboard():
             else:
                 past_appointments.append(appt)
         except Exception as e:
-            logger.error(f"Error processing appointment {appt.id}: {e}")
             continue
 
     data = {
@@ -577,7 +576,8 @@ def patient_dashboard():
                          data=data,
                          alerts=alerts,
                          upcoming_appointments=upcoming_appointments,
-                         past_appointments=past_appointments)
+                         past_appointments=past_appointments,
+                         latest_mood=latest_mood)
 
 @app.route('/provider-dashboard')
 @login_required
