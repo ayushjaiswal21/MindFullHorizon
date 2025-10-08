@@ -297,6 +297,58 @@ span[style*="color"] {
     transition: all 0.3s ease-in-out;
 }
 
+/* Chat message styles */
+.chat-message {
+    margin-bottom: 1rem;
+    display: flex;
+}
+
+.chat-message.user {
+    justify-content: flex-end;
+}
+
+.chat-message.bot {
+    justify-content: flex-start;
+}
+
+.message-bubble {
+    padding: 0.75rem 1rem;
+    border-radius: 1.25rem;
+    max-width: 75%;
+    word-wrap: break-word;
+}
+
+.chat-message.user .message-bubble {
+    background-color: #3b82f6; /* Blue-600 */
+    color: white;
+    border-bottom-right-radius: 0.25rem;
+}
+
+.chat-message.bot .message-bubble {
+    background-color: #e5e7eb; /* Gray-200 */
+    color: #1f2937; /* Gray-800 */
+    border-bottom-left-radius: 0.25rem;
+}
+
+/* Assessment option styles */
+.assessment-option {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb; /* Gray-200 */
+    border-radius: 0.5rem;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.assessment-option:hover {
+    background-color: #f3f4f6; /* Gray-100 */
+    border-color: #3b82f6; /* Blue-600 */
+}
+
+.assessment-option input[type="radio"] {
+    margin-right: 0.75rem;
+}
+
 /* Mood music buttons */
 .mood-btn {
     border: none;

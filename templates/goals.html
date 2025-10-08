@@ -188,13 +188,11 @@
         </div>
     </div>
 </div>
-
 <script>
 let currentGoalId = null;
 
 // Load goals on page load
 document.addEventListener('DOMContentLoaded', function() {
-    initializeChartJS();
     loadGoals();
     
     // Add event listeners
@@ -304,7 +302,7 @@ function handleGoalSubmit(e) {
     const formData = new FormData(e.target);
     const goalData = Object.fromEntries(formData.entries());
     
-    fetch('/api/goals', {
+        fetch('/goals', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
