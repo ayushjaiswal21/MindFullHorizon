@@ -42,7 +42,20 @@ console_formatter = logging.Formatter('%(levelname)s - %(message)s')
 console_handler.setFormatter(console_formatter)
 logger.addHandler(console_handler)
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, abort, get_flashed_messages
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
+from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
+import nltk
+
+# Download NLTK data if not already present
+try:
+    nltk.data.find('tokenizers/punkt')
+except nltk.downloader.DownloadError:
+    nltk.download('punkt')
+try:
+    nltk.data.find('corpora/wordnet')
+except nltk.downloader.DownloadError:
+    nltk.download('wordnet'), abort, get_flashed_messages
 from flask_session import Session
 from flask_compress import Compress
 from flask_migrate import Migrate
@@ -2545,19 +2558,19 @@ def handle_goals():
     user_id = session['user_id']
 
     if request.method == 'POST':
-        data = request.json
-        title = data.get('title')
-        description = data.get('description', '')
-        category = data.get('category', 'mental_health')
-        priority = data.get('priority', 'medium')
-        target_value = data.get('target_value')
-        unit = data.get('unit', '')
-        target_date = data.get('target_date')
-
-        if not title:
-            return jsonify({'success': False, 'message': 'Goal title is required.'}), 400
-
         try:
+            data = request.get_json()
+            title = data.get('title')
+            description = data.get('description')
+            category = data.get('category')
+            target_value = data.get('target_value')
+            unit = data.get('unit')
+            priority = data.get('priority')
+            target_date = data.get('target_date')
+
+            if not title:
+                return jsonify({'success': False, 'message': 'Title is required.'}), 400
+
             parsed_target_date = None
             if target_date:
                 parsed_target_date = datetime.strptime(target_date, '%Y-%m-%d').date()
@@ -2568,9 +2581,7 @@ def handle_goals():
                 description=description,
                 category=category,
                 priority=priority,
-                status='active',
-                target_value=float(target_value) if target_value and target_value.strip() else None,
-                current_value=0.0,
+                target_value=float(target_value) if target_value else None,
                 unit=unit,
                 target_date=parsed_target_date,
                 start_date=datetime.utcnow().date()
@@ -3335,12 +3346,41 @@ def upload_voice():
         return jsonify({'success': False, 'message': f'Upload failed: {str(e)}'}), 500
 
 
+import speech_recognition as sr
+
+def transcribe_audio(file_path):
+    r = sr.Recognizer()
+    with sr.AudioFile(file_path) as source:
+        audio = r.record(source)
+    try:
+        return r.recognize_google(audio)
+    except sr.UnknownValueError:
+        return ""
+    except sr.RequestError as e:
+        logger.error(f"Could not request results from Google Speech Recognition service; {e}")
+        return ""
+
 def get_ai_voice_emotion_analysis(file_path, audio_features):
+    # Initialize lemmatizer
+    lemmatizer = WordNetLemmatizer()
+
+    transcribed_text = transcribe_audio(file_path)
+
+    # Lemmatize the text
+    if transcribed_text:
+        tokens = word_tokenize(transcribed_text)
+        lemmatized_text = ' '.join([lemmatizer.lemmatize(word) for word in tokens])
+    else:
+        lemmatized_text = ""
+
     """Get AI-powered emotion analysis for voice recordings with optimized prompts."""
     try:
         # Enhanced prompt with better structure and audio features
         prompt = f"""
         You are Dr. Anya, an AI wellness coach analyzing voice recordings for emotional insights.
+
+                TRANSCRIBED & LEMMATIZED TEXT:
+        {lemmatized_text}
 
         AUDIO ANALYSIS:
         Duration: {audio_features.get('duration', 0):.1f}s

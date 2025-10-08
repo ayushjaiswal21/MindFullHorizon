@@ -116,14 +116,22 @@ async function completeAssessment() {
     const submitButton = document.getElementById('assessment-submit-btn');
     submitButton.disabled = true;
     submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Submitting...';
+
     // Manually get the value of the last question's response
     const lastAnswer = document.querySelector('input[name="assessment-option"]:checked');
     if (lastAnswer) {
         selectAnswer(parseInt(lastAnswer.value));
     }
 
-    if (assessmentResponses[currentQuestionIndex] === undefined) {
-        alert('Please select an answer before completing the assessment.');
+    // Verify that all questions have been answered
+    const unansweredQuestionIndex = assessmentQuestions.findIndex((_, index) => assessmentResponses[index] === undefined);
+
+    if (unansweredQuestionIndex !== -1) {
+        alert('Please answer all questions before submitting.');
+        currentQuestionIndex = unansweredQuestionIndex;
+        renderQuestion();
+        submitButton.disabled = false;
+        submitButton.innerHTML = '<i class="fas fa-check mr-2"></i>Complete Assessment';
         return;
     }
 
@@ -150,7 +158,7 @@ async function completeAssessment() {
         if (data.success) {
             alert('Assessment submitted successfully!');
             closeAssessment();
-            location.reload(); // Reload to update history
+            displayAiInsights(data.ai_insights);
         } else {
             throw new Error(data.message || 'Failed to save assessment.');
         }
@@ -173,6 +181,40 @@ function closeAssessment() {
     currentQuestionIndex = 0;
     assessmentQuestions = [];
     assessmentResponses = {};
+}
+
+function displayAiInsights(insights) {
+    const insightsContainer = document.getElementById('aiInsightsContent');
+    const summaryEl = document.getElementById('aiSummary');
+    const recommendationsEl = document.getElementById('aiRecommendations');
+    const resourcesEl = document.getElementById('aiResources');
+    const noInsightsMessage = document.getElementById('noInsightsMessage');
+
+    if (!insightsContainer || !summaryEl || !recommendationsEl || !resourcesEl) {
+        console.error('AI insights elements not found on the page.');
+        location.reload(); // Fallback to reload if elements are missing
+        return;
+    }
+
+    if (insights) {
+        summaryEl.textContent = insights.summary || 'No summary available.';
+        
+        recommendationsEl.innerHTML = insights.recommendations
+            .map(rec => `<li class="flex items-start"><i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i><span>${rec}</span></li>`)
+            .join('');
+
+        resourcesEl.innerHTML = insights.resources
+            .map(res => `<li class="flex items-start"><i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i><span>${res}</span></li>`)
+            .join('');
+
+        insightsContainer.classList.remove('hidden');
+        if (noInsightsMessage) {
+            noInsightsMessage.classList.add('hidden');
+        }
+
+        // Scroll to the insights section
+        insightsContainer.scrollIntoView({ behavior: 'smooth' });
+    }
 }
 
 async function startAssessment(assessmentType) {
@@ -871,6 +913,60 @@ function getMessageBoxIcon(type) {
 }
 
 // ========================
+// CHAT FUNCTIONALITY
+// ========================
+
+let socket;
+
+function initializeChat() {
+    if (typeof io === 'undefined') {
+        console.error('Socket.IO not loaded');
+        return;
+    }
+
+    socket = io();
+
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+    const chatMessages = document.getElementById('chat-messages');
+
+    if (!chatForm || !chatInput || !chatMessages) {
+        return; // Not on the chat page
+    }
+
+    socket.on('connect', () => {
+        console.log('Connected to chat server');
+    });
+
+    chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const message = chatInput.value.trim();
+        if (message) {
+            appendMessage(message, 'user');
+            socket.emit('chat_message', { message: message });
+            chatInput.value = '';
+        }
+    });
+
+    socket.on('chat_response', (data) => {
+        appendMessage(data.reply, 'bot');
+    });
+
+    socket.on('error', (data) => {
+        console.error('Chat error:', data.message);
+        appendMessage(`Error: ${data.message}`, 'system');
+    });
+
+    function appendMessage(message, sender) {
+        const messageElement = document.createElement('div');
+        messageElement.className = `chat-message ${sender}`;
+        messageElement.innerHTML = `<div class="message-bubble">${message}</div>`;
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// ========================
 // INITIALIZATION
 // ========================
 
@@ -878,8 +974,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize flash messages
     initializeFlashMessages();
     
-    // Initialize modals
+        // Initialize modals
     initializeModals();
+
+    // Initialize chat
+    initializeChat();
     
     // Initialize charts if elements exist
     if (document.getElementById('screen-time-chart')) {
