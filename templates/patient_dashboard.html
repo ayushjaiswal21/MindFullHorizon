@@ -26,7 +26,7 @@
         {% endif %}
 
         <!-- Enhanced Overview Grid -->
-        <div class="grid lg:grid-cols-3 md:grid-cols-2 gap-8 mb-8">
+        <div class="grid grid-cols-3 gap-8 mb-8">
             <!-- Enhanced Gamification Card -->
             <div class="patient-card p-6 flex flex-col justify-between">
                 <div>
@@ -174,79 +174,98 @@
                 </div>
             </div>
 
-            <div class="grid md:grid-cols-3 gap-6">
-                <!-- Enhanced Medication Card -->
-                <a href="{{ url_for('medication') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-pills text-blue-600 text-2xl"></i>
+            <div class="grid grid-cols-1 gap-6">
+                <!-- First row: 4 cards -->
+                <div class="grid grid-cols-4 gap-6">
+                    <!-- Enhanced Medication Card -->
+                    <a href="{{ url_for('medication') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-pills text-blue-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Medication Tracker</h4>
+                                <p class="text-gray-600">Log and manage your medications.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Medication Tracker</h4>
-                            <p class="text-gray-600">Log and manage your medications.</p>
+                    </a>
+                    <!-- Enhanced My Prescriptions Card -->
+                    <a href="{{ url_for('my_prescriptions') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-file-prescription text-red-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">My Prescriptions</h4>
+                                <p class="text-gray-600">View your active prescriptions.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-                <!-- Enhanced My Prescriptions Card -->
-                <a href="{{ url_for('my_prescriptions') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-file-prescription text-red-600 text-2xl"></i>
+                    </a>
+                    <!-- Enhanced Breathing Card -->
+                    <a href="{{ url_for('breathing') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-wind text-green-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Breathing Exercises</h4>
+                                <p class="text-gray-600">Practice guided breathing.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">My Prescriptions</h4>
-                            <p class="text-gray-600">View your active prescriptions.</p>
+                    </a>
+                    <!-- Enhanced Yoga Card -->
+                    <a href="{{ url_for('yoga') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-person-praying text-yellow-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Yoga Sessions</h4>
+                                <p class="text-gray-600">Follow guided yoga practices.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-                <!-- Enhanced Breathing Card -->
-                <a href="{{ url_for('breathing') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-wind text-green-600 text-2xl"></i>
+                    </a>
+                </div>
+
+                <!-- Second row: 3 cards -->
+                <div class="grid grid-cols-3 gap-6">
+                    <!-- Enhanced Music Therapy Card -->
+                    <a href="{{ url_for('music') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-music text-purple-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Mood Music</h4>
+                                <p class="text-gray-600">Binaural beats for wellness.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Breathing Exercises</h4>
-                            <p class="text-gray-600">Practice guided breathing.</p>
+                    </a>
+                    <!-- Journal Entries Card -->
+                    <a href="{{ url_for('patient_journal') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-pink-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-book text-pink-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Journal Entries</h4>
+                                <p class="text-gray-600">Write and track your thoughts with sentiment analysis.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-                <!-- Enhanced Yoga Card -->
-                <a href="{{ url_for('yoga') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-person-praying text-yellow-600 text-2xl"></i>
+                    </a>
+                    <!-- Voice Logs Card -->
+                    <a href="{{ url_for('patient_voice_logs') }}" class="toolkit-card">
+                        <div class="flex items-center">
+                            <div class="bg-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                                <i class="fas fa-microphone text-emerald-600 text-2xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800 text-lg">Voice Logs</h4>
+                                <p class="text-gray-600">Record and analyze your voice for emotional insights.</p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Yoga Sessions</h4>
-                            <p class="text-gray-600">Follow guided yoga practices.</p>
-                        </div>
-                    </div>
-                </a>
-                <!-- New Journal Entries Card -->
-                <a href="{{ url_for('patient_journal') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-pink-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-book text-pink-600 text-2xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Journal Entries</h4>
-                            <p class="text-gray-600">Write and track your thoughts with sentiment analysis.</p>
-                        </div>
-                    </div>
-                </a>
-                <!-- New Voice Logs Card -->
-                <a href="{{ url_for('patient_voice_logs') }}" class="toolkit-card">
-                    <div class="flex items-center">
-                        <div class="bg-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-microphone text-emerald-600 text-2xl"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Voice Logs</h4>
-                            <p class="text-gray-600">Record and analyze your voice for emotional insights.</p>
-                        </div>
-                    </div>
-                </a>
+                    </a>
+                </div>
             </div>
         </div>
 
@@ -351,4 +370,99 @@
         </div>
     </div>
 </div>
+
+<!-- Toast Notification Container -->
+<div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+<script>
+// Initialize Socket.IO
+const socket = io();
+
+// Connect to notification system
+socket.on('connect', function() {
+    console.log('Connected to notification system');
+});
+
+// Handle appointment accepted notifications
+socket.on('appointment_accepted', function(data) {
+    showToast('Appointment Accepted', `Your appointment on ${data.date} at ${data.time} has been accepted!`, 'success');
+    showBrowserNotification('Appointment Accepted', `Your ${data.type} appointment on ${data.date} at ${data.time} has been accepted!`);
+    
+    // Refresh the page to update appointment status
+    setTimeout(() => {
+        window.location.reload();
+    }, 2000);
+});
+
+// Handle appointment rejected notifications
+socket.on('appointment_rejected', function(data) {
+    showToast('Appointment Rejected', `Your appointment on ${data.date} at ${data.time} was rejected. Reason: ${data.reason}`, 'error');
+    showBrowserNotification('Appointment Rejected', `Your ${data.type} appointment on ${data.date} at ${data.time} was rejected. Reason: ${data.reason}`);
+    
+    // Refresh the page to update appointment status
+    setTimeout(() => {
+        window.location.reload();
+    }, 2000);
+});
+
+function showToast(title, message, type) {
+    const toastContainer = document.getElementById('toastContainer');
+    const toast = document.createElement('div');
+    
+    const bgColor = {
+        'success': 'bg-green-500',
+        'error': 'bg-red-500',
+        'info': 'bg-blue-500',
+        'warning': 'bg-yellow-500'
+    }[type] || 'bg-gray-500';
+    
+    toast.className = `${bgColor} text-white px-6 py-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 ease-in-out`;
+    toast.innerHTML = `
+        <div class="flex items-start">
+            <div class="flex-1">
+                <div class="font-semibold">${title}</div>
+                <div class="text-sm mt-1">${message}</div>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.style.transform = 'translateX(100%)';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 5000);
+}
+
+function showBrowserNotification(title, message) {
+    if (Notification.permission === 'granted') {
+        new Notification(title, {
+            body: message,
+            icon: '/static/images/icon-192x192.png',
+            badge: '/static/images/icon-192x192.png'
+        });
+    }
+}
+
+// Request notification permission on page load
+document.addEventListener('DOMContentLoaded', function() {
+    if (Notification.permission === 'default') {
+        Notification.requestPermission().then(function(permission) {
+            if (permission === 'granted') {
+                console.log('Notification permission granted');
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

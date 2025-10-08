@@ -141,6 +141,7 @@ fix_*.py
 manual_*.py
 flask_session/
 static/profile_pics/
+static/uploads/
 
 # Test and setup files (added during development)
 test_ollama.py

@@ -29,6 +29,10 @@
 
     <title>{% block title %}Mindful Horizon - Mental Wellness Platform{% endblock %}</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon-192x192.png') }}">
+    <link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='images/icon-192x192.png') }}">
+    
 
     <!-- Fonts with display swap for performance -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -38,6 +42,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=20250923-2">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced.css') }}?v=20250923-2">
+    <!-- Fallback styles if Tailwind utilities are not available -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fallback-cards.css') }}?v=1">
 
     <!-- Advanced meta tags for better performance -->
     
@@ -100,18 +106,14 @@
                                     <i class="fas fa-child nav-icon"></i>
                                     <span>Yoga</span>
                                 </a>
+                                <a href="{{ url_for('music') }}" class="nav-link-item">
+                                    <i class="fas fa-music nav-icon"></i>
+                                    <span>Music</span>
+                                </a>
                             {% endif %}
                             <a href="{{ url_for('blog_list') }}" class="nav-link-item">
                                 <i class="fas fa-blog nav-icon"></i>
                                 <span>Blog</span>
-                            </a>
-                            <a href="{{ url_for('progress') }}" class="nav-link-item">
-                                <i class="fas fa-chart-line nav-icon"></i>
-                                <span>Progress</span>
-                            </a>
-                            <a href="{{ url_for('profile') }}" class="nav-link-item">
-                                <i class="fas fa-user nav-icon"></i>
-                                <span>Profile</span>
                             </a>
 
                             <!-- Google Translate Element -->
@@ -196,18 +198,14 @@
                             <i class="fas fa-child"></i>
                             <span>Yoga</span>
                         </a>
+                        <a href="{{ url_for('music') }}" class="mobile-menu-item">
+                            <i class="fas fa-music"></i>
+                            <span>Music</span>
+                        </a>
                     {% endif %}
                     <a href="{{ url_for('blog_list') }}" class="mobile-menu-item">
                         <i class="fas fa-blog"></i>
                         <span>Blog</span>
-                    </a>
-                    <a href="{{ url_for('progress') }}" class="mobile-menu-item">
-                        <i class="fas fa-chart-line"></i>
-                        <span>Progress</span>
-                    </a>
-                    <a href="{{ url_for('profile') }}" class="mobile-menu-item">
-                        <i class="fas fa-user"></i>
-                        <span>Profile</span>
                     </a>
                     <div class="mobile-menu-divider"></div>
                     <a href="{{ url_for('logout') }}" class="mobile-menu-item text-red-600">
