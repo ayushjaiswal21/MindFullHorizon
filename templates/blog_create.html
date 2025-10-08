@@ -18,7 +18,7 @@
 
     <!-- Form -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <form method="post" class="p-8">
+        <form method="post" action="{{ url_for('blog_create') }}" class="p-8">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <!-- Title -->
             <div class="mb-6">
