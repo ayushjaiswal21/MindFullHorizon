@@ -162,71 +162,59 @@
                 <p class="text-gray-600">Analyzing your responses...</p>
             </div>
 
-            <!-- AI Insights Content -->
-            <div id="aiInsightsContent" class="{% if not latest_insights %}hidden{% endif %} space-y-4">
-                <div class="bg-white p-4 rounded-lg border border-gray-200">
-                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
-                        <i class="fas fa-comment-alt text-blue-500 mr-2"></i> Summary
-                    </h5>
-                    <p id="aiSummary" class="text-gray-700">
-                        {% if latest_insights and latest_insights.summary %}
-                            {{ latest_insights.summary }}
-                        {% else %}
-                            No summary available.
-                        {% endif %}
-                    </p>
-                </div>
-
-                <div class="bg-white p-4 rounded-lg border border-gray-200">
-                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
-                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Recommendations
-                    </h5>
-                    <ul id="aiRecommendations" class="space-y-2">
-                        {% if latest_insights and latest_insights.recommendations %}
-                            {% for rec in latest_insights.recommendations %}
-                                <li class="flex items-start">
-                                    <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
-                                    <span>{{ rec }}</span>
-                                </li>
-                            {% endfor %}
-                        {% else %}
-                            <li class="flex items-start">
-                                <div class="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </div>
-
-                <div class="bg-white p-4 rounded-lg border border-gray-200">
-                    <h5 class="font-medium text-gray-800 mb-2 flex items-center">
-                        <i class="fas fa-book-open text-green-500 mr-2"></i> Resources
-                    </h5>
-                    <ul id="aiResources" class="space-y-2">
-                        {% if latest_insights and latest_insights.resources %}
-                            {% for res in latest_insights.resources %}
-                                <li class="flex items-start">
-                                    <i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i>
-                                    <span>{{ res }}</span>
-                                </li>
-                            {% endfor %}
-                        {% else %}
-                            <li class="flex items-start">
-                                <div class="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
-            
-            {% if not latest_insights %}
-            <!-- Message when no insights are available -->
-            <div id="noInsightsMessage" class="p-4 bg-blue-50 rounded-lg">
-                <p class="text-sm text-gray-600">
-                    Complete an assessment to receive personalized AI-powered insights.
-                </p>
-            </div>
+<!-- AI Insights Content -->
+<div id="aiInsightsContent" class="space-y-4 {% if not latest_insights %}hidden{% endif %}">
+    <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+            <i class="fas fa-comment-alt text-blue-500 mr-2"></i> Summary
+        </h5>
+        <p id="aiSummary" class="text-gray-700">
+            {% if latest_insights and latest_insights.summary %}
+                {{ latest_insights.summary }}
+            {% else %}
+                No summary available.
             {% endif %}
-        </div>
+        </p>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Recommendations
+        </h5>
+        <ul id="aiRecommendations" class="space-y-2">
+            {% if latest_insights and latest_insights.recommendations %}
+                {% for rec in latest_insights.recommendations %}
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                        <span>{{ rec }}</span>
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li class="flex items-start">
+                    <div class="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+            <i class="fas fa-book-open text-green-500 mr-2"></i> Resources
+        </h5>
+        <ul id="aiResources" class="space-y-2">
+            {% if latest_insights and latest_insights.resources %}
+                {% for res in latest_insights.resources %}
+                    <li class="flex items-start">
+                        <i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i>
+                        <span>{{ res }}</span>
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li class="flex items-start">
+                    <div class="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
+                </li>
+            {% endif %}
+        </ul>
     </div>
 </div>
 
