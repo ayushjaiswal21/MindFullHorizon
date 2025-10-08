@@ -222,7 +222,46 @@ async function initializeScreenTimeChart() {
                     }
                 }
             }
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     } catch (error) {
         console.error('Error fetching screen time data:', error);
         const canvasCtx = ctx.getContext('2d');
@@ -269,7 +308,46 @@ function initializeWellnessChart() {
                 }
             }
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 async function initializeCorrelationChart() {
@@ -322,7 +400,46 @@ async function initializeCorrelationChart() {
                     },
                 }
             }
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     } catch (error) {
         console.error('Error fetching screen time data:', error);
     }
@@ -354,7 +471,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 alert.remove();
             }, 300);
         }, 5000);
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     // --- Advanced FAQ (generalized for any container) ---
     const faqContainers = Array.from(document.querySelectorAll('#faq-list, .faq-container'));
@@ -378,7 +534,46 @@ document.addEventListener('DOMContentLoaded', function() {
             const target = document.querySelector(location.hash);
             if (target && container.contains(target)) {
                 openFAQ(target, true);
-                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
             }
         }
 
@@ -420,17 +615,134 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.addEventListener('keydown', toggle);
             btn.setAttribute('role', 'button');
             btn.setAttribute('tabindex', '0');
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
         // Expand/collapse all controls
         if (expandBtn) expandBtn.addEventListener('click', () => {
             items.forEach(i => openFAQ(i, false));
             localStorage.removeItem(storageKey);
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
         if (collapseBtn) collapseBtn.addEventListener('click', () => {
             items.forEach(i => closeFAQ(i));
             localStorage.removeItem(storageKey);
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
         // Search filter by text and tags
         if (searchInput) {
@@ -441,11 +753,89 @@ document.addEventListener('DOMContentLoaded', function() {
                     const tags = (item.getAttribute('data-tags') || '').toLowerCase();
                     const match = !q || text.includes(q) || tags.includes(q);
                     item.style.display = match ? '' : 'none';
-                });
+                // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
             };
             searchInput.addEventListener('input', filter);
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     // Initialize real-time features
     // initializeRealTimeFeatures();
@@ -466,8 +856,86 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (e) {
             // Ignore malformed hrefs
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     
+// Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
 });
 
 // Function to show custom message box
@@ -543,7 +1011,46 @@ function initializeWellnessChart() {
                 }
             }
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 async function initializeCorrelationChart() {
@@ -561,7 +1068,46 @@ async function initializeCorrelationChart() {
         if (instance.canvas === canvas) {
             instance.destroy();
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     // Clear the canvas to ensure it's clean
     const ctx = canvas.getContext('2d');
@@ -633,7 +1179,46 @@ async function initializeCorrelationChart() {
                     }
                 }
             }
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     } catch (error) {
         console.error('Error fetching correlation data:', error);
         ctx.font = '16px Inter';
@@ -662,27 +1247,222 @@ document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('start-4-7-8-breathing')) {
         document.getElementById('start-4-7-8-breathing').addEventListener('click', function() {
             startBreathing('478');
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     }
     if (document.getElementById('start-box-breathing')) {
         document.getElementById('start-box-breathing').addEventListener('click', function() {
             startBreathing('box');
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     }
     if (document.getElementById('start-diaphragmatic-breathing')) {
         document.getElementById('start-diaphragmatic-breathing').addEventListener('click', function() {
             startBreathing('default'); // Using default as there's no specific case for 'diaphragmatic'
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     }
     if (document.getElementById('start-pursed-lip-breathing')) {
         document.getElementById('start-pursed-lip-breathing').addEventListener('click', function() {
             startBreathing('default'); // Using default as there's no specific case for 'pursed-lip'
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     }
     if (document.getElementById('start-session-button')) {
         document.getElementById('start-session-button').addEventListener('click', function() {
             startSession();
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     }
 
     // Breathing session control buttons
@@ -714,7 +1494,46 @@ document.addEventListener('DOMContentLoaded', function() {
                 timeout: 5000,
                 reconnection: true,
                 reconnectionAttempts: 3
-            });
+            // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
         } catch (error) {
             console.error('Failed to initialize socket connection:', error);
             showChatError('Failed to connect to chat service.');
@@ -729,22 +1548,178 @@ document.addEventListener('DOMContentLoaded', function() {
         socket.on('connect', function() {
             console.log('Chat connected');
             hideConnectionError();
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
         socket.on('disconnect', function() {
             console.log('Chat disconnected');
             showConnectionError('Connection lost. Attempting to reconnect...');
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
         socket.on('connect_error', function(error) {
             console.error('Chat connection error:', error);
             showConnectionError('Unable to connect to chat service.');
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
         socket.on('reconnect', function() {
             console.log('Chat reconnected');
             hideConnectionError();
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
         chatForm.addEventListener('submit', function(e) {
             e.preventDefault();
@@ -762,7 +1737,46 @@ document.addEventListener('DOMContentLoaded', function() {
                     socket.emit('chat_message', { 
                         'message': message, 
                         'csrf_token': csrfToken 
-                    });
+                    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
                     chatInput.value = '';
                 } catch (error) {
                     console.error('Error sending message:', error);
@@ -771,7 +1785,46 @@ document.addEventListener('DOMContentLoaded', function() {
             } else if (!socket.connected) {
                 showChatError('Not connected to chat service. Please wait for reconnection.');
             }
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
         socket.on('chat_response', function(data) {
             try {
@@ -788,19 +1841,136 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                     chatMessages.appendChild(messageElement);
                     chatMessages.scrollTop = chatMessages.scrollHeight;
-                });
+                // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
             } catch (error) {
                 console.error('Error handling chat response:', error);
                 showChatError('Error displaying chat response.');
             }
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
         // Helper functions
         function escapeHtml(text) {
             const map = {
                 '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
             };
-            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
         }
 
         function showChatError(message) {
@@ -831,6 +2001,45 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     }
+// Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
 });
 
 function setupDigitalDetoxForm() {
@@ -855,7 +2064,46 @@ function setupDigitalDetoxForm() {
                     'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
                 body: JSON.stringify(data)
-            });
+            // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
             const result = await response.json();
 
@@ -871,7 +2119,46 @@ function setupDigitalDetoxForm() {
                     headers: {
                         'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                     } 
-                });
+                // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
                 const analysisResult = await analysisResponse.json();
 
                 if (analysisResult.success) {
@@ -899,7 +2186,46 @@ function setupDigitalDetoxForm() {
             submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Today\'s Data';
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 // Yoga Timer Functionality
@@ -1071,7 +2397,46 @@ document.addEventListener('DOMContentLoaded', function() {
                         'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                     },
                     body: new URLSearchParams(data)
-                });
+                // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
                 if (response.ok) {
                     // Refresh the page to show updated logs
@@ -1083,8 +2448,86 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Error logging yoga session:', error);
                 alert('Network error. Please check your connection and try again.');
             }
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
     }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
+    }
+// Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
 });
 
 // Cleanup function
@@ -1115,7 +2558,46 @@ function initializeAdvancedNavigation() {
     // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', handleSmoothScroll);
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     // Mobile menu functionality
     initializeMobileMenu();
@@ -1162,11 +2644,128 @@ function handleNavScroll() {
                             target.scrollIntoView({
                                 behavior: 'smooth',
                                 block: 'start'
-                            });
+                            // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
                         }
                     }
-                });
-            });
+                // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
+            // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
         }
 
 function initializeMobileMenu() {
@@ -1183,22 +2782,178 @@ function initializeMobileMenu() {
             mobileMenu.classList.remove('open');
             mobileMenuBtn.classList.remove('active');
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     // Close mobile menu when clicking on menu items
     mobileMenu.querySelectorAll('.mobile-menu-item').forEach(item => {
         item.addEventListener('click', () => {
             mobileMenu.classList.remove('open');
             mobileMenuBtn.classList.remove('active');
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     // Handle escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
             toggleMobileMenu();
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 function toggleMobileMenu() {
@@ -1221,21 +2976,138 @@ function initializeUserMenu() {
     userMenuBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         userMenu.classList.toggle('open');
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     // Close user menu when clicking outside
     document.addEventListener('click', (e) => {
         if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) {
             userMenu.classList.remove('open');
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     // Handle escape key
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && userMenu.classList.contains('open')) {
             userMenu.classList.remove('open');
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 function initializeLogoInteraction() {
@@ -1247,14 +3119,92 @@ function initializeLogoInteraction() {
         if (icon) {
             icon.style.transform = 'scale(1.1) rotate(5deg)';
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     logo.addEventListener('mouseleave', () => {
         const icon = logo.querySelector('.logo-icon');
         if (icon) {
             icon.style.transform = 'scale(1) rotate(0deg)';
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 function initializeNavTooltips() {
@@ -1263,7 +3213,46 @@ function initializeNavTooltips() {
     navItems.forEach(item => {
         item.addEventListener('mouseenter', showNavTooltip);
         item.addEventListener('mouseleave', hideNavTooltip);
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 function showNavTooltip(e) {
@@ -1281,7 +3270,46 @@ function showNavTooltip(e) {
     requestAnimationFrame(() => {
         tooltip.style.opacity = '1';
         tooltip.style.transform = 'translateX(-50%) translateY(0)';
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     e.target._tooltip = tooltip;
 }
@@ -1330,23 +3358,179 @@ function initializeScrollAnimations() {
 
                 observer.unobserve(entry.target);
             }
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     }, observerOptions);
 
     // Observe all elements that need animation
     document.querySelectorAll('.animate-on-scroll, .feature-card, .testimonial-card, .blog-preview-card').forEach(el => {
         observer.observe(el);
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     // Observe statistics numbers
     document.querySelectorAll('.stat-number').forEach(el => {
         observer.observe(el);
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     // Observe progress bars
     document.querySelectorAll('.metric-fill').forEach(el => {
         observer.observe(el);
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 // Animated number counter
@@ -1404,8 +3588,86 @@ function initializeScrollToTop() {
         window.scrollTo({
             top: 0,
             behavior: 'smooth'
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 // Loading overlay management
@@ -1442,7 +3704,46 @@ function initializeAlerts() {
         if (closeBtn) {
             closeBtn.addEventListener('click', () => closeAlert(alert));
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 function closeAlert(alert) {
@@ -1499,12 +3800,129 @@ function initializeLazyLoading() {
                     img.classList.remove('lazy');
                     imageObserver.unobserve(img);
                 }
-            });
-        });
+            // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
         document.querySelectorAll('img[data-src]').forEach(img => {
             imageObserver.observe(img);
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     }
 }
 
@@ -1522,7 +3940,46 @@ function preloadCriticalResources() {
         link.as = 'image';
         link.href = src;
         document.head.appendChild(link);
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 /* ===============================================
@@ -1540,8 +3997,86 @@ function initializeFormValidation() {
         form.querySelectorAll('input, textarea, select').forEach(field => {
             field.addEventListener('blur', () => validateField(field));
             field.addEventListener('input', () => clearFieldError(field));
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 function handleFormSubmit(e) {
@@ -1553,7 +4088,46 @@ function handleFormSubmit(e) {
         if (!validateField(field)) {
             isValid = false;
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     if (!isValid) {
         e.preventDefault();
@@ -1662,7 +4236,46 @@ function initializeTooltips() {
         element.addEventListener('mouseleave', hideTooltip);
         element.addEventListener('focus', showTooltip);
         element.addEventListener('blur', hideTooltip);
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 function showTooltip(e) {
@@ -1692,7 +4305,46 @@ function showTooltip(e) {
     requestAnimationFrame(() => {
         tooltip.style.opacity = '1';
         tooltip.style.transform = 'translateY(0)';
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     e.target._tooltip = tooltip;
 }
@@ -1743,7 +4395,46 @@ window.addEventListener('resize', debounce(() => {
         if (tooltip.parentNode) {
             tooltip.parentNode.removeChild(tooltip);
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }, 250));
 
 // Handle page visibility changes
@@ -1752,13 +4443,130 @@ document.addEventListener('visibilitychange', () => {
         // Pause animations and timers when tab is not visible
         document.querySelectorAll('.animate-on-scroll').forEach(el => {
             el.style.animationPlayState = 'paused';
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     } else {
         // Resume animations when tab becomes visible
         document.querySelectorAll('.animate-on-scroll').forEach(el => {
             el.style.animationPlayState = 'running';
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
     }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
+    }
+// Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
 });
 
 // Initialize everything when DOM is loaded
@@ -1776,6 +4584,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Hide loading overlay after a delay
     setTimeout(hideLoadingOverlay, 1000);
+// Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
 });
 
 // Page-specific initializations
@@ -1803,7 +4650,46 @@ function initializeHeroAnimations() {
         setTimeout(() => {
             line.style.animation = 'titleSlideIn 0.8s ease-out forwards';
         }, index * 300);
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
     // Initialize hero stats animation
     const heroStats = document.querySelectorAll('.hero-stats .stat-item');
@@ -1812,7 +4698,46 @@ function initializeHeroAnimations() {
             stat.style.opacity = '1';
             stat.style.transform = 'translateY(0)';
         }, 1000 + (index * 200));
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 function initializeFeatureCards() {
@@ -1824,15 +4749,132 @@ function initializeFeatureCards() {
             if (icon) {
                 icon.style.transform = 'scale(1.1) rotate(5deg)';
             }
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 
         card.addEventListener('mouseleave', () => {
             const icon = card.querySelector('.feature-icon');
             if (icon) {
                 icon.style.transform = 'scale(1) rotate(0deg)';
             }
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 function initializeStatisticsCounter() {
@@ -1845,7 +4887,46 @@ function initializeDashboardFeatures() {
     const charts = document.querySelectorAll('.chart-container');
     charts.forEach(chart => {
         chart.classList.add('animate-on-scroll');
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 function initializeYogaFeatures() {
@@ -1935,7 +5016,46 @@ function validateForm(formId) {
                 return;
             }
         }
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     
     return isValid;
 }
@@ -1970,7 +5090,46 @@ function submitFormWithLoading(formId, submitButtonId) {
                     Processing...
                 </div>
             `;
-        });
+        // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
     }
 }
 
@@ -2007,6 +5166,45 @@ window.addEventListener('error', function(e) {
             })
         }).catch(err => console.error('Failed to log error:', err));
     }
+// Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
 });
 
 /* Deprecated: Mood Music YouTube handler removed.
@@ -2034,6 +5232,45 @@ window.addEventListener('unhandledrejection', function(e) {
             })
         }).catch(err => console.error('Failed to log promise rejection:', err));
     }
+// Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
+    });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
 });
 
 // Safe async function wrapper
@@ -2163,7 +5400,46 @@ function openMessage(patientId) {
     }).catch(err => {
         console.error('Message send failed', err);
         alert('Failed to send message.');
+    // Modal functionality for assessment
+document.addEventListener('DOMContentLoaded', function() {
+
+    // Find the elements we need
+    const modal = document.getElementById("assessmentModal");
+    const closeButton = modal.querySelector(".close-button");
+    const startAssessmentButtons = document.querySelectorAll(".start-assessment-btn"); // Add this class to your 'Start Assessment' buttons
+
+    // Function to open the modal
+    function openModal() {
+        if (modal) {
+            modal.style.display = "block";
+        }
+    }
+
+    // Function to close the modal
+    function closeModal() {
+        if (modal) {
+            modal.style.display = "none";
+        }
+    }
+
+    // Add click listeners to all 'Start Assessment' buttons
+    startAssessmentButtons.forEach(button => {
+        button.addEventListener('click', openModal);
     });
+
+    // When the user clicks on the close button (x), close the modal
+    if (closeButton) {
+        closeButton.addEventListener('click', closeModal);
+    }
+
+    // When the user clicks anywhere outside of the modal content, close it
+    window.addEventListener('click', function(event) {
+        if (event.target == modal) {
+            closeModal();
+        }
+    });
+
+});
 }
 
 // FAQ helpers for accordion behavior
