@@ -121,11 +121,13 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Initialize rate limiter
+# Initialize rate limiter with simple storage backend for development
+# For production, consider Redis or another persistent storage
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"]
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"  # Use memory storage but suppress warning for development
 )
 
 # Initialize caching
@@ -291,6 +293,15 @@ def login_required(f):
         session.modified = True
         return f(*args, **kwargs)
     return decorated_function
+
+# Favicon route to prevent 404 errors
+@app.route('/favicon.ico')
+def favicon():
+    try:
+        return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    except FileNotFoundError:
+        # Return empty response for missing favicon to avoid 404
+        return '', 204
 
 # Blog Delete Route (placed after app, login_required, and abort are defined)
 @app.route('/blog/<int:post_id>/delete', methods=['POST'])
@@ -1192,7 +1203,7 @@ def breathing():
                     user_id=user_id,
                     exercise_name=exercise_name,
                     duration_minutes=int(duration_minutes),
-                    created_at=datetime.now(datetime.UTC)
+                    created_at=datetime.now(timezone.utc)
                 )
                 db.session.add(new_log)
                 db.session.commit()
@@ -1247,7 +1258,7 @@ def yoga():
                     user_id=user_id,
                     session_name=session_name,
                     duration_minutes=int(duration_minutes),
-                    created_at=datetime.now(datetime.UTC)
+                    created_at=datetime.now(timezone.utc)
                 )
                 db.session.add(new_log)
                 db.session.commit()
@@ -1483,40 +1494,48 @@ def goals():
 @login_required
 @role_required('patient')
 def assessment():
-    user_id = session['user_id']
-    assessment_objects = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
-    
-    assessments = []
-    for assessment in assessment_objects:
-        assessment_dict = {
-            'id': assessment.id,
-            'user_id': assessment.user_id,
-            'assessment_type': assessment.assessment_type,
-            'score': assessment.score,
-            'responses': assessment.responses,
-            'created_at': assessment.created_at.isoformat() if assessment.created_at else None,
-            'ai_insights': {}
-        }
+    try:
+        user_id = session['user_id']
+        assessment_objects = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
         
-        if assessment.ai_insights:
-            if isinstance(assessment.ai_insights, str):
-                try:
-                    assessment_dict['ai_insights'] = json.loads(assessment.ai_insights)
-                except json.JSONDecodeError:
-                    assessment_dict['ai_insights'] = {}
-            else:
-                assessment_dict['ai_insights'] = assessment.ai_insights
+        assessments = []
+        for assessment in assessment_objects:
+            assessment_dict = {
+                'id': assessment.id,
+                'user_id': assessment.user_id,
+                'assessment_type': assessment.assessment_type,
+                'score': assessment.score,
+                'responses': assessment.responses,
+                'created_at': assessment.created_at.isoformat() if assessment.created_at else None,
+                'ai_insights': {}
+            }
+            
+            if assessment.ai_insights:
+                if isinstance(assessment.ai_insights, str):
+                    try:
+                        assessment_dict['ai_insights'] = json.loads(assessment.ai_insights)
+                    except json.JSONDecodeError:
+                        assessment_dict['ai_insights'] = {}
+                else:
+                    assessment_dict['ai_insights'] = assessment.ai_insights
+            
+            assessments.append(assessment_dict)
         
-        assessments.append(assessment_dict)
-    
-    latest_insights = None
-    if assessments:
-        latest_insights = assessments[0].get('ai_insights')
+        latest_insights = None
+        if assessments:
+            latest_insights = assessments[0].get('ai_insights')
 
-    return render_template('assessment.html', 
-                           user_name=session['user_name'], 
-                           assessments=assessments,
-                           latest_insights=latest_insights)
+        return render_template('assessment.html', 
+                               user_name=session['user_name'], 
+                               assessments=assessments,
+                               latest_insights=latest_insights)
+    except Exception as e:
+        logger.error(f"Error in assessment route: {e}")
+        flash('Error loading assessments. Please try again.', 'error')
+        return render_template('assessment.html', 
+                               user_name=session['user_name'], 
+                               assessments=[],
+                               latest_insights=None)
 
 @app.route('/api/save-assessment', methods=['POST'])
 @login_required
@@ -2765,15 +2784,45 @@ def save_mood():
 def blog_list():
     try:
         posts = BlogPost.query.filter_by(is_published=True).order_by(BlogPost.created_at.desc()).all()
+        # Get blog insights for display
+        insights = {
+            'total_posts': BlogPost.query.count(),
+            'total_likes': 0,
+            'total_comments': 0,
+            'total_views': sum([post.views for post in posts]) if posts else 0,
+            'most_popular_post': None
+        }
+        if posts:
+            insights['most_popular_post'] = max(posts, key=lambda p: p.views) if posts else None
     except SQLAlchemyError as e:
         logger.error(f"Error fetching blog posts: {e}")
         posts = []
-    return render_template('blog_list.html', posts=posts)
+        insights = None
+    return render_template('blog_list.html', posts=posts, insights=insights)
 
 @app.route('/blog/<int:post_id>')
 def blog_detail(post_id):
     post = BlogPost.query.get_or_404(post_id)
-    return render_template('blog_detail.html', post=post)
+    
+    # Increment view count
+    post.views += 1
+    db.session.commit()
+    
+    # Get comments for this post
+    comments = BlogComment.query.filter_by(post_id=post_id).order_by(BlogComment.created_at.asc()).all()
+    
+    # Check if current user has liked this post
+    user_has_liked = False
+    if session.get('user_id'):
+        user_has_liked = BlogLike.query.filter_by(
+            user_id=session['user_id'], 
+            post_id=post_id
+        ).first() is not None
+    
+    return render_template('blog_detail.html', 
+                         post=post, 
+                         comments=comments, 
+                         user_has_liked=user_has_liked)
 
 @app.route('/blog/create', methods=['GET', 'POST'])
 @login_required
@@ -2824,6 +2873,94 @@ def blog_edit(post_id):
             logger.error(f"Error updating blog post: {e}")
             flash('Failed to update blog post.', 'error')
     return render_template('blog_edit.html', post=post)
+
+# Blog API routes for AJAX functionality
+@app.route('/api/blog/<int:post_id>/like', methods=['POST'])
+@login_required
+def blog_like(post_id):
+    """Toggle like for a blog post"""
+    user_id = session['user_id']
+    post = BlogPost.query.get_or_404(post_id)
+    
+    # Check if user already liked this post
+    existing_like = BlogLike.query.filter_by(user_id=user_id, post_id=post_id).first()
+    
+    try:
+        if existing_like:
+            # Unlike the post
+            db.session.delete(existing_like)
+            liked = False
+        else:
+            # Like the post
+            new_like = BlogLike(user_id=user_id, post_id=post_id)
+            db.session.add(new_like)
+            liked = True
+        
+        db.session.commit()
+        
+        # Get updated like count
+        like_count = BlogLike.query.filter_by(post_id=post_id).count()
+        
+        return jsonify({
+            'success': True,
+            'liked': liked,
+            'like_count': like_count
+        })
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        logger.error(f"Error toggling like for post {post_id}: {e}")
+        return jsonify({'success': False, 'message': 'Failed to update like'}), 500
+
+@app.route('/api/blog/<int:post_id>/comment', methods=['POST'])
+@login_required
+def blog_comment(post_id):
+    """Add a comment to a blog post"""
+    user_id = session['user_id']
+    post = BlogPost.query.get_or_404(post_id)
+    
+    if not request.is_json:
+        return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
+    
+    data = request.get_json()
+    content = data.get('content', '').strip()
+    
+    if not content:
+        return jsonify({'success': False, 'message': 'Comment content is required'}), 400
+    
+    if len(content) > 1000:
+        return jsonify({'success': False, 'message': 'Comment is too long (max 1000 characters)'}), 400
+    
+    try:
+        new_comment = BlogComment(
+            user_id=user_id,
+            post_id=post_id,
+            content=content
+        )
+        db.session.add(new_comment)
+        db.session.commit()
+        
+        # Get updated comment count
+        comment_count = BlogComment.query.filter_by(post_id=post_id).count()
+        
+        # Get user info for response
+        user = User.query.get(user_id)
+        
+        return jsonify({
+            'success': True,
+            'comment': {
+                'id': new_comment.id,
+                'content': new_comment.content,
+                'author_name': user.name,
+                'created_at': new_comment.created_at.strftime('%B %d, %Y • %I:%M %p')
+            },
+            'comment_count': comment_count
+        })
+        
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        logger.error(f"Error adding comment to post {post_id}: {e}")
+        return jsonify({'success': False, 'message': 'Failed to add comment'}), 500
 
 
 # --- PATIENT JOURNAL ROUTES ---
@@ -3559,12 +3696,24 @@ def save_role():
         return redirect(url_for('role_selection'))
 
 if __name__ == '__main__':
+    import signal
+    import sys
+    
+    def signal_handler(sig, frame):
+        print("\nINFO - Received interrupt signal (Ctrl+C)")
+        print("INFO - Shutting down MindFullHorizon server gracefully...")
+        sys.exit(0)
+    
+    # Register signal handler for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)
+    
     try:
         print("INFO - ==================================================")
         print("INFO - Starting MindFullHorizon server...")
         print(f"INFO - Server available at: http://localhost:5000")
         print("INFO - Debug mode: True")
         print("INFO - CSRF Protection: Enabled")
+        print("INFO - Press Ctrl+C to stop the server")
         print("INFO - ==================================================")
 
         # SocketIO server for real-time features
@@ -3573,5 +3722,10 @@ if __name__ == '__main__':
         use_reloader = False if os.name == 'nt' else True
         socketio.run(app, host='127.0.0.1', port=5000, debug=True, use_reloader=use_reloader)
 
+    except KeyboardInterrupt:
+        print("\nINFO - Server interrupted by user (Ctrl+C)")
+        print("INFO - Shutting down gracefully...")
+        sys.exit(0)
     except Exception as e:
         print(f"ERROR - Failed to start server: {e}")
+        sys.exit(1)

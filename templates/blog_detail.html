@@ -213,10 +213,10 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" style="display: none;">
     <div class="bg-white rounded-lg p-6 max-w-md mx-4">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
-        <p class="text-gray-600 mb-6">Are you sure you want to delete this blog post? This action cannot be undone.</p>
+        <p class="text-gray-600 mb-6">Are you sure you want to delete "<strong>{{ post.title }}</strong>"? This action cannot be undone.</p>
         <div class="flex space-x-4">
             <button onclick="hideDeleteModal()" class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
                 Cancel
@@ -425,11 +425,15 @@ function sharePost() {
 
 // Delete functionality
 function confirmDelete() {
-    document.getElementById('deleteModal').classList.remove('hidden');
+    const modal = document.getElementById('deleteModal');
+    modal.style.display = 'flex';
+    modal.classList.remove('hidden');
 }
 
 function hideDeleteModal() {
-    document.getElementById('deleteModal').classList.add('hidden');
+    const modal = document.getElementById('deleteModal');
+    modal.style.display = 'none';
+    modal.classList.add('hidden');
 }
 
 // Load replies on page load
