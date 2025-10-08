@@ -595,8 +595,9 @@ async function initializeScreenTimeChart() {
     const ctx = document.getElementById('screen-time-chart');
     if (!ctx) return;
 
-    if (screenTimeChart) {
-        screenTimeChart.destroy();
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
 
     try {
@@ -679,12 +680,19 @@ async function initializeScreenTimeChart() {
 function initializeWellnessChart() {
     const ctx = document.getElementById('wellness-chart');
     if (!ctx) return;
-    
+
     const existingChart = Chart.getChart(ctx);
     if (existingChart) {
         existingChart.destroy();
     }
-    
+
+    // Defensive: destroy any chart on this canvas before creating a new one
+    if (typeof Chart !== 'undefined' && Chart.instances) {
+        Object.values(Chart.instances).forEach(chart => {
+            if (chart.canvas === ctx) chart.destroy();
+        });
+    }
+
     new Chart(ctx, {
         type: 'line',
         data: {
@@ -722,6 +730,13 @@ async function initializeCorrelationChart() {
     const existingChart = Chart.getChart(canvas);
     if (existingChart) {
         existingChart.destroy();
+    }
+
+    // Defensive: destroy any chart on this canvas before creating a new one
+    if (typeof Chart !== 'undefined' && Chart.instances) {
+        Object.values(Chart.instances).forEach(chart => {
+            if (chart.canvas === canvas) chart.destroy();
+        });
     }
 
     const ctx = canvas.getContext('2d');
