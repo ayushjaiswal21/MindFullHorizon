@@ -6,6 +6,49 @@ body {
     background-color: #f0f4f8; /* Light gray background */
 }
 
+/* ===== CENTRALIZED MODAL LAYOUT SHIFT PREVENTION ===== */
+
+/* Primary modal scroll lock with scrollbar compensation */
+body.modal-open {
+    overflow: hidden !important;
+    /* Padding is dynamically set by ModalUtils JavaScript */
+}
+
+/* Prevent layout shift for fixed/sticky elements during modal transitions */
+body.modal-open .fixed,
+body.modal-open .sticky,
+body.modal-open .navbar,
+body.modal-open .header {
+    /* Padding is dynamically set by ModalUtils JavaScript */
+}
+
+/* Ensure modal backdrop doesn't interfere with layout calculations */
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    /* Don't add any padding here - let ModalUtils handle it */
+}
+
+/* Smooth transitions for modal operations */
+body {
+    transition: padding-right 0.15s ease-in-out;
+}
+
+/* Ensure modals are properly layered */
+.modal {
+    z-index: 1050;
+}
+
+/* Prevent content jumping during modal state changes */
+.modal-transition-lock {
+    overflow: hidden;
+}
+
 /* Base Styles */
 .nav-link {
     @apply text-sm md:text-base hover:text-blue-200 transition duration-300;

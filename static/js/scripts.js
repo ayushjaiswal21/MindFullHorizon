@@ -274,8 +274,11 @@ let breathingPhaseTimeout = null;
 
 // Chart Variables
 let screenTimeChart = null;
+let wellnessChart = null;
+let correlationChart = null;
 let rpmUpdateInterval;
 let aiProcessingModal;
+let chartInitializationLock = false; // Prevent concurrent chart initialization
 
 // Guided Sessions
 const guidedYogaSessions = {
@@ -591,12 +594,49 @@ function clearBreathingAnimation() {
 // CHART FUNCTIONS
 // ========================
 
-async function initializeScreenTimeChart() {
-    const ctx = document.getElementById('screen-time-chart');
-    if (!ctx) return;
+// Debounced chart initialization to prevent flickering
+let chartInitTimeout = null;
+function initializeChartsDebounced() {
+    if (chartInitTimeout) {
+        clearTimeout(chartInitTimeout);
+    }
+    
+    chartInitTimeout = setTimeout(() => {
+        // Only initialize charts if elements exist and not already initialized
+        if (document.getElementById('screen-time-chart') && !screenTimeChart) {
+            initializeScreenTimeChart();
+        }
+        
+        if (document.getElementById('wellness-chart') && !wellnessChart) {
+            initializeWellnessChart();
+        }
+        
+        if (document.getElementById('correlation-chart') && !correlationChart) {
+            initializeCorrelationChart();
+        }
+    }, 100); // 100ms debounce
+}
 
+async function initializeScreenTimeChart() {
+    // Prevent concurrent initialization
+    if (chartInitializationLock) return;
+    chartInitializationLock = true;
+    
+    const ctx = document.getElementById('screen-time-chart');
+    if (!ctx) {
+        chartInitializationLock = false;
+        return;
+    }
+
+    // Destroy existing chart if it exists
     if (screenTimeChart) {
         screenTimeChart.destroy();
+        screenTimeChart = null;
+    }
+    
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
     }
 
     try {
@@ -673,19 +713,37 @@ async function initializeScreenTimeChart() {
         canvasCtx.textAlign = 'center';
         canvasCtx.fillStyle = '#ef4444';
         canvasCtx.fillText('Error loading chart data.', ctx.width / 2, ctx.height / 2);
+    } finally {
+        chartInitializationLock = false;
     }
 }
 
 function initializeWellnessChart() {
+    // Prevent concurrent initialization
+    if (chartInitializationLock) return;
+    
     const ctx = document.getElementById('wellness-chart');
     if (!ctx) return;
-    
+
+    // Destroy existing chart if it exists
+    if (wellnessChart) {
+        wellnessChart.destroy();
+        wellnessChart = null;
+    }
+
     const existingChart = Chart.getChart(ctx);
     if (existingChart) {
         existingChart.destroy();
     }
-    
-    new Chart(ctx, {
+
+    // Defensive: destroy any chart on this canvas before creating a new one
+    if (typeof Chart !== 'undefined' && Chart.instances) {
+        Object.values(Chart.instances).forEach(chart => {
+            if (chart.canvas === ctx) chart.destroy();
+        });
+    }
+
+    wellnessChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
@@ -716,12 +774,28 @@ function initializeWellnessChart() {
 }
 
 async function initializeCorrelationChart() {
+    // Prevent concurrent initialization
+    if (chartInitializationLock) return;
+    
     const canvas = document.getElementById('correlation-chart');
     if (!canvas) return;
+
+    // Destroy existing chart if it exists
+    if (correlationChart) {
+        correlationChart.destroy();
+        correlationChart = null;
+    }
 
     const existingChart = Chart.getChart(canvas);
     if (existingChart) {
         existingChart.destroy();
+    }
+
+    // Defensive: destroy any chart on this canvas before creating a new one
+    if (typeof Chart !== 'undefined' && Chart.instances) {
+        Object.values(Chart.instances).forEach(chart => {
+            if (chart.canvas === canvas) chart.destroy();
+        });
     }
 
     const ctx = canvas.getContext('2d');
@@ -745,7 +819,7 @@ async function initializeCorrelationChart() {
             ];
         }
 
-        new Chart(ctx, {
+        correlationChart = new Chart(ctx, {
             type: 'scatter',
             data: {
                 datasets: [{
@@ -980,18 +1054,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize chat
     initializeChat();
     
-    // Initialize charts if elements exist
-    if (document.getElementById('screen-time-chart')) {
-        initializeScreenTimeChart();
-    }
-    
-    if (document.getElementById('wellness-chart')) {
-        initializeWellnessChart();
-    }
-    
-    if (document.getElementById('correlation-chart')) {
-        initializeCorrelationChart();
-    }
+    // Initialize charts with debouncing to prevent flickering
+    initializeChartsDebounced();
     
     console.log('MindFullHorizon JavaScript initialized successfully');
 });

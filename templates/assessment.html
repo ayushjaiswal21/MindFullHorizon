@@ -218,8 +218,8 @@
     </div>
 </div>
 
-<!-- Assessment Modal -->
-<div id="assessmentModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+<!-- Assessment Modal - Fixed positioning and visibility -->
+<div id="assessmentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
     <div class="bg-white rounded-lg p-6 max-w-2xl mx-4 max-h-screen overflow-y-auto">
         <div class="flex justify-between items-center mb-4">
             <h3 id="assessmentTitle" class="text-xl font-semibold text-gray-800">Assessment</h3>
@@ -247,9 +247,7 @@
         </div>
 
                 <div class="flex justify-between mt-6">
-            <button id="assessment-prev-btn" onclick="previousQuestion()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg hidden">Previous</button>
-            <button id="assessment-next-btn" onclick="nextQuestion()" class="btn-primary">Next <i class="fas fa-arrow-right ml-2"></i></button>
-            <button id="assessment-submit-btn" onclick="completeAssessment()" class="btn-primary hidden"><i class="fas fa-check mr-2"></i>Complete Assessment</button>
+            <!-- Removed Next and Complete Assessment buttons as requested -->
         </div>
     </div>
 </div>
@@ -263,6 +261,20 @@ let assessmentAnswers = [];
 let selectedMood = null;
 let assessmentChart = null;
 let assessmentHistoryChart = null; // Keep track of the chart instance
+let chartUpdateTimeout = null; // Debounce chart updates
+let isChartInitialized = false; // Prevent multiple initializations
+
+// Assessment Modal Management using centralized ModalUtils
+const ASSESSMENT_MODAL_ID = 'assessment-modal';
+
+// Wait for ModalUtils to be available
+function waitForModalUtils(callback) {
+    if (typeof window.ModalUtils !== 'undefined') {
+        callback();
+    } else {
+        setTimeout(() => waitForModalUtils(callback), 50);
+    }
+}
 
 // Assessment data
 const assessments = {
@@ -311,12 +323,28 @@ const assessments = {
 };
 
 function startAssessment(type) {
+    // Prevent multiple modal instances
+    if (currentAssessment !== null) {
+        return;
+    }
+    
     currentAssessment = assessments[type];
     currentQuestion = 0;
     assessmentAnswers = [];
     
-    document.getElementById('assessmentTitle').textContent = currentAssessment.title;
-    document.getElementById('assessmentModal').classList.remove('hidden');
+    const modal = document.getElementById('assessmentModal');
+    const title = document.getElementById('assessmentTitle');
+    
+    if (title && currentAssessment) {
+        title.textContent = currentAssessment.title;
+    }
+    
+    if (modal) {
+        // Use centralized ModalUtils for layout shift prevention
+        waitForModalUtils(() => {
+            window.ModalUtils.open(ASSESSMENT_MODAL_ID, modal);
+        });
+    }
     
     showQuestion();
 }
@@ -641,13 +669,20 @@ function showAssessmentResults(score, maxScore, insights) {
     const navButtons = document.querySelector('.flex.justify-between.mt-6');
     if (navButtons) {
         navButtons.style.display = 'none';
-    }
     // Close the modal but DO NOT reload the page; keep insights visible
     document.getElementById('assessmentModal').classList.add('hidden')
 }
 
 function closeAssessment() {
-    document.getElementById('assessmentModal').classList.add('hidden');
+    const modal = document.getElementById('assessmentModal');
+    if (modal) {
+        // Use centralized ModalUtils for layout shift prevention
+        waitForModalUtils(() => {
+            window.ModalUtils.close(ASSESSMENT_MODAL_ID, modal);
+        });
+    }
+    
+    // Reset state
     currentAssessment = null;
     currentQuestion = 0;
     assessmentAnswers = [];
@@ -712,7 +747,7 @@ async function saveDailyMood() {
         if (response.ok) {
             showNotification('Mood saved successfully!', 'success');
             
-            // Reset form
+            // Reset form WITHOUT triggering chart re-renders
             document.querySelectorAll('.mood-option').forEach(option => {
                 option.classList.remove('selected');
             });
@@ -724,7 +759,7 @@ async function saveDailyMood() {
                 moodModal.classList.add('hidden');
             }
             
-            // Update points and streak display if they exist
+            // Update points and streak display if they exist (without page refresh)
             if (data.points !== undefined) {
                 const pointsElement = document.getElementById('user-points');
                 if (pointsElement) {
