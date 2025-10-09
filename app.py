@@ -50,12 +50,12 @@ import nltk
 # Download NLTK data if not already present
 try:
     nltk.data.find('tokenizers/punkt')
-except nltk.downloader.DownloadError:
+except LookupError:
     nltk.download('punkt')
 try:
     nltk.data.find('corpora/wordnet')
-except nltk.downloader.DownloadError:
-    nltk.download('wordnet'), abort, get_flashed_messages
+except LookupError:
+    nltk.download('wordnet')
 from flask_session import Session
 from flask_compress import Compress
 from flask_migrate import Migrate
