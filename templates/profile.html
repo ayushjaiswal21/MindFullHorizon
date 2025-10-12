@@ -14,12 +14,14 @@
                         <img class="h-24 w-24 rounded-full object-cover border-4 border-purple-300 shadow-lg mx-auto mb-2"
                             src="{{ url_for('static', filename='profile_pics/' + (user.profile_pic or 'default.png')) }}"
                             alt="Profile Picture">
-                        <input type="file" name="profile_pic" accept="image/*" class="block w-full text-sm text-gray-500
+                        <label for="profile_pic" class="block text-sm font-medium text-gray-700">Profile Picture</label>
+                        <input type="file" id="profile_pic" name="profile_pic" accept="image/*" class="block w-full text-sm text-gray-500
                             file:mr-4 file:py-2 file:px-4
                             file:rounded-full file:border-0
                             file:text-sm file:font-semibold
                             file:bg-purple-50 file:text-purple-700
-                            hover:file:bg-purple-100 mb-2">
+                            hover:file:bg-purple-100 mb-2" aria-describedby="profile_pic_help">
+                        <small id="profile_pic_help" class="text-gray-500">Upload a new profile picture (optional)</small>
                     </div>
                 </div>
                 <div>
@@ -29,7 +31,7 @@
                     <input type="email" name="email" value="{{ user.email }}" class="block border rounded px-2 py-1 mb-2">
                     <label>College/Institution:</label>
                     <input type="text" name="institution" value="{{ user.institution }}" class="block border rounded px-2 py-1 mb-2" placeholder="Enter your college name">
-                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full text-sm">Update Profile</button>
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-full text-sm" aria-label="Update your profile information">Update Profile</button>
                 </div>
             </div>
         </form>

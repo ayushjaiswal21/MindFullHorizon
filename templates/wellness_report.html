@@ -346,13 +346,13 @@
     <!-- Action Buttons -->
     <div class="mt-8 flex justify-between items-center">
         <div class="flex space-x-4">
-            <button onclick="window.print()" class="btn-primary">
+            <button onclick="window.print()" class="btn-primary" aria-label="Print this wellness report">
                 <i class="fas fa-print mr-2"></i>Print Report
             </button>
-            <button onclick="exportReport()" class="btn-primary">
+            <button onclick="exportReport()" class="btn-primary" aria-label="Export report data to CSV">
                 <i class="fas fa-download mr-2"></i>Export Data
             </button>
-            <a href="{{ url_for('telehealth_session', user_id=patient.id) }}" class="btn-primary bg-purple-600 hover:bg-purple-700">
+            <a href="{{ url_for('telehealth_session', user_id=patient.id) }}" class="btn-primary bg-purple-600 hover:bg-purple-700" aria-label="Start a telehealth video call with the patient">
                 <i class="fas fa-video mr-2"></i>Start Telehealth Call
             </a>
         </div>
@@ -424,7 +424,7 @@
                 <input type="date" name="expiry_date" id="expiry_date"
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
             </div>
-            <button type="submit" class="btn-primary bg-blue-600 hover:bg-blue-700">
+            <button type="submit" class="btn-primary bg-blue-600 hover:bg-blue-700" aria-label="Send prescription to the patient">
                 <i class="fas fa-paper-plane mr-2"></i>Send Prescription
             </button>
         </form>

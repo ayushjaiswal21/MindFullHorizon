@@ -1,9 +1,5 @@
-import os
-import json
-import time
-from datetime import datetime
-from typing import Dict, List, Optional
-from dotenv import load_dotenv
+# Add CloseRouter API integration for enhanced AI capabilities
+import requests
 
 try:
     import ollama
@@ -16,6 +12,14 @@ load_dotenv()
 
 class MindfulAIService:
     def __init__(self):
+        # --- CloseRouter API Configuration ---
+        self.closerouter_api_key = os.getenv('CLOSEROUTER_API_KEY')
+        self.closerouter_base_url = os.getenv('CLOSEROUTER_BASE_URL', 'https://api.closerouter.com/v1')
+        self.closerouter_model = os.getenv('CLOSEROUTER_MODEL', 'gpt-4o-mini')  # Default to cost-effective model
+
+        # Check if CloseRouter API is available
+        self.closerouter_available = bool(self.closerouter_api_key)
+
         # --- Local Ollama (Mindwell) Configuration ---
         self.ollama_host = os.getenv('OLLAMA_HOST', 'http://localhost:11434')
         # Ensure python client points to the configured host
@@ -61,16 +65,68 @@ class MindfulAIService:
         else:
             print("Warning: Ollama library not available. Chat functionality will be disabled.")
 
-    def _check_ollama_connection(self) -> bool:
-        """Check if Ollama is currently available and responding."""
-        if not OLLAMA_AVAILABLE:
-            print("Ollama library not available")
-            return False
+        # Determine primary AI service
+        if self.closerouter_available:
+            print(f"CloseRouter API available with model: {self.closerouter_model}")
+            self.primary_service = 'closerouter'
+        elif self.local_model_available:
+            print(f"Using local Ollama service with model: {self.model_name}")
+            self.primary_service = 'ollama'
+        else:
+            print("Warning: No AI services available. All AI features will use fallbacks.")
+            self.primary_service = None
+
+    def _call_closerouter_api(self, messages: List[Dict], model: str = None, **kwargs) -> str:
+        """Call CloseRouter API for chat completion."""
+        if not self.closerouter_available:
+            raise ValueError("CloseRouter API not available")
+
+        model = model or self.closerouter_model
+
+        headers = {
+            'Authorization': f'Bearer {self.closerouter_api_key}',
+            'Content-Type': 'application/json'
+        }
+
+        data = {
+            'model': model,
+            'messages': messages,
+            'temperature': kwargs.get('temperature', 0.7),
+            'max_tokens': kwargs.get('max_tokens', 1000),
+            'top_p': kwargs.get('top_p', 0.9)
+        }
+
         try:
-            print("[Ollama] Checking connection to Ollama model: {}".format(self.model_name))
-            # Try a minimal request to Ollama
-            ollama.chat(
-                model=self.model_name,
+            response = requests.post(
+                f'{self.closerouter_base_url}/chat/completions',
+                headers=headers,
+                json=data,
+                timeout=30
+            )
+            response.raise_for_status()
+
+            result = response.json()
+            return result['choices'][0]['message']['content']
+
+        except Exception as e:
+            print(f"CloseRouter API error: {e}")
+            raise
+
+    def _check_closerouter_connection(self) -> bool:
+        """Check if CloseRouter API is available."""
+        if not self.closerouter_available:
+            return False
+
+        try:
+            headers = {'Authorization': f'Bearer {self.closerouter_api_key}'}
+            response = requests.get(f'{self.closerouter_base_url}/models', headers=headers, timeout=10)
+            response.raise_for_status()
+            return True
+        except Exception as e:
+            print(f"CloseRouter connection check failed: {e}")
+            return False
+
+    def _check_ollama_connection(self) -> bool:
                 messages=[{'role': 'system', 'content': 'ping'}],
                 stream=False,
                 options={'num_predict': 1, 'timeout': 5}
@@ -80,6 +136,31 @@ class MindfulAIService:
         except Exception as e:
             print(f"[Ollama] Connection failed: {e}")
             return False
+
+            if model_available:
+                print("Mindwell model found and available")
+                return True
+            else:
+                print("Mindwell model not found. Available models:")
+                for model in models['models']:
+                    print(f"  - {model.get('name')}")
+                return False
+
+        except Exception as e:
+            print(f"Ollama connection check failed: {e}")
+            # In development, try to proceed anyway if Ollama seems to be working
+            try:
+                # Try a simple test to see if Ollama is actually responsive
+                test_response = ollama.chat(
+                    model=self.model_name,
+                    messages=[{'role': 'user', 'content': 'test'}],
+                    options={'num_predict': 1, 'timeout': 5}
+                )
+                print("Ollama is actually working despite connection check failure")
+                return True
+            except:
+                print("Ollama is not working")
+                return False
 
     def generate_chat_response(self, user_message: str, context: dict = None) -> str:
         """
@@ -742,20 +823,20 @@ Please consider this context when generating the clinical note."""
             'host': self.ollama_host,
             'timestamp': datetime.now().isoformat()
         }
-
+        
         if not OLLAMA_AVAILABLE:
             status['message'] = 'Ollama library not installed'
             return status
-
+            
         try:
             # Try to connect to Ollama and list models
             models_response = ollama.list()
             status['ollama_connected'] = True
-
+            
             if models_response and 'models' in models_response:
                 available_models = [model.get('name') for model in models_response['models']]
                 status['available_models'] = available_models
-
+                
                 # Check if our specific model is available
                 target_model = self.model_name
                 if target_model in available_models:
@@ -766,10 +847,10 @@ Please consider this context when generating the clinical note."""
                     status['message'] = f'Target model {target_model} not found. Available models: {", ".join(available_models)}'
             else:
                 status['message'] = 'No models found in Ollama response'
-
+                
         except Exception as e:
             status['message'] = f'Ollama connection failed: {str(e)}'
-
+            
         return status
 
 # Global AI service instance

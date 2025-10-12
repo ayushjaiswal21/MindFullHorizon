@@ -40,10 +40,9 @@
     <!-- Advanced CSS with modern features -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=20250923-4">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/enhanced.css') }}?v=20250923-2">
-    <!-- Fallback styles if Tailwind utilities are not available -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/fallback-cards.css') }}?v=1">
+    {% assets "css_all" %}
+    <link rel="stylesheet" href="{{ ASSET_URL }}">
+    {% endassets %}
 
     <!-- Advanced meta tags for better performance -->
     
@@ -65,9 +64,9 @@
                 <div class="flex-shrink-0">
                     {% if session.user_email %}
                         {% if session.user_role == 'patient' %}
-                            <a href="{{ url_for('patient_dashboard') }}" class="advanced-logo group">
+                            <a href="{{ url_for('patient.patient_dashboard') }}" class="advanced-logo group">
                                 <div class="logo-icon-container">
-                                    <i class="fas fa-brain logo-icon"></i>
+                                    <i class="fas fa-brain logo-icon" aria-hidden="true"></i>
                                 </div>
                                 <span class="logo-text">MindFull<span class="text-blue-600">Horizon</span></span>
                             </a>
@@ -94,25 +93,25 @@
                     <div class="ml-10 flex items-baseline space-x-1">
                         {% if session.user_email %}
                             {% if session.user_role == 'patient' %}
-                                <a href="{{ url_for('medication') }}" class="nav-link-item">
-                                    <i class="fas fa-pills nav-icon"></i>
+                                <a href="{{ url_for('patient.medication') }}" class="nav-link-item">
+                                    <i class="fas fa-pills nav-icon" aria-hidden="true"></i>
                                     <span>Medications</span>
                                 </a>
-                                <a href="{{ url_for('breathing') }}" class="nav-link-item">
-                                    <i class="fas fa-wind nav-icon"></i>
+                                <a href="{{ url_for('patient.breathing') }}" class="nav-link-item">
+                                    <i class="fas fa-wind nav-icon" aria-hidden="true"></i>
                                     <span>Breathe</span>
                                 </a>
-                                <a href="{{ url_for('yoga') }}" class="nav-link-item">
-                                    <i class="fas fa-child nav-icon"></i>
+                                <a href="{{ url_for('patient.yoga') }}" class="nav-link-item">
+                                    <i class="fas fa-child nav-icon" aria-hidden="true"></i>
                                     <span>Yoga</span>
                                 </a>
                                 <a href="{{ url_for('music') }}" class="nav-link-item">
-                                    <i class="fas fa-music nav-icon"></i>
+                                    <i class="fas fa-music nav-icon" aria-hidden="true"></i>
                                     <span>Music</span>
                                 </a>
                             {% endif %}
                             <a href="{{ url_for('blog_list') }}" class="nav-link-item">
-                                <i class="fas fa-blog nav-icon"></i>
+                                <i class="fas fa-blog nav-icon" aria-hidden="true"></i>
                                 <span>Blog</span>
                             </a>
 
@@ -126,7 +125,7 @@
                                         {{ session.user_name[0].upper() if session.user_name else 'U' }}
                                     </div>
                                     <span class="user-name">{{ session.user_name or 'User' }}</span>
-                                    <i class="fas fa-chevron-down transition-transform duration-200"></i>
+                                    <i class="fas fa-chevron-down transition-transform duration-200" aria-hidden="true"></i>
                                 </button>
                                 <div id="user-menu" class="user-menu-dropdown">
                                     <div class="user-menu-header">
@@ -140,15 +139,15 @@
                                     </div>
                                     <div class="user-menu-divider"></div>
                                     <a href="{{ url_for('profile') }}" class="user-menu-item">
-                                        <i class="fas fa-user"></i>
+                                        <i class="fas fa-user" aria-hidden="true"></i>
                                         <span>Profile Settings</span>
                                     </a>
-                                    <a href="{{ url_for('progress') }}" class="user-menu-item">
-                                        <i class="fas fa-chart-line"></i>
+                                    <a href="{{ url_for('patient.progress') }}" class="user-menu-item">
+                                        <i class="fas fa-chart-line" aria-hidden="true"></i>
                                         <span>Progress Report</span>
                                     </a>
-                                    <a href="{{ url_for('logout') }}" class="user-menu-item">
-                                        <i class="fas fa-sign-out-alt"></i>
+                                    <a href="{{ url_for('auth.logout') }}" class="user-menu-item">
+                                        <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                                         <span>Sign Out</span>
                                     </a>
                                 </div>
@@ -158,10 +157,10 @@
                                 <i class="fas fa-blog nav-icon"></i>
                                 <span>Blog</span>
                             </a>
-                            <a href="{{ url_for('login') }}" class="nav-link-item-secondary">Login</a>
-                            <a href="{{ url_for('signup') }}" class="advanced-cta-btn">
+                            <a href="{{ url_for('auth.login') }}" class="nav-link-item-secondary">Login</a>
+                            <a href="{{ url_for('auth.signup') }}" class="advanced-cta-btn">
                                 <span>Get Started</span>
-                                <i class="fas fa-rocket ml-2"></i>
+                                <i class="fas fa-rocket ml-2" aria-hidden="true"></i>
                             </a>
                         {% endif %}
                     </div>
@@ -186,36 +185,36 @@
             <div class="mobile-menu-content bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400">
                 {% if session.user_email %}
                     {% if session.user_role == 'patient' %}
-                        <a href="{{ url_for('medication') }}" class="mobile-menu-item">
-                            <i class="fas fa-pills"></i>
+                        <a href="{{ url_for('patient.medication') }}" class="mobile-menu-item">
+                            <i class="fas fa-pills" aria-hidden="true"></i>
                             <span>Medications</span>
                         </a>
-                        <a href="{{ url_for('breathing') }}" class="mobile-menu-item">
-                            <i class="fas fa-wind"></i>
+                        <a href="{{ url_for('patient.breathing') }}" class="mobile-menu-item">
+                            <i class="fas fa-wind" aria-hidden="true"></i>
                             <span>Breathe</span>
                         </a>
-                        <a href="{{ url_for('yoga') }}" class="mobile-menu-item">
-                            <i class="fas fa-child"></i>
+                        <a href="{{ url_for('patient.yoga') }}" class="mobile-menu-item">
+                            <i class="fas fa-child" aria-hidden="true"></i>
                             <span>Yoga</span>
                         </a>
                         <a href="{{ url_for('music') }}" class="mobile-menu-item">
-                            <i class="fas fa-music"></i>
+                            <i class="fas fa-music" aria-hidden="true"></i>
                             <span>Music</span>
                         </a>
                     {% endif %}
                     <a href="{{ url_for('blog_list') }}" class="mobile-menu-item">
-                        <i class="fas fa-blog"></i>
+                        <i class="fas fa-blog" aria-hidden="true"></i>
                         <span>Blog</span>
                     </a>
                     <div class="mobile-menu-divider"></div>
-                    <a href="{{ url_for('logout') }}" class="mobile-menu-item text-red-600">
-                        <i class="fas fa-sign-out-alt"></i>
+                    <a href="{{ url_for('auth.logout') }}" class="mobile-menu-item text-red-600">
+                        <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
                         <span>Sign Out</span>
                     </a>
                 {% else %}
                     <a href="{{ url_for('blog_list') }}" class="mobile-menu-item">Blog</a>
-                    <a href="{{ url_for('login') }}" class="mobile-menu-item">Login</a>
-                    <a href="{{ url_for('signup') }}" class="mobile-menu-item advanced-cta-btn">
+                    <a href="{{ url_for('auth.login') }}" class="mobile-menu-item">Login</a>
+                    <a href="{{ url_for('auth.signup') }}" class="mobile-menu-item advanced-cta-btn">
                         <span>Get Started</span>
                         <i class="fas fa-rocket ml-2"></i>
                     </a>
@@ -277,8 +276,8 @@
                 <ul class="footer-links">
                     <li><a href="{{ url_for('index') }}">Home</a></li>
                     <li><a href="{{ url_for('blog_list') }}">Blog</a></li>
-                    <li><a href="{{ url_for('login') }}">Login</a></li>
-                    <li><a href="{{ url_for('signup') }}">Sign Up</a></li>
+                    <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                    <li><a href="{{ url_for('auth.signup') }}">Sign Up</a></li>
                 </ul>
             </div>
 
@@ -307,7 +306,7 @@
             <div class="footer-bottom-content">
                 <p>&copy; 2025 MindFullHorizon. All rights reserved.</p>
                 <p class="footer-made-with">
-                    Made with <i class="fas fa-heart text-red-500"></i> for mental wellness
+                    Made with <i class="fas fa-heart text-red-500" aria-hidden="true"></i> for mental wellness
                 </p>
             </div>
         </div>
@@ -332,9 +331,9 @@
     <!-- Advanced Scripts -->
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Modal Layout Shift Prevention Utility -->
-    <script src="{{ url_for('static', filename='js/modal-utils.js') }}?v=20251009-1"></script>
-    <script src="{{ url_for('static', filename='js/scripts.js') }}?v=20250923-1" defer></script>
+    {% assets "js_all" %}
+        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+    {% endassets %}
 
     <!-- Advanced Inline Scripts -->
     <script>

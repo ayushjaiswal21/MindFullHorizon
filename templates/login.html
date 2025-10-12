@@ -7,7 +7,7 @@
     <div class="max-w-md w-full space-y-8">
         <div>
             <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100">
-                <i class="fas fa-sign-in-alt text-indigo-600 text-xl"></i>
+                <i class="fas fa-sign-in-alt text-indigo-600 text-xl" aria-hidden="true"></i>
             </div>
             <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
                 Welcome Back
@@ -17,7 +17,7 @@
             </p>
             <p class="mt-2 text-center text-sm">
                 Don't have an account?
-                <a href="{{ url_for('signup') }}" class="font-medium text-indigo-600 hover:text-indigo-500">
+                <a href="{{ url_for('auth.signup') }}" class="font-medium text-indigo-600 hover:text-indigo-500">
                     Create one here
                 </a>
             </p>
@@ -80,7 +80,7 @@
                 <button type="submit" 
                         class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
                     <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                        <i class="fas fa-sign-in-alt text-indigo-500 group-hover:text-indigo-400"></i>
+                        <i class="fas fa-sign-in-alt text-indigo-500 group-hover:text-indigo-400" aria-hidden="true"></i>
                     </span>
                     Sign In
                 </button>
@@ -100,15 +100,15 @@
         <div class="mt-4 text-center">
             <div class="flex justify-center space-x-6 text-xs text-gray-500">
                 <div class="flex items-center">
-                    <i class="fas fa-shield-alt mr-1"></i>
+                    <i class="fas fa-shield-alt mr-1" aria-hidden="true"></i>
                     <span>Secure</span>
                 </div>
                 <div class="flex items-center">
-                    <i class="fas fa-brain mr-1"></i>
+                    <i class="fas fa-brain mr-1" aria-hidden="true"></i>
                     <span>AI-Powered</span>
                 </div>
                 <div class="flex items-center">
-                    <i class="fas fa-mobile-alt mr-1"></i>
+                    <i class="fas fa-mobile-alt mr-1" aria-hidden="true"></i>
                     <span>Digital Wellness</span>
                 </div>
             </div>
