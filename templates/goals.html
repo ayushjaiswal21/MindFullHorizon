@@ -18,7 +18,7 @@
 
         <!-- Add New Goal Button -->
         <div class="mb-6 text-center">
-            <button id="add-goal-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 transform hover:scale-105">
+            <button id="add-goal-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition duration-300 transform hover:scale-105" aria-label="Add a new wellness goal">
                 <i class="fas fa-plus mr-2"></i>Add New Goal
             </button>
         </div>
@@ -48,7 +48,7 @@
             </div>
             <h3 class="text-xl font-semibold text-gray-600 mb-2">No goals yet</h3>
             <p class="text-gray-500 mb-4">Start by creating your first wellness goal!</p>
-            <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg" onclick="showAddGoalModal()">
+            <button class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg" onclick="showAddGoalModal()" aria-label="Create your first wellness goal">
                 Create Your First Goal
             </button>
         </div>
@@ -136,11 +136,11 @@
 
                 <div class="flex items-center justify-between">
                     <button type="button" onclick="hideGoalModal()"
-                            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" aria-label="Cancel and close the goal form">
                         Cancel
                     </button>
                     <button type="submit"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" aria-label="Save the new goal">
                         Save Goal
                     </button>
                 </div>
@@ -176,11 +176,11 @@
                 </div>
                 <div class="flex items-center justify-between">
                     <button type="button" onclick="hideProgressModal()"
-                            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" aria-label="Cancel and close the progress form">
                         Cancel
                     </button>
                     <button type="submit"
-                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" aria-label="Update the goal progress">
                         Update Progress
                     </button>
                 </div>

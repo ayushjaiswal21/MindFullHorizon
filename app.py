@@ -64,15 +64,20 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_caching import Cache
+from flask_assets import Environment, Bundle
+from routes.auth import auth_bp
+from routes.core import core_bp
+from routes.patient import patient_bp
+from routes.provider import provider_bp
+from routes.blog import blog_bp
 
 from ai_service import ai_service
 from extensions import db, migrate, flask_session, compress, csrf
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, MusicTherapyLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary, Notification
 from models import BlogPost, BlogComment, BlogLike, BlogInsight, Prescription, MoodLog  # Ensure BlogPost and related models are imported
 
-# In-memory storage for patient features (no database required)
-patient_journal_entries = {}  # user_id -> list of journal entries
-patient_voice_logs_data = {}       # user_id -> list of voice log entries
+# Import shared data storage instead of defining locally to avoid circular imports
+from shared_data import patient_journal_entries, patient_voice_logs_data
 
 # File upload configuration
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'wav', 'mp3', 'ogg'}
@@ -164,6 +169,31 @@ from models import *
 
 # Enable CSRF protection for security
 csrf.init_app(app)
+app.register_blueprint(auth_bp)
+app.register_blueprint(core_bp)
+app.register_blueprint(patient_bp)
+app.register_blueprint(provider_bp)
+app.register_blueprint(blog_bp)
+
+# Asset management
+assets = Environment(app)
+
+js_bundle = Bundle(
+    'js/modal-utils.js',
+    'js/scripts.js',
+    filters='jsmin',
+    output='gen/packed.js'
+)
+assets.register('js_all', js_bundle)
+
+css_bundle = Bundle(
+    'css/enhanced.css',
+    'css/fallback-cards.css',
+    'css/styles.css',
+    filters='cssmin',
+    output='gen/packed.css'
+)
+assets.register('css_all', css_bundle)
 
 # Add Content Security Policy headers for XSS protection
 @app.after_request
@@ -192,7 +222,7 @@ def add_security_headers(response):
 def handle_csrf_error(e):
     logger.warning(f"CSRF error for user {session.get('user_email', 'anonymous')}: {request.endpoint}")
     flash('Session expired or invalid request. Please try again.', 'error')
-    return redirect(url_for('login'))
+    return redirect(url_for('auth.login'))
 
 # Global error handlers for security
 @app.errorhandler(413)
@@ -221,91 +251,18 @@ def handle_internal_error(e):
     flash('An internal error occurred. Please try again later.', 'error')
     return redirect(url_for('index'))
 
-# Yoga Video Library Page (correct placement)
-@app.route('/yoga-videos')
-def yoga_videos():
-    return render_template('yoga_videos.html')
 
 
-# Cached blog insights function
-@cache.memoize(timeout=300)  # Cache for 5 minutes
-def get_blog_insights():
-    return {
-        'total_posts': BlogPost.query.count(),
-        'total_likes': 0,
-        'total_comments': 0,
-        'total_views': 0,
-        'most_popular_post': None
-    }
 
-def allowed_file(filename):
-    """Check if file extension is allowed"""
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def validate_file_security(file):
-    """Comprehensive file validation for security"""
-    if not file or not file.filename:
-        return False, "No file provided"
-    
-    # Check file extension
-    if not allowed_file(file.filename):
-        return False, "Invalid file type. Only PNG, JPG, JPEG, and GIF files are allowed."
-    
-    # Check file size (additional check beyond Flask's MAX_CONTENT_LENGTH)
-    file.seek(0, 2)  # Seek to end
-    file_size = file.tell()
-    file.seek(0)  # Reset to beginning
-    
-    if file_size > 5 * 1024 * 1024:  # 5MB
-        return False, "File too large. Maximum size is 5MB."
-    
-    # Check MIME type
-    file_mime = file.content_type
-    if file_mime not in ALLOWED_MIME_TYPES:
-        return False, "Invalid file type detected."
-    
-    # Check for path traversal attempts
-    if '..' in file.filename or '/' in file.filename or '\\' in file.filename:
-        return False, "Invalid filename detected."
-    
-    return True, "File is valid"
 
-def is_strong_password(password):
-    if len(password) < 8:
-        return False, "Password must be at least 8 characters long."
-    if not re.search(r"[a-z]", password):
-        return False, "Password must contain at least one lowercase letter."
-    if not re.search(r"[A-Z]", password):
-        return False, "Password must contain at least one uppercase letter."
-    if not re.search(r"[0-9]", password):
-        return False, "Password must contain at least one number."
-    if not re.search(r"[\W_]", password):
-        return False, "Password must contain at least one special character."
-    return True, ""
 
 # Import gamification functions
 from gamification_engine import award_points
 
-def normalize_institution_name(institution_name):
-    """Normalize institution name for better matching."""
-    if not institution_name:
-        return ''
-    return institution_name.lower().strip()
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_email' not in session:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                return jsonify(success=False, message='Authentication required'), 401
-            return redirect(url_for('login'))
-        
-        # Refresh session on activity to prevent unexpected timeouts
-        session.permanent = True
-        session.modified = True
-        return f(*args, **kwargs)
-    return decorated_function
+
+from decorators import login_required, role_required
 
 # Favicon route to prevent 404 errors
 @app.route('/favicon.ico')
@@ -316,35 +273,7 @@ def favicon():
         # Return empty response for missing favicon to avoid 404
         return '', 204
 
-# Blog Delete Route (placed after app, login_required, and abort are defined)
-@app.route('/blog/<int:post_id>/delete', methods=['POST'])
-@login_required
-def blog_delete(post_id):
-    post = BlogPost.query.get_or_404(post_id)
-    # Optional: Only allow author or admin to delete
-    if post.author_id != session.get('user_id'):
-        abort(403)
-    try:
-        db.session.delete(post)
-        db.session.commit()
-        flash('Blog post deleted successfully!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash('Failed to delete blog post.', 'error')
-    return redirect(url_for('blog_list'))
 
-def role_required(role):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if 'user_role' not in session or session['user_role'] != role:
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return jsonify(success=False, message='Insufficient permissions'), 403
-                flash('Access denied. Insufficient permissions.', 'error')
-                return redirect(url_for('login'))
-            return f(*args, **kwargs)
-        return decorated_function
-    return decorator
 
 @app.route('/')
 def index():
@@ -426,298 +355,11 @@ def index():
         datetime=datetime
     )
 
-@app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("5 per minute")  # Rate limit login attempts
-def login():
-    if request.method == 'POST':
-        # Use .get to avoid KeyError and normalize inputs
-        email = (request.form.get('email') or '').strip().lower()
-        password = request.form.get('password') or ''
-        role = (request.form.get('role') or '').strip().lower()
 
-        if not email or not password or not role:
-            flash('Please provide email, password, and select a role.', 'error')
-            return render_template('login.html')
 
-        user = User.query.filter_by(email=email).first()
 
-        if not user:
-            flash('No account found with that email. Please sign up first.', 'error')
-            return render_template('login.html')
 
-        if user.role.lower() != role:
-            flash('Selected role does not match account role. Please choose the correct role.', 'error')
-            return render_template('login.html')
 
-        if not user.check_password(password):
-            flash('Invalid credentials. Please check your email and password.', 'error')
-            return render_template('login.html')
-
-        # Successful login
-        session.clear()
-        session.permanent = True
-        session['user_email'] = email
-        session['user_role'] = role
-        session['user_name'] = user.name
-        session['user_id'] = user.id
-        session['user_institution'] = user.institution
-        session.modified = True
-
-        if role == 'patient':
-            return redirect(url_for('patient_dashboard'))
-        else:
-            return redirect(url_for('provider_dashboard'))
-
-    return render_template('login.html')
-
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == 'POST':
-        logger.info('Signup form submitted')
-        name = request.form['name']
-        email = request.form['email']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        role = request.form['role']
-        institution = request.form.get('institution', 'Default University')
-        logger.info(f'Form data: {name}, {email}, {role}, {institution}')
-
-        if not all([name, email, password, confirm_password, role]):
-            logger.warning('All fields are required')
-            flash('All fields are required.', 'error')
-            return render_template('signup.html')
-
-        if password != confirm_password:
-            logger.warning('Passwords do not match')
-            flash('Passwords do not match.', 'error')
-            return render_template('signup.html')
-
-        is_strong, message = is_strong_password(password)
-        if not is_strong:
-            logger.warning(f'Weak password: {message}')
-            flash(message, 'error')
-            return render_template('signup.html')
-
-        existing_user = User.query.filter_by(email=email).first()
-        if existing_user:
-            logger.warning(f'Email already registered: {email}')
-            flash('Email already registered. Please use a different email or login.', 'error')
-            return render_template('signup.html')
-
-        new_user = User(
-            name=name,
-            email=email,
-            role=role,
-            institution=institution
-        )
-        new_user.set_password(password)
-
-        try:
-            db.session.add(new_user)
-            db.session.commit()
-            logger.info(f'New user created: {email}')
-
-            if role == 'patient':
-                gamification = Gamification(
-                    user_id=new_user.id,
-                    points=0,
-                    streak=0,
-                    badges=[],
-                    last_activity=None
-                )
-                db.session.add(gamification)
-                db.session.commit()
-                logger.info(f'Gamification profile created for user: {email}')
-
-            flash('Registration successful! Please login with your credentials.', 'success')
-            logger.info('Flash message set for successful registration')
-            return redirect(url_for('login'))
-
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f'Error creating new user: {e}')
-            flash('Registration failed. Please try again.', 'error')
-            return render_template('signup.html')
-
-    return render_template('signup.html')
-
-@app.route('/logout')
-def logout():
-    session.clear()
-    flash('You have been logged out successfully.', 'success')
-    return redirect(url_for('index'))
-
-@app.route('/patient-dashboard')
-@login_required
-@role_required('patient')
-def patient_dashboard():
-    user_id = session['user_id']
-    
-    from sqlalchemy.orm import joinedload
-    gamification = Gamification.query.filter_by(user_id=user_id).first()
-    rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.desc()).first()
-    all_appointments = Appointment.query.filter_by(user_id=user_id).order_by(Appointment.date.asc(), Appointment.time.asc()).all()
-    latest_mood = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.created_at.desc()).first()
-
-    upcoming_appointments = []
-    past_appointments = []
-
-    for appt in all_appointments:
-        try:
-            appt_datetime_str = f"{appt.date} {appt.time}"
-            appt_datetime = datetime.strptime(appt_datetime_str, '%Y-%m-%d %H:%M')
-            if appt_datetime >= datetime.now():
-                upcoming_appointments.append(appt)
-            else:
-                past_appointments.append(appt)
-        except Exception as e:
-            continue
-
-    data = {
-        'points': gamification.points if gamification else 0,
-        'streak': gamification.streak if gamification else 0,
-        'badges': gamification.badges if gamification else [],
-        'rpm_data': {
-            'heart_rate': rpm_data.heart_rate if rpm_data else 72,
-            'sleep_duration': rpm_data.sleep_duration if rpm_data else 7.5,
-            'steps': rpm_data.steps if rpm_data else 8500,
-            'mood_score': rpm_data.mood_score if rpm_data else 8
-        }
-    }
-
-    alerts = []
-    if rpm_data:
-        if rpm_data.heart_rate and rpm_data.heart_rate > 100:
-            alerts.append('High heart rate detected')
-        if rpm_data.sleep_duration and rpm_data.sleep_duration < 6:
-            alerts.append('Insufficient sleep detected')
-        if rpm_data.mood_score and rpm_data.mood_score < 4:
-            alerts.append('Low mood score detected')
-
-    return render_template('patient_dashboard.html',
-                         user_name=session['user_name'],
-                         user=db.session.get(User, user_id),
-                         data=data,
-                         alerts=alerts,
-                         upcoming_appointments=upcoming_appointments,
-                         past_appointments=past_appointments,
-                         latest_mood=latest_mood)
-
-@app.route('/provider-dashboard')
-@login_required
-@role_required('provider')
-def provider_dashboard():
-    institution = session.get('user_institution', 'Sample University')
-
-    # Normalize the provider's institution for better matching
-    normalized_provider_institution = normalize_institution_name(institution)
-
-    # More flexible institution matching for better patient-provider visibility
-    # Split institution name into keywords for partial matching
-    institution_keywords = set(normalized_provider_institution.split())
-
-    # Fetch all patients and filter them based on institution similarity
-    from sqlalchemy.orm import joinedload
-    all_patients = User.query.options(
-        joinedload(User.digital_detox_logs),
-        joinedload(User.clinical_notes)
-    ).filter_by(role='patient').all()
-
-    # Filter patients based on institution similarity
-    patients = []
-    for patient in all_patients:
-        patient_institution = patient.institution or ''
-        normalized_patient_institution = normalize_institution_name(patient_institution)
-        patient_keywords = set(normalized_patient_institution.split())
-
-        # Check for similarity (partial match, case-insensitive)
-        if institution_keywords & patient_keywords:  # Intersection of keywords
-            patients.append(patient)
-        elif not patient_institution and institution == 'Sample University':
-            # Include patients with no institution if provider is using default
-            patients.append(patient)
-
-    # If no patients found with flexible matching, fall back to exact match for backward compatibility
-    if not patients:
-        patients = User.query.options(
-            joinedload(User.digital_detox_logs),
-            joinedload(User.clinical_notes)
-        ).filter_by(role='patient', institution=institution).all()
-
-    caseload_data = []
-    for patient in patients:
-        # Get latest detox and session from already loaded relationships (prevents N+1 queries)
-        latest_detox = patient.digital_detox_logs[0] if patient.digital_detox_logs else None
-        latest_session = patient.clinical_notes[0] if patient.clinical_notes else None
-
-        risk_level = 'Low'
-        if latest_detox:
-            if latest_detox.screen_time_hours > 8 or (latest_detox.ai_score and latest_detox.ai_score == 'Needs Improvement'):
-                risk_level = 'High'
-            elif latest_detox.screen_time_hours > 6 or (latest_detox.ai_score and latest_detox.ai_score == 'Good'):
-                risk_level = 'Medium'
-
-        caseload_data.append({
-            'user_id': patient.id,
-            'name': patient.name,
-            'email': patient.email,
-            'risk_level': risk_level,
-            'last_session': latest_session.session_date.strftime('%Y-%m-%d') if latest_session else 'No sessions',
-            'status': 'Active' if latest_detox and latest_detox.date >= date.today() - timedelta(days=7) else 'Inactive',
-            'digital_score': latest_detox.ai_score if latest_detox and latest_detox.ai_score else 'No data'
-        })
-    
-    # --- Apply client-side filters/search if provided ---
-    search_q = request.args.get('q', '').strip()
-    filter_risk = request.args.get('risk', '').strip()
-
-    filtered_caseload = caseload_data
-    if search_q:
-        q_lower = search_q.lower()
-        filtered_caseload = [c for c in filtered_caseload if q_lower in (c.get('name') or '').lower() or q_lower in (c.get('email') or '').lower()]
-
-    if filter_risk in ('High', 'Medium', 'Low'):
-        filtered_caseload = [c for c in filtered_caseload if c.get('risk_level') == filter_risk]
-
-    # --- Simple Tasks derivation (quick wins): overdue appointments and inactive follow-ups ---
-    tasks = []
-    try:
-        # Overdue appointments assigned to this provider (status 'booked' and date < today)
-        overdue = Appointment.query.filter(Appointment.provider_id == session.get('user_id'), Appointment.status == 'booked', Appointment.date < date.today()).order_by(Appointment.date.desc()).limit(5).all()
-        for o in overdue:
-            tasks.append({'title': f'Complete appointment note for {o.user.name if o.user else o.user_id}', 'patient_id': o.user_id, 'due': o.date.strftime('%Y-%m-%d'), 'type': 'appointment'})
-    except Exception:
-        # If Appointment table/query fails for any reason, ignore tasks generation gracefully
-        tasks = []
-
-    # Also add patients with no recent activity (>7 days)
-    try:
-        for c in caseload_data:
-            if c.get('status') == 'Inactive':
-                tasks.append({'title': f'Check-in with {c.get("name")}', 'patient_id': c.get('user_id'), 'due': '', 'type': 'followup'})
-    except Exception:
-        pass
-
-    institutional_data = get_institutional_summary(institution, db)
-    
-    bi_data = {
-        'patient_engagement': institutional_data['engagement_rate'],
-        'avg_session_duration': institutional_data['avg_session_duration'],
-        'completion_rate': institutional_data['completion_rate'],
-        'satisfaction_score': institutional_data['satisfaction_score'],
-        'total_patients': institutional_data['total_users'],
-        'high_risk_patients': institutional_data['high_risk_users'],
-        'avg_screen_time': institutional_data['avg_screen_time']
-    }
-    
-    return render_template('provider_dashboard.html', 
-                         user_name=session['user_name'],
-                         caseload=filtered_caseload,
-                         bi_data=bi_data,
-                         institution=institution,
-                         search_q=search_q,
-                         filter_risk=filter_risk,
-                         tasks=tasks)
 
 
 @app.route('/chat')
@@ -746,569 +388,15 @@ def api_message():
         logger.error(f"Failed to create message: {e}")
         return jsonify(success=False, error=str(e)), 500
 
-@app.route('/schedule', methods=['GET', 'POST'])
-@login_required
-def schedule():
-    if request.method == 'POST':
-        date_str = request.form['date']
-        time_str = request.form['time']
-        appointment_type = request.form['appointment_type']
-        notes = request.form.get('notes', '')
-        provider_id = request.form.get('provider_id')  # Optional provider selection
-        user_id = session['user_id']
 
-        try:
-            appointment_date = datetime.strptime(date_str, '%Y-%m-%d').date()
 
-            new_appointment = Appointment(
-                user_id=user_id,
-                provider_id=int(provider_id) if provider_id else None,
-                date=appointment_date,
-                time=time_str,
-                appointment_type=appointment_type,
-                notes=notes,
-                status='pending'  # Changed to pending for provider approval
-            )
-            db.session.add(new_appointment)
-            db.session.commit()
-            
-            logger.info(f"Appointment created successfully: ID={new_appointment.id}, User={user_id}, Provider={provider_id}, Status={new_appointment.status}")
-            
-            # Notify provider via SocketIO if provider is selected, or all providers if none selected
-            if provider_id:
-                # Notify specific provider
-                socketio.emit('new_appointment', {
-                    'appointment_id': new_appointment.id,
-                    'patient_name': session['user_name'],
-                    'patient_id': user_id,
-                    'date': date_str,
-                    'time': time_str,
-                    'type': appointment_type,
-                    'notes': notes,
-                    'urgency': 'normal'
-                }, room=f'user_{provider_id}')
-            else:
-                # Notify all providers in the same institution
-                user_institution = session.get('user_institution', 'Sample University')
-                providers = User.query.filter_by(role='provider', institution=user_institution).all()
-                for provider in providers:
-                    socketio.emit('new_appointment', {
-                        'appointment_id': new_appointment.id,
-                        'patient_name': session['user_name'],
-                        'patient_id': user_id,
-                        'date': date_str,
-                        'time': time_str,
-                        'type': appointment_type,
-                        'notes': notes,
-                        'urgency': 'normal',
-                        'unassigned': True
-                    }, room=f'user_{provider.id}')
-            
-            flash(f'Appointment successfully booked for {date_str} at {time_str}!', 'success')
-            return redirect(url_for('patient_dashboard'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error booking appointment: {e}', 'error')
-            logger.error(f"Error booking appointment for user {user_id}: {e}")
-            return redirect(url_for('schedule'))
-    
-    # Get list of providers for the dropdown
-    user_institution = session.get('user_institution', 'Sample University')
-    providers = User.query.filter_by(role='provider', institution=user_institution).all()
-    
-    return render_template('schedule.html', user_name=session['user_name'], providers=providers)
 
-@app.route('/appointments/accept/<int:appointment_id>', methods=['POST'])
-@login_required
-@role_required('provider')
-def accept_appointment(appointment_id):
-    try:
-        appointment = Appointment.query.get_or_404(appointment_id)
-        provider_id = session['user_id']
-        
-        # Verify the provider has access to this appointment
-        # Allow if it's assigned to this provider OR if it's unassigned (provider_id is None)
-        if appointment.provider_id is not None and appointment.provider_id != provider_id:
-            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-        
-        # If appointment was unassigned, assign it to this provider
-        if appointment.provider_id is None:
-            appointment.provider_id = provider_id
-            
-        appointment.status = 'accepted'
-        appointment.updated_at = datetime.utcnow()
-        db.session.commit()
-        
-        # Notify patient via SocketIO
-        socketio.emit('appointment_accepted', {
-            'appointment_id': appointment.id,
-            'date': appointment.date.strftime('%Y-%m-%d'),
-            'time': appointment.time,
-            'type': appointment.appointment_type
-        }, room=f'user_{appointment.user_id}')
-        
-        return jsonify({'success': True, 'message': 'Appointment accepted successfully'})
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error accepting appointment {appointment_id}: {e}")
-        return jsonify({'success': False, 'message': str(e)}), 500
 
-@app.route('/appointments/reject/<int:appointment_id>', methods=['POST'])
-@login_required
-@role_required('provider')
-def reject_appointment(appointment_id):
-    try:
-        data = request.get_json() or {}
-        rejection_reason = data.get('reason', 'No reason provided')
-        
-        appointment = Appointment.query.get_or_404(appointment_id)
-        provider_id = session['user_id']
-        
-        # Verify the provider has access to this appointment
-        # Allow if it's assigned to this provider OR if it's unassigned (provider_id is None)
-        if appointment.provider_id is not None and appointment.provider_id != provider_id:
-            return jsonify({'success': False, 'message': 'Unauthorized'}), 403
-        
-        appointment.status = 'rejected'
-        appointment.rejection_reason = rejection_reason
-        appointment.updated_at = datetime.utcnow()
-        db.session.commit()
-        
-        # Notify patient via SocketIO
-        socketio.emit('appointment_rejected', {
-            'appointment_id': appointment.id,
-            'date': appointment.date.strftime('%Y-%m-%d'),
-            'time': appointment.time,
-            'type': appointment.appointment_type,
-            'reason': rejection_reason
-        }, room=f'user_{appointment.user_id}')
-        
-        return jsonify({'success': True, 'message': 'Appointment rejected successfully'})
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error rejecting appointment {appointment_id}: {e}")
-        return jsonify({'success': False, 'message': str(e)}), 500
 
-@app.route('/appointments/provider', methods=['GET'])
-@login_required
-@role_required('provider')
-def provider_appointments():
-    """Get provider's appointments with optional status filter"""
-    status_filter = request.args.get('status', 'all')
-    provider_id = session['user_id']
-    
-    logger.info(f"Provider {provider_id} requesting appointments with status filter: {status_filter}")
-    
-    # Show appointments assigned to this provider OR unassigned appointments from same institution
-    from sqlalchemy import or_, and_
-    provider_institution = session.get('user_institution', 'Sample University')
-    
-    # Get user IDs from the same institution for filtering unassigned appointments
-    same_institution_users = User.query.filter_by(role='patient', institution=provider_institution).with_entities(User.id).all()
-    same_institution_user_ids = [user.id for user in same_institution_users]
-    logger.info(f"Provider institution: {provider_institution}, Same institution patient IDs: {same_institution_user_ids}")
-    
-    query = Appointment.query.filter(
-        or_(
-            Appointment.provider_id == provider_id,
-            and_(
-                Appointment.provider_id.is_(None),
-                Appointment.user_id.in_(same_institution_user_ids)
-            )
-        )
-    )
-    
-    if status_filter != 'all':
-        query = query.filter_by(status=status_filter)
-    
-    appointments = query.order_by(Appointment.date.asc(), Appointment.time.asc()).all()
-    logger.info(f"Found {len(appointments)} appointments for provider {provider_id}")
-    
-    appointments_data = []
-    for appt in appointments:
-        # Get patient's recent health data for provider decision-making
-        patient_health_data = None
-        if appt.user:
-            # Get latest assessment
-            latest_assessment = Assessment.query.filter_by(user_id=appt.user.id).order_by(Assessment.created_at.desc()).first()
-            # Get latest digital detox data
-            latest_detox = DigitalDetoxLog.query.filter_by(user_id=appt.user.id).order_by(DigitalDetoxLog.date.desc()).first()
-            # Get latest RPM data
-            latest_rpm = RPMData.query.filter_by(user_id=appt.user.id).order_by(RPMData.date.desc()).first()
-            
-            patient_health_data = {
-                'latest_assessment': {
-                    'type': latest_assessment.assessment_type if latest_assessment else None,
-                    'score': latest_assessment.score if latest_assessment else None,
-                    'date': latest_assessment.created_at.strftime('%Y-%m-%d') if latest_assessment else None
-                } if latest_assessment else None,
-                'digital_wellness': {
-                    'screen_time': latest_detox.screen_time_hours if latest_detox else None,
-                    'ai_score': latest_detox.ai_score if latest_detox else None,
-                    'date': latest_detox.date.strftime('%Y-%m-%d') if latest_detox else None
-                } if latest_detox else None,
-                'vital_signs': {
-                    'heart_rate': latest_rpm.heart_rate if latest_rpm else None,
-                    'sleep_duration': latest_rpm.sleep_duration if latest_rpm else None,
-                    'mood_score': latest_rpm.mood_score if latest_rpm else None,
-                    'date': latest_rpm.date.strftime('%Y-%m-%d') if latest_rpm else None
-                } if latest_rpm else None
-            }
 
-        appointments_data.append({
-            'id': appt.id,
-            'patient_name': appt.user.name if appt.user else 'Unknown',
-            'patient_email': appt.user.email if appt.user else 'Unknown',
-            'patient_id': appt.user.id if appt.user else None,
-            'date': appt.date.strftime('%Y-%m-%d'),
-            'time': appt.time,
-            'type': appt.appointment_type,
-            'status': appt.status,
-            'notes': appt.notes,
-            'rejection_reason': appt.rejection_reason,
-            'provider_id': appt.provider_id,
-            'patient_health_data': patient_health_data,
-            'created_at': appt.created_at.strftime('%Y-%m-%d %H:%M:%S') if appt.created_at else None,
-            'updated_at': appt.updated_at.strftime('%Y-%m-%d %H:%M:%S') if appt.updated_at else None,
-            'urgency_level': 'high' if patient_health_data and patient_health_data.get('latest_assessment') and patient_health_data['latest_assessment'].get('score', 0) > 15 else 'normal'
-        })
-    
-    logger.info(f"Returning {len(appointments_data)} appointments to provider {provider_id}")
-    
-    # Debug: Print the actual appointments data being returned
-    for appt_data in appointments_data:
-        logger.info(f"Appointment data: ID={appt_data['id']}, Patient={appt_data['patient_name']}, Status={appt_data['status']}")
-    
-    return jsonify({'success': True, 'appointments': appointments_data})
 
-@app.route('/ai-documentation', methods=['GET', 'POST'])
-@login_required
-@role_required('provider')
-def ai_documentation():
-    if request.method == 'POST':
-        transcript = request.form.get('transcript', '')
-        patient_email = request.form.get('patient_email', '')
-        
-        if transcript:
-            patient_context = None
-            if patient_email:
-                patient = User.query.filter_by(email=patient_email, role='patient').first()
-                if patient:
-                    recent_detox = DigitalDetoxLog.query.filter_by(user_id=patient.id).order_by(DigitalDetoxLog.date.desc()).first()
-                    gamification = Gamification.query.filter_by(user_id=patient.id).first()
-                    
-                    patient_context = {
-                        'wellness_trend': recent_detox.ai_score if recent_detox and recent_detox.ai_score else 'Not available',
-                        'digital_score': recent_detox.ai_score if recent_detox else 'Not available',
-                        'engagement': f'{gamification.points} points, {gamification.streak} day streak' if gamification else 'Low'
-                    }
-            
-            clinical_note = ai_service.generate_clinical_note(transcript, patient_context)
-            
-            if patient_email and patient:
-                clinical_note_record = ClinicalNote(
-                    provider_id=session['user_id'],
-                    patient_id=patient.id,
-                    session_date=datetime.now(),
-                    transcript=transcript,
-                    ai_generated_note=clinical_note
-                )
-                db.session.add(clinical_note_record)
-                db.session.commit()
-            
-            return render_template('ai_documentation.html', 
-                                 user_name=session['user_name'],
-                                 transcript=transcript,
-                                 clinical_note=clinical_note,
-                                 patient_email=patient_email)
-        else:
-            flash('Please provide a session transcript.', 'error')
-    
-    return render_template('ai_documentation.html', user_name=session['user_name'])
 
-@app.route('/analytics')
-@login_required
-@role_required('provider')
-def analytics():
-    institution = session.get('user_institution', 'Sample University')
 
-    # Get institutional analytics data
-    institutional_data = get_institutional_summary(institution, db)
-
-    # Get recent blog insights
-    recent_blog_insights = BlogInsight.query.order_by(BlogInsight.created_at.desc()).limit(10).all()
-
-    # Get patient engagement trends
-    patients = User.query.filter_by(role='patient', institution=institution).all()
-    patient_ids = [p.id for p in patients]
-
-    # Get recent digital detox data for trends
-    recent_detox = DigitalDetoxLog.query.filter(
-        DigitalDetoxLog.user_id.in_(patient_ids),
-        DigitalDetoxLog.date >= datetime.now().date() - timedelta(days=30)
-    ).all()
-
-    # Calculate engagement metrics
-    active_patients = len(set([log.user_id for log in recent_detox]))
-    total_patients = len(patients)
-
-    # Get assessment completion rates
-    assessments_30_days = Assessment.query.filter(
-        Assessment.user_id.in_(patient_ids),
-        Assessment.created_at >= datetime.now() - timedelta(days=30)
-    ).count()
-
-    # Get gamification stats
-    gamification_stats = db.session.query(
-        func.avg(Gamification.points),
-        func.avg(Gamification.streak),
-        func.count(Gamification.id)
-    ).filter(Gamification.user_id.in_(patient_ids)).first()
-
-    # Get wellness trend data for charts
-    detox_trends = {}
-    for log in recent_detox:
-        date_str = log.date.strftime('%Y-%m-%d')
-        if date_str not in detox_trends:
-            detox_trends[date_str] = {'total_hours': 0, 'count': 0, 'ai_scores': []}
-        detox_trends[date_str]['total_hours'] += log.screen_time_hours
-        detox_trends[date_str]['count'] += 1
-        if log.ai_score:
-            detox_trends[date_str]['ai_scores'].append(log.ai_score)
-
-    # Calculate average daily screen time and wellness scores
-    chart_labels = sorted(detox_trends.keys())
-    screen_time_data = []
-    wellness_score_data = []
-
-    for date in chart_labels:
-        data = detox_trends[date]
-        avg_screen_time = data['total_hours'] / data['count'] if data['count'] > 0 else 0
-        screen_time_data.append(round(avg_screen_time, 1))
-
-        # Convert AI scores to numeric values for averaging
-        numeric_scores = []
-        for score in data['ai_scores']:
-            if score == 'Excellent':
-                numeric_scores.append(5)
-            elif score == 'Good':
-                numeric_scores.append(4)
-            elif score == 'Fair':
-                numeric_scores.append(3)
-            elif score == 'Needs Improvement':
-                numeric_scores.append(2)
-            elif score == 'Poor':
-                numeric_scores.append(1)
-
-        avg_wellness = sum(numeric_scores) / len(numeric_scores) if numeric_scores else 0
-        wellness_score_data.append(round(avg_wellness, 1))
-
-    analytics_data = {
-        'institution': institution,
-        'total_patients': total_patients,
-        'active_patients': active_patients,
-        'engagement_rate': round((active_patients / total_patients) * 100, 1) if total_patients > 0 else 0,
-        'assessments_30_days': assessments_30_days,
-        'avg_gamification_points': round(gamification_stats[0], 1) if gamification_stats[0] else 0,
-        'avg_streak': round(gamification_stats[1], 1) if gamification_stats[1] else 0,
-        'total_gamified_users': gamification_stats[2],
-        'chart_labels': chart_labels,
-        'screen_time_data': screen_time_data,
-        'wellness_score_data': wellness_score_data,
-        'blog_insights': recent_blog_insights,
-        'institutional_data': institutional_data
-    }
-
-    return render_template('analytics.html',
-                         user_name=session['user_name'],
-                         analytics_data=analytics_data,
-                         datetime=datetime)
-
-@app.route('/medication', methods=['GET', 'POST'])
-@login_required
-@role_required('patient')
-def medication():
-    user_id = session['user_id']
-    
-    if request.method == 'POST':
-        name = request.form.get('name')
-        dosage = request.form.get('dosage')
-        frequency = request.form.get('frequency')
-        time_of_day = request.form.get('time_of_day')
-
-        if not name or not dosage or not frequency:
-            flash('Medication name, dosage, and frequency are required.', 'error')
-        else:
-            new_medication = Medication(
-                user_id=user_id,
-                name=name,
-                dosage=dosage,
-                frequency=frequency,
-                time_of_day=time_of_day
-            )
-            db.session.add(new_medication)
-            db.session.commit()
-            flash(f'{name} has been added to your tracker.', 'success')
-        return redirect(url_for('medication'))
-
-    medications = Medication.query.filter_by(user_id=user_id, is_active=True).all()
-    
-    today_start = datetime.combine(date.today(), datetime.min.time())
-    today_end = datetime.combine(date.today(), datetime.max.time())
-    
-    todays_logs = MedicationLog.query.filter(
-        MedicationLog.user_id == user_id,
-        MedicationLog.taken_at >= today_start,
-        MedicationLog.taken_at <= today_end
-    ).all()
-    
-    logged_med_ids = {log.medication_id for log in todays_logs}
-    
-    today = date.today()
-    return render_template('medication.html', 
-                         user_name=session['user_name'], 
-                         medications=medications,
-                         logged_med_ids=logged_med_ids,
-                         moment=datetime,
-                         today=today)
-
-@app.route('/log-medication', methods=['POST'])
-@login_required
-@role_required('patient')
-def log_medication():
-    user_id = session['user_id']
-    medication_id = request.form.get('medication_id')
-    
-    if medication_id:
-        today_start = datetime.combine(date.today(), datetime.min.time())
-        existing_log = MedicationLog.query.filter(
-            MedicationLog.medication_id == medication_id,
-            MedicationLog.user_id == user_id,
-            MedicationLog.taken_at >= today_start
-        ).first()
-
-        if not existing_log:
-            new_log = MedicationLog(user_id=user_id, medication_id=medication_id)
-            db.session.add(new_log)
-            db.session.commit()
-            award_points(user_id, 10, 'log_medication')
-            return jsonify({'success': True, 'message': 'Medication logged successfully!'})
-        else:
-            return jsonify({'success': False, 'message': 'Medication already logged for today.'})
-            
-    return jsonify({'success': False, 'message': 'Invalid request.'})
-
-@app.route('/breathing', methods=['GET', 'POST'])
-@login_required
-@role_required('patient')
-def breathing():
-    user_id = session['user_id']
-
-    if request.method == 'POST':
-        exercise_name = request.form.get('exercise_name')
-        duration_minutes = request.form.get('duration_minutes')
-
-        if not exercise_name or not duration_minutes:
-            flash('Exercise name and duration are required.', 'error')
-        else:
-            try:
-                new_log = BreathingExerciseLog(
-                    user_id=user_id,
-                    exercise_name=exercise_name,
-                    duration_minutes=int(duration_minutes),
-                    created_at=datetime.now(timezone.utc)
-                )
-                db.session.add(new_log)
-                db.session.commit()
-                award_points(user_id, 20, 'breathing_exercise')
-                flash(f'Your {exercise_name} session has been logged!', 'success')
-            except ValueError:
-                flash('Invalid duration. Please enter a number.', 'error')
-        return redirect(url_for('breathing'))
-
-    recent_logs = BreathingExerciseLog.query.filter_by(user_id=user_id).order_by(BreathingExerciseLog.created_at.desc()).limit(10).all()
-    
-    all_logs = BreathingExerciseLog.query.filter_by(user_id=user_id).all()
-    total_sessions = len(all_logs)
-    total_minutes = sum(log.duration_minutes for log in all_logs)
-    
-    streak = 0
-    if all_logs:
-        dates = sorted([log.created_at.date() for log in all_logs], reverse=True)
-        current_date = date.today()
-        for i, log_date in enumerate(dates):
-            if log_date == current_date - timedelta(days=i):
-                streak += 1
-            else:
-                break
-    
-    stats = {
-        'total_sessions': total_sessions,
-        'total_minutes': total_minutes,
-        'streak': streak
-    }
-    
-    return render_template('breathing.html', 
-                         user_name=session['user_name'],
-                         recent_logs=recent_logs,
-                         stats=stats)
-
-@app.route('/yoga', methods=['GET', 'POST'])
-@login_required
-@role_required('patient')
-def yoga():
-    user_id = session['user_id']
-
-    if request.method == 'POST':
-        session_name = request.form.get('session_name')
-        duration_minutes = request.form.get('duration_minutes')
-
-        if not session_name or not duration_minutes:
-            flash('Session name and duration are required.', 'error')
-        else:
-            try:
-                new_log = YogaLog(
-                    user_id=user_id,
-                    session_name=session_name,
-                    duration_minutes=int(duration_minutes),
-                    created_at=datetime.now(timezone.utc)
-                )
-                db.session.add(new_log)
-                db.session.commit()
-                award_points(user_id, 20, 'yoga_session')
-                flash(f'Your {session_name} session has been logged!', 'success')
-            except ValueError:
-                flash('Invalid duration. Please enter a number.', 'error')
-        return redirect(url_for('yoga'))
-
-    recent_logs = YogaLog.query.filter_by(user_id=user_id).order_by(YogaLog.created_at.desc()).limit(10).all()
-    
-    all_logs = YogaLog.query.filter_by(user_id=user_id).all()
-    total_sessions = len(all_logs)
-    total_minutes = sum(log.duration_minutes for log in all_logs)
-    avg_duration = round(total_minutes / total_sessions, 1) if total_sessions > 0 else 0
-    
-    streak = 0
-    if all_logs:
-        dates = sorted([log.created_at.date() for log in all_logs], reverse=True)
-        current_date = date.today()
-        for i, log_date in enumerate(dates):
-            if log_date == current_date - timedelta(days=i):
-                streak += 1
-            else:
-                break
-    
-    stats = {
-        'total_sessions': total_sessions,
-        'total_minutes': total_minutes,
-        'streak': streak,
-        'avg_duration': avg_duration
-    }
-    
-    return render_template('yoga.html', 
-                         user_name=session['user_name'],
-                         recent_logs=recent_logs,
-                         stats=stats)
 
 @app.route('/telehealth_session/<int:user_id>')
 @login_required
@@ -1324,349 +412,9 @@ def telehealth_session(user_id):
 def telehealth():
     return render_template('telehealth.html', user_name=session['user_name'])
 
-@app.route('/digital-detox')
-@login_required
-@role_required('patient')
-def digital_detox():
-    user_id = session['user_id']
-    
-    screen_time_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
-    
-    screen_time_log = []
-    for log in screen_time_logs:
-        screen_time_log.append({
-            'date': log.date.strftime('%Y-%m-%d'),
-            'hours': log.screen_time_hours,
-            'academic_score': log.academic_score,
-            'social_interactions': log.social_interactions,
-            'ai_score': log.ai_score
-        })
-    
-    avg_screen_time = 0
-    if screen_time_log:
-        total_hours = sum(log['hours'] for log in screen_time_log)
-        avg_screen_time = round(total_hours / len(screen_time_log), 1)
 
-    latest_log = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).first()
-    score = None
-    suggestion = None
-    if latest_log:
-        score = latest_log.ai_score
-        suggestion = latest_log.ai_suggestion
-    
-    return render_template('digital_detox.html', 
-                         user_name=session['user_name'],
-                         screen_time_log=screen_time_log,
-                         avg_screen_time=avg_screen_time,
-                         score=score,
-                         suggestion=suggestion)
 
-@app.route('/progress')
-@login_required
-@role_required('patient')
-def progress():
-    try:
-        user_id = session['user_id']
-        goals = Goal.query.filter_by(user_id=user_id).all()
-        
-        achievements = [goal.title for goal in goals if goal.status == 'completed']
-        
-        assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
-        
-        latest_gad7 = next((a for a in assessments if a.assessment_type == 'GAD-7'), None)
-        latest_phq9 = next((a for a in assessments if a.assessment_type == 'PHQ-9'), None)
-        latest_mood = next((a for a in assessments if a.assessment_type == 'Daily Mood'), None)
 
-        mood_assessments = sorted([a for a in assessments if a.assessment_type == 'Daily Mood'], key=lambda x: x.created_at)[-30:]
-        mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
-        
-        gad7_assessments = sorted([a for a in assessments if a.assessment_type == 'GAD-7'], key=lambda x: x.created_at)
-        phq9_assessments = sorted([a for a in assessments if a.assessment_type == 'PHQ-9'], key=lambda x: x.created_at)
-
-        assessment_chart_labels = sorted(list(set([a.created_at.strftime('%Y-%m-%d') for a in gad7_assessments + phq9_assessments])))
-        assessment_chart_gad7_data = [next((a.score for a in gad7_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
-        assessment_chart_phq9_data = [next((a.score for a in phq9_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
-
-        days_since_assessment = (datetime.now() - assessments[0].created_at).days if assessments else 'N/A'
-        
-        user_data_for_ai = {
-            'gad7_score': latest_gad7.score if latest_gad7 else 'N/A',
-            'phq9_score': latest_phq9.score if latest_phq9 else 'N/A',
-            'wellness_score': 'calculating...',
-            'completed_goals': len(achievements),
-            'total_goals': len(goals),
-            'days_since_assessment': days_since_assessment
-        }
-        
-        user = db.session.get(User, user_id)
-        if not user:
-            flash('User not found. Please log in again.', 'error')
-            return redirect(url_for('login'))
-
-        last_assessment_at = user.last_assessment_at
-
-        latest_recommendation = ProgressRecommendation.query.filter_by(user_id=user_id).order_by(ProgressRecommendation.created_at.desc()).first()
-
-        ai_recommendations = None
-        if latest_recommendation and last_assessment_at and latest_recommendation.created_at > last_assessment_at:
-            ai_recommendations = latest_recommendation.recommendations
-        
-        if not ai_recommendations:
-            try:
-                ai_recommendations = ai_service.generate_progress_recommendations(user_data_for_ai)
-                new_recommendation = ProgressRecommendation(
-                    user_id=user_id,
-                    recommendations=ai_recommendations
-                )
-                db.session.add(new_recommendation)
-                db.session.commit()
-            except Exception as ai_error:
-                logger.error(f"AI service error in progress page: {ai_error}")
-                ai_recommendations = {
-                    'summary': 'Your progress data has been recorded.',
-                    'recommendations': ['Continue with your current mental health routine.'],
-                    'priority_actions': []
-                }
-
-        scores_to_average = []
-        if latest_gad7 and latest_gad7.score is not None:
-            scores_to_average.append(10 - (latest_gad7.score / 21 * 9))
-        if latest_phq9 and latest_phq9.score is not None:
-            scores_to_average.append(10 - (latest_phq9.score / 27 * 9))
-        if latest_mood and latest_mood.score is not None:
-            scores_to_average.append(latest_mood.score)
-
-        overall_wellness_score = round(sum(scores_to_average) / len(scores_to_average), 1) if scores_to_average else 0
-        user_data_for_ai['wellness_score'] = overall_wellness_score
-
-        return render_template('progress.html', 
-                             user_name=session['user_name'], 
-                             goals=goals, 
-                             achievements=achievements,
-                             latest_gad7=latest_gad7,
-                             latest_phq9=latest_phq9,
-                             overall_wellness_score=overall_wellness_score,
-                             mood_data=mood_data,
-                             assessment_chart_labels=assessment_chart_labels,
-                             assessment_chart_gad7_data=assessment_chart_gad7_data,
-                             assessment_chart_phq9_data=assessment_chart_phq9_data,
-                             ai_recommendations=ai_recommendations)
-    except Exception as e:
-        logger.exception(f"An error occurred in the progress route: {e}")
-        return "An internal error occurred. Please try again later.", 500
-
-@app.route('/goals', methods=['GET', 'POST'])
-@login_required
-@role_required('patient')
-def goals():
-    user_id = session['user_id']
-    
-    if request.method == 'POST':
-        title = request.form.get('title')
-        description = request.form.get('description', '')
-        category = request.form.get('category', 'mental_health')
-        priority = request.form.get('priority', 'medium')
-        target_value = request.form.get('target_value')
-        unit = request.form.get('unit', '')
-        target_date = request.form.get('target_date')
-
-        if not title:
-            flash('Goal title is required.', 'error')
-        else:
-            try:
-                parsed_target_date = None
-                if target_date:
-                    parsed_target_date = datetime.strptime(target_date, '%Y-%m-%d').date()
-
-                new_goal = Goal(
-                    user_id=user_id,
-                    title=title,
-                    description=description,
-                    category=category,
-                    priority=priority,
-                    status='active',
-                    target_value=float(target_value) if target_value and target_value.strip() else None,
-                    current_value=0.0,
-                    unit=unit,
-                    target_date=parsed_target_date,
-                    start_date=datetime.utcnow().date()
-                )
-                db.session.add(new_goal)
-                db.session.commit()
-                flash('Goal created successfully!', 'success')
-            except Exception as e:
-                db.session.rollback()
-                logger.error(f"Error adding goal for user {user_id}: {e}")
-                flash('Failed to create goal.', 'error')
-        return redirect(url_for('goals'))
-
-    goals = Goal.query.filter_by(user_id=user_id).all()
-    return render_template('goals.html', user_name=session['user_name'], goals=goals)
-
-@app.route('/api/assessment/questions/<assessment_type>')
-@login_required
-@role_required('patient')
-def get_assessment_questions(assessment_type):
-    try:
-        # Construct the full path to the questions.json file
-        questions_file_path = os.path.join(app.static_folder, 'questions.json')
-        
-        # Check if the file exists
-        if not os.path.exists(questions_file_path):
-            logger.error(f"questions.json not found at {questions_file_path}")
-            return jsonify({'success': False, 'message': 'Assessment questions file not found.'}), 500
-
-        # Load the questions from the JSON file
-        with open(questions_file_path, 'r') as f:
-            all_questions = json.load(f)
-        
-        # Get the questions for the requested assessment type
-        questions = all_questions.get(assessment_type)
-        
-        if questions:
-            return jsonify({'success': True, 'questions': questions})
-        else:
-            return jsonify({'success': False, 'message': 'Invalid assessment type.'}), 404
-            
-    except Exception as e:
-        logger.error(f"Error fetching assessment questions: {e}")
-        return jsonify({'success': False, 'message': 'An internal error occurred.'}), 500
-
-@app.route('/assessment')
-@login_required
-@role_required('patient')
-def assessment():
-    try:
-        user_id = session['user_id']
-        assessment_objects = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
-        
-        assessments = []
-        for assessment in assessment_objects:
-            assessment_dict = {
-                'id': assessment.id,
-                'user_id': assessment.user_id,
-                'assessment_type': assessment.assessment_type,
-                'score': assessment.score,
-                'responses': assessment.responses,
-                'created_at': assessment.created_at.isoformat() if assessment.created_at else None,
-                'ai_insights': {}
-            }
-            
-            if assessment.ai_insights:
-                if isinstance(assessment.ai_insights, str):
-                    try:
-                        assessment_dict['ai_insights'] = json.loads(assessment.ai_insights)
-                    except json.JSONDecodeError:
-                        assessment_dict['ai_insights'] = {}
-                else:
-                    assessment_dict['ai_insights'] = assessment.ai_insights
-            
-            assessments.append(assessment_dict)
-        
-        latest_insights = None
-        if assessments:
-            latest_insights = assessments[0].get('ai_insights')
-
-        return render_template('assessment.html', 
-                               user_name=session['user_name'], 
-                               assessments=assessments,
-                               latest_insights=latest_insights)
-    except Exception as e:
-        logger.error(f"Error in assessment route: {e}")
-        flash('Error loading assessments. Please try again.', 'error')
-        return render_template('assessment.html', 
-                               user_name=session['user_name'], 
-                               assessments=[],
-                               latest_insights=None)
-
-@app.route('/api/save-assessment', methods=['POST'])
-@login_required
-@role_required('patient')
-@limiter.limit("5 per minute")  # Rate limit assessment saving
-def api_save_assessment():
-    if not request.is_json:
-        return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
-        
-    user_id = session['user_id']
-    data = request.get_json()
-    
-    assessment_type = data.get('assessment_type')
-    score = data.get('score')
-    responses = data.get('responses', {})
-    
-    if not all([assessment_type, score is not None]):
-        return jsonify({
-            'success': False,
-            'message': 'Missing required fields: assessment_type and score are required'
-        }), 400
-
-    ai_insights = {}
-    ai_insights_generated_successfully = True
-    try:
-        ai_insights = ai_service.generate_assessment_insights(
-            assessment_type=assessment_type,
-            score=score,
-            responses=responses
-        )
-    except Exception as e:
-        logger.error(f"Error generating AI insights: {e}")
-        ai_insights_generated_successfully = False
-        ai_insights = {
-            'summary': 'AI insights are currently unavailable. Please try again later.',
-            'recommendations': [],
-            'resources': []
-        }
-
-    try:
-        logger.debug("Attempting to create assessment object.")
-        assessment = Assessment(
-            user_id=user_id,
-            assessment_type=assessment_type.upper(),
-            score=score,
-            responses=responses,
-            ai_insights=json.dumps(ai_insights) if ai_insights else None
-        )
-        logger.debug("Assessment object created.")
-        
-        db.session.add(assessment)
-        logger.debug("Assessment added to session.")
-
-        logger.debug("Awarding points and updating gamification.")
-        gamification = award_points(user_id, 20, 'assessment')
-        logger.debug(f"Gamification points awarded. Total points: {gamification.points}")
-
-        logger.debug("Updating user's last assessment time.")
-        user = db.session.get(User, user_id)
-        if not user:
-            return jsonify({
-                'success': False,
-                'message': 'User not found. Please log in again.'
-            }), 400
-
-        user.last_assessment_at = datetime.now(timezone.utc)
-        logger.debug("User's last assessment time updated.")
-        
-        db.session.commit()
-        logger.debug("Database commit successful.")
-        
-        return jsonify({
-            'success': True,
-            'message': 'Assessment saved successfully',
-            'assessment_id': assessment.id,
-            'points_earned': 20,
-            'total_points': gamification.points,
-            'ai_insights': ai_insights,
-            'ai_insights_generated': ai_insights_generated_successfully
-        })
-        
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error saving assessment for user {user_id}: {str(e)}")
-        return jsonify({
-            'success': False,
-            'message': f'Failed to save assessment: {str(e)}',
-            'insights': ai_insights if 'ai_insights' in locals() else None
-        }), 500
 
 @app.route('/send_prescription/<int:patient_id>', methods=['POST'])
 @login_required
@@ -1710,15 +458,7 @@ def send_prescription(patient_id):
 
     return redirect(url_for('wellness_report', user_id=patient_id))
 
-@app.route('/my_prescriptions')
-@login_required
-@role_required('patient')
-def my_prescriptions():
-    user_id = session['user_id']
-    prescriptions = Prescription.query.filter_by(patient_id=user_id).order_by(Prescription.issue_date.desc()).all()
-    return render_template('my_prescriptions.html', 
-                           user_name=session['user_name'],
-                           prescriptions=prescriptions)
+
 
 @app.route('/wellness-report/<int:user_id>')
 @login_required
@@ -1836,7 +576,7 @@ def profile():
     user = User.query.get(user_id)
     if not user:
         flash('User not found. Please log in again.', 'error')
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     if request.method == 'POST':
         user.name = request.form.get('name', user.name)
@@ -2717,27 +1457,21 @@ def utility_processor():
 @app.route('/api/save-mood', methods=['POST'])
 @login_required
 @role_required('patient')
-@limiter.limit("10 per minute")  # Rate limit mood saving
 def save_mood():
     if not request.is_json:
-        print("DEBUG: Request is not JSON.")
         return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
         
     user_id = session['user_id']
     data = request.get_json()
-    print(f"DEBUG: Received mood data: {data}")
     
     if not data or 'mood' not in data:
-        print("DEBUG: Missing mood data.")
         return jsonify({'success': False, 'message': 'Missing mood data'}), 400
     
     try:
         mood = int(data.get('mood'))
         if not (1 <= mood <= 5):
-            print("DEBUG: Mood score out of range.")
             return jsonify({'success': False, 'message': 'Mood must be between 1 and 5'}), 400
             
-        print("DEBUG: Creating new mood assessment.")
         # Create new assessment for the mood
         mood_assessment = Assessment(
             user_id=user_id,
@@ -2746,7 +1480,6 @@ def save_mood():
             responses={'mood': mood, 'notes': data.get('notes', '')}
         )
         db.session.add(mood_assessment)
-        print("DEBUG: Mood assessment added to session.")
         
         # Also update RPM data for dashboard
         today = datetime.utcnow().date()
@@ -2754,37 +1487,29 @@ def save_mood():
         if not rpm_data:
             rpm_data = RPMData(user_id=user_id, date=today, mood_score=mood)
             db.session.add(rpm_data)
-            print("DEBUG: New RPM data added to session.")
         else:
             rpm_data.mood_score = mood
-            print("DEBUG: Existing RPM data updated.")
         
         # Update gamification points
         gamification = Gamification.query.filter_by(user_id=user_id).first()
         if not gamification:
             gamification = Gamification(user_id=user_id, points=0, streak=0)
             db.session.add(gamification)
-            print("DEBUG: New gamification record added to session.")
             
         # Add points for mood check-in
         gamification.points += 10
-        print(f"DEBUG: Gamification points updated: {gamification.points}")
         
         # Check for streak
         if gamification.last_activity:
             last_activity = gamification.last_activity.date() if hasattr(gamification.last_activity, 'date') else gamification.last_activity
             if last_activity == today - timedelta(days=1):
                 gamification.streak += 1
-                print(f"DEBUG: Gamification streak updated: {gamification.streak}")
             elif last_activity < today - timedelta(days=1):
                 gamification.streak = 1
-                print("DEBUG: Gamification streak reset.")
         else:
             gamification.streak = 1
-            print("DEBUG: Gamification streak initialized.")
         
         gamification.last_activity = today
-        print(f"DEBUG: Gamification last_activity updated: {gamification.last_activity}")
 
         # Update user's last assessment time
         user = db.session.get(User, user_id)
@@ -2796,9 +1521,7 @@ def save_mood():
 
         user.last_assessment_at = datetime.utcnow()
         
-        print("DEBUG: Attempting to commit changes to database.")
         db.session.commit()
-        print("DEBUG: Changes committed successfully.")
         
         return jsonify({
             'success': True,
@@ -2810,13 +1533,10 @@ def save_mood():
     except Exception as e:
         db.session.rollback()
         app.logger.error(f'Error saving mood: {str(e)}')
-        print(f"DEBUG: Error saving mood: {e}")
         return jsonify({
             'success': False,
             'message': f'Failed to save mood: {str(e)}'
         }), 500
-
-
 
 # --- BLOG ROUTES ---
 
@@ -3000,138 +1720,9 @@ def blog_comment(post_id):
     except SQLAlchemyError as e:
         db.session.rollback()
         logger.error(f"Error adding comment to post {post_id}: {e}")
-        return jsonify({'success': False, 'message': 'Failed to add comment'}), 500
 
 
 # --- PATIENT JOURNAL ROUTES ---
-
-@app.route('/patient/journal', methods=['GET', 'POST'])
-@login_required
-@role_required('patient')
-def patient_journal():
-    """Journal entries page for patients."""
-    # Ensure user is logged in and has valid session
-    if 'user_id' not in session:
-        flash('Please log in to access your journal.', 'error')
-        return redirect(url_for('login'))
-
-    user_id = session['user_id']
-
-    if request.method == 'POST':
-        title = request.form.get('title', '').strip()
-        content = request.form.get('content', '').strip()
-
-        if not title or not content:
-            flash('Both title and content are required.', 'error')
-            return redirect(url_for('patient_journal'))
-
-        if len(title) > 100:
-            flash('Title must be less than 100 characters.', 'error')
-            return redirect(url_for('patient_journal'))
-
-        if len(content) > 5000:
-            flash('Content must be less than 5000 characters.', 'error')
-            return redirect(url_for('patient_journal'))
-
-        # Perform sentiment analysis
-        sentiment_result = 'Neutral'  # Default fallback
-        if TEXTBLOB_AVAILABLE:
-            try:
-                blob = TextBlob(content)
-                polarity = blob.sentiment.polarity
-                if polarity > 0.1:
-                    sentiment_result = 'Positive'
-                elif polarity < -0.1:
-                    sentiment_result = 'Negative'
-                else:
-                    sentiment_result = 'Neutral'
-            except Exception as e:
-                logger.warning(f"Sentiment analysis failed: {e}")
-                sentiment_result = 'Neutral'
-
-        # Get AI suggestions for the journal entry
-        ai_suggestions = get_ai_journal_suggestions(title, content)
-
-        # Create journal entry
-        journal_entry = {
-            'id': str(uuid.uuid4()),
-            'title': title,
-            'content': content,
-            'sentiment': sentiment_result,
-            'ai_suggestions': ai_suggestions,
-            'created_at': datetime.now(),
-            'updated_at': datetime.now()
-        }
-
-        # Initialize user's journal entries if not exists
-        if user_id not in patient_journal_entries:
-            patient_journal_entries[user_id] = []
-
-        patient_journal_entries[user_id].append(journal_entry)
-
-        # Award points for journaling
-        award_points(user_id, 15, 'journal_entry')
-
-        flash('Journal entry saved successfully!', 'success')
-        return redirect(url_for('patient_journal'))
-
-    # GET request - display journal entries
-    user_entries = patient_journal_entries.get(user_id, [])
-
-    return render_template('patient_journal.html',
-                         user_name=session['user_name'],
-                         journal_entries=user_entries)
-
-
-def get_ai_journal_suggestions(title, content):
-    """Get AI-powered suggestions for journal entries with optimized prompts."""
-    try:
-        # Enhanced prompt with better structure and context
-        prompt = f"""
-        You are Dr. Anya, a compassionate AI wellness coach. Analyze this journal entry and provide supportive, actionable insights.
-
-        JOURNAL ENTRY:
-        Title: {title}
-        Content: {content}
-
-        Please provide a structured response in this exact format:
-
-        INSIGHTS:
-        [2-3 sentences identifying key themes, emotions, or patterns]
-
-        SUGGESTIONS:
-        [3 specific, actionable suggestions for wellbeing, each on a new line]
-
-        COPING STRATEGIES:
-        [2-3 relevant coping strategies or techniques]
-
-        ENCOURAGEMENT:
-        [1-2 sentences of supportive, empathetic encouragement]
-
-        Keep your response concise (under 800 characters total), supportive, and focused on wellness and growth.
-        Use bullet points for suggestions and strategies. Be empathetic and non-judgmental.
-        """
-
-        # Use the AI service to get suggestions with optimized parameters
-        ai_response = ai_service.generate_chat_response(prompt)
-
-        if isinstance(ai_response, dict):
-            suggestions = ai_response.get('response') or ai_response.get('reply') or str(ai_response)
-        else:
-            suggestions = str(ai_response)
-
-        # Clean up and format the response for better readability
-        suggestions = suggestions.strip()[:800]  # Limit length
-
-        # Ensure we have meaningful content
-        if len(suggestions) < 50:  # Too short, probably error
-            suggestions = "Thank you for sharing your thoughts. Consider discussing these feelings with a trusted friend or mental health professional."
-
-        return suggestions
-
-    except Exception as e:
-        logger.warning(f"AI suggestion generation failed: {e}")
-        return "Thank you for sharing your thoughts. Consider discussing these feelings with a trusted friend or mental health professional."
 
 @app.route('/api/delete-journal-entry/<entry_id>', methods=['DELETE'])
 @login_required
@@ -3714,7 +2305,7 @@ def google_logged_in(blueprint, token):
         
         if user.role == 'patient':
             logger.info("User is a patient, redirecting to patient_dashboard.")
-            return redirect(url_for('patient_dashboard'))
+            return redirect(url_for('patient.patient_dashboard'))
         else:
             logger.info("User is a provider, redirecting to provider_dashboard.")
             return redirect(url_for('provider_dashboard'))
@@ -3722,7 +2313,7 @@ def google_logged_in(blueprint, token):
     except Exception as e:
         logger.error(f"An error occurred during Google login: {e}", exc_info=True)
         flash(f"An error occurred: {e}", "danger")
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
 @app.route('/login/google')
 def login_google():
@@ -3734,14 +2325,14 @@ def login_google():
 def role_selection():
     """Renders the role selection page for new users."""
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
     return render_template('role_selection.html')
 
 @app.route('/save_role', methods=['POST'])
 def save_role():
     """Saves the user's chosen role to the database."""
     if 'user_id' not in session:
-        return redirect(url_for('login'))
+        return redirect(url_for('auth.login'))
 
     user_id = session['user_id']
     role = request.form.get('role')
@@ -3753,7 +2344,7 @@ def save_role():
             db.session.commit()
             session['user_role'] = role
             if role == 'patient':
-                return redirect(url_for('patient_dashboard'))
+                return redirect(url_for('patient.patient_dashboard'))
             else:
                 return redirect(url_for('provider_dashboard'))
         except Exception as e:

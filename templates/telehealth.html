@@ -188,7 +188,7 @@
                 peerConnection.close();
             }
             socket.emit('leave', { room: room });
-            window.location.href = "{{ url_for('patient_dashboard') if session.user_role == 'patient' else url_for('provider_dashboard') }}";
+            window.location.href = "{{ url_for('patient.patient_dashboard') if session.user_role == 'patient' else url_for('provider_dashboard') }}";
         });
 
         // Handle browser tab/window close

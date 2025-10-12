@@ -26,21 +26,21 @@
 
         <!-- Exercise Controls -->
         <div class="flex flex-wrap justify-center gap-4 mb-6">
-<button class="btn btn-primary" id="start-4-7-8-breathing">Start 4-7-8 Breathing</button>
-            <button class="btn btn-primary" id="start-box-breathing">Start Box Breathing</button>
-            <button class="btn btn-primary" id="start-diaphragmatic-breathing">Start Diaphragmatic Breathing</button>
-            <button class="btn btn-primary" id="start-pursed-lip-breathing">Start Pursed-Lip Breathing</button>
+<button class="btn btn-primary" id="start-4-7-8-breathing" aria-label="Start 4-7-8 breathing exercise">Start 4-7-8 Breathing</button>
+            <button class="btn btn-primary" id="start-box-breathing" aria-label="Start box breathing exercise">Start Box Breathing</button>
+            <button class="btn btn-primary" id="start-diaphragmatic-breathing" aria-label="Start diaphragmatic breathing exercise">Start Diaphragmatic Breathing</button>
+            <button class="btn btn-primary" id="start-pursed-lip-breathing" aria-label="Start pursed-lip breathing exercise">Start Pursed-Lip Breathing</button>
         </div>
 
         <!-- Timer and Controls -->
         <div class="text-center">
             <div id="timer-display" class="text-3xl font-bold text-gray-800 mb-4 hidden">00:00</div>
             <div class="flex justify-center gap-4">
-<button class="btn btn-success" id="start-btn">Start Session</button>
-                <button id="pause-btn" class="btn-secondary hidden">
+<button class="btn btn-success" id="start-btn" aria-label="Start the breathing session">Start Session</button>
+                <button id="pause-btn" class="btn-secondary hidden" aria-label="Pause the breathing session">
                     <i class="fas fa-pause mr-2"></i>Pause
                 </button>
-                <button id="stop-btn" class="btn-danger hidden">
+                <button id="stop-btn" class="btn-danger hidden" aria-label="Stop the breathing session">
                     <i class="fas fa-stop mr-2"></i>Stop
                 </button>
             </div>
@@ -123,7 +123,7 @@
                               placeholder="How did you feel during this session?"></textarea>
                 </div>
                 
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="Log the breathing session">
                     <i class="fas fa-save mr-2"></i>Log Session
                 </button>
             </form>

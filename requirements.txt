@@ -1,25 +1,25 @@
 # requirements.txt - MindFullHorizon Mental Health Platform
-# Updated: December 2024
-# Tested with Python 3.11+
+# Updated: October 2025
+# Tested with Python 3.10+
 
 # ===== CORE FLASK FRAMEWORK =====
-Flask
-Flask-WTF
-Flask-SQLAlchemy
-Flask-Migrate
-Flask-Session
-Flask-Compress
-Flask-SocketIO
-Flask-CORS
-Flask-Dance
-Flask-Caching
-Flask-Limiter
+Flask>=2.3.0
+Flask-WTF>=1.1.0
+Flask-SQLAlchemy>=3.0.0
+Flask-Migrate>=4.0.0
+Flask-Session>=0.5.0
+Flask-Compress>=1.13
+Flask-SocketIO>=5.3.0
+Flask-CORS>=4.0.0
+Flask-Dance>=7.0.0
+Flask-Caching>=2.0.0
+Flask-Limiter>=3.0.0
 
 # ===== DATABASE & ORM =====
-SQLAlchemy
-Werkzeug
-psycopg2-binary
-alembic
+SQLAlchemy>=2.0.0
+Werkzeug>=2.3.0
+psycopg2-binary>=2.9.0
+alembic>=1.11.0
 
 # ===== AI & CHATBOT SERVICES =====
 # Google Gemini AI (fallback)
@@ -54,8 +54,9 @@ WTForms
 MarkupSafe
 
 # ===== PRODUCTION SERVER =====
-gunicorn
-eventlet
+gunicorn>=21.0.0
+eventlet>=0.33.0
+waitress>=2.1.0
 
 # ===== REAL-TIME COMMUNICATION =====
 python-socketio
@@ -125,23 +126,49 @@ wrapt
 SpeechRecognition
 pydub
 
-# ===== OPTIONAL AUDIO PROCESSING =====
-# Uncomment these for advanced voice analysis features:
-# librosa
-# scipy
-# numpy
-# praat-parselmouth
+# ===== AUDIO PROCESSING (REQUIRED) =====
+# Required for voice analysis and audio therapy features
+librosa>=0.10.0
+scipy>=1.11.0
+numpy>=1.24.0
 
 # ===== INSTALLATION INSTRUCTIONS =====
 # 1. Basic installation:
 #    pip install -r requirements.txt
 #
-# 2. For audio features, also install:
-#    pip install librosa scipy numpy
-#
-# 3. For development:
+# 2. For development:
 #    pip install -r requirements.txt
-#    pip install pytest black flake8
+#    pip install pytest black flake8 coverage pytest-cov
 #
-# 4. For production deployment:
+# 3. For production deployment:
 #    All packages above are included
+#
+# 4. Database setup (first time only):
+#    python create_schema_direct.py
+#    python simple_cleanup.py
+#
+# 5. Environment setup:
+#    Create .env file with required environment variables
+#    Set FLASK_APP=app.py
+#    Set FLASK_ENV=production (for production)
+#
+# 6. Running the application:
+#    Development: python app.py
+#    Production: gunicorn -w 4 -b 0.0.0.0:8000 app:app
+
+# ===== ASSET MANAGEMENT =====
+Flask-Assets>=2.0
+webassets>=2.0
+
+# ===== DATABASE INTEGRITY TOOLS =====
+# Custom scripts for database maintenance and integrity
+# Files: create_schema_direct.py, simple_cleanup.py, simple_backup.py
+# These are included in the project and don't require additional packages
+
+# ===== DEVELOPMENT & TESTING (OPTIONAL) =====
+# Uncomment for development environment:
+# pytest>=7.0.0
+# black>=23.0.0
+# flake8>=6.0.0
+# coverage>=7.0.0
+# pytest-cov>=4.0.0

@@ -23,10 +23,10 @@ class MindfulAIService:
             os.environ['OLLAMA_HOST'] = self.ollama_host
         except Exception:
             pass
-        
+
         # Model & generation defaults (override via env vars)
         self.model_name = os.getenv('OLLAMA_MODEL', 'ALIENTELLIGENCE/mindwell:latest')
-        
+
         # Base options for all generations; can be overridden per-call
         def _env_int(name, default):
             try:
@@ -38,7 +38,7 @@ class MindfulAIService:
                 return float(os.getenv(name, str(default)))
             except Exception:
                 return default
-        
+
         self.chat_options = {
             # Increased defaults for longer responses and slower machines
             "num_predict": _env_int('OLLAMA_NUM_PREDICT', 512),
@@ -47,7 +47,7 @@ class MindfulAIService:
             "top_p": _env_float('OLLAMA_TOP_P', 0.9),
             "repeat_penalty": _env_float('OLLAMA_REPEAT_PENALTY', 1.2)
         }
-        
+
         self.local_model_available = False
         if OLLAMA_AVAILABLE:
             try:
@@ -80,31 +80,6 @@ class MindfulAIService:
         except Exception as e:
             print(f"[Ollama] Connection failed: {e}")
             return False
-
-            if model_available:
-                print("Mindwell model found and available")
-                return True
-            else:
-                print("Mindwell model not found. Available models:")
-                for model in models['models']:
-                    print(f"  - {model.get('name')}")
-                return False
-
-        except Exception as e:
-            print(f"Ollama connection check failed: {e}")
-            # In development, try to proceed anyway if Ollama seems to be working
-            try:
-                # Try a simple test to see if Ollama is actually responsive
-                test_response = ollama.chat(
-                    model=self.model_name,
-                    messages=[{'role': 'user', 'content': 'test'}],
-                    options={'num_predict': 1, 'timeout': 5}
-                )
-                print("Ollama is actually working despite connection check failure")
-                return True
-            except:
-                print("Ollama is not working")
-                return False
 
     def generate_chat_response(self, user_message: str, context: dict = None) -> str:
         """
@@ -767,20 +742,20 @@ Please consider this context when generating the clinical note."""
             'host': self.ollama_host,
             'timestamp': datetime.now().isoformat()
         }
-        
+
         if not OLLAMA_AVAILABLE:
             status['message'] = 'Ollama library not installed'
             return status
-            
+
         try:
             # Try to connect to Ollama and list models
             models_response = ollama.list()
             status['ollama_connected'] = True
-            
+
             if models_response and 'models' in models_response:
                 available_models = [model.get('name') for model in models_response['models']]
                 status['available_models'] = available_models
-                
+
                 # Check if our specific model is available
                 target_model = self.model_name
                 if target_model in available_models:
@@ -791,10 +766,10 @@ Please consider this context when generating the clinical note."""
                     status['message'] = f'Target model {target_model} not found. Available models: {", ".join(available_models)}'
             else:
                 status['message'] = 'No models found in Ollama response'
-                
+
         except Exception as e:
             status['message'] = f'Ollama connection failed: {str(e)}'
-            
+
         return status
 
 # Global AI service instance

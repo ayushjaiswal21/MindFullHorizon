@@ -13,7 +13,7 @@
         <!-- Enhanced Alerts Section -->
         {% if alerts %}
         <div class="health-alert mb-8 flex items-center">
-            <i class="fas fa-exclamation-triangle text-2xl mr-4 text-red-500"></i>
+            <i class="fas fa-exclamation-triangle text-2xl mr-4 text-red-500" aria-hidden="true"></i>
             <div>
                 <h4 class="font-bold text-lg mb-2 text-red-800">Health Alerts</h4>
                 <ul class="list-disc list-inside space-y-1 text-red-700">
@@ -32,7 +32,7 @@
                 <div>
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-2xl font-bold dashboard-title">Your Progress</h3>
-                        <i class="fas fa-trophy text-yellow-500 text-3xl card-icon-glow"></i>
+                        <i class="fas fa-trophy text-yellow-500 text-3xl card-icon-glow" aria-hidden="true"></i>
                     </div>
                     <div class="space-y-4">
                         <div class="progress-metric">
@@ -54,12 +54,12 @@
                     <div class="flex flex-wrap gap-2">
                         {% for badge in data.badges or [] %}
                         <span class="wellness-badge">
-                            <i class="fas fa-medal mr-1"></i>{{ badge }}
+                            <i class="fas fa-medal mr-1" aria-hidden="true"></i>{{ badge }}
                         </span>
                         {% endfor %}
                         {% if not data.badges or not data.badges %}
                         <span class="wellness-badge opacity-50">
-                            <i class="fas fa-plus mr-1"></i>Start earning badges!
+                            <i class="fas fa-plus mr-1" aria-hidden="true"></i>Start earning badges!
                         </span>
                         {% endif %}
                     </div>
@@ -72,7 +72,7 @@
                     <h3 class="text-2xl font-bold dashboard-title">Real-time Health Monitoring</h3>
                     <div class="flex items-center">
                         <span class="status-indicator status-online mr-3" title="Live Data"></span>
-                        <i class="fas fa-heartbeat text-red-500 text-3xl metric-icon"></i>
+                        <i class="fas fa-heartbeat text-red-500 text-3xl metric-icon" aria-hidden="true"></i>
                     </div>
                 </div>
                 <div class="space-y-4">
@@ -103,7 +103,7 @@
                 </div>
                 <div class="mt-4 pt-4 border-t border-gray-100">
                     <p class="text-xs text-gray-500 text-center">
-                        <i class="fas fa-sync-alt mr-1"></i>Last updated: Live
+                        <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>Last updated: Live
                     </p>
                 </div>
             </div>
@@ -113,32 +113,32 @@
                 <div>
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="text-2xl font-bold dashboard-title">Quick Actions</h3>
-                        <i class="fas fa-bolt text-blue-500 text-3xl card-icon-glow"></i>
+                        <i class="fas fa-bolt text-blue-500 text-3xl card-icon-glow" aria-hidden="true"></i>
                     </div>
                     <div class="space-y-3">
-                        <a href="{{ url_for('goals') }}" class="action-button w-full bg-gradient-to-r from-indigo-600 to-indigo-700">
-                            <i class="fas fa-bullseye"></i>Manage Goals
+                        <a href="{{ url_for('patient.goals') }}" class="action-button w-full bg-gradient-to-r from-indigo-600 to-indigo-700">
+                            <i class="fas fa-bullseye" aria-hidden="true"></i>Manage Goals
                         </a>
-                        <a href="{{ url_for('patient_journal') }}" class="action-button w-full bg-gradient-to-r from-pink-600 to-pink-700">
-                            <i class="fas fa-book"></i>Journal Entries
+                        <a href="{{ url_for('patient.patient_journal') }}" class="action-button w-full bg-gradient-to-r from-pink-600 to-pink-700">
+                            <i class="fas fa-book" aria-hidden="true"></i>Journal Entries
                         </a>
                         <a href="{{ url_for('patient_voice_logs') }}" class="action-button w-full bg-gradient-to-r from-emerald-600 to-emerald-700">
-                            <i class="fas fa-microphone"></i>Voice Logs
+                            <i class="fas fa-microphone" aria-hidden="true"></i>Voice Logs
                         </a>
                         <a href="{{ url_for('chat') }}" class="action-button w-full bg-gradient-to-r from-blue-600 to-blue-700">
-                            <i class="fas fa-comment-dots"></i>Chat with Support
+                            <i class="fas fa-comment-dots" aria-hidden="true"></i>Chat with Support
                         </a>
                         <a href="{{ url_for('telehealth') }}" class="action-button w-full bg-gradient-to-r from-green-600 to-green-700">
-                            <i class="fas fa-video"></i>Start Telehealth Session
+                            <i class="fas fa-video" aria-hidden="true"></i>Start Telehealth Session
                         </a>
-                        <a href="{{ url_for('schedule') }}" class="action-button w-full bg-gradient-to-r from-purple-600 to-purple-700">
-                            <i class="fas fa-plus"></i>Schedule Appointment
+                        <a href="{{ url_for('patient.schedule') }}" class="action-button w-full bg-gradient-to-r from-purple-600 to-purple-700">
+                            <i class="fas fa-plus" aria-hidden="true"></i>Schedule Appointment
                         </a>
                     </div>
                 </div>
                 <div class="mt-6 pt-4 border-t border-gray-100">
-                    <a href="{{ url_for('digital_detox') }}" class="w-full text-center text-sm font-medium text-red-600 hover:text-red-800 transition duration-200 block">
-                        <i class="fas fa-mobile-alt mr-1"></i>Digital Wellness Check-in
+                    <a href="{{ url_for('patient.digital_detox') }}" class="w-full text-center text-sm font-medium text-red-600 hover:text-red-800 transition duration-200 block">
+                        <i class="fas fa-mobile-alt mr-1" aria-hidden="true"></i>Digital Wellness Check-in
                     </a>
                 </div>
             </div>
@@ -147,7 +147,7 @@
         <!-- Enhanced Wellness Toolkit Section -->
         <div class="patient-card toolkit-section p-8 mb-8">
             <h3 class="text-3xl font-bold mb-4 section-title">
-                <i class="fas fa-heart-pulse text-teal-500 mr-3"></i>Wellness Toolkit
+                <i class="fas fa-heart-pulse text-teal-500 mr-3" aria-hidden="true"></i>Wellness Toolkit
             </h3>
             <p class="text-gray-600 mb-6 text-lg">Engage with tools designed to support your daily well-being and mindfulness practices.</p>
 
@@ -178,10 +178,10 @@
                 <!-- First row: 4 cards -->
                 <div class="grid grid-cols-4 gap-6">
                     <!-- Enhanced Medication Card -->
-                    <a href="{{ url_for('medication') }}" class="toolkit-card">
+                    <a href="{{ url_for('patient.medication') }}" class="toolkit-card">
                         <div class="flex items-center">
                             <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-pills text-blue-600 text-2xl"></i>
+                                <i class="fas fa-pills text-blue-600 text-2xl" aria-hidden="true"></i>
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-800 text-lg">Medication Tracker</h4>
@@ -190,10 +190,10 @@
                         </div>
                     </a>
                     <!-- Enhanced My Prescriptions Card -->
-                    <a href="{{ url_for('my_prescriptions') }}" class="toolkit-card">
+                    <a href="{{ url_for('patient.my_prescriptions') }}" class="toolkit-card">
                         <div class="flex items-center">
                             <div class="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-file-prescription text-red-600 text-2xl"></i>
+                                <i class="fas fa-file-prescription text-red-600 text-2xl" aria-hidden="true"></i>
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-800 text-lg">My Prescriptions</h4>
@@ -202,10 +202,10 @@
                         </div>
                     </a>
                     <!-- Enhanced Breathing Card -->
-                    <a href="{{ url_for('breathing') }}" class="toolkit-card">
+                    <a href="{{ url_for('patient.breathing') }}" class="toolkit-card">
                         <div class="flex items-center">
                             <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-wind text-green-600 text-2xl"></i>
+                                <i class="fas fa-wind text-green-600 text-2xl" aria-hidden="true"></i>
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-800 text-lg">Breathing Exercises</h4>
@@ -214,10 +214,10 @@
                         </div>
                     </a>
                     <!-- Enhanced Yoga Card -->
-                    <a href="{{ url_for('yoga') }}" class="toolkit-card">
+                    <a href="{{ url_for('patient.yoga') }}" class="toolkit-card">
                         <div class="flex items-center">
                             <div class="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-person-praying text-yellow-600 text-2xl"></i>
+                                <i class="fas fa-person-praying text-yellow-600 text-2xl" aria-hidden="true"></i>
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-800 text-lg">Yoga Sessions</h4>
@@ -233,7 +233,7 @@
                     <a href="{{ url_for('music') }}" class="toolkit-card">
                         <div class="flex items-center">
                             <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-music text-purple-600 text-2xl"></i>
+                                <i class="fas fa-music text-purple-600 text-2xl" aria-hidden="true"></i>
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-800 text-lg">Mood Music</h4>
@@ -242,10 +242,10 @@
                         </div>
                     </a>
                     <!-- Journal Entries Card -->
-                    <a href="{{ url_for('patient_journal') }}" class="toolkit-card">
+                    <a href="{{ url_for('patient.patient_journal') }}" class="toolkit-card">
                         <div class="flex items-center">
                             <div class="bg-pink-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-book text-pink-600 text-2xl"></i>
+                                <i class="fas fa-book text-pink-600 text-2xl" aria-hidden="true"></i>
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-800 text-lg">Journal Entries</h4>
@@ -257,7 +257,7 @@
                     <a href="{{ url_for('patient_voice_logs') }}" class="toolkit-card">
                         <div class="flex items-center">
                             <div class="bg-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-microphone text-emerald-600 text-2xl"></i>
+                                <i class="fas fa-microphone text-emerald-600 text-2xl" aria-hidden="true"></i>
                             </div>
                             <div>
                                 <h4 class="font-bold text-gray-800 text-lg">Voice Logs</h4>
@@ -272,7 +272,7 @@
         <!-- Enhanced Appointment History Section -->
         <div class="patient-card p-8 mb-8">
             <h3 class="text-3xl font-bold mb-6 section-title">
-                <i class="fas fa-calendar-alt text-purple-500 mr-3"></i>Your Appointments
+                <i class="fas fa-calendar-alt text-purple-500 mr-3" aria-hidden="true"></i>Your Appointments
             </h3>
 
             {% with messages = get_flashed_messages(with_categories=true) %}
@@ -296,7 +296,7 @@
                                 <p class="font-semibold text-gray-800 text-lg">{{ appt.date.strftime('%B %d, %Y') }} at {{ appt.time }}</p>
                                 <p class="text-gray-600">{{ appt.appointment_type | capitalize }} - Status: <span class="text-green-600 font-semibold">{{ appt.status | capitalize }}</span></p>
                             </div>
-                            <i class="fas fa-chevron-right text-green-500 text-lg"></i>
+                            <i class="fas fa-chevron-right text-green-500 text-lg" aria-hidden="true"></i>
                         </div>
                         {% endfor %}
                     </div>
@@ -315,7 +315,7 @@
                                 <p class="font-semibold text-gray-800 text-lg">{{ appt.date.strftime('%B %d, %Y') }} at {{ appt.time }}</p>
                                 <p class="text-gray-600">{{ appt.appointment_type | capitalize }} - Status: <span class="text-gray-500 font-semibold">{{ appt.status | capitalize }}</span></p>
                             </div>
-                            <i class="fas fa-history text-gray-400 text-lg"></i>
+                            <i class="fas fa-history text-gray-400 text-lg" aria-hidden="true"></i>
                         </div>
                         {% endfor %}
                     </div>
@@ -329,14 +329,14 @@
         <!-- Enhanced Mental Health Assessment Section -->
         <div class="patient-card p-8 mb-8">
             <h3 class="text-3xl font-bold mb-6 section-title">
-                <i class="fas fa-clipboard-check text-indigo-500 mr-3"></i>Mental Health Assessment
+                <i class="fas fa-clipboard-check text-indigo-500 mr-3" aria-hidden="true"></i>Mental Health Assessment
             </h3>
             <p class="text-gray-600 mb-6 text-lg">Take standardized assessments to track your mental health progress and get personalized insights.</p>
             <div class="grid md:grid-cols-3 gap-6">
-                <a href="{{ url_for('assessment') }}" class="assessment-card">
+                <a href="{{ url_for('patient.assessment') }}" class="assessment-card">
                     <div class="flex items-center">
                         <div class="bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-brain text-indigo-600 text-2xl"></i>
+                            <i class="fas fa-brain text-indigo-600 text-2xl" aria-hidden="true"></i>
                         </div>
                         <div>
                             <h4 class="font-bold text-gray-800 text-lg">Take Assessment</h4>
@@ -344,10 +344,10 @@
                         </div>
                     </div>
                 </a>
-                <a href="{{ url_for('progress') }}" class="assessment-card">
+                <a href="{{ url_for('patient.progress') }}" class="assessment-card">
                     <div class="flex items-center">
                         <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-chart-line text-green-600 text-2xl"></i>
+                            <i class="fas fa-chart-line text-green-600 text-2xl" aria-hidden="true"></i>
                         </div>
                         <div>
                             <h4 class="font-bold text-gray-800 text-lg">View Progress</h4>
@@ -355,10 +355,10 @@
                         </div>
                     </div>
                 </a>
-                <a href="{{ url_for('digital_detox') }}" class="assessment-card">
+                <a href="{{ url_for('patient.digital_detox') }}" class="assessment-card">
                     <div class="flex items-center">
                         <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-mobile-alt text-purple-600 text-2xl"></i>
+                            <i class="fas fa-mobile-alt text-purple-600 text-2xl" aria-hidden="true"></i>
                         </div>
                         <div>
                             <h4 class="font-bold text-gray-800 text-lg">Digital Detox</h4>

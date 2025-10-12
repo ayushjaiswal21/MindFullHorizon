@@ -26,15 +26,14 @@ def verify_user_ownership(user_id, resource_id=None, resource_type='assessment')
     
     return True
 
+from decorators import api_login_required
+
 def enhanced_auth_required(resource_type=None):
     """Enhanced authentication decorator with IDOR protection"""
     def decorator(f):
         @wraps(f)
+        @api_login_required
         def decorated_function(*args, **kwargs):
-            # Standard login check
-            if 'user_email' not in session:
-                return jsonify({'error': 'Authentication required'}), 401
-            
             # IDOR protection for resource access
             if resource_type and request.method in ['POST', 'PUT', 'DELETE']:
                 data = request.get_json() or {}

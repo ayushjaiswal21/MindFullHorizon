@@ -86,7 +86,7 @@
                 <label for="mood-notes" class="block text-sm font-medium text-gray-700 mb-1">Add a note (optional):</label>
                 <textarea id="mood-notes" class="w-full p-2 border rounded-lg" rows="2" placeholder="How are you feeling today?"></textarea>
             </div>
-            <button id="save-mood-btn" class="btn-primary" onclick="saveDailyMood()" disabled>
+            <button id="save-mood-btn" class="btn-primary" onclick="saveDailyMood()" disabled aria-label="Save your daily mood assessment">
                 <i class="fas fa-save mr-2"></i>Save Today's Mood
             </button>
         </div>
@@ -806,7 +806,7 @@ function scheduleFollowUp() {
 }
 
 function viewProgress() {
-    window.location.href = "{{ url_for('progress') }}";
+    window.location.href = "{{ url_for('patient.progress') }}";
 }
 
 function showNotification(message, type) {

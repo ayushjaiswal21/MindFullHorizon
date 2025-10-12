@@ -15,7 +15,7 @@
         <h1 class="text-5xl md:text-6xl font-extrabold leading-tight mb-4">Campus Calm for India’s Students</h1>
         <p class="text-xl md:text-2xl mb-8 opacity-90">Bite‑size check‑ins, mindful breaks, and AI support—made for Indian college life.</p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{{ url_for('signup') }}" class="btn-primary animate-fade-in-delay">Start Free</a>
+            <a href="{{ url_for('auth.signup') }}" class="btn-primary animate-fade-in-delay">Start Free</a>
             <a href="{{ url_for('blog_list') }}" class="btn-primary-nav animate-fade-in-delay">Explore Blogs</a>
         </div>
     </div>
@@ -293,8 +293,8 @@
         <h2 class="text-3xl font-extrabold text-gray-900 mb-4">Start Your 7‑Day Focus Journey</h2>
         <p class="text-gray-600 max-w-2xl mx-auto">Build a sustainable routine with short check-ins, calm breaks, and progress you can feel.</p>
         <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{{ url_for('signup') }}" class="btn-primary">Create Free Account</a>
-            <a href="{{ url_for('login') }}" class="btn-primary-nav">I already have an account</a>
+            <a href="{{ url_for('auth.signup') }}" class="btn-primary">Create Free Account</a>
+            <a href="{{ url_for('auth.login') }}" class="btn-primary-nav">I already have an account</a>
         </div>
     </div>
 </section>
