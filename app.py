@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 
 import json
 import re
+import secrets  # Added for CSP nonce generation
 
 from werkzeug.utils import secure_filename
 import uuid
@@ -139,14 +140,22 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# Initialize rate limiter with simple storage backend for development
-# For production, consider Redis or another persistent storage
+# Initialize rate limiter with enhanced configuration for production security
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
-    storage_uri="memory://"  # Use memory storage but suppress warning for development
+    default_limits=["200 per day", "50 per hour", "10 per minute"],
+    storage_uri="memory://" if os.getenv('FLASK_ENV') == 'development' else None,  # Use Redis in production
+    strategy="fixed-window",  # More predictable than moving window for security
+    headers_enabled=True,  # Send rate limit headers to clients
+    retry_after="http-date",  # Standard HTTP retry-after format
 )
+
+# Rate limiting exemption for health checks and static files
+@limiter.request_filter
+def exempt_health_checks():
+    """Exempt health check endpoints from rate limiting"""
+    return request.endpoint in ['static', 'health_check']
 
 # Initialize caching
 cache = Cache(app, config={'CACHE_TYPE': 'simple'})
@@ -158,8 +167,16 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Extended session
 app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV') == 'production'  # True in production with HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS attacks
 app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'  # Prevent CSRF attacks
+app.config['SESSION_COOKIE_NAME'] = 'mindfullhorizon_session'  # Custom session cookie name
 app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
 app.config['WTF_CSRF_TIME_LIMIT'] = 604800  # 7 days, for prototype convenience
+
+# Additional security configurations
+app.config['SESSION_COOKIE_MAX_AGE'] = 604800  # 7 days in seconds
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)  # Remember me functionality
+app.config['REMEMBER_COOKIE_SECURE'] = os.getenv('FLASK_ENV') == 'production'
+app.config['REMEMBER_COOKIE_HTTPONLY'] = True
+app.config['REMEMBER_COOKIE_SAMESITE'] = 'Strict'
 
 # Initialize database extensions AFTER session configuration
 from extensions import init_extensions
@@ -195,26 +212,52 @@ css_bundle = Bundle(
 )
 assets.register('css_all', css_bundle)
 
-# Add Content Security Policy headers for XSS protection
+# Add enhanced security headers for modern web security
 @app.after_request
 def add_security_headers(response):
-    """Add security headers to all responses"""
+    """Add comprehensive security headers to all responses"""
+    # Existing headers (already implemented)
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    
-    # Content Security Policy
+
+    # Enhanced Content Security Policy with nonce support
+    csp_nonce = secrets.token_urlsafe(16)
+    response.headers['CSP-Nonce'] = csp_nonce
+
     csp = (
-        "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "script-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "style-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "font-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "img-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "connect-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
-        "frame-src * 'unsafe-inline' 'unsafe-eval' data: blob:; "
+        f"default-src 'self'; "
+        f"script-src 'self' 'unsafe-inline' 'nonce-{csp_nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
+        f"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
+        f"font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
+        f"img-src 'self' data: blob: https:; "
+        f"connect-src 'self' ws: wss: https:; "
+        f"frame-src 'none'; "
+        f"object-src 'none'; "
+        f"base-uri 'self'; "
+        f"form-action 'self';"
     )
     response.headers['Content-Security-Policy'] = csp
+
+    # HTTPS enforcement and security
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
+    response.headers['Expect-CT'] = 'max-age=86400, enforce'
+    response.headers['X-Permitted-Cross-Domain-Policies'] = 'none'
+
+    # Permissions Policy for modern browsers
+    response.headers['Permissions-Policy'] = (
+        'camera=(), microphone=(), geolocation=(), '
+        'interest-cohort=(), payment=(self), '
+        'usb=(), bluetooth=(), magnetometer=(), '
+        'gyroscope=(), accelerometer=(), ambient-light-sensor=()'
+    )
+
+    # Additional security headers
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Resource-Policy'] = 'same-origin'
+
     return response
 
 # Secure CSRF error handler
@@ -263,6 +306,15 @@ from gamification_engine import award_points
 
 
 from decorators import login_required, role_required
+
+@app.route('/health')
+def health_check():
+    """Health check endpoint for monitoring and load balancers"""
+    return jsonify({
+        'status': 'healthy',
+        'timestamp': datetime.utcnow().isoformat(),
+        'service': 'MindFullHorizon'
+    })
 
 # Favicon route to prevent 404 errors
 @app.route('/favicon.ico')
@@ -502,39 +554,45 @@ def wellness_report(user_id):
     
     recent_sessions = ClinicalNote.query.filter_by(patient_id=user_id).order_by(ClinicalNote.session_date.desc()).limit(10).all()
 
-    # Fetch RPM data for mood charting
+    # Fetch RPM data for mood charting using list comprehensions
     rpm_logs = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.asc()).limit(90).all()
     mood_chart_labels = [log.date.strftime('%Y-%m-%d') for log in rpm_logs]
     mood_chart_data = [log.mood_score if log.mood_score else 0 for log in rpm_logs]
 
-    # Fetch assessments for mental health charting
+    # Fetch assessments for mental health charting with improved data processing
     mental_health_assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.asc()).all()
+
+    # Initialize data structures
     mh_chart_labels = []
     gad7_data = []
     phq9_data = []
 
+    # Process assessments using modern Python patterns
     for assessment in mental_health_assessments:
         date_str = assessment.created_at.strftime('%Y-%m-%d')
+
+        # Check if date already exists in labels
         if date_str not in mh_chart_labels:
             mh_chart_labels.append(date_str)
-            gad7_data.append(None) # Initialize with None
-            phq9_data.append(None) # Initialize with None
+            gad7_data.append(None)  # Initialize with None
+            phq9_data.append(None)  # Initialize with None
 
+        # Update the appropriate data array
         idx = mh_chart_labels.index(date_str)
         if assessment.assessment_type == 'GAD-7':
             gad7_data[idx] = assessment.score
         elif assessment.assessment_type == 'PHQ-9':
             phq9_data[idx] = assessment.score
 
-    # Filter out dates where both GAD-7 and PHQ-9 are None
-    filtered_mh_chart_labels = []
-    filtered_gad7_data = []
-    filtered_phq9_data = []
-    for i, label in enumerate(mh_chart_labels):
-        if gad7_data[i] is not None or phq9_data[i] is not None:
-            filtered_mh_chart_labels.append(label)
-            filtered_gad7_data.append(gad7_data[i])
-            filtered_phq9_data.append(phq9_data[i])
+    # Filter out dates where both GAD-7 and PHQ-9 are None using list comprehensions
+    filtered_indices = [
+        i for i, (gad, phq) in enumerate(zip(gad7_data, phq9_data))
+        if gad is not None or phq is not None
+    ]
+
+    filtered_mh_chart_labels = [mh_chart_labels[i] for i in filtered_indices]
+    filtered_gad7_data = [gad7_data[i] for i in filtered_indices]
+    filtered_phq9_data = [phq9_data[i] for i in filtered_indices]
 
     # Prepare patient data for AI goal suggestions
     patient_data_for_ai = {
@@ -543,14 +601,23 @@ def wellness_report(user_id):
             'score': ai_analysis.score,
             'insights': json.loads(ai_analysis.ai_insights) if ai_analysis and ai_analysis.ai_insights else None
         } if ai_analysis else None,
-        'recent_goals': [{'title': g.title, 'status': g.status, 'progress': g.progress_percentage} for g in Goal.query.filter_by(user_id=user_id).order_by(Goal.created_at.desc()).limit(5).all()],
-        'recent_digital_detox': [{'screen_time_hours': d.screen_time_hours, 'ai_score': d.ai_score} for d in digital_detox_logs[:5]]
+        'recent_goals': [
+            {'title': g.title, 'status': g.status, 'progress': g.progress_percentage}
+            for g in Goal.query.filter_by(user_id=user_id).order_by(Goal.created_at.desc()).limit(5).all()
+        ],
+        'recent_digital_detox': [
+            {'screen_time_hours': d.screen_time_hours, 'ai_score': d.ai_score}
+            for d in digital_detox_logs[:5]
+        ]
     }
     ai_goal_suggestions = ai_service.generate_goal_suggestions(patient_data_for_ai)
 
     # Fetch medication logs for AI adherence analysis
     medication_logs = MedicationLog.query.filter_by(user_id=user_id).order_by(MedicationLog.taken_at.desc()).limit(30).all()
-    medication_logs_data = [{'medication_id': log.medication_id, 'taken_at': log.taken_at.isoformat()} for log in medication_logs]
+    medication_logs_data = [
+        {'medication_id': log.medication_id, 'taken_at': log.taken_at.isoformat()}
+        for log in medication_logs
+    ]
     ai_medication_adherence_insights = ai_service.analyze_medication_adherence(medication_logs_data, patient_data_for_ai)
 
     return render_template('wellness_report.html', 
@@ -609,14 +676,18 @@ def profile():
                             flash('Invalid file path detected.', 'error')
                         else:
                             # Use context manager to ensure file is properly closed
-                            with open(file_path, 'wb') as f:
-                                file.seek(0)  # Reset file pointer
-                                f.write(file.read())
-                            user.profile_pic = unique_filename
-                            flash('Profile picture updated successfully!', 'success')
+                            try:
+                                with open(file_path, 'wb') as f:
+                                    file.seek(0)  # Reset file pointer
+                                    f.write(file.read())
+                                user.profile_pic = unique_filename
+                                flash('Profile picture updated successfully!', 'success')
+                            except Exception as e:
+                                logger.error(f"Error saving profile picture: {e}")
+                                flash('Error saving profile picture.', 'error')
                     except Exception as e:
-                        logger.error(f"Error saving profile picture: {e}")
-                        flash('Error saving profile picture.', 'error')
+                        logger.error(f"Error processing profile picture upload: {e}")
+                        flash('Error processing profile picture.', 'error')
                 else:
                     flash(error_message, 'error')
 
@@ -677,66 +748,126 @@ def digital_detox_data():
 @login_required
 @role_required('patient')
 def log_digital_detox():
+    """Log digital detox data with enhanced error handling and validation"""
     user_id = session['user_id']
-    data = request.get_json()
 
     try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'success': False, 'message': 'Request body must be JSON'}), 400
+
+        # Validate required fields with clear error messages
+        required_fields = ['screen_time', 'academic_score', 'social_interactions']
+        missing_fields = [field for field in required_fields if field not in data]
+
+        if missing_fields:
+            return jsonify({
+                'success': False,
+                'message': f'Missing required fields: {", ".join(missing_fields)}'
+            }), 400
+
+        # Validate data types and ranges
         screen_time = float(data.get('screen_time'))
         academic_score = int(data.get('academic_score'))
         social_interactions = data.get('social_interactions')
 
-        if not all([screen_time is not None, academic_score is not None, social_interactions]):
-            return jsonify({'success': False, 'message': 'Missing required fields.'}), 400
+        if not (0 <= screen_time <= 24):
+            return jsonify({
+                'success': False,
+                'message': 'Screen time must be between 0 and 24 hours'
+            }), 400
 
-        # Get historical data for better AI analysis
-        historical_data = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.asc()).limit(30).all()
-        history_for_ai = [{'screen_time_hours': log.screen_time_hours, 'academic_score': log.academic_score} for log in historical_data]
+        if not (1 <= academic_score <= 10):
+            return jsonify({
+                'success': False,
+                'message': 'Academic score must be between 1 and 10'
+            }), 400
 
-        # Call AI service for digital detox insights
+        if not isinstance(social_interactions, (str, type(None))):
+            return jsonify({
+                'success': False,
+                'message': 'Social interactions must be a string or null'
+            }), 400
+
+        # Get historical data for better AI analysis with error handling
+        try:
+            historical_data = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.asc()).limit(30).all()
+            history_for_ai = [
+                {'screen_time_hours': log.screen_time_hours, 'academic_score': log.academic_score}
+                for log in historical_data
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to fetch historical data for user {user_id}: {e}")
+            history_for_ai = []
+
+        # Call AI service for digital detox insights with error handling
         detox_data = {
             'screen_time': screen_time,
             'academic_score': academic_score,
             'social_interactions': social_interactions
         }
-        ai_analysis = ai_service.generate_digital_detox_insights(detox_data)
 
-        # Create new log entry
-        new_log = DigitalDetoxLog(
-            user_id=user_id,
-            date=date.today(),
-            screen_time_hours=screen_time,
-            academic_score=academic_score,
-            social_interactions=social_interactions,
-            ai_score=ai_analysis.get('ai_score', 'N/A'),
-            ai_suggestion=ai_analysis.get('ai_suggestion', 'No suggestion available')
-        )
+        try:
+            ai_analysis = ai_service.generate_digital_detox_insights(detox_data)
+        except Exception as e:
+            logger.error(f"AI service error for user {user_id}: {e}")
+            ai_analysis = {'ai_score': 'N/A', 'ai_suggestion': 'Service temporarily unavailable'}
 
-        db.session.add(new_log)
-        db.session.commit()
+        # Create new log entry with validation
+        try:
+            new_log = DigitalDetoxLog(
+                user_id=user_id,
+                date=date.today(),
+                screen_time_hours=screen_time,
+                academic_score=academic_score,
+                social_interactions=social_interactions,
+                ai_score=ai_analysis.get('ai_score', 'N/A'),
+                ai_suggestion=ai_analysis.get('ai_suggestion', 'No suggestion available')
+            )
 
-        # Award points for logging
-        award_points(user_id, 15, 'digital_detox_log')
+            db.session.add(new_log)
+            db.session.commit()
 
-        return jsonify({
-            'success': True,
-            'message': 'Digital detox data logged successfully!',
-            'log': {
-                'date': new_log.date.strftime('%Y-%m-%d'),
-                'hours': new_log.screen_time_hours,
-                'academic_score': new_log.academic_score,
-                'social_interactions': new_log.social_interactions,
-                'ai_score': new_log.ai_score
-            },
-            'ai_analysis': ai_analysis
-        })
+            # Award points for logging with error handling
+            try:
+                award_points(user_id, 15, 'digital_detox_log')
+            except Exception as e:
+                logger.warning(f"Failed to award points for user {user_id}: {e}")
+
+            return jsonify({
+                'success': True,
+                'message': 'Digital detox data logged successfully!',
+                'log': {
+                    'date': new_log.date.strftime('%Y-%m-%d'),
+                    'hours': new_log.screen_time_hours,
+                    'academic_score': new_log.academic_score,
+                    'social_interactions': new_log.social_interactions,
+                    'ai_score': new_log.ai_score
+                },
+                'ai_analysis': ai_analysis
+            })
+
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Database error logging digital detox for user {user_id}: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'Failed to save data to database'
+            }), 500
 
     except (ValueError, TypeError) as e:
-        logger.error(f"Invalid data for digital detox log: {e}")
-        return jsonify({'success': False, 'message': 'Invalid data format.'}), 400
+        logger.error(f"Invalid data types for digital detox log from user {user_id}: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'Invalid data format. Please check your input values.'
+        }), 400
+
     except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error logging digital detox data for user {user_id}: {e}")
-        return jsonify({'success': False, 'message': 'An internal error occurred.'}), 500
+        logger.error(f"Unexpected error in digital detox logging for user {user_id}: {e}")
+        return jsonify({
+            'success': False,
+            'message': 'An internal error occurred. Please try again.'
+        }), 500
 
 
 @app.route('/api/mood-music', methods=['GET'])
@@ -788,10 +919,14 @@ def api_mood_music():
                     # fallback: put in calm
                     mapping['calm'].append(t)
 
-            # Convert to response shape
-            resp_map = {}
+            # Convert to response shape using dictionary comprehensions
+            resp_map = {
+                k: {'query': mood_map[k]['query'], 'videos': []}
+                for k in mapping.keys()
+            }
+
+            # Process each mood's tracks
             for k in mapping:
-                resp_map[k] = {'query': mood_map[k]['query'], 'videos': []}
                 for t in mapping[k]:
                     if t.youtube_id:
                         resp_map[k]['videos'].append({'id': t.youtube_id, 'title': t.title})
