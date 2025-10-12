@@ -63,19 +63,19 @@
                 <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🧘‍♂️</div>
                 <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">1-Min Breathing</h3>
                 <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Quick stress relief between classes and study sessions</p>
-                <a href="{{ url_for('breathing') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Start Now</a>
+                <a href="{{ url_for('patient.breathing') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Start Now</a>
             </div>
             <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
                 <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">📊</div>
                 <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">Mood Check-in</h3>
                 <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Track how you're feeling today with our quick assessment</p>
-                <a href="{{ url_for('assessment') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Check In</a>
+                <a href="{{ url_for('patient.assessment') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Check In</a>
             </div>
             <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
                 <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🧎</div>
                 <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">Yoga Timer</h3>
                 <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Guided sessions designed for busy student schedules</p>
-                <a href="{{ url_for('yoga') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Begin</a>
+                <a href="{{ url_for('patient.yoga') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Begin</a>
             </div>
             <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
                 <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">💬</div>
@@ -87,7 +87,7 @@
                 <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🎵</div>
                 <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">Mood Music</h3>
                 <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Binaural beats to support calm, focus, and mood regulation</p>
-                <a href="{{ url_for('music') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Listen</a>
+                <a href="{{ url_for('patient.music') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Listen</a>
             </div>
         </div>
         

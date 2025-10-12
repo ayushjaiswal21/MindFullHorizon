@@ -191,7 +191,7 @@
                             </span>
                         </td>
                         <td class="px-4 py-3 text-sm">
-                            <a href="{{ url_for('wellness_report', user_id=patient.user_id) }}" class="text-blue-600 hover:text-blue-800 mr-2" title="View Wellness Report">
+                            <a href="{{ url_for('provider.wellness_report', user_id=patient.user_id) }}" class="text-blue-600 hover:text-blue-800 mr-2" title="View Wellness Report">
                                 <i class="fas fa-chart-bar" aria-hidden="true"></i>
                             </a>
                             <a href="#" onclick="openMessage('{{ patient.user_id }}')" class="text-indigo-600 hover:text-indigo-800 mr-2" title="Message Patient">
@@ -293,7 +293,7 @@ window.loadAppointments = function(status = 'all') {
         tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-3 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>Loading appointments...</td></tr>';
     }
     
-    fetch(`{{ url_for("provider_appointments") }}?status=${status}`)
+    fetch(`{{ url_for('provider.provider_appointments') }}?status=${status}`)
         .then(response => {
             console.log('📡 Response status:', response.status);
             if (!response.ok) {
@@ -490,7 +490,7 @@ function acceptAppointment(appointmentId) {
     // Get CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     
-    fetch(`{{ url_for("accept_appointment", appointment_id=0) }}`.replace('0', appointmentId), {
+    fetch(`{{ url_for('provider.accept_appointment', appointment_id=0) }}`.replace('0', appointmentId), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -559,7 +559,7 @@ function rejectAppointment(appointmentId, reason) {
     // Get CSRF token
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
     
-    fetch(`{{ url_for("reject_appointment", appointment_id=0) }}`.replace('0', appointmentId), {
+    fetch(`{{ url_for('provider.reject_appointment', appointment_id=0) }}`.replace('0', appointmentId), {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -736,7 +736,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 window.loadAppointments = function(status = 'all') {
     console.log('🔄 Loading appointments with status:', status);
-    console.log('🌐 Fetching from URL:', `{{ url_for("provider_appointments") }}?status=${status}`);
+    console.log('🌐 Fetching from URL:', `{{ url_for('provider.provider_appointments') }}?status=${status}`);
     
     // Show loading state
     const tbody = document.getElementById('appointmentsBody');
@@ -756,7 +756,7 @@ window.loadAppointments = function(status = 'all') {
         headers['X-CSRFToken'] = csrfToken;
     }
     
-    fetch(`{{ url_for("provider_appointments") }}?status=${status}`, {
+    fetch(`{{ url_for('provider.provider_appointments') }}?status=${status}`, {
         method: 'GET',
         headers: headers,
         credentials: 'same-origin'
@@ -1156,7 +1156,7 @@ window.testAPI = function() {
     console.log('🧪 Testing API endpoint...');
     
     // Test 1: Check if we can reach the endpoint
-    const testUrl = '{{ url_for("provider_appointments") }}';
+    const testUrl = '{{ url_for('provider.provider_appointments') }}';
     console.log('🎯 Testing URL:', testUrl);
     
     // Test 2: Check session info
