@@ -71,7 +71,7 @@
                                 <span class="logo-text">MindFull<span class="text-blue-600">Horizon</span></span>
                             </a>
                         {% else %}
-                            <a href="{{ url_for('provider_dashboard') }}" class="advanced-logo group">
+                            <a href="{{ url_for('provider.provider_dashboard') }}" class="advanced-logo group">
                                 <div class="logo-icon-container">
                                     <i class="fas fa-brain logo-icon"></i>
                                 </div>
@@ -105,12 +105,12 @@
                                     <i class="fas fa-child nav-icon" aria-hidden="true"></i>
                                     <span>Yoga</span>
                                 </a>
-                                <a href="{{ url_for('music') }}" class="nav-link-item">
+                                <a href="{{ url_for('patient.music') }}" class="nav-link-item">
                                     <i class="fas fa-music nav-icon" aria-hidden="true"></i>
                                     <span>Music</span>
                                 </a>
                             {% endif %}
-                            <a href="{{ url_for('blog_list') }}" class="nav-link-item">
+                            <a href="{{ url_for('blog.blog_list') }}" class="nav-link-item">
                                 <i class="fas fa-blog nav-icon" aria-hidden="true"></i>
                                 <span>Blog</span>
                             </a>
@@ -153,7 +153,7 @@
                                 </div>
                             </div>
                         {% else %}
-                            <a href="{{ url_for('blog_list') }}" class="nav-link-item">
+                            <a href="{{ url_for('blog.blog_list') }}" class="nav-link-item">
                                 <i class="fas fa-blog nav-icon"></i>
                                 <span>Blog</span>
                             </a>
@@ -197,12 +197,12 @@
                             <i class="fas fa-child" aria-hidden="true"></i>
                             <span>Yoga</span>
                         </a>
-                        <a href="{{ url_for('music') }}" class="mobile-menu-item">
+                        <a href="{{ url_for('patient.music') }}" class="mobile-menu-item">
                             <i class="fas fa-music" aria-hidden="true"></i>
                             <span>Music</span>
                         </a>
                     {% endif %}
-                    <a href="{{ url_for('blog_list') }}" class="mobile-menu-item">
+                    <a href="{{ url_for('blog.blog_list') }}" class="mobile-menu-item">
                         <i class="fas fa-blog" aria-hidden="true"></i>
                         <span>Blog</span>
                     </a>
@@ -212,7 +212,7 @@
                         <span>Sign Out</span>
                     </a>
                 {% else %}
-                    <a href="{{ url_for('blog_list') }}" class="mobile-menu-item">Blog</a>
+                    <a href="{{ url_for('blog.blog_list') }}" class="mobile-menu-item">Blog</a>
                     <a href="{{ url_for('auth.login') }}" class="mobile-menu-item">Login</a>
                     <a href="{{ url_for('auth.signup') }}" class="mobile-menu-item advanced-cta-btn">
                         <span>Get Started</span>
@@ -275,7 +275,7 @@
                 <h4 class="footer-subtitle">Quick Links</h4>
                 <ul class="footer-links">
                     <li><a href="{{ url_for('index') }}">Home</a></li>
-                    <li><a href="{{ url_for('blog_list') }}">Blog</a></li>
+                    <li><a href="{{ url_for('blog.blog_list') }}">Blog</a></li>
                     <li><a href="{{ url_for('auth.login') }}">Login</a></li>
                     <li><a href="{{ url_for('auth.signup') }}">Sign Up</a></li>
                 </ul>

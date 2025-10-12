@@ -324,7 +324,7 @@ def yoga():
                 flash(f'Your {session_name} session has been logged!', 'success')
             except ValueError:
                 flash('Invalid duration. Please enter a number.', 'error')
-        return redirect(url_for('patient.yoga'))
+        return redirect(url_for('patient.patient_journal'))
 
     recent_logs = YogaLog.query.filter_by(user_id=user_id).order_by(YogaLog.created_at.desc()).limit(10).all()
     

@@ -237,7 +237,7 @@ def handle_bad_request(e):
     # For journal-related requests, redirect back to journal instead of index
     if request.endpoint == 'patient_journal' and request.method == 'POST':
         flash('Invalid request. Please check your input and try again.', 'error')
-        return redirect(url_for('patient_journal'))
+        return redirect(url_for('patient.patient_journal'))
     flash('Invalid request. Please try again.', 'error')
     return redirect(url_for('index'))
 
@@ -247,7 +247,7 @@ def handle_internal_error(e):
     # For journal-related requests, redirect back to journal instead of index
     if request.endpoint == 'patient_journal' and request.method == 'POST':
         flash('An error occurred while saving your journal entry. Please try again.', 'error')
-        return redirect(url_for('patient_journal'))
+        return redirect(url_for('patient.patient_journal'))
     flash('An internal error occurred. Please try again later.', 'error')
     return redirect(url_for('index'))
 
@@ -429,7 +429,7 @@ def send_prescription(patient_id):
 
     if not all([medication_name, dosage]):
         flash('Medication name and dosage are required.', 'error')
-        return redirect(url_for('wellness_report', user_id=patient_id))
+        return redirect(url_for('provider.wellness_report', user_id=patient_id))
 
     expiry_date = None
     if expiry_date_str:
@@ -437,7 +437,7 @@ def send_prescription(patient_id):
             expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d')
         except ValueError:
             flash('Invalid expiry date format. Please use YYYY-MM-DD.', 'error')
-            return redirect(url_for('wellness_report', user_id=patient_id))
+            return redirect(url_for('provider.wellness_report', user_id=patient_id))
 
     try:
         new_prescription = Prescription(
@@ -456,7 +456,7 @@ def send_prescription(patient_id):
         flash(f'Error sending prescription: {e}', 'error')
         logger.error(f"Error sending prescription for patient {patient_id} by provider {provider_id}: {e}")
 
-    return redirect(url_for('wellness_report', user_id=patient_id))
+    return redirect(url_for('provider.wellness_report', user_id=patient_id))
 
 
 

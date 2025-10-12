@@ -122,7 +122,7 @@
                         <a href="{{ url_for('patient.patient_journal') }}" class="action-button w-full bg-gradient-to-r from-pink-600 to-pink-700">
                             <i class="fas fa-book" aria-hidden="true"></i>Journal Entries
                         </a>
-                        <a href="{{ url_for('patient_voice_logs') }}" class="action-button w-full bg-gradient-to-r from-emerald-600 to-emerald-700">
+                        <a href="{{ url_for('patient.patient_voice_logs') }}" class="action-button w-full bg-gradient-to-r from-emerald-600 to-emerald-700">
                             <i class="fas fa-microphone" aria-hidden="true"></i>Voice Logs
                         </a>
                         <a href="{{ url_for('chat') }}" class="action-button w-full bg-gradient-to-r from-blue-600 to-blue-700">
@@ -230,7 +230,7 @@
                 <!-- Second row: 3 cards -->
                 <div class="grid grid-cols-3 gap-6">
                     <!-- Enhanced Music Therapy Card -->
-                    <a href="{{ url_for('music') }}" class="toolkit-card">
+                    <a href="{{ url_for('patient.music') }}" class="toolkit-card">
                         <div class="flex items-center">
                             <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
                                 <i class="fas fa-music text-purple-600 text-2xl" aria-hidden="true"></i>
@@ -254,7 +254,7 @@
                         </div>
                     </a>
                     <!-- Voice Logs Card -->
-                    <a href="{{ url_for('patient_voice_logs') }}" class="toolkit-card">
+                    <a href="{{ url_for('patient.patient_voice_logs') }}" class="toolkit-card">
                         <div class="flex items-center">
                             <div class="bg-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
                                 <i class="fas fa-microphone text-emerald-600 text-2xl" aria-hidden="true"></i>
