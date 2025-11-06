@@ -38,6 +38,10 @@ def login():
             flash('Selected role does not match account role. Please choose the correct role.', 'error')
             return render_template('login.html')
 
+        if not user.password_hash:
+            flash('Your account was created without a password. Please use a different sign-in method or reset your password.', 'error')
+            return render_template('login.html')
+
         if not user.check_password(password):
             flash('Invalid credentials. Please check your email and password.', 'error')
             return render_template('login.html')

@@ -72,7 +72,7 @@ from routes.patient import patient_bp
 from routes.provider import provider_bp
 from routes.blog import blog_bp
 
-from ai_service import ai_service
+from ai import ask as ai_service
 from extensions import db, migrate, flask_session, compress, csrf
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, MusicTherapyLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary, Notification
 from models import BlogPost, BlogComment, BlogLike, BlogInsight, Prescription, MoodLog  # Ensure BlogPost and related models are imported
@@ -282,7 +282,7 @@ def handle_bad_request(e):
         flash('Invalid request. Please check your input and try again.', 'error')
         return redirect(url_for('patient.patient_journal'))
     flash('Invalid request. Please try again.', 'error')
-    return redirect(url_for('index'))
+    return redirect(url_for('core.index'))
 
 @app.errorhandler(500)
 def handle_internal_error(e):
@@ -291,8 +291,7 @@ def handle_internal_error(e):
     if request.endpoint == 'patient_journal' and request.method == 'POST':
         flash('An error occurred while saving your journal entry. Please try again.', 'error')
         return redirect(url_for('patient.patient_journal'))
-    flash('An internal error occurred. Please try again later.', 'error')
-    return redirect(url_for('index'))
+    return redirect(url_for('core.index'))
 
 
 
@@ -307,14 +306,6 @@ from gamification_engine import award_points
 
 from decorators import login_required, role_required
 
-@app.route('/health')
-def health_check():
-    """Health check endpoint for monitoring and load balancers"""
-    return jsonify({
-        'status': 'healthy',
-        'timestamp': datetime.utcnow().isoformat(),
-        'service': 'MindFullHorizon'
-    })
 
 # Favicon route to prevent 404 errors
 @app.route('/favicon.ico')
@@ -327,85 +318,11 @@ def favicon():
 
 
 
-@app.route('/')
-def index():
-    # Get blog insights for the landing page
-    try:
-        blog_insights = get_blog_insights()
+    @app.route('/')
+    def index():
+        return render_template('index.html')
 
-        # Get featured/recent blog posts for display
-        featured_posts = BlogPost.query.filter_by(
-            is_published=True,
-            is_featured=True
-        ).order_by(BlogPost.created_at.desc()).limit(3).all()
 
-        # If no featured posts, get recent ones
-        if not featured_posts:
-            featured_posts = BlogPost.query.filter_by(
-                is_published=True
-            ).order_by(BlogPost.created_at.desc()).limit(3).all()
-
-        # Student-focused homepage theme data
-        landing_theme = {
-            "hero_title": "Welcome to MindFull Horizon",
-            "hero_subtitle": "Empowering Students for Better Mental Wellness",
-            "hero_message": "Track your mood, set goals, join wellness challenges, and connect with campus providers. Your journey to a healthier mind starts here!",
-            "features": [
-                {
-                    "title": "Daily Mood Tracker",
-                    "desc": "Check in with your feelings and see your progress over time."
-                },
-                {
-                    "title": "Digital Detox",
-                    "desc": "Reduce screen time and boost your academic and social life."
-                },
-                {
-                    "title": "Gamified Wellness",
-                    "desc": "Earn points, badges, and rewards for healthy habits and activities."
-                }
-            ]
-        }
-
-        # FAQ section data
-        faqs = [
-            {
-                "question": "What is MindFull Horizon?",
-                "answer": "MindFull Horizon is a student wellness platform designed to help you track your mood, set goals, and improve your mental health."
-            },
-            {
-                "question": "How do I join wellness challenges?",
-                "answer": "Sign up and visit your dashboard to participate in ongoing wellness challenges and earn rewards."
-            },
-            {
-                "question": "Is my data private?",
-                "answer": "Yes, your data is securely stored and only accessible to you and authorized campus providers."
-            },
-            {
-                "question": "Can I connect with campus counselors?",
-                "answer": "Absolutely! Use the telehealth feature to book appointments and chat with campus counselors."
-            }
-        ]
-
-    except Exception as e:
-        logger.error(f"Error getting blog insights for homepage: {e}")
-        blog_insights = None
-        featured_posts = []
-        landing_theme = {
-            "hero_title": "Welcome to MindFull Horizon",
-            "hero_subtitle": "Empowering Students for Better Mental Wellness",
-            "hero_message": "Track your mood, set goals, join wellness challenges, and connect with campus providers. Your journey to a healthier mind starts here!",
-            "features": []
-        }
-        faqs = []
-
-    return render_template(
-        'index.html',
-        blog_insights=blog_insights,
-        featured_posts=featured_posts,
-        landing_theme=landing_theme,
-        faqs=faqs,
-        datetime=datetime
-    )
 
 
 

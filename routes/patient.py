@@ -6,7 +6,7 @@ from decorators import patient_required, login_required
 from sqlalchemy.orm import joinedload
 from datetime import datetime, date, timedelta, timezone
 import json
-from ai_service import ai_service
+from ai.service import ask as ai_service
 from gamification_engine import award_points
 import logging
 import uuid
