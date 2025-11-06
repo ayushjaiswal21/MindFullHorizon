@@ -9,7 +9,7 @@
         <h1 class="hero-main-headline" style="font-size: 3.2rem; margin-bottom: 16px; color: #fff; text-shadow: 0 2px 8px rgba(38,99,235,0.18); transition: color 0.2s, text-shadow 0.2s; cursor: pointer; line-height: 1.2;">Your Mental Health Companion for College Life</h1>
         <p class="hero-sub-headline" style="font-size: 1.6rem; margin-bottom: 24px; color: #e3f0ff; text-shadow: 0 1px 4px rgba(38,99,235,0.12); transition: color 0.2s, text-shadow 0.2s; cursor: pointer; max-width: 800px; line-height: 1.4;">AI-powered support, progress tracking, and professional counseling - all designed for busy students like you.</p>
         <div class="hero-actions" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 16px;">
-            <a href="{{ url_for('signup') }}" class="hero-cta-button primary" style="padding: 12px 32px; font-size: 1.1rem; background: #2563eb; color: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(38,99,235,0.18); transition: background 0.2s, color 0.2s, box-shadow 0.2s; cursor: pointer; text-decoration: none; font-weight: 600;">Get Started Free</a>
+            <a href="{{ url_for('auth.signup') }}" class="hero-cta-button primary" style="padding: 12px 32px; font-size: 1.1rem; background: #2563eb; color: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(38,99,235,0.18); transition: background 0.2s, color 0.2s, box-shadow 0.2s; cursor: pointer; text-decoration: none; font-weight: 600;">Get Started Free</a>
             <a href="#features" class="hero-cta-button secondary" style="padding: 12px 32px; font-size: 1.1rem; background: transparent; color: #fff; border: 2px solid #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(255,255,255,0.2); transition: background 0.2s, color 0.2s, box-shadow 0.2s; cursor: pointer; text-decoration: none; font-weight: 600;">Learn More</a>
         </div>
         <div class="hero-stats" style="display: flex; gap: 32px; justify-content: center; margin-top: 20px;">
@@ -87,7 +87,7 @@
                 <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🎵</div>
                 <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">Mood Music</h3>
                 <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Binaural beats to support calm, focus, and mood regulation</p>
-                <a href="{{ url_for('patient.music') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Listen</a>
+                <a href="{{ url_for('patient.medication') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Listen</a>
             </div>
         </div>
         

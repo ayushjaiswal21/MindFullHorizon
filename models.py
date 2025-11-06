@@ -14,7 +14,7 @@ class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(255), nullable=True)
+    password_hash = db.Column(db.String(255), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     role = db.Column(db.String(20), nullable=True, index=True)  # 'patient' or 'provider'
     institution = db.Column(db.String(100), nullable=True, index=True)  # For institutional aggregation

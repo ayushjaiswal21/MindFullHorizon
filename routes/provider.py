@@ -7,7 +7,7 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy import or_, and_
 from datetime import datetime, date, timedelta
 import json
-from ai_service import ai_service
+from ai import ask as ai_service
 
 provider_bp = Blueprint('provider', __name__, url_prefix='/provider')
 
