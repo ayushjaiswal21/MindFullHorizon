@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth" data-nonce="{{ g.csp_nonce }}">
 <head>
     <meta charset="UTF-8">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -39,10 +39,28 @@
 
     <!-- Advanced CSS with modern features -->
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    
+    <!-- Preload Font Awesome with fallback -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    
+    <!-- Local CSS -->
     {% assets "css_all" %}
     <link rel="stylesheet" href="{{ ASSET_URL }}">
     {% endassets %}
+    
+    <!-- Fallback for Font Awesome -->
+    <script>
+    // Check if Font Awesome loaded
+    window.addEventListener('load', function() {
+        if (!document.querySelector('.fa')) {
+            // If not, load from local
+            var link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = "{{ url_for('static', filename='css/fontawesome.min.css') }}";
+            document.head.appendChild(link);
+        }
+    });
+    </script>
 
     <!-- Advanced meta tags for better performance -->
     
@@ -116,7 +134,13 @@
                             </a>
 
                             <!-- Google Translate Element -->
-                            <div id="google_translate_element" class="google-translate-element"></div>
+                            <div id="google_translate_element"></div>
+<script>
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
+}
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
                             <!-- User Menu with Advanced Dropdown -->
                             <div class="relative user-menu-container">
@@ -328,15 +352,45 @@
         </div>
     </div>
 
-    <!-- Advanced Scripts -->
-    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Scripts with nonce and error handling -->
+    <script nonce="{{ g.csp_nonce }}" src="https://cdn.socket.io/4.7.4/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script nonce="{{ g.csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     {% assets "js_all" %}
-        <script type="text/javascript" src="{{ ASSET_URL }}"></script>
+        <script nonce="{{ g.csp_nonce }}" type="text/javascript" src="{{ ASSET_URL }}" crossorigin="anonymous"></script>
     {% endassets %}
 
+    <!-- Handle socket.io connection with error handling -->
+    <script nonce="{{ g.csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize socket.io connection with error handling
+        if (typeof io !== 'undefined') {
+            try {
+                const socket = io({
+                    transports: ['websocket'],
+                    upgrade: false,
+                    secure: true
+                });
+                
+                socket.on('connect', function() {
+                    console.log('Connected to WebSocket server');
+                });
+                
+                socket.on('connect_error', function(error) {
+                    console.error('WebSocket connection error:', error);
+                });
+                
+                window.socket = socket; // Make socket available globally if needed
+            } catch (error) {
+                console.error('Error initializing WebSocket:', error);
+            }
+        } else {
+            console.warn('Socket.IO not loaded. Some real-time features may not work.');
+        }
+    });
+    </script>
+
     <!-- Advanced Inline Scripts -->
-    <script>
+    <script nonce="{{ g.csp_nonce }}">
         // Initialize advanced features on page load
         document.addEventListener('DOMContentLoaded', function() {
             if (typeof initializeChartJS === 'function') {
@@ -520,7 +574,19 @@
             }, 'google_translate_element');
         }
     </script>
-    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+    <script nonce="{{ g.csp_nonce }}" type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/ui-init.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mood.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/ui-init.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mood.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/ui-init.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/mood.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
 </body>
 </html>
