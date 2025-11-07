@@ -43,7 +43,7 @@ console_formatter = logging.Formatter('%(levelname)s - %(message)s')
 console_handler.setFormatter(console_formatter)
 logger.addHandler(console_handler)
 
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, g
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 import nltk
@@ -66,11 +66,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from flask_caching import Cache
 from flask_assets import Environment, Bundle
-from routes.auth import auth_bp
-from routes.core import core_bp
-from routes.patient import patient_bp
-from routes.provider import provider_bp
-from routes.blog import blog_bp
+# Import blueprints from routes package
+from routes import all_blueprints
 
 from ai import ask as ai_service
 from extensions import db, migrate, flask_session, compress, csrf
@@ -183,14 +180,23 @@ from extensions import init_extensions
 init_extensions(app)
 
 from models import *
+from utils.database_utils import check_database, init_db
+
+# Check database connection at startup
+with app.app_context():
+    if not check_database():
+        app.logger.warning("Database not initialized or connection failed. Attempting to initialize...")
+        if init_db():
+            app.logger.info("Database initialized successfully")
+        else:
+            app.logger.error("Failed to initialize database. Some features may not work correctly.")
 
 # Enable CSRF protection for security
 csrf.init_app(app)
-app.register_blueprint(auth_bp)
-app.register_blueprint(core_bp)
-app.register_blueprint(patient_bp)
-app.register_blueprint(provider_bp)
-app.register_blueprint(blog_bp)
+
+# Register all blueprints
+for blueprint in all_blueprints:
+    app.register_blueprint(blueprint)
 
 # Asset management
 assets = Environment(app)
@@ -216,34 +222,58 @@ assets.register('css_all', css_bundle)
 @app.after_request
 def add_security_headers(response):
     """Add comprehensive security headers to all responses"""
-    # Existing headers (already implemented)
+    # Basic security headers
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'DENY'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
 
-    # Enhanced Content Security Policy with nonce support
+    # Generate a new nonce for this response
     csp_nonce = secrets.token_urlsafe(16)
+    
+    # Store the nonce in the response headers
     response.headers['CSP-Nonce'] = csp_nonce
-
-    csp = (
-        f"default-src 'self'; "
-        f"script-src 'self' 'unsafe-inline' 'nonce-{csp_nonce}' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-        f"style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; "
-        f"font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
-        f"img-src 'self' data: blob: https:; "
-        f"connect-src 'self' ws: wss: https:; "
-        f"frame-src 'none'; "
-        f"object-src 'none'; "
-        f"base-uri 'self'; "
-        f"form-action 'self';"
-    )
-    response.headers['Content-Security-Policy'] = csp
+    
+    # Define the CSP with all required sources
+    csp_parts = [
+        "default-src 'self'",
+        f"script-src 'self' 'nonce-{csp_nonce}' 'strict-dynamic' 'unsafe-inline' https: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io https://translate.google.com https://translate.googleapis.com",
+        f"script-src-elem 'self' 'nonce-{csp_nonce}' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io https://translate.google.com https://translate.googleapis.com",
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://www.gstatic.com",
+        "style-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://www.gstatic.com",
+        "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
+        "img-src 'self' data: blob: https:",
+        "connect-src 'self' ws: wss: http: https: http://localhost:* https://*.socket.io https://translate.google.com https://translate.googleapis.com",
+        "frame-src 'self' https://translate.google.com",
+        "media-src 'self' data: blob:",
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+        "frame-ancestors 'self'"
+    ]
+    
+    csp = "; ".join(csp_parts)
+    response.headers['Content-Security-Policy'] = "script-src 'self' 'unsafe-inline' https://translate.google.com https://translate.googleapis.com; frame-src 'self' https://translate.google.com;"
 
     # HTTPS enforcement and security
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
     response.headers['Expect-CT'] = 'max-age=86400, enforce'
     response.headers['X-Permitted-Cross-Domain-Policies'] = 'none'
+    
+    # CORS headers for socket.io
+    response.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
+    
+    # Set Permissions-Policy header
+    response.headers['Permissions-Policy'] = (
+        'accelerometer=(), ambient-light-sensor=(), autoplay=(), camera=(), '
+        'display-capture=(), document-domain=(), encrypted-media=(), fullscreen=(), '
+        'geolocation=(), gyroscope=(), magnetometer=(), microphone=(), '
+        'midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), '
+        'screen-wake-lock=(), sync-xhr=(), usb=(), xr-spatial-tracking=()'
+    )
 
     # Permissions Policy for modern browsers
     response.headers['Permissions-Policy'] = (
@@ -1811,18 +1841,6 @@ def delete_journal_entry(entry_id):
         logger.error(f"Error deleting journal entry {entry_id}: {e}")
         return jsonify({'success': False, 'message': 'Failed to delete journal entry'}), 500
 
-
-@app.route('/patient/voice-logs')
-@login_required
-@role_required('patient')
-def patient_voice_logs():
-    """Voice logs page for patients."""
-    user_id = session['user_id']
-    user_logs = patient_voice_logs_data.get(user_id, [])
-
-    return render_template('patient_voice_logs.html',
-                         user_name=session['user_name'],
-                         voice_logs=user_logs)
 
 
 @app.route('/api/delete-voice-log/<voice_log_id>', methods=['DELETE'])

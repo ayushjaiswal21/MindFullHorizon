@@ -12,7 +12,7 @@ import logging
 import uuid
 
 # Import shared data storage instead of importing from app to avoid circular imports
-from shared_data import patient_journal_entries
+from shared_data import patient_journal_entries, patient_voice_logs_data
 
 # TextBlob for sentiment analysis
 try:
@@ -73,6 +73,7 @@ def get_ai_journal_suggestions(title, content):
         logger.warning(f"AI suggestion generation failed: {e}")
         return "Thank you for sharing your thoughts. Consider discussing these feelings with a trusted friend or mental health professional."
 
+# Create the patient blueprint with the name 'patient' and URL prefix
 patient_bp = Blueprint('patient', __name__, url_prefix='/patient')
 
 @patient_bp.route('/dashboard')
@@ -130,10 +131,10 @@ def patient_dashboard():
                          past_appointments=past_appointments,
                          latest_mood=latest_mood)
 
-@patient_bp.route('/schedule', methods=['GET', 'POST'])
+@patient_bp.route('/schedule', methods=['GET', 'POST'], endpoint='schedule_appointment')
 @login_required
 @patient_required
-def schedule():
+def schedule_appointment():
     if request.method == 'POST':
         date_str = request.form['date']
         time_str = request.form['time']
@@ -162,7 +163,7 @@ def schedule():
         except Exception as e:
             db.session.rollback()
             flash(f'Error booking appointment: {e}', 'error')
-            return redirect(url_for('patient.schedule'))
+            return redirect(url_for('patient.schedule_appointment'))
     
     user_institution = session.get('user_institution', 'Sample University')
     providers = User.query.filter_by(role='provider', institution=user_institution).all()
@@ -932,9 +933,28 @@ def save_mood():
             'message': f'Failed to save mood: {str(e)}'
         }), 500
 
+@patient_bp.route('/voice-logs', methods=['GET'])
+@login_required
+@patient_required
+def patient_voice_logs():
+    """Voice logs page for patients."""
+    try:
+        user_id = session['user_id']
+        user_logs = patient_voice_logs_data.get(user_id, [])
+        
+        return render_template('patient_voice_logs.html',
+                             user_name=session.get('user_name', 'User'),
+                             voice_logs=user_logs)
+    except Exception as e:
+        logger.error(f"Error in patient_voice_logs: {str(e)}")
+        flash('An error occurred while loading the voice logs.', 'error')
+        return redirect(url_for('patient.patient_dashboard'))
+
+
 @patient_bp.route('/api/goals', methods=['GET', 'POST'])
 @patient_required
 def handle_goals():
+    """Handle goal creation and updates."""
     user_id = session['user_id']
 
     if request.method == 'POST':

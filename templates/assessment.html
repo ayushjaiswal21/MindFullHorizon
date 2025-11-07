@@ -802,7 +802,7 @@ async function saveDailyMood() {
 }
 
 function scheduleFollowUp() {
-    window.location.href = "{{ url_for('schedule') }}";
+    window.location.href = "{{ url_for('patient.schedule_appointment') }}";
 }
 
 function viewProgress() {
