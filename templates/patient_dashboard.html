@@ -116,13 +116,6 @@
                         <i class="fas fa-bolt text-blue-500 text-3xl card-icon-glow" aria-hidden="true"></i>
                     </div>
                     <div class="space-y-3">
-                        <div class="mood-tracker">
-                            <button class="mood-btn" data-mood="happy">😊</button>
-                            <button class="mood-btn" data-mood="sad">😢</button>
-                            <button class="mood-btn" data-mood="angry">😠</button>
-                            <button class="mood-btn" data-mood="calm">😌</button>
-                            <button class="mood-btn" data-mood="anxious">😟</button>
-                        </div>
                         <a href="{{ url_for('patient.goals') }}" class="action-button w-full bg-gradient-to-r from-indigo-600 to-indigo-700">
                             <i class="fas fa-bullseye" aria-hidden="true"></i>Manage Goals
                         </a>
@@ -138,7 +131,7 @@
                         <a href="{{ url_for('telehealth') }}" class="action-button w-full bg-gradient-to-r from-green-600 to-green-700">
                             <i class="fas fa-video" aria-hidden="true"></i>Start Telehealth Session
                         </a>
-                        <a href="{{ url_for('patient.schedule_appointment') }}" class="action-button w-full bg-gradient-to-r from-purple-600 to-purple-700">
+                        <a href="{{ url_for('patient.schedule') }}" class="action-button w-full bg-gradient-to-r from-purple-600 to-purple-700">
                             <i class="fas fa-plus" aria-hidden="true"></i>Schedule Appointment
                         </a>
                     </div>
@@ -237,7 +230,7 @@
                 <!-- Second row: 3 cards -->
                 <div class="grid grid-cols-3 gap-6">
                     <!-- Enhanced Music Therapy Card -->
-                    <a href="{{ url_for('music') }}" class="toolkit-card">
+                    <a href="{{ url_for('patient.music') }}" class="toolkit-card">
                         <div class="flex items-center">
                             <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
                                 <i class="fas fa-music text-purple-600 text-2xl" aria-hidden="true"></i>
@@ -340,29 +333,39 @@
             </h3>
             <p class="text-gray-600 mb-6 text-lg">Take standardized assessments to track your mental health progress and get personalized insights.</p>
             <div class="grid md:grid-cols-3 gap-6">
-                <button id="start-assessment" class="btn btn-primary">Start Assessment</button>
-
-<div id="assessment-modal" style="display:none;">
-  <div class="modal-content">
-    <h3 id="assessment-title"></h3>
-    <pre id="assessment-body"></pre>
-    <button id="close-assessment">Close</button>
-  </div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const modal = document.getElementById('assessment-modal');
-  document.getElementById('start-assessment').addEventListener('click', async () => {
-    const res = await fetch('/api/assessment/next');
-    const data = await res.json();
-    document.getElementById('assessment-title').textContent = data.title;
-    document.getElementById('assessment-body').textContent = JSON.stringify(data.questions, null, 2);
-    modal.style.display = 'block';
-  });
-  document.getElementById('close-assessment').addEventListener('click', () => modal.style.display = 'none');
-});
-</script>
+                <a href="{{ url_for('patient.assessment') }}" class="assessment-card">
+                    <div class="flex items-center">
+                        <div class="bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                            <i class="fas fa-brain text-indigo-600 text-2xl" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg">Take Assessment</h4>
+                            <p class="text-gray-600">GAD-7, PHQ-9 & Daily Mood</p>
+                        </div>
+                    </div>
+                </a>
+                <a href="{{ url_for('patient.progress') }}" class="assessment-card">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                            <i class="fas fa-chart-line text-green-600 text-2xl" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg">View Progress</h4>
+                            <p class="text-gray-600">Trends & AI Insights</p>
+                        </div>
+                    </div>
+                </a>
+                <a href="{{ url_for('patient.digital_detox') }}" class="assessment-card">
+                    <div class="flex items-center">
+                        <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
+                            <i class="fas fa-mobile-alt text-purple-600 text-2xl" aria-hidden="true"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-lg">Digital Detox</h4>
+                            <p class="text-gray-600">Screen Time & Wellness</p>
+                        </div>
+                    </div>
+                </a>
             </div>
         </div>
     </div>
