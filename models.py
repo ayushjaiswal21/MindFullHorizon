@@ -164,6 +164,7 @@ class Assessment(db.Model):
     assessment_type = db.Column(db.String(50), nullable=False, index=True)  # 'GAD-7', 'PHQ-9', 'mood'
     score = db.Column(db.Integer, nullable=False)
     responses = db.Column(db.JSON, nullable=True)  # Store individual question responses
+    contextual_responses = db.Column(db.JSON, nullable=True) # Store contextual question responses
     ai_insights = db.Column(db.Text, nullable=True)  # AI-generated insights (stored as JSON string)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     

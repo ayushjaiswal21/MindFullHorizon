@@ -1,76 +1,146 @@
 {
-    "GAD-7": [
-        {
-            "question": "Feeling nervous, anxious, or on edge?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Not being able to stop or control worrying?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Worrying too much about different things?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Trouble relaxing?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Being so restless that it is hard to sit still?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Becoming easily annoyed or irritable?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Feeling afraid, as if something awful might happen?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        }
-    ],
-    "PHQ-9": [
-        {
-            "question": "Little interest or pleasure in doing things?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Feeling down, depressed, or hopeless?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Trouble falling or staying asleep, or sleeping too much?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Feeling tired or having little energy?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Poor appetite or overeating?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Feeling bad about yourself - or that you are a failure or have let yourself or your family down?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Trouble concentrating on things, such as reading the newspaper or watching television?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Moving or speaking so slowly that other people could have noticed? Or the opposite - being so fidgety or restless that you have been moving around a lot more than usual?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        },
-        {
-            "question": "Thoughts that you would be better off dead, or of hurting yourself in some way?",
-            "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
-        }
-    ],
-    "Daily Mood": [
-        {
-            "question": "How would you rate your mood today?",
-            "options": ["1 (Awful)", "2", "3", "4", "5 (Okay)", "6", "7", "8", "9", "10 (Excellent)"]
-        }
-    ]
+    "GAD-7": {
+        "title": "GAD-7 Anxiety Screening",
+        "questions": [
+            {
+                "id": "gad7_1",
+                "text": "Feeling nervous, anxious, or on edge?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "gad7_2",
+                "text": "Not being able to stop or control worrying?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "gad7_3",
+                "text": "Worrying too much about different things?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "gad7_4",
+                "text": "Trouble relaxing?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "gad7_5",
+                "text": "Being so restless that it is hard to sit still?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "gad7_6",
+                "text": "Becoming easily annoyed or irritable?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "gad7_7",
+                "text": "Feeling afraid, as if something awful might happen?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            }
+        ],
+        "contextual_questions": [
+            {
+                "id": "context_anxiety_1",
+                "text": "You've mentioned feeling anxious. In the past week, which of these areas has been the biggest source of stress for you? (Select up to 3)",
+                "type": "multiple-choice",
+                "options": ["Academics/Work", "Social Relationships", "Family", "Finances", "Health", "Future Uncertainty", "Daily Chores", "Other"]
+            },
+            {
+                "id": "context_anxiety_2",
+                "text": "Thank you for sharing. If you're comfortable, could you tell us a bit more about what's been on your mind?",
+                "type": "open-ended"
+            },
+            {
+                "id": "context_anxiety_3",
+                "text": "Have you tried any of the following to manage these feelings? (Select all that apply)",
+                "type": "multiple-choice",
+                "options": ["Talking to someone", "Exercise", "Mindfulness or meditation", "Spending time on a hobby", "Spending time in nature", "I haven't tried anything yet"]
+            }
+        ]
+    },
+    "PHQ-9": {
+        "title": "PHQ-9 Depression Screening",
+        "questions": [
+            {
+                "id": "phq9_1",
+                "text": "Little interest or pleasure in doing things?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "phq9_2",
+                "text": "Feeling down, depressed, or hopeless?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "phq9_3",
+                "text": "Trouble falling or staying asleep, or sleeping too much?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "phq9_4",
+                "text": "Feeling tired or having little energy?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "phq9_5",
+                "text": "Poor appetite or overeating?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "phq9_6",
+                "text": "Feeling bad about yourself - or that you are a failure or have let yourself or your family down?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "phq9_7",
+                "text": "Trouble concentrating on things, such as reading the newspaper or watching television?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "phq9_8",
+                "text": "Moving or speaking so slowly that other people could have noticed? Or the opposite - being so fidgety or restless that you have been moving around a lot more than usual?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            },
+            {
+                "id": "phq9_9",
+                "text": "Thoughts that you would be better off dead, or of hurting yourself in some way?",
+                "type": "scale",
+                "options": ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+            }
+        ],
+        "contextual_questions": [
+            {
+                "id": "context_depression_1",
+                "text": "You've indicated you're feeling down. Which of these best describes the energy levels you've been experiencing?",
+                "type": "multiple-choice",
+                "options": ["Constantly fatigued", "Tired most of the time", "Normal, but with occasional slumps", "Generally energetic"]
+            },
+            {
+                "id": "context_depression_2",
+                "text": "We're here to listen. Is there anything specific that has been contributing to these feelings?",
+                "type": "open-ended"
+            },
+            {
+                "id": "context_depression_3",
+                "text": "In the last week, have you been able to engage in activities you usually enjoy?",
+                "type": "multiple-choice",
+                "options": ["Yes, and I enjoyed them", "Yes, but I didn't get much pleasure from them", "I tried, but couldn't get into them", "No, I haven't had the energy or interest"]
+            }
+        ]
+    }
 }

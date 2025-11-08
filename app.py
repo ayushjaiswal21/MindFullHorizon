@@ -253,7 +253,7 @@ def add_security_headers(response):
     ]
     
     csp = "; ".join(csp_parts)
-    response.headers['Content-Security-Policy'] = "script-src 'self' 'unsafe-inline' https://translate.google.com https://translate.googleapis.com; frame-src 'self' https://translate.google.com;"
+    response.headers['Content-Security-Policy'] = csp
 
     # HTTPS enforcement and security
     response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
@@ -262,25 +262,16 @@ def add_security_headers(response):
     
     # CORS headers for socket.io
     response.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
-    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    response.headers['Access-control-Allow-Credentials'] = 'true'
     response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
     
     # Set Permissions-Policy header
     response.headers['Permissions-Policy'] = (
-        'accelerometer=(), ambient-light-sensor=(), autoplay=(), camera=(), '
-        'display-capture=(), document-domain=(), encrypted-media=(), fullscreen=(), '
-        'geolocation=(), gyroscope=(), magnetometer=(), microphone=(), '
-        'midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), '
-        'screen-wake-lock=(), sync-xhr=(), usb=(), xr-spatial-tracking=()'
-    )
-
-    # Permissions Policy for modern browsers
-    response.headers['Permissions-Policy'] = (
         'camera=(), microphone=(), geolocation=(), '
         'interest-cohort=(), payment=(self), '
         'usb=(), bluetooth=(), magnetometer=(), '
-        'gyroscope=(), accelerometer=(), ambient-light-sensor=()'
+        'gyroscope=(), accelerometer=()'
     )
 
     # Additional security headers
@@ -327,8 +318,6 @@ def handle_internal_error(e):
 
 
 
-
-
 # Import gamification functions
 from gamification_engine import award_points
 
@@ -351,8 +340,6 @@ def favicon():
     @app.route('/')
     def index():
         return render_template('index.html')
-
-
 
 
 
@@ -394,9 +381,6 @@ def api_message():
 
 
 
-
-
-
 @app.route('/telehealth_session/<int:user_id>')
 @login_required
 def telehealth_session(user_id):
@@ -410,7 +394,6 @@ def telehealth_session(user_id):
 @login_required
 def telehealth():
     return render_template('telehealth.html', user_name=session['user_name'])
-
 
 
 
@@ -1266,7 +1249,7 @@ def api_mood_audio():
                         
                     rel = f"{sub}/{fn}"
                     # Ensure URL uses forward slashes
-                    rel_url = rel.replace('\\\\', '/').replace('\\', '/')
+                    rel_url = rel.replace('\\', '/').replace('\\', '/')
                     
                     # Calculate relevance score for sorting
                     relevance_score = 0
@@ -1535,6 +1518,54 @@ def utility_processor():
         else:
             return {'severity': 'N/A', 'color': 'gray'}
     return dict(get_severity_info=get_severity_info)
+
+@app.route('/api/save-assessment', methods=['POST'])
+@login_required
+@role_required('patient')
+def save_assessment():
+    """Save a new assessment (GAD-7, PHQ-9) for the logged-in user."""
+    if not request.is_json:
+        return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
+
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'success': False, 'message': 'User not logged in'}), 401
+
+    data = request.get_json()
+    assessment_type = data.get('assessment_type')
+    score = data.get('score')
+    responses = data.get('responses')
+    contextual_responses = data.get('contextual_responses')
+
+    if not all([assessment_type, score is not None, responses is not None]):
+        return jsonify({'success': False, 'message': 'Missing required assessment data'}), 400
+
+    try:
+        # Create a new assessment record
+        new_assessment = Assessment(
+            user_id=user_id,
+            assessment_type=assessment_type,
+            score=int(score),
+            responses=responses,
+            contextual_responses=contextual_responses,
+            created_at=datetime.utcnow()
+        )
+        db.session.add(new_assessment)
+        db.session.commit()
+
+        # Award points for completing an assessment
+        award_points(user_id, 25, f'completed_{assessment_type}')
+
+        return jsonify({
+            'success': True,
+            'message': 'Assessment saved successfully!',
+            'assessment_id': new_assessment.id
+        }), 201
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Error saving assessment for user {user_id}: {e}")
+        return jsonify({'success': False, 'message': 'Failed to save assessment.'}), 500
 
 @app.route('/api/save-mood', methods=['POST'])
 @login_required

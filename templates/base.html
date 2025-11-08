@@ -47,20 +47,6 @@
     {% assets "css_all" %}
     <link rel="stylesheet" href="{{ ASSET_URL }}">
     {% endassets %}
-    
-    <!-- Fallback for Font Awesome -->
-    <script>
-    // Check if Font Awesome loaded
-    window.addEventListener('load', function() {
-        if (!document.querySelector('.fa')) {
-            // If not, load from local
-            var link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = "{{ url_for('static', filename='css/fontawesome.min.css') }}";
-            document.head.appendChild(link);
-        }
-    });
-    </script>
 
     <!-- Advanced meta tags for better performance -->
     

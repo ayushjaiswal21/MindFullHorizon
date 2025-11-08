@@ -404,3 +404,10 @@ span[style*="color"] {
     outline: 3px solid rgba(37,99,235,0.25);
     outline-offset: 2px;
 }
+
+/* Styling for selected mood option */
+.mood-option.selected {
+    border-color: #3b82f6; /* Blue-600 */
+    background-color: #e0f2fe; /* Light blue background */
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); /* Blue ring shadow */
+}
