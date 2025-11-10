@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 import json
 import re
 import secrets  # Added for CSP nonce generation
+import base64
 
 from werkzeug.utils import secure_filename
 import uuid
@@ -218,6 +219,14 @@ css_bundle = Bundle(
 )
 assets.register('css_all', css_bundle)
 
+# --- CSP Report-Only: generate nonce per request and set CSP-Report-Only header ---
+@app.before_request
+def generate_csp_nonce():
+    # 18 random bytes -> base64 ascii nonce
+    g.csp_nonce = base64.b64encode(os.urandom(18)).decode('ascii')
+
+
+
 # Add enhanced security headers for modern web security
 @app.after_request
 def add_security_headers(response):
@@ -229,7 +238,7 @@ def add_security_headers(response):
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
 
     # Generate a new nonce for this response
-    csp_nonce = secrets.token_urlsafe(16)
+    csp_nonce = getattr(g, 'csp_nonce', '')
     
     # Store the nonce in the response headers
     response.headers['CSP-Nonce'] = csp_nonce
@@ -237,14 +246,14 @@ def add_security_headers(response):
     # Define the CSP with all required sources
     csp_parts = [
         "default-src 'self'",
-        f"script-src 'self' 'nonce-{csp_nonce}' 'strict-dynamic' 'unsafe-inline' https: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io https://translate.google.com https://translate.googleapis.com",
-        f"script-src-elem 'self' 'nonce-{csp_nonce}' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io https://translate.google.com https://translate.googleapis.com",
-        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://www.gstatic.com",
-        "style-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://www.gstatic.com",
-        "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
+        f"script-src 'self' 'nonce-{csp_nonce}' 'strict-dynamic' 'unsafe-inline' https: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com",
+        f"script-src-elem 'self' 'nonce-{csp_nonce}' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com",
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://www.gstatic.com https://fonts.gstatic.com",
+        "style-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://www.gstatic.com https://fonts.gstatic.com",
+        "font-src 'self' data: https: https://fonts.gstatic.com https://cdn.jsdelivr.net https://fonts.googleapis.com https://www.gstatic.com https://cdnjs.cloudflare.com",
         "img-src 'self' data: blob: https:",
-        "connect-src 'self' ws: wss: http: https: http://localhost:* https://*.socket.io https://translate.google.com https://translate.googleapis.com",
-        "frame-src 'self' https://translate.google.com",
+        "connect-src 'self' ws: wss: http: https: http://localhost:* https://*.socket.io https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com https://cdnjs.cloudflare.com",
+        "frame-src 'self' https://translate.google.com https://translate-pa.googleapis.com",
         "media-src 'self' data: blob:",
         "object-src 'none'",
         "base-uri 'self'",

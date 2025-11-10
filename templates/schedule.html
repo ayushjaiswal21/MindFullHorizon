@@ -71,8 +71,5 @@
     </div>
 </div>
 
-<script>
-// Set minimum date to today
-document.getElementById('date').min = new Date().toISOString().split('T')[0];
-</script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/schedule_inline_1.js') }}"></script>
 {% endblock %}

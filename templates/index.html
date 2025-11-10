@@ -608,16 +608,5 @@
     font-size: 1rem;
 }
 </style>
-<script>
-function toggleFaq(btn) {
-    var item = btn.parentElement;
-    var isActive = item.classList.contains('active');
-    document.querySelectorAll('.faq-item').forEach(function(faq) {
-        faq.classList.remove('active');
-    });
-    if (!isActive) {
-        item.classList.add('active');
-    }
-}
-</script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/index_inline_1.js') }}"></script>
 {% endblock %}

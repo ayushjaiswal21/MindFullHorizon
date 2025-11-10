@@ -18,19 +18,6 @@
         </div>
         <div class="mt-4 text-xs text-gray-500">All videos are embedded from YouTube and free to access for everyone.</div>
     </div>
-    <script>
-    function toggleYogaVideos() {
-        const section = document.getElementById('yoga-videos-section');
-        const btn = document.getElementById('show-videos-btn');
-        if (section.classList.contains('hidden')) {
-            section.classList.remove('hidden');
-            btn.innerHTML = '<i class="fas fa-video mr-2"></i>Hide Yoga Video Library';
-        } else {
-            section.classList.add('hidden');
-            btn.innerHTML = '<i class="fas fa-video mr-2"></i>Show Yoga Video Library';
-        }
-    }
-    </script>
 {% extends 'base.html' %}
 
 {% block title %}Yoga & Mindfulness - MindFull Horizon{% endblock %}
@@ -81,23 +68,23 @@
 
         <!-- Timer Controls -->
         <div class="flex justify-center gap-4 mb-6">
-            <button id="start-timer-btn" onclick="startTimer()" class="btn-primary">
+            <button id="start-timer-btn" class="btn-primary">
                 <i class="fas fa-play mr-2"></i>Start Session
             </button>
-            <button id="pause-timer-btn" onclick="pauseTimer()" class="btn-secondary hidden">
+            <button id="pause-timer-btn" class="btn-secondary hidden">
                 <i class="fas fa-pause mr-2"></i>Pause
             </button>
-            <button id="stop-timer-btn" onclick="stopTimer()" class="btn-danger hidden">
+            <button id="stop-timer-btn" class="btn-danger hidden">
                 <i class="fas fa-stop mr-2"></i>Stop
             </button>
         </div>
 
         <!-- Quick Session Buttons -->
         <div class="flex flex-wrap justify-center gap-3">
-            <button onclick="setQuickSession(5)" class="quick-session-btn">5 min</button>
-            <button onclick="setQuickSession(10)" class="quick-session-btn">10 min</button>
-            <button onclick="setQuickSession(15)" class="quick-session-btn">15 min</button>
-            <button onclick="setQuickSession(30)" class="quick-session-btn">30 min</button>
+            <button class="quick-session-btn" data-duration="5">5 min</button>
+            <button class="quick-session-btn" data-duration="10">10 min</button>
+            <button class="quick-session-btn" data-duration="15">15 min</button>
+            <button class="quick-session-btn" data-duration="30">30 min</button>
         </div>
     </div>
 
@@ -115,7 +102,7 @@
         </h3>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Morning Flow -->
-            <div class="yoga-session-card bg-gradient-to-br from-blue-50 to-blue-100" onclick="startGuidedSession('yoga', 'morning', 15)">
+            <div class="yoga-session-card bg-gradient-to-br from-blue-50 to-blue-100 start-guided-session-card" data-session-type="yoga" data-session-name="morning" data-session-duration="15">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-sun text-blue-600 text-2xl mr-3"></i>
@@ -130,7 +117,7 @@
             </div>
 
             <!-- Desk Relief -->
-            <div class="yoga-session-card bg-gradient-to-br from-green-50 to-green-100" onclick="startGuidedSession('yoga', 'desk', 10)">
+            <div class="yoga-session-card bg-gradient-to-br from-green-50 to-green-100 start-guided-session-card" data-session-type="yoga" data-session-name="desk" data-session-duration="10">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-chair text-green-600 text-2xl mr-3"></i>
@@ -145,7 +132,7 @@
             </div>
 
             <!-- Evening Relaxation -->
-            <div class="yoga-session-card bg-gradient-to-br from-purple-50 to-purple-100" onclick="startGuidedSession('yoga', 'evening', 20)">
+            <div class="yoga-session-card bg-gradient-to-br from-purple-50 to-purple-100 start-guided-session-card" data-session-type="yoga" data-session-name="evening" data-session-duration="20">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-moon text-purple-600 text-2xl mr-3"></i>
@@ -160,7 +147,7 @@
             </div>
 
             <!-- Stress Relief -->
-            <div class="yoga-session-card bg-gradient-to-br from-red-50 to-red-100" onclick="startGuidedSession('yoga', 'stress', 12)">
+            <div class="yoga-session-card bg-gradient-to-br from-red-50 to-red-100 start-guided-session-card" data-session-type="yoga" data-session-name="stress" data-session-duration="12">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-heart text-red-600 text-2xl mr-3"></i>
@@ -175,7 +162,7 @@
             </div>
 
             <!-- Focus & Concentration -->
-            <div class="yoga-session-card bg-gradient-to-br from-yellow-50 to-yellow-100" onclick="startGuidedSession('yoga', 'focus', 18)">
+            <div class="yoga-session-card bg-gradient-to-br from-yellow-50 to-yellow-100 start-guided-session-card" data-session-type="yoga" data-session-name="focus" data-session-duration="18">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-brain text-yellow-600 text-2xl mr-3"></i>
@@ -190,7 +177,7 @@
             </div>
 
             <!-- Flexibility -->
-            <div class="yoga-session-card bg-gradient-to-br from-teal-50 to-teal-100" onclick="startGuidedSession('yoga', 'flexibility', 25)">
+            <div class="yoga-session-card bg-gradient-to-br from-teal-50 to-teal-100 start-guided-session-card" data-session-type="yoga" data-session-name="flexibility" data-session-duration="25">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-leaf text-teal-600 text-2xl mr-3"></i>
@@ -301,4 +288,8 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/yoga.js') }}"></script>
 {% endblock %}
