@@ -3,11 +3,26 @@
 (function () {
   // mapping of human assessment types to keys used by the JS assessments object
   const typeMap = {
-    'GAD-7': 'anxiety',
-    'PHQ-9': 'depression',
-    'gad-7': 'anxiety',
-    'phq-9': 'depression'
+    'GAD-7': 'GAD-7',
+    'PHQ-9': 'PHQ-9',
+    'gad-7': 'GAD-7',
+    'phq-9': 'PHQ-9',
+    'anxiety': 'GAD-7',     // optional friendly aliases
+    'depression': 'PHQ-9'
   };
+
+  // Modal helper functions
+  function showModal(modal) {
+    if (!modal) return;
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+  }
+
+  function hideModal(modal) {
+    if (!modal) return;
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 
   // safe references for global variables (if original code uses them)
   window.currentAssessment = window.currentAssessment || null;
@@ -204,7 +219,7 @@
       if (res.ok) {
         alert(json?.message || 'Assessment saved.');
         const modal = document.getElementById('assessmentModal');
-        if (modal) modal.classList.add('hidden');
+        if (modal) hideModal(modal);
       } else {
         alert(json?.message || 'Failed to save assessment.');
         console.warn('Assessment save failed', res.status, json);
@@ -217,6 +232,28 @@
 
   // startAssessment: called when user clicks card/button
   let allAssessments = {};
+
+  // Load assessment questions with error handling
+  async function loadQuestions() {
+    try {
+      const response = await fetch('/static/questions.json');
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      allAssessments = await response.json();
+      console.log('Loaded assessments:', Object.keys(allAssessments));
+    } catch (error) {
+      console.error('Error loading assessment questions:', error);
+      const errEl = document.getElementById('assessment-error');
+      if (errEl) {
+        errEl.classList.remove('hidden');
+        const errorMessage = errEl.querySelector('p');
+        if (errorMessage) {
+          errorMessage.textContent = 'Could not load assessment questions. Please check your connection.';
+        }
+      } else {
+        alert('Could not load assessment questions. See console for details.');
+      }
+    }
+  }
 
   async function loadQuestions() {
     if (Object.keys(allAssessments).length === 0) {
@@ -257,18 +294,26 @@
     }
     
     if (modal) {
-        modal.classList.remove('hidden');
+      showModal(modal);
     }
     
     showQuestion();
   };
+
+  function showModal(modal) {
+    modal.classList.remove('hidden');
+  }
+
+  function hideModal(modal) {
+    modal.classList.add('hidden');
+  }
 
   // Attach handlers to cards/buttons and mood options
   document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.start-assessment-btn').forEach(card => {
       card.addEventListener('click', () => {
         const type = card.dataset.assessmentType || card.getAttribute('data-assessment-type') || 'GAD-7';
-        const key = typeMap[type] || type.toLowerCase();
+        const key = typeMap[type] || type;  // use mapping, otherwise use raw type (preserve caps)
         if (typeof window.startAssessment === 'function') {
           window.startAssessment(key);
         } else {
@@ -330,12 +375,39 @@
     const closeBtn = document.getElementById('closeAssessmentBtn');
     if (closeBtn) closeBtn.addEventListener('click', () => {
       const modal = document.getElementById('assessmentModal');
-      if (modal) modal.classList.add('hidden');
+      if (modal) hideModal(modal);
     });
     const openBtn = document.getElementById('openAssessmentBtn');
     if (openBtn) openBtn.addEventListener('click', () => {
       window.startAssessment('anxiety');
     });
+
+    // Event listener for viewing assessment details
+    document.querySelectorAll('.view-assessment-details-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const assessmentId = btn.dataset.assessmentId;
+        if (typeof window.viewAssessmentDetails === 'function') {
+          window.viewAssessmentDetails(assessmentId);
+        }
+      });
+    });
+
+    // Event listener for closing the assessment modal
+    document.querySelectorAll('.close-assessment-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const modal = document.getElementById('assessmentModal');
+        if (modal) hideModal(modal);
+      });
+    });
+
+    // Define viewAssessmentDetails on the window object
+    if (typeof window.viewAssessmentDetails !== 'function') {
+      window.viewAssessmentDetails = function(assessmentId) {
+        // Placeholder logic for viewing assessment details.
+        // This could be implemented to fetch details and show another modal.
+        alert(`Viewing details for assessment ID: ${assessmentId}`);
+      };
+    }
   });
 
 })();

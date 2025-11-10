@@ -398,12 +398,24 @@ def digital_detox():
 @patient_required
 def progress():
     try:
+        logger.info("Entering progress route")
         user_id = session['user_id']
-        goals = Goal.query.filter_by(user_id=user_id).all()
+        logger.info(f"User ID: {user_id}")
         
-        achievements = [goal.title for goal in goals if goal.status == 'completed']
-        
-        assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+        # Get user's goals and assessments with error handling
+        try:
+            goals = Goal.query.filter_by(user_id=user_id).all()
+            logger.info(f"Found {len(goals)} goals")
+            
+            assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+            logger.info(f"Found {len(assessments)} assessments")
+            
+            achievements = [goal.title for goal in goals if goal.status == 'completed']
+            logger.info(f"Found {len(achievements)} completed goals")
+            
+        except Exception as e:
+            logger.error(f"Error fetching goals or assessments: {str(e)}", exc_info=True)
+            return "An error occurred while fetching your data. Please try again later.", 500
         
         latest_gad7 = next((a for a in assessments if a.assessment_type == 'GAD-7'), None)
         latest_phq9 = next((a for a in assessments if a.assessment_type == 'PHQ-9'), None)
@@ -419,15 +431,15 @@ def progress():
         assessment_chart_gad7_data = [next((a.score for a in gad7_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
         assessment_chart_phq9_data = [next((a.score for a in phq9_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
 
-        days_since_assessment = (datetime.now() - assessments[0].created_at).days if assessments else 'N/A'
+        days_since_assessment = (datetime.now(assessments[0].created_at.tzinfo) - assessments[0].created_at).days if assessments and assessments[0].created_at else 'N/A'
         
         user_data_for_ai = {
-            'gad7_score': latest_gad7.score if latest_gad7 else 'N/A',
-            'phq9_score': latest_phq9.score if latest_phq9 else 'N/A',
+            'gad7_score': latest_gad7.score if latest_gad7 else 0,  # Default to 0 instead of 'N/A' for calculations
+            'phq9_score': latest_phq9.score if latest_phq9 else 0,  # Default to 0 instead of 'N/A' for calculations
             'wellness_score': 'calculating...',
             'completed_goals': len(achievements),
             'total_goals': len(goals),
-            'days_since_assessment': days_since_assessment
+            'days_since_assessment': days_since_assessment if days_since_assessment != 'N/A' else 0  # Default to 0 for calculations
         }
         
         user = db.session.get(User, user_id)
@@ -483,12 +495,14 @@ def progress():
                              assessment_chart_phq9_data=assessment_chart_phq9_data,
                              ai_recommendations=ai_recommendations)
     except Exception as e:
-        return "An internal error occurred. Please try again later.", 500
+        logger.error(f"Error in progress route: {str(e)}", exc_info=True)
+        return f"An internal error occurred: {str(e)}. Please try again later.", 500
 
 @patient_bp.route('/goals', methods=['GET', 'POST'])
 @login_required
 @patient_required
 def goals():
+    # ... (rest of the code remains the same)
     user_id = session['user_id']
     
     if request.method == 'POST':

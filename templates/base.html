@@ -121,16 +121,12 @@
 
                             <!-- Google Translate Element -->
                             <div id="google_translate_element"></div>
-<script>
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
-}
-</script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_1.js') }}"></script>
+<script nonce="{{ g.csp_nonce }}" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
                             <!-- User Menu with Advanced Dropdown -->
                             <div class="relative user-menu-container">
-                                <button class="user-menu-btn" onclick="toggleUserMenu()">
+                                <button id="user-menu-btn" class="user-menu-btn">
                                     <div class="user-avatar">
                                         {{ session.user_name[0].upper() if session.user_name else 'U' }}
                                     </div>
@@ -178,7 +174,7 @@ function googleTranslateElementInit() {
 
                 <!-- Mobile menu button -->
                 <div class="md:hidden">
-                    <button type="button" class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                    <button id="mobile-menu-btn" type="button" class="mobile-menu-btn">
                         <span class="sr-only">Open main menu</span>
                         <div class="hamburger">
                             <span></span>
@@ -247,7 +243,7 @@ function googleTranslateElementInit() {
                                 <div class="alert-title">{{ category.title() if category else 'Notice' }}</div>
                                 <div class="alert-message">{{ message }}</div>
                             </div>
-                            <button class="alert-close" onclick="closeAlert(this)">
+                            <button class="alert-close alert-close-btn">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -323,7 +319,7 @@ function googleTranslateElementInit() {
     </footer>
 
     <!-- Advanced Scroll to Top Button -->
-    <button id="scroll-to-top" class="scroll-to-top" onclick="scrollToTop()" aria-label="Scroll to top">
+    <button id="scroll-to-top" class="scroll-to-top" aria-label="Scroll to top">
         <i class="fas fa-chevron-up"></i>
     </button>
 
@@ -346,233 +342,26 @@ function googleTranslateElementInit() {
     {% endassets %}
 
     <!-- Handle socket.io connection with error handling -->
-    <script nonce="{{ g.csp_nonce }}">
-    document.addEventListener('DOMContentLoaded', function() {
-        // Initialize socket.io connection with error handling
-        if (typeof io !== 'undefined') {
-            try {
-                const socket = io({
-                    transports: ['websocket'],
-                    upgrade: false,
-                    secure: true
-                });
-                
-                socket.on('connect', function() {
-                    console.log('Connected to WebSocket server');
-                });
-                
-                socket.on('connect_error', function(error) {
-                    console.error('WebSocket connection error:', error);
-                });
-                
-                window.socket = socket; // Make socket available globally if needed
-            } catch (error) {
-                console.error('Error initializing WebSocket:', error);
-            }
-        } else {
-            console.warn('Socket.IO not loaded. Some real-time features may not work.');
-        }
-    });
-    </script>
+    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_2.js') }}"></script>
 
     <!-- Advanced Inline Scripts -->
-    <script nonce="{{ g.csp_nonce }}">
-        // Initialize advanced features on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            if (typeof initializeChartJS === 'function') {
-                initializeChartJS();
-            }
-
-            // Initialize advanced UI features after scripts are loaded
-            setTimeout(function() {
-                if (typeof initializeAdvancedUI === 'function') {
-                    initializeAdvancedUI();
-                }
-            }, 100);
-
-            // Show loading overlay for dynamic content
-            hideLoadingOverlay();
-        });
-
-        // Advanced UI Functions
-        function initializeAdvancedUI() {
-            // Initialize smooth scrolling
-            initializeSmoothScrolling();
-
-            // Initialize tooltips
-            initializeTooltips();
-
-            // Initialize animations
-            initializeAnimations();
-
-            // Initialize mobile menu
-            if (typeof initializeMobileMenu === 'function') {
-                initializeMobileMenu();
-            }
-
-            // Initialize user menu
-            if (typeof initializeUserMenu === 'function') {
-                initializeUserMenu();
-            }
-
-            // Initialize alerts
-            initializeAlerts();
-        }
-
-        function initializeSmoothScrolling() {
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }
-                });
-            });
-        }
-
-        function initializeTooltips() {
-            // Advanced tooltip functionality
-            const tooltipElements = document.querySelectorAll('[data-tooltip]');
-            tooltipElements.forEach(element => {
-                element.addEventListener('mouseenter', showTooltip);
-                element.addEventListener('mouseleave', hideTooltip);
-            });
-        }
-
-        function showTooltip(e) {
-            const tooltip = document.createElement('div');
-            tooltip.className = 'advanced-tooltip';
-            tooltip.textContent = e.target.getAttribute('data-tooltip');
-            document.body.appendChild(tooltip);
-
-            const rect = e.target.getBoundingClientRect();
-            tooltip.style.left = rect.left + rect.width / 2 + 'px';
-            tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
-        }
-
-        function hideTooltip() {
-            const tooltip = document.querySelector('.advanced-tooltip');
-            if (tooltip) {
-                tooltip.remove();
-            }
-        }
-
-        function initializeAnimations() {
-            // Intersection Observer for animations
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('animate-in');
-                    }
-                });
-            }, observerOptions);
-
-            document.querySelectorAll('.animate-on-scroll').forEach(el => {
-                observer.observe(el);
-            });
-        }
-
-        function toggleMobileMenu() {
-            const mobileMenu = document.getElementById('mobile-menu');
-            const isOpen = mobileMenu.classList.contains('open');
-
-            if (isOpen) {
-                mobileMenu.classList.remove('open');
-            } else {
-                mobileMenu.classList.add('open');
-            }
-        }
-
-        function toggleUserMenu() {
-            const userMenu = document.getElementById('user-menu');
-            userMenu.classList.toggle('open');
-        }
-
-        function initializeAlerts() {
-            // Auto-hide alerts after 5 seconds
-            setTimeout(() => {
-                document.querySelectorAll('.advanced-alert').forEach(alert => {
-                    if (!alert.classList.contains('dismissed')) {
-                        closeAlert(alert.querySelector('.alert-close'));
-                    }
-                });
-            }, 5000);
-        }
-
-        function closeAlert(button) {
-            const alert = button.closest('.advanced-alert');
-            alert.classList.add('dismissed');
-            setTimeout(() => alert.remove(), 300);
-        }
-
-        function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        }
-
-        function showLoadingOverlay() {
-            document.getElementById('loading-overlay').style.display = 'flex';
-        }
-
-        function hideLoadingOverlay() {
-            setTimeout(() => {
-                document.getElementById('loading-overlay').style.display = 'none';
-            }, 1000);
-        }
-
-        // Close user menu when clicking outside
-        document.addEventListener('click', function(e) {
-            const userMenu = document.getElementById('user-menu');
-            const userMenuBtn = document.querySelector('.user-menu-btn');
-
-            if (!userMenu.contains(e.target) && !userMenuBtn.contains(e.target)) {
-                userMenu.classList.remove('open');
-            }
-        });
-
-        // Advanced keyboard navigation
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.getElementById('user-menu')?.classList.remove('open');
-                document.getElementById('mobile-menu')?.classList.remove('open');
-            }
-        });
-    </script>
+    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_3.js') }}"></script>
 
         {% block extra_scripts %}
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({
-                pageLanguage: 'en',
-                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-                autoDisplay: false
-            }, 'google_translate_element');
-        }
-    </script>
+    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_4.js') }}"></script>
     <script nonce="{{ g.csp_nonce }}" type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     {% endblock %}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/ui-init.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/mood.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/ui-init.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/mood.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/ui-init.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/mood.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    <script nonce="{ g.csp_nonce }" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script nonce="{ g.csp_nonce }" src="{{ url_for('static', filename='js/ui-init.js') }}"></script>
+    <script nonce="{ g.csp_nonce }" src="{{ url_for('static', filename='js/mood.js') }}"></script>
+    <script nonce="{ g.csp_nonce }" src="{{ url_for('static', filename='js/chat.js') }}"></script>
+    <script nonce="{ g.csp_nonce }" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script nonce="{ g.csp_nonce }" src="{{ url_for('static', filename='js/ui-init.js') }}"></script>
+    <script nonce="{ g.csp_nonce }" src="{{ url_for('static', filename='js/mood.js') }}"></script>
+    <script nonce="{ g.csp_nonce }" src="{{ url_for('static', filename='js/breathing.js') }}"></script></script>
+    <script nonce="{ g.csp_nonce }" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script nonce="{ g.csp_nonce }" src="{{ url_for('static', filename='js/ui-init.js') }}"></script>
+    <script nonce="{ g.csp_nonce }" src="{{ url_for('static', filename='js/mood.js') }}"></script>
+    <script nonce="{ g.csp_nonce }" src="{{ url_for('static', filename='js/chat.js') }}"></script>
 </body>
 </html>

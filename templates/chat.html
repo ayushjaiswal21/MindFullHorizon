@@ -3,7 +3,7 @@
 {% block title %}Chat Support - Mindful Horizon{% endblock %}
 
 {% block extra_head %}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.2/socket.io.js"></script>
+    <script nonce="{ g.csp_nonce }" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.2/socket.io.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -32,25 +32,5 @@
     </div>
 </div>
 
-<script>
-// Initialize chat when page loads
-document.addEventListener('DOMContentLoaded', function() {
-    if (typeof io !== 'undefined') {
-        // Chat functionality is initialized in scripts.js
-        console.log('Chat page loaded, SocketIO should initialize');
-    } else {
-        console.error('SocketIO not loaded');
-        showChatError('Chat service unavailable. Please refresh the page.');
-    }
-});
-
-function showChatError(message) {
-    const chatMessages = document.getElementById('chat-messages');
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'chat-message text-center';
-    errorDiv.innerHTML = `<div class="inline-block px-4 py-2 rounded-lg bg-red-100 text-red-800"><p><i class="fas fa-exclamation-triangle mr-2"></i>${message}</p></div>`;
-    chatMessages.appendChild(errorDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-}
-</script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/chat_inline_1.js') }}"></script>
 {% endblock %}

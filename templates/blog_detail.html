@@ -231,7 +231,7 @@
     </div>
 </div>
 
-<script>
+<script nonce="{{ g.csp_nonce }}">
 // Like functionality
 function toggleLike(postId) {
     fetch(`/api/blog/${postId}/like`, {

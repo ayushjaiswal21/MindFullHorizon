@@ -128,7 +128,7 @@
                         
                         {% if session.get('user_id') == post.author_id %}
                         <div class="relative">
-                            <button onclick="toggleDropdown('{{ post.id }}')" class="text-gray-400 hover:text-gray-600 p-2">
+                            <button class="text-gray-400 hover:text-gray-600 p-2 toggle-dropdown-btn" data-post-id="{{ post.id }}">
                                 <i class="fas fa-ellipsis-v"></i>
                             </button>
                             <div id="dropdown-{{ post.id }}" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 hidden">
@@ -136,8 +136,7 @@
                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class="fas fa-edit mr-2"></i>Edit
                                 </a>
-                                <button onclick="confirmDelete('{{ post.id }}', {{ post.title|tojson|safe }})"
-                                        class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50">
+                                <button class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50 confirm-delete-btn" data-post-id="{{ post.id }}" data-post-title="{{ post.title|tojson|safe }}">
                                     <i class="fas fa-trash mr-2"></i>Delete
                                 </button>
                             </div>
@@ -170,7 +169,7 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
         <p class="text-gray-600 mb-6">Are you sure you want to delete "<span id="deletePostTitle"></span>"? This action cannot be undone.</p>
         <div class="flex space-x-4">
-            <button onclick="hideDeleteModal()" class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
+            <button id="hide-delete-modal-btn" class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
                 Cancel
             </button>
             <form id="deleteForm" method="post" class="flex-1">
@@ -183,39 +182,5 @@
     </div>
 </div>
 
-<script>
-function toggleDropdown(postId) {
-    const dropdown = document.getElementById(`dropdown-${postId}`);
-    // Hide all other dropdowns
-    document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
-        if (d.id !== `dropdown-${postId}`) d.classList.add('hidden');
-    });
-    dropdown.classList.toggle('hidden');
-}
-
-function confirmDelete(postId, title) {
-    // Ensure title is not empty
-    const displayTitle = title || 'this post';
-    document.getElementById('deletePostTitle').textContent = displayTitle;
-    document.getElementById('deleteForm').action = `/blog/${postId}/delete`;
-    const modal = document.getElementById('deleteModal');
-    modal.style.display = 'flex';
-    modal.classList.remove('hidden');
-}
-
-function hideDeleteModal() {
-    const modal = document.getElementById('deleteModal');
-    modal.style.display = 'none';
-    modal.classList.add('hidden');
-}
-
-// Close dropdowns when clicking outside
-document.addEventListener('click', function(e) {
-    if (!e.target.closest('[onclick^="toggleDropdown"]')) {
-        document.querySelectorAll('[id^="dropdown-"]').forEach(d => {
-            d.classList.add('hidden');
-        });
-    }
-});
-</script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/blog_list_inline_1.js') }}"></script>
 {% endblock %}
