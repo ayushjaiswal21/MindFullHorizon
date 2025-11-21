@@ -22,9 +22,15 @@ function startBreathing(pattern) {
     const patternData = patterns[pattern];
     
     // Update UI
-    document.getElementById('breathing-indicator').classList.add('active');
+    const circle = document.getElementById('breathing-circle');
+    if (circle) {
+        circle.classList.add('active');
+    }
     document.getElementById('breathing-instruction').textContent = 'Breathe In';
-    document.getElementById('breathing-timer').textContent = patternData.inhale;
+    const textElement = document.getElementById('breathing-text');
+    if (textElement) {
+        textElement.textContent = patternData.inhale;
+    }
     
     let phase = 'inhale';
     remainingTime = patternData[phase];
@@ -40,16 +46,22 @@ function startBreathing(pattern) {
                     remainingTime = patternData[phase];
                     document.getElementById('breathing-instruction').textContent = 
                         phase === 'hold' ? 'Hold' : 'Breathe Out';
-                    document.getElementById('breathing-indicator').classList.remove('inhale');
-                    document.getElementById('breathing-indicator').classList.add(phase);
+                    const circle1 = document.getElementById('breathing-circle');
+                    if (circle1) {
+                        circle1.classList.remove('inhale');
+                        circle1.classList.add(phase);
+                    }
                     break;
                     
                 case 'hold':
                     phase = 'exhale';
                     remainingTime = patternData.exhale;
                     document.getElementById('breathing-instruction').textContent = 'Breathe Out';
-                    document.getElementById('breathing-indicator').classList.remove('hold');
-                    document.getElementById('breathing-indicator').classList.add('exhale');
+                    const circle2 = document.getElementById('breathing-circle');
+                    if (circle2) {
+                        circle2.classList.remove('hold');
+                        circle2.classList.add('exhale');
+                    }
                     break;
                     
                 case 'exhale':
@@ -57,14 +69,20 @@ function startBreathing(pattern) {
                         phase = 'rest';
                         remainingTime = patternData.rest;
                         document.getElementById('breathing-instruction').textContent = 'Rest';
-                        document.getElementById('breathing-indicator').classList.remove('exhale');
+                        const circle3 = document.getElementById('breathing-circle');
+                        if (circle3) {
+                            circle3.classList.remove('exhale');
+                        }
                     } else {
                         // Restart the cycle
                         phase = 'inhale';
                         remainingTime = patternData.inhale;
                         document.getElementById('breathing-instruction').textContent = 'Breathe In';
-                        document.getElementById('breathing-indicator').classList.remove('exhale');
-                        document.getElementById('breathing-indicator').classList.add('inhale');
+                        const circle4 = document.getElementById('breathing-circle');
+                        if (circle4) {
+                            circle4.classList.remove('exhale');
+                            circle4.classList.add('inhale');
+                        }
                     }
                     break;
                     
@@ -73,14 +91,20 @@ function startBreathing(pattern) {
                     phase = 'inhale';
                     remainingTime = patternData.inhale;
                     document.getElementById('breathing-instruction').textContent = 'Breathe In';
-                    document.getElementById('breathing-indicator').classList.remove('rest');
-                    document.getElementById('breathing-indicator').classList.add('inhale');
+                    const circle5 = document.getElementById('breathing-circle');
+                    if (circle5) {
+                        circle5.classList.remove('rest');
+                        circle5.classList.add('inhale');
+                    }
                     break;
             }
         }
         
         // Update timer display
-        document.getElementById('breathing-timer').textContent = remainingTime > 0 ? remainingTime : 1;
+        const textElement2 = document.getElementById('breathing-text');
+        if (textElement2) {
+            textElement2.textContent = remainingTime > 0 ? remainingTime : 1;
+        }
         
     }, 1000);
 }
@@ -95,19 +119,19 @@ function stopBreathing() {
     currentPattern = null;
     
     // Reset UI
-    const indicator = document.getElementById('breathing-indicator');
-    if (indicator) {
-        indicator.className = 'breathing-indicator';
+    const circle = document.getElementById('breathing-circle');
+    if (circle) {
+        circle.className = 'breathing-circle';
     }
     
     const instruction = document.getElementById('breathing-instruction');
     if (instruction) {
-        instruction.textContent = 'Ready to begin';
+        instruction.textContent = 'Select an exercise to begin';
     }
     
-    const timer = document.getElementById('breathing-timer');
-    if (timer) {
-        timer.textContent = '--';
+    const textElement = document.getElementById('breathing-text');
+    if (textElement) {
+        textElement.textContent = 'Breathe';
     }
 }
 
@@ -178,8 +202,12 @@ function stopSession() {
 function updateSessionTimer(seconds) {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    document.getElementById('session-timer').textContent = 
-        `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    const timerDisplay = document.getElementById('timer-display');
+    if (timerDisplay) {
+        timerDisplay.textContent = 
+            `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+        timerDisplay.classList.remove('hidden');
+    }
 }
 
 // Initialize the breathing exercise

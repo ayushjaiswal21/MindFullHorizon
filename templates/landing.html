@@ -16,7 +16,7 @@
         <p class="text-xl md:text-2xl mb-8 opacity-90">Bite‑size check‑ins, mindful breaks, and AI support—made for Indian college life.</p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="{{ url_for('auth.signup') }}" class="btn-primary animate-fade-in-delay">Start Free</a>
-            <a href="{{ url_for('blog_list') }}" class="btn-primary-nav animate-fade-in-delay">Explore Blogs</a>
+            <a href="{{ url_for('blog.blog_list') }}" class="btn-primary-nav animate-fade-in-delay">Explore Blogs</a>
         </div>
     </div>
     <div class="absolute inset-0 z-0 opacity-10">
@@ -71,7 +71,7 @@
     <div class="container mx-auto px-6">
         <div class="flex items-end justify-between mb-8">
             <h2 class="text-3xl font-bold text-gray-800">Latest from the Blog</h2>
-            <a href="{{ url_for('blog_list') }}" class="text-blue-700 font-semibold hover:underline">View all</a>
+            <a href="{{ url_for('blog.blog_list') }}" class="text-blue-700 font-semibold hover:underline">View all</a>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
             <article class="blog-card group">
@@ -81,7 +81,7 @@
                     <p class="mt-2 text-gray-600">Rahul Sharma, IIT Delhi: “Short breathing + two mindful breaks helped me cut the noise before finals.”</p>
                     <div class="mt-4 flex items-center justify-between">
                         <span class="text-sm text-gray-500">3 min read</span>
-                        <a href="{{ url_for('blog_list') }}" class="inline-flex items-center text-blue-700 font-medium hover:underline">Read more <i class="fas fa-arrow-right ml-2"></i></a>
+                        <a href="{{ url_for('blog.blog_list') }}" class="inline-flex items-center text-blue-700 font-medium hover:underline">Read more <i class="fas fa-arrow-right ml-2"></i></a>
                     </div>
                 </div>
             </article>
@@ -92,7 +92,7 @@
                     <p class="mt-2 text-gray-600">Aisha Khan, Jamia Millia Islamia: “Replacing doom‑scroll with 1‑minute check‑ins boosted my mood and focus.”</p>
                     <div class="mt-4 flex items-center justify-between">
                         <span class="text-sm text-gray-500">4 min read</span>
-                        <a href="{{ url_for('blog_list') }}" class="inline-flex items-center text-blue-700 font-medium hover:underline">Read more <i class="fas fa-arrow-right ml-2"></i></a>
+                        <a href="{{ url_for('blog.blog_list') }}" class="inline-flex items-center text-blue-700 font-medium hover:underline">Read more <i class="fas fa-arrow-right ml-2"></i></a>
                     </div>
                 </div>
             </article>
@@ -103,7 +103,7 @@
                     <p class="mt-2 text-gray-600">Rohan Iyer, IISc Bengaluru: “Earphones + 3 breaths rule. Tiny habits, big calm.”</p>
                     <div class="mt-4 flex items-center justify-between">
                         <span class="text-sm text-gray-500">5 min read</span>
-                        <a href="{{ url_for('blog_list') }}" class="inline-flex items-center text-blue-700 font-medium hover:underline">Read more <i class="fas fa-arrow-right ml-2"></i></a>
+                        <a href="{{ url_for('blog.blog_list') }}" class="inline-flex items-center text-blue-700 font-medium hover:underline">Read more <i class="fas fa-arrow-right ml-2"></i></a>
                     </div>
                 </div>
             </article>

@@ -47,3 +47,61 @@ document.addEventListener('DOMContentLoaded', function () {
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 });
+
+// Breathing exercise guided session function (globally accessible)
+function startGuidedSession(type, name, durationMinutes) {
+    // Convert duration to seconds
+    const duration = durationMinutes * 60;
+    
+    // Update UI to show guided session started
+    const instruction = document.getElementById('breathing-instruction');
+    if (instruction) {
+        instruction.textContent = `Starting ${name} session...`;
+    }
+    
+    // Show timer
+    const timerDisplay = document.getElementById('timer-display');
+    if (timerDisplay) {
+        timerDisplay.classList.remove('hidden');
+    }
+    
+    // Start the session timer
+    let remainingTime = duration;
+    const sessionInterval = setInterval(() => {
+        remainingTime--;
+        updateSessionTimer(remainingTime);
+        
+        if (remainingTime <= 0) {
+            clearInterval(sessionInterval);
+            if (instruction) {
+                instruction.textContent = `${name} session completed!`;
+            }
+            // Reset breathing
+            if (typeof stopBreathing === 'function') {
+                stopBreathing();
+            }
+        }
+    }, 1000);
+    
+    // Start appropriate breathing pattern based on type
+    if (type === 'breathing') {
+        if (name === 'morning') {
+            startBreathing('box'); // Energizing
+        } else if (name === 'stress') {
+            startBreathing('478'); // Calming
+        } else if (name === 'sleep') {
+            startBreathing('coherence'); // Relaxing
+        }
+    }
+}
+
+// Helper function to update session timer (globally accessible)
+function updateSessionTimer(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    const timerDisplay = document.getElementById('timer-display');
+    if (timerDisplay) {
+        timerDisplay.textContent = 
+            `${minutes}:${remainingSeconds < 10 ? '0' : ''}${remainingSeconds}`;
+    }
+}

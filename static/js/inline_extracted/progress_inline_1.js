@@ -252,10 +252,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function updateGoalStatus(goalId, isCompleted) {
-    fetch(`/api/goals/${goalId}`, {
+    fetch(`/patient/api/goals/${goalId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
             'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
         body: JSON.stringify({
@@ -290,10 +291,11 @@ function updateGoalStatus(goalId, isCompleted) {
 }
 
 function addNewGoal(description) {
-    fetch('/api/goals', {
+    fetch('/patient/api/goals', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
             'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
         body: JSON.stringify({

@@ -40,10 +40,10 @@
                 <i class="fas fa-robot text-purple-500 mr-2" aria-hidden="true"></i>AI Tools & Analytics
             </h3>
             <div class="space-y-3">
-                <a href="{{ url_for('ai_documentation') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 text-center">
+                <a href="{{ url_for('provider.ai_documentation') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 text-center">
                     <i class="fas fa-file-medical-alt mr-2" aria-hidden="true"></i>AI Documentation
                 </a>
-                <a href="{{ url_for('analytics') }}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 text-center">
+                <a href="{{ url_for('provider.analytics') }}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 text-center">
                     <i class="fas fa-chart-line mr-2" aria-hidden="true"></i>Advanced Analytics
                 </a>
                 <p class="text-sm text-gray-600 text-center">AI-powered insights and institutional analytics</p>
@@ -54,7 +54,7 @@
     <!-- Search, Filters and Tasks -->
     <div class="grid md:grid-cols-3 gap-6 mb-6">
         <div class="col-span-2">
-            <form method="get" action="{{ url_for('provider_dashboard') }}" class="flex items-center space-x-3">
+            <form method="get" action="{{ url_for('provider.provider_dashboard') }}" class="flex items-center space-x-3">
                 <input type="text" name="q" value="{{ search_q|default('') }}" placeholder="Search patients, email..." class="w-2/3 px-4 py-2 border border-gray-200 rounded-md focus:outline-none" />
                 <select name="risk" class="px-3 py-2 border border-gray-200 rounded-md">
                     <option value="">All Risks</option>
@@ -63,7 +63,7 @@
                     <option value="Low" {% if filter_risk == 'Low' %}selected{% endif %}>Low</option>
                 </select>
                 <button type="submit" class="btn-primary">Filter</button>
-                <a href="{{ url_for('provider_dashboard') }}" class="text-sm text-gray-500 ml-2">Reset</a>
+                <a href="{{ url_for('provider.provider_dashboard') }}" class="text-sm text-gray-500 ml-2">Reset</a>
             </form>
         </div>
 

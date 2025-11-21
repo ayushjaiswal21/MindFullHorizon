@@ -116,3 +116,18 @@ input[type="radio"] {
     font-size: 0.875rem;
   }
 }
+/* Ensure modal starts hidden but doesn’t cause reflow */
+#assessmentModal {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+#assessmentModal.visible {
+  display: flex;
+  opacity: 1;
+}
+
+#assessmentModal.hidden {
+  opacity: 0;
+}

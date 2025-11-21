@@ -627,7 +627,8 @@ def api_save_assessment():
     
     assessment_type = data.get('assessment_type')
     score = data.get('score')
-    responses = data.get('responses', {})
+    responses = data.get('responses', [])
+    contextual_responses = data.get('contextual_responses', {})
     
     if not all([assessment_type, score is not None]):
         return jsonify({
@@ -657,6 +658,7 @@ def api_save_assessment():
             assessment_type=assessment_type.upper(),
             score=score,
             responses=responses,
+            contextual_responses=contextual_responses,
             ai_insights=json.dumps(ai_insights) if ai_insights else None
         )
         
@@ -1037,57 +1039,67 @@ def handle_goals():
         })
     return jsonify({'success': True, 'goals': goals_data})
 
-@patient_bp.route('/api/goals/<int:goal_id>', methods=['PUT'])
+@patient_bp.route('/api/goals/<int:goal_id>', methods=['PUT', 'DELETE'])
 @patient_required
-def update_goal(goal_id):
+def handle_goal(goal_id):
     user_id = session['user_id']
     goal = Goal.query.filter_by(id=goal_id, user_id=user_id).first()
 
     if not goal:
         return jsonify({'success': False, 'message': 'Goal not found.'}), 404
 
-    data = request.json
+    if request.method == 'DELETE':
+        try:
+            db.session.delete(goal)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Goal deleted successfully!'})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': f'Error deleting goal: {str(e)}'})
+    
+    elif request.method == 'PUT':
+        data = request.json
 
-    editable_fields = [
-        'title',
-        'description',
-        'category',
-        'priority',
-        'target_value',
-        'current_value',
-        'unit'
-    ]
+        editable_fields = [
+            'title',
+            'description',
+            'category',
+            'priority',
+            'target_value',
+            'current_value',
+            'unit'
+        ]
 
-    for field in editable_fields:
-        if field in data:
-            setattr(goal, field, data[field])
+        for field in editable_fields:
+            if field in data:
+                setattr(goal, field, data[field])
 
-    completed = data.get('completed')
+        completed = data.get('completed')
 
-    try:
-        if completed is not None:
-            goal.status = 'completed'
-            goal.completed_date = datetime.utcnow().date()
-        else:
-            goal.status = 'active'
-            goal.completed_date = None
-        
-        goal.updated_at = datetime.utcnow()
-        db.session.commit()
-        
-        return jsonify({
-            'success': True,
-            'message': 'Goal updated successfully!',
-            'goal': {
-                'id': goal.id,
-                'title': goal.title,
-                'description': goal.description,
-                'category': goal.category,
-                'status': goal.status,
-                'priority': goal.priority,
-                'progress_percentage': goal.progress_percentage
-            }
-        })
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'success': False, 'message': f'Error updating goal: {str(e)}'})
+        try:
+            if completed is not None:
+                goal.status = 'completed'
+                goal.completed_date = datetime.utcnow().date()
+            else:
+                goal.status = 'active'
+                goal.completed_date = None
+            
+            goal.updated_at = datetime.utcnow()
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Goal updated successfully!',
+                'goal': {
+                    'id': goal.id,
+                    'title': goal.title,
+                    'description': goal.description,
+                    'category': goal.category,
+                    'status': goal.status,
+                    'priority': goal.priority,
+                    'progress_percentage': goal.progress_percentage
+                }
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': f'Error updating goal: {str(e)}'})

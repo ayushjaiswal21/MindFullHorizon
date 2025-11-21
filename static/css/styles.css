@@ -51,7 +51,45 @@ body.modal-open {
   height: 100%;
 }
 
+/* ===== Breathing Exercise Animations ===== */
+#breathing-circle {
+  transition: all 1s ease-in-out;
+}
+
+#breathing-circle.active {
+  transform: scale(1.5);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+#breathing-circle.inhale {
+  transform: scale(1.8);
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+#breathing-circle.hold {
+  transform: scale(1.6);
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+#breathing-circle.exhale {
+  transform: scale(1.2);
+  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+#breathing-circle.rest {
+  transform: scale(1.0);
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+#breathing-visualizer {
+  transition: all 1s ease-in-out;
+}
+
+#breathing-visualizer.active {
+  box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+}
+
 /* Optional: reduce translate element container margin and pin to right side on small screens */
- @media (max-width: 768px) {
+@media (max-width: 768px) {
   .google-translate-wrapper { position: absolute; right: 12px; top: 12px; width: auto; }
 }

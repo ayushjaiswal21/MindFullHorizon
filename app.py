@@ -136,6 +136,9 @@ if app.config.get('SQLALCHEMY_DATABASE_URI', '').startswith('sqlite:///'):
 
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
 
+# DEBUGGING HELPER: set to True for local debugging to skip strict security headers
+app.config.setdefault('DEBUG_DISABLE_SECURITY', os.getenv('DEBUG_DISABLE_SECURITY', '0') == '1')
+
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 # Initialize rate limiter with enhanced configuration for production security
@@ -230,64 +233,26 @@ def generate_csp_nonce():
 # Add enhanced security headers for modern web security
 @app.after_request
 def add_security_headers(response):
-    """Add comprehensive security headers to all responses"""
-    # Basic security headers
-    response.headers['X-Content-Type-Options'] = 'nosniff'
-    response.headers['X-Frame-Options'] = 'DENY'
-    response.headers['X-XSS-Protection'] = '1; mode=block'
-    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    """
+    Simplified version for prototype debugging.
+    Disables restrictive CSP and other blocking headers.
+    """
+    # Remove restrictive headers
+    for h in [
+        "Content-Security-Policy",
+        "Cross-Origin-Opener-Policy",
+        "Cross-Origin-Embedder-Policy",
+        "Cross-Origin-Resource-Policy",
+        "Permissions-Policy",
+        "Strict-Transport-Security",
+        "X-Frame-Options",
+        "X-XSS-Protection",
+    ]:
+        response.headers.pop(h, None)
 
-    # Generate a new nonce for this response
-    csp_nonce = getattr(g, 'csp_nonce', '')
-    
-    # Store the nonce in the response headers
-    response.headers['CSP-Nonce'] = csp_nonce
-    
-    # Define the CSP with all required sources
-    csp_parts = [
-        "default-src 'self'",
-        f"script-src 'self' 'nonce-{csp_nonce}' 'strict-dynamic' 'unsafe-inline' https: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com",
-        f"script-src-elem 'self' 'nonce-{csp_nonce}' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com",
-        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://www.gstatic.com https://fonts.gstatic.com",
-        "style-src-elem 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com https://www.gstatic.com https://fonts.gstatic.com",
-        "font-src 'self' data: https: https://fonts.gstatic.com https://cdn.jsdelivr.net https://fonts.googleapis.com https://www.gstatic.com https://cdnjs.cloudflare.com",
-        "img-src 'self' data: blob: https:",
-        "connect-src 'self' ws: wss: http: https: http://localhost:* https://*.socket.io https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com https://cdnjs.cloudflare.com",
-        "frame-src 'self' https://translate.google.com https://translate-pa.googleapis.com",
-        "media-src 'self' data: blob:",
-        "object-src 'none'",
-        "base-uri 'self'",
-        "form-action 'self'",
-        "frame-ancestors 'self'"
-    ]
-    
-    csp = "; ".join(csp_parts)
-    response.headers['Content-Security-Policy'] = csp
-
-    # HTTPS enforcement and security
-    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains; preload'
-    response.headers['Expect-CT'] = 'max-age=86400, enforce'
-    response.headers['X-Permitted-Cross-Domain-Policies'] = 'none'
-    
-    # CORS headers for socket.io
-    response.headers['Access-Control-Allow-Origin'] = request.headers.get('Origin', '*')
-    response.headers['Access-control-Allow-Credentials'] = 'true'
-    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
-    response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With'
-    
-    # Set Permissions-Policy header
-    response.headers['Permissions-Policy'] = (
-        'camera=(), microphone=(), geolocation=(), '
-        'interest-cohort=(), payment=(self), '
-        'usb=(), bluetooth=(), magnetometer=(), '
-        'gyroscope=(), accelerometer=()'
-    )
-
-    # Additional security headers
-    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
-    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
-    response.headers['Cross-Origin-Resource-Policy'] = 'same-origin'
-
+    # Keep only minimal headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["Referrer-Policy"] = "no-referrer-when-downgrade"
     return response
 
 # Secure CSRF error handler

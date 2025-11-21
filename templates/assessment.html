@@ -9,24 +9,7 @@
 <!-- Assessment data will be passed via data attribute -->
 <div id="assessment-data" data-assessments='{{ assessments|tojson|safe if assessments else "[]" }}'></div>
 
-<!-- Assessment modal root -->
-<div id="assessmentModal" class="hidden" aria-hidden="true">
-  <div class="modal-card bg-white rounded p-6" role="dialog" aria-modal="true" aria-labelledby="assessment-title">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <h2 id="assessment-title">Assessment</h2>
-      <button id="assessment-close-btn" class="modal-close" aria-label="Close assessment">✕</button>
-    </div>
 
-    <div id="assessment-error" class="hidden" role="status" style="color: red; margin-bottom: 8px;"></div>
-
-    <div id="assessment-questions-container" aria-live="polite"></div>
-
-    <div style="margin-top:12px;display:flex;gap:8px;">
-      <button id="assessment-submit-btn" class="btn">Submit</button>
-      <button id="assessment-cancel-btn" class="btn">Cancel</button>
-    </div>
-  </div>
-</div>
 
 <!-- Optional debug element (remove in production) -->
 <div id="assessment-debug-duplicate" style="position:fixed;right:8px;bottom:8px;color:#999;font-size:12px"></div>
@@ -50,7 +33,7 @@
                     <span class="text-sm text-blue-700">⏱️ Takes 2-3 minutes</span>
                 </div>
                 <button id="start-assessment-btn" 
-                        class="mt-3 btn-primary w-full" 
+                        class="mt-3 btn-primary w-full start-assessment-btn" 
                         data-questions-url="{{ url_for('static', filename='questions.json') }}"
                         data-assessment="GAD-7"
                         aria-label="Start Anxiety Assessment">
@@ -280,6 +263,6 @@
 </div>
 </div>
 
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/assessment-fixes.js') }}" defer></script>
+
 {% endblock %}
 

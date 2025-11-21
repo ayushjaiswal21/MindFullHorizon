@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request, jsonify
 from models import (User, Gamification, DigitalDetoxLog, Assessment, Goal, Medication, 
                 MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation, 
-                Prescription, MoodLog, RPMData, Appointment, ClinicalNote, BlogInsight, db)
+                Prescription, MoodLog, RPMData, Appointment, ClinicalNote, BlogInsight, db, get_institutional_summary)
 from decorators import login_required, role_required
 from sqlalchemy.orm import joinedload
 from sqlalchemy import or_, and_

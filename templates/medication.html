@@ -42,7 +42,7 @@
                             <p class="font-semibold text-lg text-gray-800">{{ med.name }}</p>
                             <p class="text-sm text-gray-500">{{ med.dosage }} - {{ med.frequency }}{% if med.time_of_day %} ({{ med.time_of_day }}){% endif %}</p>
                         </div>
-                        <form action="{{ url_for('log_medication') }}" method="POST">
+                        <form action="{{ url_for('patient.log_medication') }}" method="POST">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                             <input type="hidden" name="medication_id" value="{{ med.id }}">
                             {% if med.id in logged_med_ids %}

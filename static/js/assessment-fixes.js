@@ -1,27 +1,146 @@
+/* === saveAssessment helper (INSERTED BY SAFE PATCH) === */
+async function saveAssessment(payload) {
+  const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+  const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+  try {
+    const res = await fetch('/patient/api/save-assessment', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': csrfToken || ''
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const text = await res.text().catch(() => '');
+    if (!res.ok) {
+      console.error('saveAssessment failed', res.status, text);
+      const errEl = document.getElementById('assessment-error');
+      if (errEl) {
+        errEl.textContent = 'Failed to save assessment. Try again later.';
+        errEl.classList.remove('hidden');
+      }
+      throw new Error('Save failed: ' + res.status + ' ' + text);
+    }
+
+    try { return JSON.parse(text); } catch (e) { return text; }
+  } catch (err) {
+    console.error('saveAssessment error', err);
+    const errEl = document.getElementById('assessment-error');
+    if (errEl) {
+      errEl.textContent = 'Failed to save assessment. Try again later.';
+      errEl.classList.remove('hidden');
+    }
+    throw err;
+  }
+}
+/* === end saveAssessment helper === */
 // static/js/assessment-fixes.js
 // Robust bindings and showQuestion() implementation
-(function () {
-  // mapping of human assessment types to keys used by the JS assessments object
-  const typeMap = {
+
+// mapping of human assessment types to keys used by the JS assessments object
+const typeMap = {
     'GAD-7': 'GAD-7',
     'PHQ-9': 'PHQ-9',
     'gad-7': 'GAD-7',
     'phq-9': 'PHQ-9',
     'anxiety': 'GAD-7',     // optional friendly aliases
     'depression': 'PHQ-9'
-  };
+};
 
-  // Modal helper functions
-  function showModal(modal) {
-    if (!modal) return;
-    modal.classList.remove('hidden');
-    modal.style.display = 'flex';
+// Quick global guard to stop anchor href="#" from jumping
+document.addEventListener('click', function (e) {
+  const a = e.target.closest && e.target.closest('a[href="#"]');
+  if (a) {
+    if (e.cancelable) e.preventDefault();
+    e.stopPropagation();
+    const btn = a.closest('.start-assessment-btn') || a.querySelector('.start-assessment-btn');
+    if (btn) { btn.click(); }
+    return;
+  }
+});
+
+// Delegated handler: one place to catch all "start" clicks
+document.addEventListener('click', function (e) {
+  // find closest actionable element
+  const startBtn = e.target.closest('.start-assessment-btn, #start-assessment-btn, .view-assessment-details-btn, .start-assessment-link');
+  if (!startBtn) return;
+
+  // Prevent default browser nav (href="#") and stop bubbling to global handlers
+  if (e.cancelable) e.preventDefault();
+  e.stopPropagation();
+
+  // Avoid double initialization: guard
+  if (window.__assessmentOpening) return;
+  window.__assessmentOpening = true;
+
+  try {
+    const assessmentType = startBtn.dataset.assessmentType || startBtn.dataset.assessment || startBtn.getAttribute('data-assessment-type');
+    const questionsUrl = startBtn.dataset.questionsUrl || startBtn.getAttribute('data-questions-url') || '/static/questions.json';
+    openAssessmentModal({ assessmentType, questionsUrl });
+  } finally {
+    // release flag slightly later (in case open is async)
+    setTimeout(() => { window.__assessmentOpening = false; }, 300);
+  }
+});
+
+function openAssessmentModal(options) {
+    const { assessmentType, questionsUrl } = options;
+    if (typeof window.startAssessment === 'function') {
+        const key = typeMap[assessmentType] || assessmentType;
+        window.startAssessment(key);
+    } else {
+        console.error('startAssessment not available');
+    }
+}
+
+(function () {
+  // Prevent multiple bindings if the file loads twice
+  if (window.__assessmentFixesInit) {
+    console.warn('assessment-fixes.js already initialized');
+    return;
+  }
+  window.__assessmentFixesInit = true;
+  console.log('assessment-fixes.js initialized');
+  
+  function lockBodyScroll() {
+    document.documentElement.style.scrollBehavior = 'auto';
+    document.body.classList.add('modal-open');
+  }
+  function unlockBodyScroll() {
+    document.body.classList.remove('modal-open');
+    document.documentElement.style.scrollBehavior = '';
   }
 
-  function hideModal(modal) {
-    if (!modal) return;
-    modal.classList.add('hidden');
-    modal.style.display = 'none';
+  // Modal helper functions
+  function showModal() {
+    const modal = document.getElementById("assessmentModal");
+    if (!modal || modal.classList.contains("visible")) return;
+
+    lockBodyScroll();
+    modal.style.display = "flex";
+    requestAnimationFrame(() => {
+        modal.classList.add("visible");
+        modal.classList.remove("hidden");
+        const first = modal.querySelector('input, button, [tabindex]:not([tabindex="-1"])');
+        if (first) first.focus({preventScroll: true});
+    });
+  }
+
+  function hideModal() {
+    const modal = document.getElementById("assessmentModal");
+    if (!modal || !modal.classList.contains("visible")) return;
+
+    unlockBodyScroll();
+    modal.classList.remove("visible");
+    modal.classList.add("hidden");
+
+    setTimeout(() => {
+        if (!modal.classList.contains("visible")) {
+        modal.style.display = "none";
+        }
+    }, 200); // smooth transition end
   }
 
   // safe references for global variables (if original code uses them)
@@ -196,37 +315,24 @@
   }
 
   async function completeAssessment() {
-    const payload = {
-      assessment_type: window.currentAssessment.title,
-      score: window.assessmentAnswers.standard.reduce((a, b) => a + b, 0),
-      responses: window.assessmentAnswers.standard,
-      contextual_responses: window.assessmentAnswers.contextual
-    };
-
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    if (window.__assessmentSaving) return;
+    window.__assessmentSaving = true;
     try {
-      const res = await fetch('/api/save-assessment', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRFToken': csrfToken
-        },
-        body: JSON.stringify(payload)
-      });
-      const json = await res.json().catch(() => null);
-      if (res.ok) {
+        const payload = {
+        assessment_type: window.currentAssessment.title,
+        score: window.assessmentAnswers.standard.reduce((a, b) => a + b, 0),
+        responses: window.assessmentAnswers.standard,
+        contextual_responses: window.assessmentAnswers.contextual
+        };
+
+        const json = await saveAssessment(payload);
         alert(json?.message || 'Assessment saved.');
         const modal = document.getElementById('assessmentModal');
         if (modal) hideModal(modal);
-      } else {
-        alert(json?.message || 'Failed to save assessment.');
-        console.warn('Assessment save failed', res.status, json);
-      }
     } catch (err) {
-      console.error('Error saving assessment', err);
-      alert('Network error saving assessment.');
+        // Error is handled by saveAssessment
+    } finally {
+        setTimeout(() => { window.__assessmentSaving = false; }, 300);
     }
   }
 
@@ -300,28 +406,10 @@
     showQuestion();
   };
 
-  function showModal(modal) {
-    modal.classList.remove('hidden');
-  }
-
-  function hideModal(modal) {
-    modal.classList.add('hidden');
-  }
+  
 
   // Attach handlers to cards/buttons and mood options
   document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.start-assessment-btn').forEach(card => {
-      card.addEventListener('click', () => {
-        const type = card.dataset.assessmentType || card.getAttribute('data-assessment-type') || 'GAD-7';
-        const key = typeMap[type] || type;  // use mapping, otherwise use raw type (preserve caps)
-        if (typeof window.startAssessment === 'function') {
-          window.startAssessment(key);
-        } else {
-          console.error('startAssessment not available');
-        }
-      });
-    });
-
     // Mood options binding
     document.querySelectorAll('.mood-option').forEach(opt => {
       opt.addEventListener('click', () => {
@@ -382,16 +470,6 @@
       window.startAssessment('anxiety');
     });
 
-    // Event listener for viewing assessment details
-    document.querySelectorAll('.view-assessment-details-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const assessmentId = btn.dataset.assessmentId;
-        if (typeof window.viewAssessmentDetails === 'function') {
-          window.viewAssessmentDetails(assessmentId);
-        }
-      });
-    });
-
     // Event listener for closing the assessment modal
     document.querySelectorAll('.close-assessment-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -411,3 +489,4 @@
   });
 
 })();
+

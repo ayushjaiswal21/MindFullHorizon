@@ -12,8 +12,22 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function loadGoals() {
-    fetch('/api/goals')
-        .then(response => response.json())
+    fetch('/patient/api/goals', {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            // Check if response is actually JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned non-JSON response. You may need to log in again.');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 displayGoals(data.goals);
@@ -112,15 +126,23 @@ function handleGoalSubmit(e) {
     const formData = new FormData(e.target);
     const goalData = Object.fromEntries(formData.entries());
     
-        fetch('/goals', {
+        fetch('/patient/api/goals', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
             'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
         body: JSON.stringify(goalData)
     })
-    .then(response => response.json())
+    .then(response => {
+        // Check if response is actually JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response. You may need to log in again.');
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             showMessage(data.message, 'success');
@@ -132,7 +154,7 @@ function handleGoalSubmit(e) {
     })
     .catch(error => {
         console.error('Error:', error);
-        showMessage('Error creating goal', 'error');
+        showMessage(error.message || 'Error creating goal', 'error');
     });
 }
 
@@ -143,15 +165,23 @@ function handleProgressSubmit(e) {
     const formData = new FormData(e.target);
     const updateData = Object.fromEntries(formData.entries());
     
-    fetch(`/api/goals/${goalId}`, {
+    fetch(`/patient/api/goals/${goalId}`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
             'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
         body: JSON.stringify(updateData)
     })
-    .then(response => response.json())
+    .then(response => {
+        // Check if response is actually JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response. You may need to log in again.');
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
             showMessage(data.message, 'success');
@@ -169,13 +199,21 @@ function handleProgressSubmit(e) {
 
 function deleteGoal(goalId) {
     if (confirm('Are you sure you want to delete this goal?')) {
-        fetch(`/api/goals/${goalId}`, {
+        fetch(`/patient/api/goals/${goalId}`, {
             method: 'DELETE',
             headers: {
+                'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
             }
         })
-        .then(response => response.json())
+        .then(response => {
+        // Check if response is actually JSON
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response. You may need to log in again.');
+        }
+        return response.json();
+    })
         .then(data => {
             if (data.success) {
                 showMessage(data.message, 'success');

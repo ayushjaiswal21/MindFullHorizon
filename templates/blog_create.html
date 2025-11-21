@@ -10,7 +10,7 @@
                 <h1 class="text-3xl font-bold text-gray-900">Create New Blog Post</h1>
                 <p class="mt-2 text-gray-600">Share your thoughts and experiences with the mental health community</p>
             </div>
-            <a href="{{ url_for('blog_list') }}" class="text-blue-600 hover:text-blue-800 flex items-center">
+            <a href="{{ url_for('blog.blog_list') }}" class="text-blue-600 hover:text-blue-800 flex items-center">
                 <i class="fas fa-arrow-left mr-2"></i> Back to Blog
             </a>
         </div>
@@ -18,7 +18,7 @@
 
     <!-- Form -->
     <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <form method="post" action="{{ url_for('blog_create') }}" class="p-8">
+        <form method="post" action="{{ url_for('blog.blog_create') }}" class="p-8">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <!-- Title -->
             <div class="mb-6">
@@ -123,7 +123,7 @@
                 </div>
                 
                 <div class="flex items-center space-x-4">
-                    <a href="{{ url_for('blog_list') }}" 
+                    <a href="{{ url_for('blog.blog_list') }}" 
                        class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">
                         Cancel
                     </a>

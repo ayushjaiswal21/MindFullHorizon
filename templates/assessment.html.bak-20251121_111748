@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block title %}Mental Health Assessment - Mindful Horizon{% endblock %}
+{% block head %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
+{% block content %}
+<!-- Assessment data will be passed via data attribute -->
+<div id="assessment-data" data-assessments='{{ assessments|tojson|safe if assessments else "[]" }}'></div>
+
+<!-- Assessment modal root -->
+<div id="assessmentModal" class="hidden" aria-hidden="true">
+  <div class="modal-card bg-white rounded p-6" role="dialog" aria-modal="true" aria-labelledby="assessment-title">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 id="assessment-title">Assessment</h2>
+      <button id="assessment-close-btn" class="modal-close" aria-label="Close assessment">✕</button>
+    </div>
+
+    <div id="assessment-error" class="hidden" role="status" style="color: red; margin-bottom: 8px;"></div>
+
+    <div id="assessment-questions-container" aria-live="polite"></div>
+
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button id="assessment-submit-btn" class="btn">Submit</button>
+      <button id="assessment-cancel-btn" class="btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Optional debug element (remove in production) -->
+<div id="assessment-debug-duplicate" style="position:fixed;right:8px;bottom:8px;color:#999;font-size:12px"></div>
+
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Mental Health Assessment</h1>
+        <p class="text-gray-600">Complete this assessment to track your mental well-being and get personalized insights</p>
+    </div>
+
+    <!-- Assessment Selection -->
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+        <div class="card cursor-pointer hover:shadow-xl transition-all duration-300 start-assessment-btn" data-assessment-type="GAD-7">
+            <div class="text-center">
+                <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-heartbeat text-blue-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Anxiety Screening (GAD-7)</h3>
+                <p class="text-gray-600 text-sm mb-4">7-question assessment for anxiety symptoms</p>
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <span class="text-sm text-blue-700">⏱️ Takes 2-3 minutes</span>
+                </div>
+                <button id="start-assessment-btn" 
+                        class="mt-3 btn-primary w-full" 
+                        data-questions-url="{{ url_for('static', filename='questions.json') }}"
+                        data-assessment="GAD-7"
+                        aria-label="Start Anxiety Assessment">
+                    Start Assessment
+                </button>
+            </div>
+        </div>
+
+        <div class="card cursor-pointer hover:shadow-xl transition-all duration-300 start-assessment-btn" data-assessment-type="PHQ-9">
+            <div class="text-center">
+                <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-brain text-purple-600 text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 mb-2">Depression Screening (PHQ-9)</h3>
+                <p class="text-gray-600 text-sm mb-4">9-question assessment for depression symptoms</p>
+                <div class="bg-purple-50 p-3 rounded-lg">
+                    <span class="text-sm text-purple-700">⏱️ Takes 5-7 minutes</span>
+                </div>
+                <button class="mt-3 btn-primary w-full start-assessment-btn" 
+                        data-assessment-type="PHQ-9"
+                        aria-label="Start Depression Assessment">
+                    Start Assessment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Mood Check -->
+    <div class="card mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-smile text-yellow-500 mr-2"></i>Daily Mood Check
+        </h3>
+        <p class="text-gray-600 mb-4">How are you feeling today? This helps track your mood patterns over time.</p>
+        
+        <div class="grid grid-cols-5 gap-4 mb-4">
+            <div class="text-center cursor-pointer mood-option" data-mood="1">
+                <div class="text-4xl mb-2">😢</div>
+                <span class="text-sm text-gray-600">Very Low</span>
+            </div>
+            <div class="text-center cursor-pointer mood-option" data-mood="2">
+                <div class="text-4xl mb-2">😟</div>
+                <span class="text-sm text-gray-600">Low</span>
+            </div>
+            <div class="text-center cursor-pointer mood-option" data-mood="3">
+                <div class="text-4xl mb-2">😐</div>
+                <span class="text-sm text-gray-600">Neutral</span>
+            </div>
+            <div class="text-center cursor-pointer mood-option" data-mood="4">
+                <div class="text-4xl mb-2">🙂</div>
+                <span class="text-sm text-gray-600">Good</span>
+            </div>
+            <div class="text-center cursor-pointer mood-option" data-mood="5">
+                <div class="text-4xl mb-2">😊</div>
+                <span class="text-sm text-gray-600">Excellent</span>
+            </div>
+        </div>
+        
+        <div class="flex flex-col items-center">
+            <div id="mood-notes-container" class="w-full mb-4 hidden">
+                <label for="mood-notes" class="block text-sm font-medium text-gray-700 mb-1">Add a note (optional):</label>
+                <textarea id="mood-notes" class="w-full p-2 border rounded-lg" rows="2" placeholder="How are you feeling today?"></textarea>
+            </div>
+            <button id="save-mood-btn" class="btn-primary" disabled aria-label="Save your daily mood assessment">
+                <i class="fas fa-save mr-2"></i>Save Today's Mood
+            </button>
+        </div>
+    </div>
+
+    <!-- Assessment History Chart -->
+    <div class="card mb-8">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-chart-line text-green-500 mr-2"></i>Assessment Score Trends
+        </h3>
+        <div class="assessment-chart-container">
+            <canvas id="assessment-history-chart"></canvas>
+        </div>
+        <div class="text-sm text-gray-600 mt-2">
+            <i class="fas fa-info-circle mr-2"></i>
+            Track your mental health scores over time to see your progress.
+        </div>
+    </div>
+
+    <!-- Assessment History Table -->
+    <div class="card">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-history text-blue-500 mr-2"></i>Assessment History
+        </h3>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full table-auto">
+                <thead>
+                    <tr class="bg-gray-50">
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Date</th>
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Assessment Type</th>
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Score</th>
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Severity</th>
+                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="assessmentHistory">
+                    {% if assessments %}
+                        {% for assessment in assessments %}
+                        <tr>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ assessment.created_at }}</td>
+                            <td class="px-4 py-3 text-sm text-gray-700">{{ assessment.assessment_type }}</td>
+                            <td class="px-4 py-3 text-sm font-semibold text-blue-600">{{ assessment.score }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                {% set severity_info = get_severity_info(assessment.assessment_type, assessment.score) %}
+                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-{{ severity_info.color }}-100 text-{{ severity_info.color }}-800">{{ severity_info.severity }}</span>
+                            </td>
+                            <td class="px-4 py-3 text-sm">
+                                <button class="text-blue-600 hover:text-blue-800 mr-2 view-assessment-details-btn" data-assessment-id="{{ assessment.id }}">
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-4 py-3 text-sm text-gray-600 text-center">No assessments recorded yet.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- AI Insights Section -->
+        <div class="mt-6 pt-6 border-t border-gray-200">
+            <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
+                <i class="fas fa-robot text-blue-500 mr-2"></i> AI-Powered Insights
+            </h4>
+
+            <!-- Loading State (hidden by default; shown when generating insights) -->
+            <div id="aiInsightsLoading" class="hidden text-center py-4">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                <p class="text-gray-600">Analyzing your responses...</p>
+            </div>
+
+<!-- AI Insights Content -->
+<div id="aiInsightsContent" class="space-y-4 {% if not latest_insights %}hidden{% endif %}">
+    <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+            <i class="fas fa-comment-alt text-blue-500 mr-2"></i> Summary
+        </h5>
+        <p id="aiSummary" class="text-gray-700">
+            {% if latest_insights and latest_insights.summary %}
+                {{ latest_insights.summary }}
+            {% else %}
+                No summary available.
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Recommendations
+        </h5>
+        <ul id="aiRecommendations" class="space-y-2">
+            {% if latest_insights and latest_insights.recommendations %}
+                {% for rec in latest_insights.recommendations %}
+                    <li class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
+                        <span>{{ rec }}</span>
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li class="flex items-start">
+                    <div class="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg border border-gray-200">
+        <h5 class="font-medium text-gray-800 mb-2 flex items-center">
+            <i class="fas fa-book-open text-green-500 mr-2"></i> Resources
+        </h5>
+        <ul id="aiResources" class="space-y-2">
+            {% if latest_insights and latest_insights.resources %}
+                {% for res in latest_insights.resources %}
+                    <li class="flex items-start">
+                        <i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i>
+                        <span>{{ res }}</span>
+                    </li>
+                {% endfor %}
+            {% else %}
+                <li class="flex items-start">
+                    <div class="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+
+<!-- Assessment Modal - Fixed positioning and visibility -->
+<div id="assessmentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-6 max-w-2xl mx-4 max-h-screen overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 id="assessmentTitle" class="text-xl font-semibold text-gray-800">Assessment</h3>
+            <button class="text-gray-500 hover:text-gray-700 close-assessment-btn" aria-label="Close Assessment">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+
+        <div id="assessment-loading" class="text-center py-8 hidden">
+            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p class="text-gray-600">Loading questions...</p>
+        </div>
+
+        <div id="assessment-error" class="text-center py-8 hidden">
+            <div class="text-6xl text-red-500 mb-4">✗</div>
+            <h2 class="text-xl font-bold text-gray-800 mb-2">Something went wrong</h2>
+            <p class="text-gray-600 mb-6">Could not load assessment questions. Please try again later.</p>
+            <button class="btn-primary close-assessment-btn">Close</button>
+        </div>
+
+        <div id="assessment-question-container" class="hidden">
+            <div id="assessment-progress" class="text-sm text-gray-600 mb-4 text-center"></div>
+            <h4 id="assessment-question" class="text-lg font-medium text-gray-800 mb-4"></h4>
+            <div id="assessment-options" class="space-y-3"></div>
+        </div>
+
+                <div class="flex justify-between mt-6">
+            <!-- Removed Next and Complete Assessment buttons as requested -->
+        </div>
+    </div>
+</div>
+</div>
+
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/assessment-fixes.js') }}" defer></script>
+{% endblock %}
+
