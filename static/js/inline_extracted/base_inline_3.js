@@ -52,13 +52,16 @@
         function initializeSmoothScrolling() {
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
                 anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
+                    const href = this.getAttribute('href');
+                    if (href && href !== '#') {
+                        e.preventDefault();
+                        const target = document.querySelector(href);
+                        if (target) {
+                            target.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
                     }
                 });
             });
@@ -179,3 +182,41 @@
             }
         });
     
+// Ensure google translate wrapper exists and is positioned so it doesn't push nav items
+(function ensureGoogleTranslateWrapper(){
+  document.addEventListener('DOMContentLoaded', function(){
+    let wrapper = document.getElementById('google-translate-wrapper');
+    if (!wrapper) {
+      // try to find google_translate_element and wrap it
+      const el = document.getElementById('google_translate_element') || document.querySelector('.google-translate-element');
+      if (el) {
+        wrapper = document.createElement('div');
+        wrapper.id = 'google-translate-wrapper';
+        wrapper.className = 'google-translate-wrapper';
+        el.parentNode.insertBefore(wrapper, el);
+        wrapper.appendChild(el);
+      }
+    }
+    // keep fixed width so it doesn't push nearby nav links
+    if (wrapper) {
+      wrapper.style.display = 'inline-block';
+      wrapper.style.width = wrapper.style.width || '180px';
+      wrapper.style.verticalAlign = 'middle';
+      wrapper.style.position = 'relative';
+    }
+  });
+})();
+document.addEventListener('click', function(e){
+  try {
+    const a = e.target.closest && e.target.closest('a[href=""#""]');
+    if (!a) return;
+    // if anchor is used as JS trigger (has data-* or class), prevent default
+    const isTrigger = a.classList.contains('start-assessment-btn') || a.dataset?.assessment || a.dataset?.questionsUrl;
+    if (isTrigger || a.querySelector('.start-assessment-btn')) {
+      if (e.cancelable) e.preventDefault();
+      e.stopPropagation();
+      const btn = a.closest('.start-assessment-btn') || a.querySelector('.start-assessment-btn') || a;
+      if (btn) { btn.click(); }
+    }
+  } catch(err){ /* ignore */ }
+});

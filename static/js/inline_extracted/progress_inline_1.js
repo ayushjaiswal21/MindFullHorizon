@@ -337,3 +337,22 @@ function showNotification(message, type) {
         notification.remove();
     }, 3000);
 }
+(function(){
+  // Wrap fetch used for progress with debug output so when server returns 500, client logs useful info
+  const originalFetch = window.fetch;
+  window.fetch = function(input, init){
+    if (typeof input === 'string' && input.includes('/api/progress')) {
+      console.debug('[DEBUG] calling progress API', input, init);
+      return originalFetch(input, init).then(res => {
+        if (!res.ok) {
+          console.warn('[DEBUG] progress API failed', res.status, res.statusText);
+        }
+        return res;
+      }).catch(err => {
+        console.error('[DEBUG] progress API network error', err);
+        throw err;
+      });
+    }
+    return originalFetch(input, init);
+  };
+})();

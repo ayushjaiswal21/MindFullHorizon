@@ -1,413 +1,57 @@
-/* Importing Google Font */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f0f4f8; /* Light gray background */
-}
-
-/* ===== CENTRALIZED MODAL LAYOUT SHIFT PREVENTION ===== */
-
-/* Primary modal scroll lock with scrollbar compensation */
 body.modal-open {
-    overflow: hidden !important;
-    /* Padding is dynamically set by ModalUtils JavaScript */
+  overflow: hidden;
+  height: 100%;
+}
+#assessmentModal.visible {
+  /* ensure it sits centered and above all content */
+  display: flex !important;
+  visibility: visible;
+  opacity: 1;
+}
+#assessmentModal.hidden {
+  display: none !important;
+  visibility: hidden;
+  opacity: 0;
+}
+/* ===== Fix: navbar focus & google translate layout ===== */
+.advanced-nav .nav-link-item:focus,
+.advanced-nav .nav-link-item:active,
+.advanced-nav .user-menu-btn:focus,
+.advanced-nav .user-menu-btn:active,
+.advanced-nav .nav-link-item:focus-visible {
+  background-color: transparent !important; /* stop focus / active from turning white */
+  color: inherit !important;
+  outline: 2px solid rgba(99,102,241,0.12) !important; /* tasteful focus ring for accessibility */
+  box-shadow: none !important;
 }
 
-/* Prevent layout shift for fixed/sticky elements during modal transitions */
-body.modal-open .fixed,
-body.modal-open .sticky,
-body.modal-open .navbar,
-body.modal-open .header {
-    /* Padding is dynamically set by ModalUtils JavaScript */
+/* Wrapper for google translate to avoid layout shifts */
+.google-translate-wrapper {
+  display: inline-block;
+  width: 180px;                 /* fixed width to avoid pushing nav items */
+  min-width: 120px;
+  max-width: 220px;
+  overflow: hidden;
+  vertical-align: middle;
 }
 
-/* Ensure modal backdrop doesn't interfere with layout calculations */
-.modal-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 1040;
-    /* Don't add any padding here - let ModalUtils handle it */
-}
+/* Prevent the invisible google banner frame from moving content */
+.goog-te-banner-frame.skiptranslate { display:none !important; }
+body { top: 0 !important; }
 
-/* Smooth transitions for modal operations */
-body {
-    transition: padding-right 0.15s ease-in-out;
-}
-
-/* Ensure modals are properly layered */
-.modal {
-    z-index: 1050;
-}
-
-/* Prevent content jumping during modal state changes */
-.modal-transition-lock {
-    overflow: hidden;
-}
-
-/* Base Styles */
-.nav-link {
-    @apply text-sm md:text-base hover:text-blue-200 transition duration-300;
-}
-
-.btn-primary {
-    @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-full transition duration-300 shadow-lg;
-}
-
-.input-field {
-    @apply w-full p-3 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200;
-}
-
-.card {
-    @apply bg-white p-8 rounded-3xl shadow-xl hover:shadow-2xl transition duration-300 transform border border-gray-200;
-}
-
-.header-bg {
-    background: linear-gradient(135deg, #667eea, #764ba2);
-}
-
-.assessment-card {
-    @apply bg-white p-6 rounded-2xl shadow-md border-t-4 border-blue-500 transition duration-300;
-}
-
-.dashboard-grid {
-    display: grid;
-    gap: 2rem;
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-}
-
-@media (min-width: 768px) {
-    .dashboard-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-.logo {
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-    font-size: 2.5rem;
-    display: flex;
-    align-items: center;
-    text-decoration: none;
-    color: white;
-}
-
-.logo-icon {
-    margin-right: 0.5rem;
-    font-size: 3.8rem;
-}
-
-/* Google Translate Element Styling */
-.google-translate-element {
-    margin-left: 1rem; /* Adjust as needed for spacing */
-    margin-right: 1rem;
-}
-
-.goog-te-gadget {
-    font-family: 'Inter', sans-serif;
-    font-size: 0.875rem;
-    color: #f8fafc; /* Light text color for contrast */
-    white-space: nowrap;
-}
-
-.goog-te-gadget img {
-    display: none; /* Hide Google Translate branding image */
-}
-
-.goog-te-gadget div {
-    color: #f8fafc !important;
-}
-
+/* Make the google select appear visually consistent */
 .goog-te-gadget .goog-te-combo {
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 8px;
-    padding: 6px 10px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #f8fafc;
-    appearance: none;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    cursor: pointer;
-    transition: all 0.2s ease;
+  width: 100% !important;
+  box-sizing: border-box;
 }
 
-.goog-te-gadget .goog-te-combo:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.5);
+/* When modal is opened, lock body scroll without causing layout jump */
+body.modal-open {
+  overflow: hidden !important;
+  height: 100%;
 }
 
-.goog-te-gadget .goog-te-combo option {
-    background-color: #667eea; /* Background for dropdown options */
-    color: #f8fafc;
-}
-
-/* Hide the Google Translate banner */
-.goog-te-banner-frame.skiptranslate {
-    display: none !important;
-}
-body {
-    top: 0px !important;
-}
-
-/* Header/Nav Bar Lavender Purple Theme */
-.advanced-nav {
-    background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%) !important;
-    color: #f8fafc;
-}
-
-.advanced-nav .nav-link-item,
-.advanced-nav .nav-link-item-secondary,
-.advanced-nav .user-menu-btn,
-.advanced-nav .user-name {
-    color: #f8fafc !important;
-    transition: background 0.2s, color 0.2s;
-}
-
-.advanced-nav .nav-link-item:hover,
-.advanced-nav .nav-link-item-secondary:hover,
-.advanced-nav .user-menu-btn:hover {
-    background: linear-gradient(90deg, #a78bfa 0%, #c4b5fd 100%) !important;
-    color: #6d28d9 !important;
-}
-
-/* Mobile menu lavender purple theme */
-.mobile-menu-content {
-    background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%) !important;
-}
-.mobile-menu-item {
-    color: #f8fafc !important;
-    transition: background 0.2s, color 0.2s;
-}
-.mobile-menu-item:hover {
-    background: linear-gradient(90deg, #a78bfa 0%, #c4b5fd 100%) !important;
-    color: #6d28d9 !important;
-}
-
-/* Ensure dropdown and avatar text stays visible */
-.user-menu-dropdown {
-    background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 50%, #c4b5fd 100%) !important;
-    color: #f8fafc !important;
-}
-.user-menu-item {
-    color: #f8fafc !important;
-}
-.user-menu-item:hover {
-    background: linear-gradient(90deg, #a78bfa 0%, #c4b5fd 100%) !important;
-    color: #6d28d9 !important;
-}
-
-/* Logo icon color for contrast */
-.logo-icon {
-    color: #ffffff !important;
-}
-
-/* Animations */
-@keyframes fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-in {
-    animation: fade-in 0.8s ease-out;
-}
-
-.animate-fade-in-delay {
-    animation: fade-in 0.8s ease-out 0.3s both;
-}
-
-/* Alert Styles */
-.alert-success {
-    @apply bg-green-100 border border-green-400 text-green-700;
-}
-
-.alert-error {
-    @apply bg-red-100 border border-red-400 text-red-700;
-}
-
-/* Custom hover effects */
-.card:hover {
-    transform: translateY(-2px);
-}
-
-/* Progress bars */
-.progress-bar {
-    @apply bg-gray-200 rounded-full h-2 overflow-hidden;
-}
-
-.progress-fill {
-    @apply bg-blue-600 h-full transition-all duration-300;
-}
-
-/* Chart containers */
-.chart-container {
-    position: relative;
-    height: 400px;
-    width: 100%;
-    margin: 20px 0;
-}
-
-.chart-container canvas {
-    max-height: 400px !important;
-}
-
-/* Assessment history chart */
-.assessment-chart-container {
-    position: relative;
-    height: 300px;
-    width: 100%;
-    margin: 15px 0;
-}
-
-/* Status badges */
-.status-badge {
-    @apply px-2 py-1 rounded-full text-xs font-medium;
-}
-
-.status-active {
-    @apply bg-green-100 text-green-800;
-}
-
-.status-warning {
-    @apply bg-yellow-100 text-yellow-800;
-}
-
-.status-danger {
-    @apply bg-red-100 text-red-800;
-}
-
-/* Table styles */
-.table-hover tbody tr:hover {
-    @apply bg-gray-50;
-}
-
-/* Custom scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    @apply bg-gray-100 rounded;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-gray-400 rounded;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-500;
-}
-
-/* Emoji visibility and styling */
-.emoji-tile {
-    font-size: 2.5rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
-}
-
-/* Hero image optimizations */
-.hero-image {
-    object-fit: cover;
-    object-position: center;
-    width: 100%;
-    height: 100%;
-}
-
-.hero-overlay {
-    background: linear-gradient(135deg, rgba(12, 74, 110, 0.6), rgba(56, 189, 248, 0.4));
-}
-
-/* Ensure emojis are always visible */
-span[style*="color"] {
-    display: inline-block;
-    text-rendering: optimizeLegibility;
-    font-feature-settings: "kern";
-}
-
-/* Feature tiles hover effect */
-.feature-tile:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease-in-out;
-}
-
-/* Chat message styles */
-.chat-message {
-    margin-bottom: 1rem;
-    display: flex;
-}
-
-.chat-message.user {
-    justify-content: flex-end;
-}
-
-.chat-message.bot {
-    justify-content: flex-start;
-}
-
-.message-bubble {
-    padding: 0.75rem 1rem;
-    border-radius: 1.25rem;
-    max-width: 75%;
-    word-wrap: break-word;
-}
-
-.chat-message.user .message-bubble {
-    background-color: #3b82f6; /* Blue-600 */
-    color: white;
-    border-bottom-right-radius: 0.25rem;
-}
-
-.chat-message.bot .message-bubble {
-    background-color: #e5e7eb; /* Gray-200 */
-    color: #1f2937; /* Gray-800 */
-    border-bottom-left-radius: 0.25rem;
-}
-
-/* Assessment option styles */
-.assessment-option {
-    display: flex;
-    align-items: center;
-    padding: 0.75rem;
-    border: 1px solid #e5e7eb; /* Gray-200 */
-    border-radius: 0.5rem;
-    transition: background-color 0.2s, border-color 0.2s;
-}
-
-.assessment-option:hover {
-    background-color: #f3f4f6; /* Gray-100 */
-    border-color: #3b82f6; /* Blue-600 */
-}
-
-.assessment-option input[type="radio"] {
-    margin-right: 0.75rem;
-}
-
-/* Mood music buttons */
-.mood-btn {
-    border: none;
-    padding: 10px 14px;
-    border-radius: 12px;
-    font-weight: 700;
-    cursor: pointer;
-}
-.mood-btn:focus {
-    outline: 3px solid rgba(37,99,235,0.25);
-    outline-offset: 2px;
-}
-
-/* Styling for selected mood option */
-.mood-option.selected {
-    border-color: #3b82f6; /* Blue-600 */
-    background-color: #e0f2fe; /* Light blue background */
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3); /* Blue ring shadow */
+/* Optional: reduce translate element container margin and pin to right side on small screens */
+ @media (max-width: 768px) {
+  .google-translate-wrapper { position: absolute; right: 12px; top: 12px; width: auto; }
 }
