@@ -93,3 +93,10 @@ body.modal-open {
 @media (max-width: 768px) {
   .google-translate-wrapper { position: absolute; right: 12px; top: 12px; width: auto; }
 }
+
+/* Ensure charts are visible */
+canvas { display: block; max-width: 100%; }
+#assessment-history-chart, #mood-history-chart, #screenTimeChart, #wellnessChart {
+  min-height: 200px !important;
+  height: 250px !important;
+}

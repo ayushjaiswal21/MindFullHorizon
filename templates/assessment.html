@@ -102,20 +102,6 @@
         </div>
     </div>
 
-    <!-- Assessment History Chart -->
-    <div class="card mb-8">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">
-            <i class="fas fa-chart-line text-green-500 mr-2"></i>Assessment Score Trends
-        </h3>
-        <div class="assessment-chart-container">
-            <canvas id="assessment-history-chart"></canvas>
-        </div>
-        <div class="text-sm text-gray-600 mt-2">
-            <i class="fas fa-info-circle mr-2"></i>
-            Track your mental health scores over time to see your progress.
-        </div>
-    </div>
-
     <!-- Assessment History Table -->
     <div class="card">
         <h3 class="text-xl font-semibold text-gray-800 mb-4">
@@ -135,7 +121,7 @@
                 </thead>
                 <tbody id="assessmentHistory">
                     {% if assessments %}
-                        {% for assessment in assessments %}
+                        {% for assessment in assessments[:15] %}
                         <tr>
                             <td class="px-4 py-3 text-sm text-gray-700">{{ assessment.created_at }}</td>
                             <td class="px-4 py-3 text-sm text-gray-700">{{ assessment.assessment_type }}</td>
@@ -158,6 +144,14 @@
                     {% endif %}
                 </tbody>
             </table>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <p class="text-sm text-gray-600">
+                <i class="fas fa-info-circle mr-2"></i>
+                Showing recent 15 assessments. 
+                <a href="{{ url_for('patient.progress') }}" class="text-blue-600 hover:text-blue-800 font-medium">View complete history and trends</a>
+            </p>
         </div>
         
         <!-- AI Insights Section -->
@@ -254,13 +248,11 @@
             <div id="assessment-progress" class="text-sm text-gray-600 mb-4 text-center"></div>
             <h4 id="assessment-question" class="text-lg font-medium text-gray-800 mb-4"></h4>
             <div id="assessment-options" class="space-y-3"></div>
-        </div>
-
-                <div class="flex justify-between mt-6">
-            <!-- Removed Next and Complete Assessment buttons as requested -->
+            <div id="assessment-nav-area" class="flex justify-between mt-6">
+                <!-- Navigation buttons will be inserted here by JavaScript -->
+            </div>
         </div>
     </div>
-</div>
 </div>
 
 

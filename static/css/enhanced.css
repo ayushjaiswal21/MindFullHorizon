@@ -1549,3 +1549,70 @@ html {
         border-color: rgba(59, 130, 246, 0.2);
     }
 }
+
+/* ===============================================
+   HEADER AND TRANSLATE WIDGET FIXES
+   =============================================== */
+
+/* Fixes the logo/brand disappearing on click and hover */
+.advanced-logo:focus, 
+.advanced-logo:active {
+    background-color: #e0f7fa !important;  /* Light Blue Background */
+    color: #003366 !important;             /* Dark Blue Text (so it is visible) */
+    border-radius: 5px;                    /* Optional: Smooth corners */
+    outline: none;                         /* Removes default browser outline */
+}
+
+/* Fix header hover to maintain light blue background */
+.advanced-nav:hover {
+    background: linear-gradient(to right, #60a5fa, #93c5fd, #60a5fa) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* If the whole header bar is turning white, use this instead */
+.advanced-nav:active,
+.advanced-nav:focus-within {
+    background: linear-gradient(to right, #60a5fa, #93c5fd, #60a5fa) !important;
+}
+
+/* Google Translate Widget Width and Position Fix */
+/* 1. Constrain the width of the translation box container */
+#google_translate_element {
+    display: inline-block;
+    width: 130px !important;  /* Force a fixed, smaller width */
+    height: 35px;
+    overflow: hidden;
+    margin: 0 16px 0 24px;  /* Move more to the right (increase left margin) */
+    vertical-align: middle;  /* Align vertically with other nav items */
+}
+
+/* 2. Hide the "Powered by Google" text */
+.goog-te-gadget {
+    font-size: 0 !important;
+    color: transparent !important;
+}
+
+/* 3. Hide the "Select Language" label text inside the gadget */
+.goog-te-gadget span {
+    display: none !important;
+}
+
+/* 4. Style the actual dropdown menu to fit nicely */
+.goog-te-combo {
+    margin: 0 !important;
+    height: 30px;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+/* 5. Better positioning within nav items */
+.nav-link-item + #google_translate_element,
+#google_translate_element + .user-menu-container {
+    margin-left: 8px;
+    margin-right: 8px;
+}
+
+/* End of enhanced.css - Header and Translate Widget Fixes Applied */
+}

@@ -245,15 +245,44 @@ function openAssessmentModal(options) {
 
     prevBtn.disabled = window.currentQuestion === 0;
 
-    if (window.currentQuestion === window.currentAssessment.questions.length - 1) {
-      nextBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Complete Assessment';
-      nextBtn.onclick = completeAssessment;
-      nextBtn.disabled = false;
+    // Check if we're in contextual questions mode
+    const isContextualMode = window.currentAssessment.contextual_questions && 
+                            window.currentAssessment.questions === window.currentAssessment.contextual_questions;
+    
+    if (isContextualMode) {
+      // We're in contextual questions mode
+      if (window.currentQuestion === window.currentAssessment.questions.length - 1) {
+        // Last contextual question - show complete button
+        nextBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Complete Assessment';
+        nextBtn.onclick = completeAssessment;
+      } else {
+        // More contextual questions available
+        nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right ml-2"></i>';
+        nextBtn.onclick = nextQuestion;
+      }
     } else {
-      nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right ml-2"></i>';
-      nextBtn.onclick = nextQuestion;
-      nextBtn.disabled = false;
+      // We're in standard questions mode
+      const hasContextualQuestions = window.currentAssessment.contextual_questions && 
+                                    window.currentAssessment.contextual_questions.length > 0;
+      
+      if (window.currentQuestion === window.currentAssessment.questions.length - 1) {
+        // Last standard question
+        if (hasContextualQuestions) {
+          // Has contextual questions - show next button to move to contextual
+          nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right ml-2"></i>';
+          nextBtn.onclick = nextQuestion;
+        } else {
+          // No contextual questions - show complete button
+          nextBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Complete Assessment';
+          nextBtn.onclick = completeAssessment;
+        }
+      } else {
+        // More standard questions available
+        nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right ml-2"></i>';
+        nextBtn.onclick = nextQuestion;
+      }
     }
+    nextBtn.disabled = false;
   }
 
   // fallback selectAnswer / next / prev / complete functions if not defined
@@ -292,32 +321,70 @@ function openAssessmentModal(options) {
     const qIndex = window.currentQuestion;
     const question = window.currentAssessment.questions[qIndex];
 
+    // Validate answer for scale questions
     if (question.type === 'scale' && window.assessmentAnswers.standard[qIndex] === undefined) {
       alert('Please select an answer before continuing.');
       return;
     }
 
-    if (qIndex < window.currentAssessment.questions.length - 1) {
+    // Check if this is the last standard question and we have contextual questions
+    const isLastStandardQuestion = qIndex === window.currentAssessment.questions.length - 1;
+    const hasContextualQuestions = window.currentAssessment.contextual_questions && 
+                                  window.currentAssessment.contextual_questions.length > 0;
+    const isContextualMode = window.currentAssessment.questions === window.currentAssessment.contextual_questions;
+    
+    if (isLastStandardQuestion && hasContextualQuestions && !isContextualMode) {
+      // Move to contextual questions
+      showContextualQuestions();
+    } else if (qIndex < window.currentAssessment.questions.length - 1) {
+      // Move to next question
       window.currentQuestion++;
       showQuestion();
     } else {
-      showContextualQuestions();
+      // No more questions, complete assessment
+      completeAssessment();
     }
   }
 
   function showContextualQuestions() {
+    // Store the original questions so we can restore them if needed
+    if (!window.originalQuestions) {
+      window.originalQuestions = window.currentAssessment.questions;
+    }
+    
+    // Switch to contextual questions
     window.currentAssessment.questions = window.currentAssessment.contextual_questions;
     window.currentQuestion = 0;
     showQuestion();
+    
+    // Update the button to show completion
     const nextBtn = document.getElementById('nextBtn');
-    nextBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Complete Assessment';
-    nextBtn.onclick = completeAssessment;
+    if (nextBtn) {
+      nextBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Complete Assessment';
+      nextBtn.onclick = completeAssessment;
+    }
   }
 
   async function completeAssessment() {
     if (window.__assessmentSaving) return;
     window.__assessmentSaving = true;
     try {
+        // Validate last contextual question if we're in contextual mode
+        const qIndex = window.currentQuestion;
+        const question = window.currentAssessment.questions[qIndex];
+        
+        if (question.type === 'multiple-choice' && (!window.assessmentAnswers.contextual[question.id] || window.assessmentAnswers.contextual[question.id].length === 0)) {
+          alert('Please select at least one answer before completing.');
+          window.__assessmentSaving = false;
+          return;
+        }
+        
+        if (question.type === 'open-ended' && (!window.assessmentAnswers.contextual[question.id] || window.assessmentAnswers.contextual[question.id].trim() === '')) {
+          alert('Please provide a response before completing.');
+          window.__assessmentSaving = false;
+          return;
+        }
+
         const payload = {
         assessment_type: window.currentAssessment.title,
         score: window.assessmentAnswers.standard.reduce((a, b) => a + b, 0),
@@ -341,40 +408,28 @@ function openAssessmentModal(options) {
 
   // Load assessment questions with error handling
   async function loadQuestions() {
-    try {
-      const response = await fetch('/static/questions.json');
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      allAssessments = await response.json();
-      console.log('Loaded assessments:', Object.keys(allAssessments));
-    } catch (error) {
-      console.error('Error loading assessment questions:', error);
-      const errEl = document.getElementById('assessment-error');
-      if (errEl) {
-        errEl.classList.remove('hidden');
-        const errorMessage = errEl.querySelector('p');
-        if (errorMessage) {
-          errorMessage.textContent = 'Could not load assessment questions. Please check your connection.';
+    if (Object.keys(allAssessments).length === 0) {
+      try {
+        const response = await fetch('/static/questions.json');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        allAssessments = await response.json();
+        console.log('Loaded assessments:', Object.keys(allAssessments));
+      } catch (error) {
+        console.error('Error loading assessment questions:', error);
+        const errEl = document.getElementById('assessment-error');
+        if (errEl) {
+          errEl.classList.remove('hidden');
+          const errorMessage = errEl.querySelector('p');
+          if (errorMessage) {
+            errorMessage.textContent = 'Could not load assessment questions. Please check your connection.';
+          }
+        } else {
+          alert('Could not load assessment questions. See console for details.');
         }
-      } else {
-        alert('Could not load assessment questions. See console for details.');
       }
     }
   }
 
-  async function loadQuestions() {
-    if (Object.keys(allAssessments).length === 0) {
-      try {
-        const response = await fetch('/static/questions.json');
-        if (!response.ok) {
-          throw new Error('Failed to load assessment questions.');
-        }
-        allAssessments = await response.json();
-      } catch (error) {
-        console.error(error);
-        // Handle error, maybe show a message to the user
-      }
-    }
-  }
 
   window.startAssessment = async function (typeKey) {
     await loadQuestions();
@@ -427,37 +482,52 @@ function openAssessmentModal(options) {
     });
 
     // Save mood click handler (if not already implemented)
-    const saveMoodBtn = document.getElementById('save-mood-btn');
-    if (saveMoodBtn) {
-      saveMoodBtn.addEventListener('click', async () => {
-        const sel = document.querySelector('.mood-option.selected');
-        if (!sel) {
-          alert('Please select a mood first.');
-          return;
-        }
-        const moodVal = sel.getAttribute('data-mood');
-        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        try {
-          const res = await fetch('/api/save-mood', {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrfToken },
-            body: JSON.stringify({ mood: moodVal })
-          });
-          const json = await res.json().catch(() => null);
-          if (res.ok) {
-            alert(json?.message || 'Mood saved.');
-            saveMoodBtn.disabled = true;
-          } else {
-            alert(json?.message || 'Failed to save mood.');
-            console.warn('save-mood', res.status, json);
+    /* === MOOD SAVE: unified handler (INSERTED) === */
+    if (typeof document !== 'undefined') {
+      const saveMoodBtn = document.getElementById('save-mood-btn');
+      if (saveMoodBtn) {
+        saveMoodBtn.addEventListener('click', async () => {
+          const sel = document.querySelector('.mood-option.selected');
+          if (!sel) {
+            alert('Please select a mood first.');
+            return;
           }
-        } catch (err) {
-          console.error('Error saving mood', err);
-          alert('Network error while saving mood.');
-        }
-      });
+          const moodVal = sel.getAttribute('data-mood');
+
+          const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+          const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+          try {
+            const res = await fetch('/api/mood', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken || ''
+              },
+              body: JSON.stringify({ value: Number(moodVal) })
+            });
+
+            const text = await res.text().catch(()=>null);
+            let json;
+            try { json = JSON.parse(text); } catch(e) { json = { raw: text }; }
+
+            if (res.ok) {
+              alert(json?.message || 'Mood saved.');
+              saveMoodBtn.disabled = true;
+              if (typeof window._debugMoods === 'function') window._debugMoods();
+            } else {
+              console.warn('save-mood failed', res.status, json);
+              alert(json?.message || 'Failed to save mood.');
+            }
+          } catch (err) {
+            console.error('Error saving mood', err);
+            alert('Network error while saving mood.');
+          }
+        });
+      }
     }
+    /* === END MOOD SAVE === */
 
     // Close/open bindings
     const closeBtn = document.getElementById('closeAssessmentBtn');

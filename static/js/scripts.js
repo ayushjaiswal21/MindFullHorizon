@@ -40,6 +40,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function appendMessage(text, className) {
+        if (!chatContainer) {
+            console.warn('Chat container not found, cannot append message');
+            return;
+        }
         const messageElement = document.createElement('div');
         messageElement.className = `chat-message ${className}`;
         messageElement.textContent = text;

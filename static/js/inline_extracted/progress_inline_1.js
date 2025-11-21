@@ -11,11 +11,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 function initializeMoodChart() {
-    const canvas = document.getElementById('moodChart');
+    // Try both possible canvas IDs
+    const canvas = document.getElementById('mood-history-chart') || document.getElementById('moodChart');
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
     
-    // Get data from Flask template
-    const moodData = JSON.parse('{{ mood_data | tojson }}');
+    // Get data from Flask template (if available)
+    let moodData = [];
+    try {
+        // This will be replaced by template data when loaded via template
+        const templateData = typeof window.moodData !== 'undefined' ? window.moodData : [];
+        moodData = templateData;
+    } catch (e) {
+        console.warn('Could not load mood data from template', e);
+    }
     
     if (moodData.length === 0) {
         // Display a message if no data
@@ -38,13 +48,31 @@ function initializeMoodChart() {
 }
 
 function initializeAssessmentChart() {
-    const canvas = document.getElementById('assessmentChart');
+    // Try both possible canvas IDs
+    const canvas = document.getElementById('assessment-history-chart') || document.getElementById('assessmentChart');
+    if (!canvas) return;
+    
     const ctx = canvas.getContext('2d');
     
-    // Get data from Flask template
-    const labels = JSON.parse('{{ assessment_chart_labels | tojson }}');
-    const gad7Data = JSON.parse('{{ assessment_chart_gad7_data | tojson }}');
-    const phq9Data = JSON.parse('{{ assessment_chart_phq9_data | tojson }}');
+    // Get data from Flask template (if available)
+    let labels = [];
+    let gad7Data = [];
+    let phq9Data = [];
+    
+    try {
+        // This will be replaced by template data when loaded via template
+        if (typeof window.assessmentChartLabels !== 'undefined') {
+            labels = window.assessmentChartLabels;
+        }
+        if (typeof window.assessmentChartGad7Data !== 'undefined') {
+            gad7Data = window.assessmentChartGad7Data;
+        }
+        if (typeof window.assessmentChartPhq9Data !== 'undefined') {
+            phq9Data = window.assessmentChartPhq9Data;
+        }
+    } catch (e) {
+        console.warn('Could not load assessment data from template', e);
+    }
 
     if (labels.length === 0) {
         // Display a message if no data
@@ -343,7 +371,7 @@ function showNotification(message, type) {
   // Wrap fetch used for progress with debug output so when server returns 500, client logs useful info
   const originalFetch = window.fetch;
   window.fetch = function(input, init){
-    if (typeof input === 'string' && input.includes('/api/progress')) {
+    if (typeof input === 'string' && input.includes('/patient/api/progress')) {
       console.debug('[DEBUG] calling progress API', input, init);
       return originalFetch(input, init).then(res => {
         if (!res.ok) {
@@ -357,4 +385,48 @@ function showNotification(message, type) {
     }
     return originalFetch(input, init);
   };
+})();
+
+(function(){
+  async function renderProgressCharts() {
+    try {
+      const res = await fetch('/patient/api/progress', { credentials: 'include' });
+      const txt = await res.text();
+      const payload = txt ? JSON.parse(txt) : {};
+
+      const assessments = payload.assessments || [];
+      const moods = payload.moods || [];
+
+      const aLabels = assessments.map(a => a.created_at ? a.created_at.slice(0,16) : '');
+      const aScores = assessments.map(a => Number(a.score || 0));
+      const mLabels = moods.map(m => m.created_at ? m.created_at.slice(0,16) : '');
+      const mValues = moods.map(m => Number(m.mood || 0));
+
+      if (window.Chart) {
+        if (document.getElementById('assessment-history-chart') || document.getElementById('assessmentChart')) {
+          const canvas = document.getElementById('assessment-history-chart') || document.getElementById('assessmentChart');
+          const ctx = canvas.getContext('2d');
+          if (window._assessmentChart) window._assessmentChart.destroy();
+          window._assessmentChart = new Chart(ctx, { type: 'line', data: { labels: aLabels, datasets: [{ label: 'Assessment Score', data: aScores, fill:false, tension:0.2 }] }, options: { responsive:true, maintainAspectRatio:false } });
+        }
+        if (document.getElementById('mood-history-chart') || document.getElementById('moodChart')) {
+          const canvas = document.getElementById('mood-history-chart') || document.getElementById('moodChart');
+          const ctx2 = canvas.getContext('2d');
+          if (window._moodChart) window._moodChart.destroy();
+          window._moodChart = new Chart(ctx2, { type: 'bar', data: { labels: mLabels, datasets: [{ label: 'Mood', data: mValues }] }, options: { responsive:true, maintainAspectRatio:false } });
+        }
+      } else {
+        console.warn('Chart.js not available - charts not rendered');
+      }
+    } catch (err) {
+      console.error('renderProgressCharts error', err);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    // try to render after a short delay to ensure canvases exist
+    setTimeout(renderProgressCharts, 400);
+    // expose debug helper
+    window._debugProgress = renderProgressCharts;
+  });
 })();

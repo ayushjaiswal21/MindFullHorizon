@@ -705,6 +705,36 @@ def my_prescriptions():
                            user_name=session['user_name'],
                            prescriptions=prescriptions)
 
+@patient_bp.route('/api/progress', methods=['GET'])
+def get_progress():
+    try:
+        # Import models at function-time to avoid circular imports in some setups
+        from models import Assessment, MoodLog
+        assessments = Assessment.query.order_by(Assessment.created_at.asc()).limit(500).all()
+        moods = MoodLog.query.order_by(MoodLog.created_at.asc()).limit(500).all()
+
+        a_out = []
+        for a in assessments:
+            a_out.append({
+                "id": a.id,
+                "assessment_type": getattr(a, 'assessment_type', None),
+                "score": getattr(a, 'score', None),
+                "created_at": a.created_at.isoformat() if hasattr(a, 'created_at') else None
+            })
+
+        m_out = []
+        for m in moods:
+            m_out.append({
+                "id": m.id,
+                "mood": getattr(m, 'mood_score', None),
+                "created_at": m.created_at.isoformat() if hasattr(m, 'created_at') else None
+            })
+
+        return jsonify({"ok": True, "assessments": a_out, "moods": m_out}), 200
+    except Exception as e:
+        current_app.logger.exception("progress fetch failed")
+        return jsonify({"ok": False, "error": str(e)}), 500
+
 @patient_bp.route('/api/digital-detox-data')
 @login_required
 @patient_required

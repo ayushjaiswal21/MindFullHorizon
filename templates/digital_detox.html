@@ -120,5 +120,9 @@
 {% endblock %}
 
 {% block extra_scripts %}
+<script nonce="{{ g.csp_nonce }}">
+    // Provide screen time log data to the external JavaScript
+    window.screen_time_log = {{ screen_time_log|tojson }};
+</script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/digital_detox_inline_1.js') }}"></script>
 {% endblock %}

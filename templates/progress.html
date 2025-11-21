@@ -104,14 +104,23 @@
         <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg mb-6">
             <h4 class="font-semibold text-gray-800 mb-3">Personalized Insights</h4>
             <div class="space-y-3 text-sm text-gray-700">
-                <div class="flex items-start">
-                    <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
-                    <span><strong>Positive Trend:</strong> Your anxiety levels have decreased by 25% over the past month, indicating effective coping strategies.</span>
-                </div>
-                <div class="flex items-start">
-                    <i class="fas fa-lightbulb text-yellow-500 mr-3 mt-1"></i>
-                    <span><strong>Recommendation:</strong> Your mood dips typically occur on Mondays. Consider implementing weekend self-care routines.</span>
-                </div>
+                {% if ai_recommendations and ai_recommendations.insights %}
+                    {% for insight in ai_recommendations.insights[:2] %}
+                    <div class="flex items-start">
+                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
+                        <span><strong>{{ insight.title }}:</strong> {{ insight.desc }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="flex items-start">
+                        <i class="fas fa-info-circle text-blue-500 mr-3 mt-1"></i>
+                        <span><strong>Analysis Available:</strong> Complete more assessments to receive personalized AI insights about your mental health progress.</span>
+                    </div>
+                    <div class="flex items-start">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-3 mt-1"></i>
+                        <span><strong>Recommendation:</strong> Continue regular assessments and mood tracking for better AI analysis.</span>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -216,5 +225,7 @@
     </div>
 </div>
 
+<!-- Chart.js for data visualization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/progress_inline_1.js') }}"></script>
 {% endblock %}

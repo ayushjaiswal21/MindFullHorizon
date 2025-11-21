@@ -3,7 +3,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let screenTimeChart;
     let correlationChart;
 
-    const screenTimeLog = {{ screen_time_log|tojson }};
+    // Handle screen_time_log data - use empty array if not available
+    let screenTimeLog = window.screen_time_log || [];
+    if (!Array.isArray(screenTimeLog)) {
+        console.warn('Screen time log is not an array, using empty array');
+        screenTimeLog = [];
+    }
 
     function initializeCharts() {
         const screenTimeCtx = document.getElementById('screen-time-chart').getContext('2d');
