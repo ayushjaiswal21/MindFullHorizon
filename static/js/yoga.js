@@ -44,10 +44,27 @@ function startTimer() {
             if (timeElapsed >= sessionDuration) {
                 stopTimer();
                 sessionStatus.textContent = 'Session completed!';
+                playBeep();
                 // Optionally log session here or trigger a modal
             }
         }
     }, 1000);
+}
+
+function playBeep() {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
+    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + 0.5); // Play for 0.5 seconds
 }
 
 function pauseTimer() {
@@ -93,7 +110,7 @@ function startGuidedSession(type, name, durationMinutes) {
     alert(`Starting guided ${type} session: ${name} for ${durationMinutes} minutes.`);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Attach event listeners to timer controls
     startBtn?.addEventListener('click', startTimer);
     pauseBtn?.addEventListener('click', pauseTimer);
@@ -101,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Attach event listeners to quick session buttons
     document.querySelectorAll('.quick-session-btn').forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function () {
             const duration = parseInt(this.dataset.duration);
             setQuickSession(duration);
         });
@@ -109,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Attach event listeners to guided yoga session cards
     document.querySelectorAll('.start-guided-session-card').forEach(card => {
-        card.addEventListener('click', function() {
+        card.addEventListener('click', function () {
             const type = this.dataset.sessionType;
             const name = this.dataset.sessionName;
             const duration = parseInt(this.dataset.sessionDuration);

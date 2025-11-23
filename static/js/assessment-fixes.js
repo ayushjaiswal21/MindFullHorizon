@@ -41,12 +41,12 @@ async function saveAssessment(payload) {
 
 // mapping of human assessment types to keys used by the JS assessments object
 const typeMap = {
-    'GAD-7': 'GAD-7',
-    'PHQ-9': 'PHQ-9',
-    'gad-7': 'GAD-7',
-    'phq-9': 'PHQ-9',
-    'anxiety': 'GAD-7',     // optional friendly aliases
-    'depression': 'PHQ-9'
+  'GAD-7': 'GAD-7',
+  'PHQ-9': 'PHQ-9',
+  'gad-7': 'GAD-7',
+  'phq-9': 'PHQ-9',
+  'anxiety': 'GAD-7',     // optional friendly aliases
+  'depression': 'PHQ-9'
 };
 
 // Quick global guard to stop anchor href="#" from jumping
@@ -86,13 +86,13 @@ document.addEventListener('click', function (e) {
 });
 
 function openAssessmentModal(options) {
-    const { assessmentType, questionsUrl } = options;
-    if (typeof window.startAssessment === 'function') {
-        const key = typeMap[assessmentType] || assessmentType;
-        window.startAssessment(key);
-    } else {
-        console.error('startAssessment not available');
-    }
+  const { assessmentType, questionsUrl } = options;
+  if (typeof window.startAssessment === 'function') {
+    const key = typeMap[assessmentType] || assessmentType;
+    window.startAssessment(key);
+  } else {
+    console.error('startAssessment not available');
+  }
 }
 
 (function () {
@@ -103,7 +103,7 @@ function openAssessmentModal(options) {
   }
   window.__assessmentFixesInit = true;
   console.log('assessment-fixes.js initialized');
-  
+
   function lockBodyScroll() {
     document.documentElement.style.scrollBehavior = 'auto';
     document.body.classList.add('modal-open');
@@ -121,10 +121,10 @@ function openAssessmentModal(options) {
     lockBodyScroll();
     modal.style.display = "flex";
     requestAnimationFrame(() => {
-        modal.classList.add("visible");
-        modal.classList.remove("hidden");
-        const first = modal.querySelector('input, button, [tabindex]:not([tabindex="-1"])');
-        if (first) first.focus({preventScroll: true});
+      modal.classList.add("visible");
+      modal.classList.remove("hidden");
+      const first = modal.querySelector('input, button, [tabindex]:not([tabindex="-1"])');
+      if (first) first.focus({ preventScroll: true });
     });
   }
 
@@ -137,9 +137,9 @@ function openAssessmentModal(options) {
     modal.classList.add("hidden");
 
     setTimeout(() => {
-        if (!modal.classList.contains("visible")) {
+      if (!modal.classList.contains("visible")) {
         modal.style.display = "none";
-        }
+      }
     }, 200); // smooth transition end
   }
 
@@ -246,9 +246,9 @@ function openAssessmentModal(options) {
     prevBtn.disabled = window.currentQuestion === 0;
 
     // Check if we're in contextual questions mode
-    const isContextualMode = window.currentAssessment.contextual_questions && 
-                            window.currentAssessment.questions === window.currentAssessment.contextual_questions;
-    
+    const isContextualMode = window.currentAssessment.contextual_questions &&
+      window.currentAssessment.questions === window.currentAssessment.contextual_questions;
+
     if (isContextualMode) {
       // We're in contextual questions mode
       if (window.currentQuestion === window.currentAssessment.questions.length - 1) {
@@ -262,9 +262,9 @@ function openAssessmentModal(options) {
       }
     } else {
       // We're in standard questions mode
-      const hasContextualQuestions = window.currentAssessment.contextual_questions && 
-                                    window.currentAssessment.contextual_questions.length > 0;
-      
+      const hasContextualQuestions = window.currentAssessment.contextual_questions &&
+        window.currentAssessment.contextual_questions.length > 0;
+
       if (window.currentQuestion === window.currentAssessment.questions.length - 1) {
         // Last standard question
         if (hasContextualQuestions) {
@@ -329,10 +329,10 @@ function openAssessmentModal(options) {
 
     // Check if this is the last standard question and we have contextual questions
     const isLastStandardQuestion = qIndex === window.currentAssessment.questions.length - 1;
-    const hasContextualQuestions = window.currentAssessment.contextual_questions && 
-                                  window.currentAssessment.contextual_questions.length > 0;
+    const hasContextualQuestions = window.currentAssessment.contextual_questions &&
+      window.currentAssessment.contextual_questions.length > 0;
     const isContextualMode = window.currentAssessment.questions === window.currentAssessment.contextual_questions;
-    
+
     if (isLastStandardQuestion && hasContextualQuestions && !isContextualMode) {
       // Move to contextual questions
       showContextualQuestions();
@@ -351,12 +351,12 @@ function openAssessmentModal(options) {
     if (!window.originalQuestions) {
       window.originalQuestions = window.currentAssessment.questions;
     }
-    
+
     // Switch to contextual questions
     window.currentAssessment.questions = window.currentAssessment.contextual_questions;
     window.currentQuestion = 0;
     showQuestion();
-    
+
     // Update the button to show completion
     const nextBtn = document.getElementById('nextBtn');
     if (nextBtn) {
@@ -369,37 +369,77 @@ function openAssessmentModal(options) {
     if (window.__assessmentSaving) return;
     window.__assessmentSaving = true;
     try {
-        // Validate last contextual question if we're in contextual mode
-        const qIndex = window.currentQuestion;
-        const question = window.currentAssessment.questions[qIndex];
-        
-        if (question.type === 'multiple-choice' && (!window.assessmentAnswers.contextual[question.id] || window.assessmentAnswers.contextual[question.id].length === 0)) {
-          alert('Please select at least one answer before completing.');
-          window.__assessmentSaving = false;
-          return;
-        }
-        
-        if (question.type === 'open-ended' && (!window.assessmentAnswers.contextual[question.id] || window.assessmentAnswers.contextual[question.id].trim() === '')) {
-          alert('Please provide a response before completing.');
-          window.__assessmentSaving = false;
-          return;
-        }
+      // Validate last contextual question if we're in contextual mode
+      const qIndex = window.currentQuestion;
+      const question = window.currentAssessment.questions[qIndex];
 
-        const payload = {
+      if (question.type === 'multiple-choice' && (!window.assessmentAnswers.contextual[question.id] || window.assessmentAnswers.contextual[question.id].length === 0)) {
+        alert('Please select at least one answer before completing.');
+        window.__assessmentSaving = false;
+        return;
+      }
+
+      if (question.type === 'open-ended' && (!window.assessmentAnswers.contextual[question.id] || window.assessmentAnswers.contextual[question.id].trim() === '')) {
+        alert('Please provide a response before completing.');
+        window.__assessmentSaving = false;
+        return;
+      }
+
+      const payload = {
         assessment_type: window.currentAssessment.title,
         score: window.assessmentAnswers.standard.reduce((a, b) => a + b, 0),
         responses: window.assessmentAnswers.standard,
         contextual_responses: window.assessmentAnswers.contextual
-        };
+      };
 
-        const json = await saveAssessment(payload);
-        alert(json?.message || 'Assessment saved.');
-        const modal = document.getElementById('assessmentModal');
-        if (modal) hideModal(modal);
+      const json = await saveAssessment(payload);
+      alert(json?.message || 'Assessment saved.');
+      const modal = document.getElementById('assessmentModal');
+      if (modal) hideModal(modal);
+
+      // Dynamically update AI insights if available
+      if (json.success && json.ai_insights) {
+        const insights = json.ai_insights;
+
+        // Update Summary
+        const summaryEl = document.getElementById('aiSummary');
+        if (summaryEl && insights.summary) {
+          summaryEl.textContent = insights.summary;
+        }
+
+        // Update Recommendations
+        const recsEl = document.getElementById('aiRecommendations');
+        if (recsEl && insights.recommendations && Array.isArray(insights.recommendations)) {
+          recsEl.innerHTML = insights.recommendations.map(rec =>
+            `<li class="flex items-start"><i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i><span>${rec}</span></li>`
+          ).join('');
+        }
+
+        // Update Resources
+        const resEl = document.getElementById('aiResources');
+        if (resEl && insights.resources && Array.isArray(insights.resources)) {
+          resEl.innerHTML = insights.resources.map(res =>
+            `<li class="flex items-start"><i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i><span>${res}</span></li>`
+          ).join('');
+        }
+
+        // Show the container
+        const contentEl = document.getElementById('aiInsightsContent');
+        if (contentEl) {
+          contentEl.classList.remove('hidden');
+          // Scroll to insights
+          contentEl.scrollIntoView({ behavior: 'smooth' });
+        }
+      } else {
+        // If no insights returned immediately, maybe reload or show a message
+        if (confirm('Assessment saved. Reload page to see updated history?')) {
+          window.location.reload();
+        }
+      }
     } catch (err) {
-        // Error is handled by saveAssessment
+      // Error is handled by saveAssessment
     } finally {
-        setTimeout(() => { window.__assessmentSaving = false; }, 300);
+      setTimeout(() => { window.__assessmentSaving = false; }, 300);
     }
   }
 
@@ -449,19 +489,19 @@ function openAssessmentModal(options) {
 
     const modal = document.getElementById('assessmentModal');
     const title = document.getElementById('assessmentTitle');
-    
+
     if (title && window.currentAssessment) {
-        title.textContent = window.currentAssessment.title;
+      title.textContent = window.currentAssessment.title;
     }
-    
+
     if (modal) {
       showModal(modal);
     }
-    
+
     showQuestion();
   };
 
-  
+
 
   // Attach handlers to cards/buttons and mood options
   document.addEventListener('DOMContentLoaded', function () {
@@ -508,9 +548,9 @@ function openAssessmentModal(options) {
               body: JSON.stringify({ value: Number(moodVal) })
             });
 
-            const text = await res.text().catch(()=>null);
+            const text = await res.text().catch(() => null);
             let json;
-            try { json = JSON.parse(text); } catch(e) { json = { raw: text }; }
+            try { json = JSON.parse(text); } catch (e) { json = { raw: text }; }
 
             if (res.ok) {
               alert(json?.message || 'Mood saved.');
@@ -550,7 +590,7 @@ function openAssessmentModal(options) {
 
     // Define viewAssessmentDetails on the window object
     if (typeof window.viewAssessmentDetails !== 'function') {
-      window.viewAssessmentDetails = function(assessmentId) {
+      window.viewAssessmentDetails = function (assessmentId) {
         // Placeholder logic for viewing assessment details.
         // This could be implemented to fetch details and show another modal.
         alert(`Viewing details for assessment ID: ${assessmentId}`);

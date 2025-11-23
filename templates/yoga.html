@@ -1,23 +1,3 @@
-    <div id="yoga-videos-section" class="card p-6 mb-8 hidden">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">
-            <i class="fas fa-video text-red-500 mr-2"></i>Yoga Video Library (Free for All)
-        </h3>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div class="aspect-w-16 aspect-h-9">
-                <iframe class="rounded-lg shadow" width="100%" height="215" src="https://www.youtube.com/embed/v7AYKMP6rOE" title="Yoga For Complete Beginners - 20 Minute Home Yoga Workout!" frameborder="0" allowfullscreen></iframe>
-                <div class="mt-2 text-sm text-gray-700 font-medium">Yoga For Complete Beginners</div>
-            </div>
-            <div class="aspect-w-16 aspect-h-9">
-                <iframe class="rounded-lg shadow" width="100%" height="215" src="https://www.youtube.com/embed/4pKly2JojMw" title="10-Minute Morning Yoga for Beginners" frameborder="0" allowfullscreen></iframe>
-                <div class="mt-2 text-sm text-gray-700 font-medium">10-Minute Morning Yoga</div>
-            </div>
-            <div class="aspect-w-16 aspect-h-9">
-                <iframe class="rounded-lg shadow" width="100%" height="215" src="https://www.youtube.com/embed/sTANio_2E0Q" title="Yoga For Flexibility" frameborder="0" allowfullscreen></iframe>
-                <div class="mt-2 text-sm text-gray-700 font-medium">Yoga For Flexibility</div>
-            </div>
-        </div>
-        <div class="mt-4 text-xs text-gray-500">All videos are embedded from YouTube and free to access for everyone.</div>
-    </div>
 {% extends 'base.html' %}
 
 {% block title %}Yoga & Mindfulness - MindFull Horizon{% endblock %}
@@ -55,13 +35,14 @@
             <h2 class="text-2xl font-semibold text-gray-800 mb-2">Session Timer</h2>
             <p id="session-status" class="text-lg text-gray-600">Ready to begin your practice</p>
         </div>
-        
+
         <!-- Timer Display -->
         <div class="flex justify-center mb-8">
             <div class="text-center">
                 <div id="timer-display" class="text-6xl font-bold text-indigo-600 mb-4">00:00</div>
                 <div id="session-progress" class="w-64 bg-gray-200 rounded-full h-2 mx-auto">
-                    <div id="progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                    <div id="progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-1000"
+                        style="width: 0%"></div>
                 </div>
             </div>
         </div>
@@ -88,11 +69,42 @@
         </div>
     </div>
 
-    <!-- Yoga Video Library Button (opens new page) -->
+    <!-- Yoga Video Library Button (toggles section) -->
     <div class="flex justify-center mb-8">
-        <a href="/yoga-videos" target="_blank" id="show-videos-btn" class="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded shadow" rel="noopener">
+        <button id="show-videos-btn"
+            class="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded shadow"
+            onclick="toggleYogaVideos()" aria-expanded="false" aria-controls="yoga-videos-section">
             <i class="fas fa-video mr-2"></i>Show Yoga Video Library
-        </a>
+        </button>
+    </div>
+
+    <div id="yoga-videos-section" class="card p-6 mb-8 hidden" role="region" aria-label="Yoga Video Library">
+        <h3 class="text-xl font-semibold text-gray-800 mb-4">
+            <i class="fas fa-video text-red-500 mr-2"></i>Yoga Video Library (Free for All)
+        </h3>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="aspect-w-16 aspect-h-9">
+                <iframe class="rounded-lg shadow" width="100%" height="215"
+                    src="https://www.youtube.com/embed/v7AYKMP6rOE"
+                    title="Yoga For Complete Beginners - 20 Minute Home Yoga Workout!" frameborder="0"
+                    allowfullscreen></iframe>
+                <div class="mt-2 text-sm text-gray-700 font-medium">Yoga For Complete Beginners</div>
+            </div>
+            <div class="aspect-w-16 aspect-h-9">
+                <iframe class="rounded-lg shadow" width="100%" height="215"
+                    src="https://www.youtube.com/embed/4pKly2JojMw" title="10-Minute Morning Yoga for Beginners"
+                    frameborder="0" allowfullscreen></iframe>
+                <div class="mt-2 text-sm text-gray-700 font-medium">10-Minute Morning Yoga</div>
+            </div>
+            <div class="aspect-w-16 aspect-h-9">
+                <iframe class="rounded-lg shadow" width="100%" height="215"
+                    src="https://www.youtube.com/embed/sTANio_2E0Q" title="Yoga For Flexibility" frameborder="0"
+                    allowfullscreen></iframe>
+                <div class="mt-2 text-sm text-gray-700 font-medium">Yoga For Flexibility</div>
+            </div>
+        </div>
+        <div class="mt-4 text-xs text-gray-500">All videos are embedded from YouTube and free to access for everyone.
+        </div>
     </div>
 
     <!-- Guided Yoga Sessions -->
@@ -102,22 +114,26 @@
         </h3>
         <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Morning Flow -->
-            <div class="yoga-session-card bg-gradient-to-br from-blue-50 to-blue-100 start-guided-session-card" data-session-type="yoga" data-session-name="morning" data-session-duration="15">
+            <div class="yoga-session-card bg-gradient-to-br from-blue-50 to-blue-100 start-guided-session-card"
+                data-session-type="yoga" data-session-name="morning" data-session-duration="15">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-sun text-blue-600 text-2xl mr-3"></i>
                         <h4 class="font-bold text-blue-800 text-lg">Morning Energy Flow</h4>
                     </div>
-                    <p class="text-blue-700 mb-3">Awaken your body and mind with gentle stretches and energizing poses.</p>
+                    <p class="text-blue-700 mb-3">Awaken your body and mind with gentle stretches and energizing poses.
+                    </p>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-blue-600">15 minutes • Beginner</span>
-                        <button class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Start</button>
+                        <button
+                            class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">Start</button>
                     </div>
                 </div>
             </div>
 
             <!-- Desk Relief -->
-            <div class="yoga-session-card bg-gradient-to-br from-green-50 to-green-100 start-guided-session-card" data-session-type="yoga" data-session-name="desk" data-session-duration="10">
+            <div class="yoga-session-card bg-gradient-to-br from-green-50 to-green-100 start-guided-session-card"
+                data-session-type="yoga" data-session-name="desk" data-session-duration="10">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-chair text-green-600 text-2xl mr-3"></i>
@@ -126,13 +142,15 @@
                     <p class="text-green-700 mb-3">Release neck, shoulder, and back tension with targeted stretches.</p>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-green-600">10 minutes • All Levels</span>
-                        <button class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Start</button>
+                        <button
+                            class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Start</button>
                     </div>
                 </div>
             </div>
 
             <!-- Evening Relaxation -->
-            <div class="yoga-session-card bg-gradient-to-br from-purple-50 to-purple-100 start-guided-session-card" data-session-type="yoga" data-session-name="evening" data-session-duration="20">
+            <div class="yoga-session-card bg-gradient-to-br from-purple-50 to-purple-100 start-guided-session-card"
+                data-session-type="yoga" data-session-name="evening" data-session-duration="20">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-moon text-purple-600 text-2xl mr-3"></i>
@@ -141,13 +159,15 @@
                     <p class="text-purple-700 mb-3">Gentle practice to prepare your mind and body for restful sleep.</p>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-purple-600">20 minutes • Relaxing</span>
-                        <button class="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700">Start</button>
+                        <button
+                            class="bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700">Start</button>
                     </div>
                 </div>
             </div>
 
             <!-- Stress Relief -->
-            <div class="yoga-session-card bg-gradient-to-br from-red-50 to-red-100 start-guided-session-card" data-session-type="yoga" data-session-name="stress" data-session-duration="12">
+            <div class="yoga-session-card bg-gradient-to-br from-red-50 to-red-100 start-guided-session-card"
+                data-session-type="yoga" data-session-name="stress" data-session-duration="12">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-heart text-red-600 text-2xl mr-3"></i>
@@ -162,22 +182,26 @@
             </div>
 
             <!-- Focus & Concentration -->
-            <div class="yoga-session-card bg-gradient-to-br from-yellow-50 to-yellow-100 start-guided-session-card" data-session-type="yoga" data-session-name="focus" data-session-duration="18">
+            <div class="yoga-session-card bg-gradient-to-br from-yellow-50 to-yellow-100 start-guided-session-card"
+                data-session-type="yoga" data-session-name="focus" data-session-duration="18">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-brain text-yellow-600 text-2xl mr-3"></i>
                         <h4 class="font-bold text-yellow-800 text-lg">Focus & Clarity</h4>
                     </div>
-                    <p class="text-yellow-700 mb-3">Enhance mental clarity and concentration through mindful movement.</p>
+                    <p class="text-yellow-700 mb-3">Enhance mental clarity and concentration through mindful movement.
+                    </p>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-yellow-600">18 minutes • Intermediate</span>
-                        <button class="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700">Start</button>
+                        <button
+                            class="bg-yellow-600 text-white px-3 py-1 rounded text-sm hover:bg-yellow-700">Start</button>
                     </div>
                 </div>
             </div>
 
             <!-- Flexibility -->
-            <div class="yoga-session-card bg-gradient-to-br from-teal-50 to-teal-100 start-guided-session-card" data-session-type="yoga" data-session-name="flexibility" data-session-duration="25">
+            <div class="yoga-session-card bg-gradient-to-br from-teal-50 to-teal-100 start-guided-session-card"
+                data-session-type="yoga" data-session-name="flexibility" data-session-duration="25">
                 <div class="p-6">
                     <div class="flex items-center mb-3">
                         <i class="fas fa-leaf text-teal-600 text-2xl mr-3"></i>
@@ -186,7 +210,8 @@
                     <p class="text-teal-700 mb-3">Improve flexibility and range of motion with dynamic stretches.</p>
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-teal-600">25 minutes • All Levels</span>
-                        <button class="bg-teal-600 text-white px-3 py-1 rounded text-sm hover:bg-teal-700">Start</button>
+                        <button
+                            class="bg-teal-600 text-white px-3 py-1 rounded text-sm hover:bg-teal-700">Start</button>
                     </div>
                 </div>
             </div>
@@ -199,12 +224,13 @@
             <h3 class="text-xl font-semibold mb-4 text-gray-800">
                 <i class="fas fa-plus-circle text-blue-500 mr-2"></i>Log a Session
             </h3>
-            
+
             <form id="yoga-log-form" method="POST" class="space-y-4">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <div>
                     <label for="session_name" class="block text-sm font-medium text-gray-700 mb-1">Session Type</label>
-                    <select id="session_name" name="session_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="session_name" name="session_name" required
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Select session type</option>
                         <option value="Morning Energy Flow">Morning Energy Flow</option>
                         <option value="Desk Worker's Relief">Desk Worker's Relief</option>
@@ -215,35 +241,39 @@
                         <option value="Custom Session">Custom Session</option>
                     </select>
                 </div>
-                
+
                 <div>
-                    <label for="duration_minutes" class="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
-                    <input type="number" id="duration_minutes" name="duration_minutes" required min="1" max="120" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                           placeholder="e.g., 20">
+                    <label for="duration_minutes" class="block text-sm font-medium text-gray-700 mb-1">Duration
+                        (minutes)</label>
+                    <input type="number" id="duration_minutes" name="duration_minutes" required min="1" max="120"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="e.g., 20">
                 </div>
-                
+
                 <div>
-                    <label for="difficulty_level" class="block text-sm font-medium text-gray-700 mb-1">Difficulty Level</label>
-                    <select id="difficulty_level" name="difficulty_level" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <label for="difficulty_level" class="block text-sm font-medium text-gray-700 mb-1">Difficulty
+                        Level</label>
+                    <select id="difficulty_level" name="difficulty_level"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="Beginner">Beginner</option>
                         <option value="Intermediate">Intermediate</option>
                         <option value="Advanced">Advanced</option>
                     </select>
                 </div>
-                
+
                 <div>
                     <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
-                    <textarea id="notes" name="notes" rows="3" 
-                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                              placeholder="How did you feel during this session? Any specific poses or insights?"></textarea>
+                    <textarea id="notes" name="notes" rows="3"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="How did you feel during this session? Any specific poses or insights?"></textarea>
                 </div>
-                
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+
+                <button type="submit"
+                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
                     <i class="fas fa-save mr-2"></i>Log Session
                 </button>
             </form>
-            
+
             <div id="form-message" class="mt-4 hidden"></div>
         </div>
 
@@ -252,38 +282,38 @@
             <h3 class="text-xl font-semibold mb-4 text-gray-800">
                 <i class="fas fa-history text-green-500 mr-2"></i>Recent Sessions
             </h3>
-            
+
             {% if recent_logs %}
-                <div class="space-y-3 max-h-80 overflow-y-auto">
-                    {% for log in recent_logs %}
-                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-medium text-gray-800">{{ log.session_name }}</p>
-                                    <p class="text-sm text-gray-600">{{ log.duration_minutes }} minutes</p>
-                                    {% if log.difficulty_level %}
-                                        <span class="inline-block px-2 py-1 text-xs rounded-full 
+            <div class="space-y-3 max-h-80 overflow-y-auto">
+                {% for log in recent_logs %}
+                <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="font-medium text-gray-800">{{ log.session_name }}</p>
+                            <p class="text-sm text-gray-600">{{ log.duration_minutes }} minutes</p>
+                            {% if log.difficulty_level %}
+                            <span class="inline-block px-2 py-1 text-xs rounded-full 
                                             {% if log.difficulty_level == 'Beginner' %}bg-green-100 text-green-800
                                             {% elif log.difficulty_level == 'Intermediate' %}bg-yellow-100 text-yellow-800
                                             {% else %}bg-red-100 text-red-800{% endif %}">
-                                            {{ log.difficulty_level }}
-                                        </span>
-                                    {% endif %}
-                                    {% if log.notes %}
-                                        <p class="text-xs text-gray-500 mt-1">{{ log.notes }}</p>
-                                    {% endif %}
-                                </div>
-                                <p class="text-xs text-gray-500">{{ log.created_at.strftime('%m/%d %H:%M') }}</p>
-                            </div>
+                                {{ log.difficulty_level }}
+                            </span>
+                            {% endif %}
+                            {% if log.notes %}
+                            <p class="text-xs text-gray-500 mt-1">{{ log.notes }}</p>
+                            {% endif %}
                         </div>
-                    {% endfor %}
+                        <p class="text-xs text-gray-500">{{ log.created_at.strftime('%m/%d %H:%M') }}</p>
+                    </div>
                 </div>
+                {% endfor %}
+            </div>
             {% else %}
-                <div class="text-center py-8">
-                    <i class="fas fa-yoga text-gray-300 text-4xl mb-4"></i>
-                    <p class="text-gray-500">No yoga sessions logged yet.</p>
-                    <p class="text-sm text-gray-400 mt-2">Start your first session to see your progress here.</p>
-                </div>
+            <div class="text-center py-8">
+                <i class="fas fa-yoga text-gray-300 text-4xl mb-4"></i>
+                <p class="text-gray-500">No yoga sessions logged yet.</p>
+                <p class="text-sm text-gray-400 mt-2">Start your first session to see your progress here.</p>
+            </div>
             {% endif %}
         </div>
     </div>
@@ -292,4 +322,6 @@
 
 {% block scripts %}
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/yoga.js') }}"></script>
+<script nonce="{{ g.csp_nonce }}"
+    src="{{ url_for('static', filename='js/inline_extracted/yoga_inline_1.js') }}"></script>
 {% endblock %}

@@ -17,6 +17,7 @@ def is_strong_password(password):
         return False, "Password must contain at least one special character."
     return True, ""
 
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':

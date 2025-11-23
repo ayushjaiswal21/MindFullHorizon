@@ -6,7 +6,7 @@ from decorators import patient_required, login_required
 from sqlalchemy.orm import joinedload
 from datetime import datetime, date, timedelta, timezone
 import json
-from ai.service import ask as ai_service
+import ai.service as ai_service
 from gamification_engine import award_points
 import logging
 import uuid
@@ -26,39 +26,17 @@ logger = logging.getLogger(__name__)
 def get_ai_journal_suggestions(title, content):
     """Get AI-powered suggestions for journal entries with optimized prompts."""
     try:
-        # Enhanced prompt with better structure and context
-        prompt = f"""
-        You are Dr. Anya, a compassionate AI wellness coach. Analyze this journal entry and provide supportive, actionable insights.
+        # Simple sentiment check for context (optional, can be improved)
+        sentiment = "Neutral" 
+        if TEXTBLOB_AVAILABLE:
+             try:
+                 blob = TextBlob(content)
+                 if blob.sentiment.polarity > 0.1: sentiment = "Positive"
+                 elif blob.sentiment.polarity < -0.1: sentiment = "Negative"
+             except: pass
 
-        JOURNAL ENTRY:
-        Title: {title}
-        Content: {content}
-
-        Please provide a structured response in this exact format:
-
-        INSIGHTS:
-        [2-3 sentences identifying key themes, emotions, or patterns]
-
-        SUGGESTIONS:
-        [3 specific, actionable suggestions for wellbeing, each on a new line]
-
-        COPING STRATEGIES:
-        [2-3 relevant coping strategies or techniques]
-
-        ENCOURAGEMENT:
-        [1-2 sentences of supportive, empathetic encouragement]
-
-        Keep your response concise (under 800 characters total), supportive, and focused on wellness and growth.
-        Use bullet points for suggestions and strategies. Be empathetic and non-judgmental.
-        """
-
-        # Use the AI service to get suggestions with optimized parameters
-        ai_response = ai_service.generate_chat_response(prompt)
-
-        if isinstance(ai_response, dict):
-            suggestions = ai_response.get('response') or ai_response.get('reply') or str(ai_response)
-        else:
-            suggestions = str(ai_response)
+        # Use the dedicated AI service function
+        suggestions = ai_service.generate_journal_insights(title, content, sentiment)
 
         # Clean up and format the response for better readability
         suggestions = suggestions.strip()[:800]  # Limit length
@@ -325,7 +303,7 @@ def yoga():
                 flash(f'Your {session_name} session has been logged!', 'success')
             except ValueError:
                 flash('Invalid duration. Please enter a number.', 'error')
-        return redirect(url_for('patient.patient_journal'))
+        return redirect(url_for('patient.yoga'))
 
     recent_logs = YogaLog.query.filter_by(user_id=user_id).order_by(YogaLog.created_at.desc()).limit(10).all()
     

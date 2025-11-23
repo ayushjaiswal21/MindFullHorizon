@@ -19,6 +19,13 @@ from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Debug: Check if .env was loaded successfully
+logger.info(f".env file loaded: GEMINI_API_KEY present = {'Yes' if os.getenv('GEMINI_API_KEY') else 'No'}")
+
 # Configure logging early
 import logging
 
@@ -70,7 +77,7 @@ from flask_assets import Environment, Bundle
 # Import blueprints from routes package
 from routes import all_blueprints
 
-from ai import ask as ai_service
+import ai.service as ai_service
 from extensions import db, migrate, flask_session, compress, csrf
 from models import User, Assessment, DigitalDetoxLog, RPMData, Gamification, ClinicalNote, InstitutionalAnalytics, Appointment, Goal, Medication, MedicationLog, BreathingExerciseLog, YogaLog, MusicTherapyLog, ProgressRecommendation, get_user_wellness_trend, get_institutional_summary, Notification
 from models import BlogPost, BlogComment, BlogLike, BlogInsight, Prescription, MoodLog  # Ensure BlogPost and related models are imported
@@ -1509,41 +1516,6 @@ def save_assessment():
     assessment_type = data.get('assessment_type')
     score = data.get('score')
     responses = data.get('responses')
-    contextual_responses = data.get('contextual_responses')
-
-    if not all([assessment_type, score is not None, responses is not None]):
-        return jsonify({'success': False, 'message': 'Missing required assessment data'}), 400
-
-    try:
-        # Create a new assessment record
-        new_assessment = Assessment(
-            user_id=user_id,
-            assessment_type=assessment_type,
-            score=int(score),
-            responses=responses,
-            contextual_responses=contextual_responses,
-            created_at=datetime.utcnow()
-        )
-        db.session.add(new_assessment)
-        db.session.commit()
-
-        # Award points for completing an assessment
-        award_points(user_id, 25, f'completed_{assessment_type}')
-
-        return jsonify({
-            'success': True,
-            'message': 'Assessment saved successfully!',
-            'assessment_id': new_assessment.id
-        }), 201
-
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f"Error saving assessment for user {user_id}: {e}")
-        return jsonify({'success': False, 'message': 'Failed to save assessment.'}), 500
-
-@app.route('/api/save-mood', methods=['POST'])
-@login_required
-@role_required('patient')
 def save_mood():
     if not request.is_json:
         return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
@@ -2009,104 +1981,6 @@ def upload_voice():
 
     except Exception as e:
         logger.error(f"Error uploading voice file: {e}")
-        return jsonify({'success': False, 'message': f'Upload failed: {str(e)}'}), 500
-
-
-import speech_recognition as sr
-
-def transcribe_audio(file_path):
-    r = sr.Recognizer()
-    with sr.AudioFile(file_path) as source:
-        audio = r.record(source)
-    try:
-        return r.recognize_google(audio)
-    except sr.UnknownValueError:
-        return ""
-    except sr.RequestError as e:
-        logger.error(f"Could not request results from Google Speech Recognition service; {e}")
-        return ""
-
-def get_ai_voice_emotion_analysis(file_path, audio_features):
-    # Initialize lemmatizer
-    lemmatizer = WordNetLemmatizer()
-
-    transcribed_text = transcribe_audio(file_path)
-
-    # Lemmatize the text
-    if transcribed_text:
-        tokens = word_tokenize(transcribed_text)
-        lemmatized_text = ' '.join([lemmatizer.lemmatize(word) for word in tokens])
-    else:
-        lemmatized_text = ""
-
-    """Get AI-powered emotion analysis for voice recordings with optimized prompts."""
-    try:
-        # Enhanced prompt with better structure and audio features
-        prompt = f"""
-        You are Dr. Anya, an AI wellness coach analyzing voice recordings for emotional insights.
-
-                TRANSCRIBED & LEMMATIZED TEXT:
-        {lemmatized_text}
-
-        AUDIO ANALYSIS:
-        Duration: {audio_features.get('duration', 0):.1f}s
-        Mean Pitch: {audio_features.get('mean_pitch', 0):.0f} Hz
-        Mean Energy: {audio_features.get('mean_energy', 0):.4f}
-        Spectral Centroid: {audio_features.get('mean_spectral_centroid', 0):.0f} Hz
-
-        Based on these acoustic features, determine the primary emotion expressed:
-
-        EMOTIONS: happy, sad, stressed, angry, calm, excited, neutral, anxious, confident
-
-        Respond in this exact format:
-
-        EMOTION: [primary emotion]
-        CONFIDENCE: [high/medium/low]
-        INSIGHTS: [2-3 sentences explaining the emotion based on audio features]
-        SUGGESTIONS: [2 specific wellness suggestions based on detected emotion]
-
-        Keep response concise and supportive.
-        """
-
-        # Use the AI service to get emotion analysis with optimized parameters
-        ai_response = ai_service.generate_chat_response(prompt)
-
-        if isinstance(ai_response, dict):
-            analysis = ai_response.get('response') or ai_response.get('reply') or str(ai_response)
-        else:
-            analysis = str(ai_response)
-
-        # Extract the primary emotion from the response
-        analysis_lower = analysis.lower()
-
-        # Look for emotion keywords in the response
-        emotions = ['happy', 'sad', 'stressed', 'angry', 'calm', 'excited', 'neutral', 'anxious', 'confident']
-        detected_emotion = 'neutral'  # default fallback
-
-        for emotion in emotions:
-            if emotion in analysis_lower:
-                detected_emotion = emotion
-                break
-
-        # Clean up the response and limit length
-        analysis = analysis.strip()[:400]  # Limit to 400 characters
-
-        return f"{detected_emotion.capitalize()}: {analysis}"
-
-    except Exception as e:
-        logger.warning(f"AI voice emotion analysis failed: {e}")
-        return "Neutral: Voice analysis completed. Consider how you're feeling and what might be affecting your emotional state."
-
-
-def classify_emotion(audio_features):
-    """Simple emotion classification based on acoustic features."""
-    if not audio_features:
-        return 'neutral'
-
-    try:
-        # Simple heuristic-based classification
-        pitch = audio_features.get('mean_pitch', 0)
-        energy = audio_features.get('mean_energy', 0)
         zcr = audio_features.get('mean_zcr', 0)
 
         # Higher pitch and energy might indicate excitement/happiness
