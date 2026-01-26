@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "python-linting": {
+      "command": "uvx",
+      "args": ["mcp-python-linter@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": ["lint_file", "check_pep8"]
+    },
+    "security-scanner": {
+      "command": "uvx", 
+      "args": ["mcp-security-scanner@latest"],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": ["scan_vulnerabilities", "check_dependencies"]
+    }
+  }
+}

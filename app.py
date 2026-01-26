@@ -92,6 +92,41 @@ ALLOWED_MIME_TYPES = {
     'audio/wav', 'audio/mpeg', 'audio/ogg'
 }
 
+def validate_file_security(file):
+    """
+    Comprehensive file validation for security and compatibility
+    Returns: (is_valid: bool, error_message: str)
+    """
+    try:
+        # Check if file exists
+        if not file or not file.filename:
+            return False, "No file selected"
+        
+        # Check file extension
+        if not ('.' in file.filename and 
+                file.filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS):
+            return False, f"File type not allowed. Allowed types: {', '.join(ALLOWED_EXTENSIONS)}"
+        
+        # Get file size
+        file.seek(0, os.SEEK_END)
+        file_size = file.tell()
+        file.seek(0)  # Reset file pointer
+        
+        # Check file size (16MB max)
+        max_size = 16 * 1024 * 1024
+        if file_size > max_size:
+            return False, f"File too large. Maximum size: {max_size // (1024*1024)}MB"
+        
+        # Check for malicious content in filename
+        if any(char in file.filename for char in ['..', '/', '\\', ':', '*', '?', '"', '<', '>', '|']):
+            return False, "Invalid characters in filename"
+        
+        return True, "File validation successful"
+        
+    except Exception as e:
+        logger.error(f"Error during file validation: {e}")
+        return False, f"File validation error: {str(e)}"
+
 # Import new dependencies for patient features
 try:
     from textblob import TextBlob

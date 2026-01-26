@@ -1,0 +1,13 @@
+{
+  "name": "Validate HTML Templates",
+  "version": "1.0.0",
+  "description": "Check HTML templates for accessibility and security when modified",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["templates/*.html"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review the HTML template for WCAG 2.1 AA accessibility compliance, proper Jinja2 template inheritance, XSS protection, and responsive design patterns."
+  }
+}
