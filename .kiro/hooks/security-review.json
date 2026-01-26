@@ -1,0 +1,13 @@
+{
+  "name": "Security Review for Routes",
+  "version": "1.0.0",
+  "description": "Perform security review when route files are modified",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["routes/*.py", "secure_routes.py", "app.py"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Perform a security review of the route changes. Check for proper authentication, authorization, input validation, CSRF protection, and HIPAA compliance for any health data handling."
+  }
+}

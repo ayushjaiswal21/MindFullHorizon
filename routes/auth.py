@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from models import User, Gamification, db
+from datetime import datetime, date
 import re
 
 auth_bp = Blueprint('auth', __name__)

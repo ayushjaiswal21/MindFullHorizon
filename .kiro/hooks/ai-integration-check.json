@@ -1,0 +1,13 @@
+{
+  "name": "AI Integration Validation",
+  "version": "1.0.0",
+  "description": "Validate AI service integrations for privacy and error handling",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["ai/*.py", "ai_prompts/*.txt"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review AI integration changes for proper error handling, rate limiting, data privacy compliance, and ensure no sensitive patient data is logged or exposed in AI requests."
+  }
+}

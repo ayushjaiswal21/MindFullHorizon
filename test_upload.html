@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Test - MindFull Horizon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .upload-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        input[type="file"]:hover {
+            border-color: #007bff;
+            background: #f0f8ff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .file-info {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #007bff;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <h1>🧠 MindFull Horizon - File Upload Test</h1>
+        <p>Test file upload functionality with various file types and sizes.</p>
+        
+        <!-- Profile Picture Upload -->
+        <form id="profileForm" enctype="multipart/form-data" method="POST" action="/profile">
+            <div class="form-group">
+                <label for="profile_pic">Profile Picture Upload:</label>
+                <input type="file" 
+                       id="profile_pic" 
+                       name="profile_pic" 
+                       accept="image/png,image/jpeg,image/jpg,image/gif"
+                       onchange="showFileInfo(this, 'profile-info')">
+                <div id="profile-info" class="file-info" style="display: none;"></div>
+            </div>
+            <button type="submit">Upload Profile Picture</button>
+        </form>
+    </div>
+
+    <div class="upload-container">
+        <!-- Voice Log Upload -->
+        <form id="voiceForm" enctype="multipart/form-data" method="POST" action="/patient/voice-logs">
+            <div class="form-group">
+                <label for="voice_file">Voice Recording Upload:</label>
+                <input type="file" 
+                       id="voice_file" 
+                       name="voice_file" 
+                       accept="audio/wav,audio/mp3,audio/ogg"
+                       onchange="showFileInfo(this, 'voice-info')">
+                <div id="voice-info" class="file-info" style="display: none;"></div>
+            </div>
+            <button type="submit">Upload Voice Recording</button>
+        </form>
+    </div>
+
+    <div class="upload-container">
+        <!-- Generic File Upload Test -->
+        <form id="testForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="test_file">Test File Upload (Any Allowed Type):</label>
+                <input type="file" 
+                       id="test_file" 
+                       name="test_file" 
+                       accept=".png,.jpg,.jpeg,.gif,.wav,.mp3,.ogg"
+                       onchange="showFileInfo(this, 'test-info')">
+                <div id="test-info" class="file-info" style="display: none;"></div>
+            </div>
+            <button type="button" onclick="testUpload()">Test Upload (AJAX)</button>
+            <div class="progress" id="progress" style="display: none;">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            <div id="result"></div>
+        </form>
+    </div>
+
+    <div class="upload-container">
+        <h3>📋 Upload Guidelines</h3>
+        <ul>
+            <li><strong>Allowed Image Types:</strong> PNG, JPG, JPEG, GIF</li>
+            <li><strong>Allowed Audio Types:</strong> WAV, MP3, OGG</li>
+            <li><strong>Maximum File Size:</strong> 16MB (5MB recommended for images)</li>
+            <li><strong>Image Dimensions:</strong> Maximum 4000x4000 pixels</li>
+            <li><strong>Security:</strong> Files are scanned for malicious content</li>
+        </ul>
+        
+        <h3>🔧 Troubleshooting</h3>
+        <ul>
+            <li>Ensure your file is under the size limit</li>
+            <li>Check that the file type is supported</li>
+            <li>Try refreshing the page if upload fails</li>
+            <li>Clear browser cache if experiencing issues</li>
+            <li>Check browser console for JavaScript errors</li>
+        </ul>
+    </div>
+
+    <script>
+        function showFileInfo(input, infoId) {
+            const infoDiv = document.getElementById(infoId);
+            const file = input.files[0];
+            
+            if (file) {
+                const size = (file.size / 1024 / 1024).toFixed(2);
+                const type = file.type || 'Unknown';
+                
+                let sizeClass = '';
+                if (file.size > 16 * 1024 * 1024) {
+                    sizeClass = 'error';
+                } else if (file.size > 5 * 1024 * 1024) {
+                    sizeClass = 'warning';
+                }
+                
+                infoDiv.innerHTML = `
+                    <strong>File:</strong> ${file.name}<br>
+                    <strong>Size:</strong> <span class="${sizeClass}">${size} MB</span><br>
+                    <strong>Type:</strong> ${type}<br>
+                    <strong>Last Modified:</strong> ${new Date(file.lastModified).toLocaleString()}
+                `;
+                infoDiv.style.display = 'block';
+                
+                // Validate file
+                validateFile(file, infoDiv);
+            } else {
+                infoDiv.style.display = 'none';
+            }
+        }
+        
+        function validateFile(file, infoDiv) {
+            const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 
+                                'audio/wav', 'audio/mpeg', 'audio/ogg'];
+            const maxSize = 16 * 1024 * 1024; // 16MB
+            
+            let errors = [];
+            
+            if (!allowedTypes.includes(file.type)) {
+                errors.push(`File type "${file.type}" not allowed`);
+            }
+            
+            if (file.size > maxSize) {
+                errors.push(`File size ${(file.size / 1024 / 1024).toFixed(2)}MB exceeds 16MB limit`);
+            }
+            
+            if (file.name.length > 255) {
+                errors.push('Filename too long');
+            }
+            
+            if (errors.length > 0) {
+                infoDiv.innerHTML += `<div class="error"><strong>Validation Errors:</strong><br>${errors.join('<br>')}</div>`;
+            } else {
+                infoDiv.innerHTML += `<div class="success">✅ File validation passed</div>`;
+            }
+        }
+        
+        function testUpload() {
+            const fileInput = document.getElementById('test_file');
+            const resultDiv = document.getElementById('result');
+            const progressDiv = document.getElementById('progress');
+            const progressBar = document.getElementById('progress-bar');
+            
+            if (!fileInput.files[0]) {
+                resultDiv.innerHTML = '<div class="error">Please select a file first</div>';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('test_file', fileInput.files[0]);
+            
+            // Show progress bar
+            progressDiv.style.display = 'block';
+            progressBar.style.width = '0%';
+            
+            // Simulate upload progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += Math.random() * 30;
+                if (progress > 90) progress = 90;
+                progressBar.style.width = progress + '%';
+            }, 200);
+            
+            // Test upload endpoint (you'll need to create this)
+            fetch('/api/test-upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                clearInterval(progressInterval);
+                progressBar.style.width = '100%';
+                
+                setTimeout(() => {
+                    progressDiv.style.display = 'none';
+                    if (data.success) {
+                        resultDiv.innerHTML = `<div class="success">✅ Upload successful!<br>Filename: ${data.filename}</div>`;
+                    } else {
+                        resultDiv.innerHTML = `<div class="error">❌ Upload failed: ${data.message}</div>`;
+                    }
+                }, 500);
+            })
+            .catch(error => {
+                clearInterval(progressInterval);
+                progressDiv.style.display = 'none';
+                resultDiv.innerHTML = `<div class="error">❌ Network error: ${error.message}</div>`;
+            });
+        }
+        
+        // Add CSRF token to forms if available
+        document.addEventListener('DOMContentLoaded', function() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]');
+            if (csrfToken) {
+                const forms = document.querySelectorAll('form');
+                forms.forEach(form => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = csrfToken.getAttribute('content');
+                    form.appendChild(input);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

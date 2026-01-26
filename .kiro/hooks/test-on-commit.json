@@ -1,0 +1,12 @@
+{
+  "name": "Run Tests Before Commit",
+  "version": "1.0.0", 
+  "description": "Automatically run tests when user submits a commit message",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "python -m pytest tests/ -v --tb=short"
+  }
+}

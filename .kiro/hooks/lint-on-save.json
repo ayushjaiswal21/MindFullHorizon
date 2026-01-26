@@ -1,0 +1,13 @@
+{
+  "name": "Lint Python Files on Save",
+  "version": "1.0.0",
+  "description": "Automatically run linting checks when Python files are saved",
+  "when": {
+    "type": "fileEdited",
+    "patterns": ["*.py"]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Check the edited Python file for PEP 8 compliance, security issues, and Flask best practices. Fix any issues found."
+  }
+}
