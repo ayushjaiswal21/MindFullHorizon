@@ -23,7 +23,7 @@
             </p>
             {% with messages = get_flashed_messages(with_categories=true) %}
                 {% if messages %}
-                    <div class="mb-4">
+                    <div class="mb-4" role="alert">
                         {% for category, message in messages %}
                             <div class="alert alert-{{ 'success' if category == 'success' else 'error' }} p-3 rounded-lg text-center text-sm {{ 'bg-green-100 text-green-800' if category == 'success' else 'bg-red-100 text-red-800' }}">
                                 {{ message }}
@@ -53,14 +53,14 @@
             <div class="space-y-4">
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <input id="email" name="email" type="email" required 
+                    <input id="email" name="email" type="email" required autocomplete="email" 
                            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
                            placeholder="Enter your email address">
                 </div>
                 
                 <div>
                     <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input id="password" name="password" type="password" required 
+                    <input id="password" name="password" type="password" required autocomplete="current-password" 
                            class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
                            placeholder="Enter your password">
                 </div>
@@ -71,7 +71,7 @@
                             class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                         <option value="">Select your role</option>
                         <option value="patient">Student (Patient)</option>
-                        <option value="provider">Mental Health Provider</option>
+                        <option value="provider">Counselor / Mental Health Provider</option>
                     </select>
                 </div>
             </div>
@@ -87,45 +87,6 @@
             </div>
         </form>
         
-        <!-- Demo Credentials -->
-        <div class="mt-6 bg-gray-50 rounded-lg p-4">
-            <h3 class="text-sm font-medium text-gray-900 mb-2">Demo Credentials (for testing):</h3>
-            <div class="space-y-2">
-                <div class="flex items-center justify-between">
-                    <div class="text-xs text-gray-600">
-                        <p><strong>Student:</strong> patient@example.com / password</p>
-                    </div>
-                    <button type="button" onclick="fillDemo('patient')" 
-                            class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">
-                        Use Student
-                    </button>
-                </div>
-                <div class="flex items-center justify-between">
-                    <div class="text-xs text-gray-600">
-                        <p><strong>Provider:</strong> provider@example.com / password</p>
-                    </div>
-                    <button type="button" onclick="fillDemo('provider')" 
-                            class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">
-                        Use Provider
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <script>
-        function fillDemo(type) {
-            if (type === 'patient') {
-                document.getElementById('email').value = 'patient@example.com';
-                document.getElementById('password').value = 'password';
-                document.getElementById('role').value = 'patient';
-            } else if (type === 'provider') {
-                document.getElementById('email').value = 'provider@example.com';
-                document.getElementById('password').value = 'password';
-                document.getElementById('role').value = 'provider';
-            }
-        }
-        </script>
-        
         <!-- Features Info -->
         <div class="mt-4 text-center">
             <div class="flex justify-center space-x-6 text-xs text-gray-500">
@@ -135,7 +96,7 @@
                 </div>
                 <div class="flex items-center">
                     <i class="fas fa-brain mr-1" aria-hidden="true"></i>
-                    <span>AI-Powered</span>
+                    <span>AI companion</span>
                 </div>
                 <div class="flex items-center">
                     <i class="fas fa-mobile-alt mr-1" aria-hidden="true"></i>

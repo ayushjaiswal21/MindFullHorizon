@@ -1,107 +1,70 @@
-# MindFull Horizon - Dynamic Mental Health Assessment System
+# MindFull Horizon
 
-A comprehensive Flask-based web application implementing the **Mindful Horizon Framework** for dynamic psychological health assessment of college students. This system provides real-time monitoring, AI-powered analysis, and gamified engagement through separate dashboards for patients and healthcare providers.
+A Flask web app for college-student mental-health monitoring. Students check in (PHQ-9 / GAD-7, mood, journal, breathing, yoga, music), chat with an AI wellness companion, track goals and medication, and book sessions. Campus counselors get a provider dashboard with caseload, appointments, prescriptions and wellness reports.
 
-## 🎯 Project Overview
+> **Not a medical device.** MindFull Horizon supports everyday wellbeing and screening; it does not diagnose or treat any condition. If you or someone else is in danger, call **112**, or **Tele-MANAS 14416** (India, free, 24x7).
 
-MindFull Horizon is a revolutionary mental health platform that moves beyond static assessments to provide dynamic, real-time psychological health monitoring. Built specifically for college students, it integrates multi-modal data analysis including self-reported metrics, physiological monitoring, and digital behavior patterns.
+Status: work in progress. See [docs/STATUS.md](docs/STATUS.md) for what works, known issues and the roadmap.
 
-### Core Philosophy
-- **Proactive vs Reactive Care**: Early detection of psychological distress through continuous monitoring
-- **Gamified Engagement**: Interactive feedback loops to maintain student participation
-- **AI-Driven Insights**: Automated analysis using the Gemini API
-- **Data-Driven Decisions**: Integration of screen time, academic performance, and social interaction data
+## Features
 
-## 🚀 Key Features
+| Area | What exists |
+|------|-------------|
+| Students | PHQ-9 / GAD-7 assessments, mood log, journal with sentiment, breathing, yoga (video library), music (binaural), digital detox, goals, medication log, gamification, progress and wellness reports |
+| AI | Gemini-powered chat companion with a severity heuristic, assessment insights, journal and goal suggestions (falls back to canned text without an API key) |
+| Providers | Caseload and risk level, appointment accept/reject, prescriptions, analytics, AI note drafting, telehealth signalling (WebRTC over SocketIO) |
+| Community | Blog with likes and comments |
 
-### Patient Dashboard - Gamified Mental Wellness
-- **🎮 Gamification System**: Points, streak tracking, and achievement badges
-- **📊 Remote Patient Monitoring (RPM)**: Real-time health metrics with automated alerts
-- **💬 AI-Powered Chat Interface**: Interactive communication with simulated bot responses
-- **📅 Self-Scheduling System**: Intuitive appointment booking with date/time selection
-- **🔗 Telehealth Integration**: WebRTC video session interface for remote consultations
-- **📱 Digital Detox Tools**: Screen time analysis with academic performance correlation
-- **💊 Medication Tracking**: Daily medication logging with adherence insights
-- **🧘 Wellness Activities**: Breathing exercises and yoga session tracking
-- **🎯 Goal Setting**: Personalized goal management with progress tracking
+## Quick start
 
-### Provider Dashboard - Clinical Excellence
-- **👥 Caseload Management**: Comprehensive patient tracking with risk level assessment
-- **🤖 AI-Powered Documentation**: Automated clinical note generation from session transcripts
-- **📈 Business Intelligence**: Practice analytics with engagement metrics and performance indicators
-- **📋 Prescription Management**: Digital prescription sending and tracking
-- **📈 Wellness Reports**: Comprehensive patient progress reports with AI insights
-
-## 🏗️ System Architecture
-
-The MindFull Horizon system is built on a robust, scalable architecture designed for healthcare environments:
-
-### Backend Infrastructure
-- **Flask Application Server**: RESTful API with role-based authentication
-- **SQLAlchemy ORM**: Database abstraction layer for easy migration
-- **Session Management**: Secure user state handling with decorators
-- **AI Integration**: Google Gemini API integration
-- **Logging System**: Comprehensive audit trails and debugging support
-
-### Frontend Experience
-- **Responsive Design**: Mobile-first approach using Tailwind CSS
-- **Real-time Updates**: JavaScript intervals for live data synchronization
-- **Interactive Visualizations**: Chart.js for dynamic data representation
-- **Progressive Enhancement**: AJAX forms with graceful fallbacks
-
-## 💻 Technology Stack
-
-### Core Technologies
-- **Backend Framework**: Flask (Python 3.8+)
-- **Database ORM**: SQLAlchemy with PostgreSQL (production)
-- **Frontend**: HTML5, Tailwind CSS 3.x, Vanilla JavaScript, Chart.js 4.x
-- **AI/ML**: Google Gemini API
-- **Authentication**: Flask-Session with role-based access control
-- **Real-time Communication**: Flask-SocketIO for WebRTC telehealth
-
-## Project Structure
-
-```
-MindFullHorizon/
-├── app.py                 # Main Flask application
-├── requirements.txt       # Python dependencies
-├── README.md              # Project documentation
-├── ai_service.py          # AI service for mental health analysis
-├── models.py              # SQLAlchemy models
-├── init_db.py             # Database initialization script
-├── templates/             # Jinja2 HTML templates
-│   ├── base.html
-│   ├── index.html
-│   ├── login.html
-│   ├── signup.html
-│   ├── patient_dashboard.html
-│   ├── provider_dashboard.html
-│   └── ... (and many more)
-└── static/                # Static assets
-    ├── css/
-    │   ├── styles.css
-    │   └── enhanced.css
-    └── js/
-        └── scripts.js
+```bash
+python -m venv venv && venv\Scripts\activate        # Windows (use source venv/bin/activate on Linux/macOS)
+pip install -r requirements.txt
+copy .env.example .env                               # then edit .env (SECRET_KEY, GEMINI_API_KEY)
+python app.py                                        # http://127.0.0.1:5000
 ```
 
-## 🚀 Cloud Deployment Guide (Render.com)
+The SQLite database is created automatically on first start (`instance/mindful_horizon.db`).
 
-1.  **Create a Render account** and connect your GitHub repository.
-2.  **Create a new Web Service** and a new **PostgreSQL Database**.
-3.  **Configure the Web Service**:
-    *   **Runtime**: `Python 3.13`
-    *   **Build Command**: `pip install -r requirements.txt && python init_db.py`
-    *   **Start Command**: `gunicorn app:app`
-4.  **Add Environment Variables**:
-    *   `FLASK_APP`: `app.py`
-    *   `FLASK_ENV`: `production`
-    *   `SECRET_KEY`: (generate a new one)
-    *   `GEMINI_API_KEY`: (your Google Gemini API key)
-    *   `DATABASE_URL`: (from the PostgreSQL database service)
+## Tests
 
-## 🔧 Troubleshooting
+```bash
+pip install -r requirements-dev.txt
+pytest tests -q
+```
 
--   **Database Connection Errors**: Ensure `DATABASE_URL` is correctly set and the database is running.
--   **AI Service Unavailable**: Verify `GEMINI_API_KEY` is set correctly.
--   **Build Failures**: Check `requirements.txt` for compatibility and Python version.
+Tests use a throw-away SQLite database and never call Gemini.
+
+## Project layout
+
+```
+app.py            Flask app setup, SocketIO, OAuth, remaining legacy routes
+routes/           Blueprints: auth, core, patient, provider, blog, assessment, mood, chat
+models.py         SQLAlchemy models (source of truth for the schema)
+ai/               Gemini service, severity heuristic; prompts in ai_prompts/
+utils/            DB helpers, gamification
+templates/ static/  Jinja2 pages, CSS, JS
+tests/            pytest suite (tests/manual holds old manual scripts)
+docs/             Architecture, development guide, status, safety research, requirements
+scripts/          One-off tools (dataset import, schema bootstrap)
+```
+
+More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
+## Deploy
+
+Use PostgreSQL (`DATABASE_URL`) and the eventlet worker, which SocketIO needs:
+
+```bash
+gunicorn --worker-class eventlet --workers 1 app:app
+```
+
+Set `SECRET_KEY`, `GEMINI_API_KEY`, `DATABASE_URL`, `FLASK_ENV=production`. The binaural-audio mp3s are not in git; see "Audio dataset on a hosted server" in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md). A `Dockerfile` is provided.
+
+## Security and privacy
+
+Please report vulnerabilities privately; see [SECURITY.md](SECURITY.md). The app handles sensitive health data: never commit `.env`, rotate any key that was shared, and read the open issues in [docs/STATUS.md](docs/STATUS.md) before any public deployment.
+
+## License
+
+MIT, see [LICENSE](LICENSE). The binaural dataset under `data/binaural-beats-dataset/` carries its own license and README.

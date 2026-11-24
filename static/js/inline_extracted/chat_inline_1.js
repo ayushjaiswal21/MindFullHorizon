@@ -1,150 +1,150 @@
+/* Chat UI. All server and user text is inserted with textContent / DOM nodes (no HTML parsing). */
+const BOT_NAME = 'Anya';
+let crisisShown = false;
 
-/* Helper UI functions */
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
 function appendLocalMessage(user, text) {
   const chatMessages = document.getElementById('chat-messages');
   if (!chatMessages) return;
-  const msgDiv = document.createElement('div');
-  msgDiv.className = 'mb-4 p-3 rounded-lg';
-  
-  // Different styling for user vs bot
-  if (user === 'You') {
-    msgDiv.className += ' bg-blue-100 ml-auto max-w-xs';
-    msgDiv.innerHTML = `<p class="font-semibold text-blue-800 text-sm">${user}</p><p class="text-gray-800">${text}</p>`;
-  } else if (user === 'Dr. Anya') {
-    msgDiv.className += ' bg-gray-100 mr-auto max-w-xs';
-    msgDiv.innerHTML = `<p class="font-semibold text-gray-800 text-sm">${user}</p><p class="text-gray-700">${text}</p>`;
-  } else {
-    msgDiv.className += ' bg-yellow-100 mx-auto max-w-xs text-center';
-    msgDiv.innerHTML = `<p class="font-semibold text-yellow-800 text-sm">${user}</p><p class="text-yellow-700">${text}</p>`;
-  }
-  
+  const styles = {
+    'You': ['bg-blue-100 ml-auto max-w-xs', 'text-blue-800', 'text-gray-800'],
+    [BOT_NAME]: ['bg-gray-100 mr-auto max-w-xs', 'text-gray-800', 'text-gray-700'],
+  };
+  const [box, nameCls, textCls] = styles[user] || ['bg-yellow-100 mx-auto max-w-xs text-center', 'text-yellow-800', 'text-yellow-700'];
+  const msgDiv = el('div', 'mb-4 p-3 rounded-lg ' + box);
+  msgDiv.append(el('p', 'font-semibold text-sm ' + nameCls, user), el('p', textCls, String(text)));
   chatMessages.appendChild(msgDiv);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-function showBanner(message) {
-    const banner = document.getElementById('chat-banner');
-    if (!banner) {
-        const topLevelContainer = document.querySelector('.container') || document.body;
-        const newBanner = document.createElement('div');
-        newBanner.id = 'chat-banner';
-        newBanner.className = 'bg-yellow-200 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4';
-        newBanner.setAttribute('role', 'alert');
-        topLevelContainer.prepend(newBanner);
-        newBanner.innerHTML = message;
-    } else {
-        banner.innerHTML = message;
-        banner.style.display = 'block';
-    }
+function getBanner() {
+  let banner = document.getElementById('chat-banner');
+  if (!banner) {
+    banner = el('div', 'p-4 mb-4');
+    banner.id = 'chat-banner';
+    banner.setAttribute('role', 'alert');
+    (document.querySelector('.container') || document.body).prepend(banner);
+  }
+  banner.textContent = '';
+  banner.style.display = 'block';
+  return banner;
 }
 
-
-/* replace or add in chat_inline_1.js */
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('Chat script loaded');
-    const chatForm = document.getElementById('chat-form');
-    const chatInput = document.getElementById('chat-input');
-    const chatMessages = document.getElementById('chat-messages');
-    
-    if (!chatForm) {
-        console.error('Chat form not found');
-        return;
-    }
-    if (!chatInput) {
-        console.error('Chat input not found');
-        return;
-    }
-    if (!chatMessages) {
-        console.error('Chat messages container not found');
-        return;
-    }
-    
-    // Add welcome message
-    appendLocalMessage('Dr. Anya', 'Hello! I\'m Dr. Anya, your AI psychologist. How are you feeling today?');
-    
-    chatForm.addEventListener('submit', async function(e){
-      console.log('Form submit triggered');
-      e.preventDefault();
-      e.stopPropagation(); // Extra prevention of default behavior
-      
-      const text = chatInput.value.trim();
-      console.log('Message text:', text);
-      if(!text) return;
-      
-      // Get CSRF token from the form input
-      const csrfToken = document.querySelector('input[name="csrf_token"]');
-      if (!csrfToken) {
-        console.error('CSRF token input not found');
-        appendLocalMessage('System', 'Error: Security token not found. Please refresh the page.');
-        return;
-      }
-      
-      const tokenValue = csrfToken.value;
-      console.log('CSRF token found:', tokenValue ? 'Yes' : 'No');
-      
-      appendLocalMessage('You', text);
-      chatInput.value = '';
-    
-      try {
-        console.log('Sending request to /api/chat');
-        const res = await fetch('/api/chat', {
-          method: 'POST',
-          credentials: 'include',
-          headers: { 
-              'Content-Type': 'application/json',
-              'X-CSRFToken': tokenValue
-          },
-          body: JSON.stringify({ message: text })
-        });
-        
-        console.log('Response status:', res.status);
-        const json = await res.json();
-        console.log('Response data:', json);
-        
-        if (json.ok) {
-          appendLocalMessage('Dr. Anya', json.reply);
-          if (json.recommended_action === 'recommend_appointment') {
-            showBanner("It may help to speak to a clinician. <button id='bookNow' class='bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded'>Book</button>");
-            document.getElementById('bookNow').addEventListener('click', async ()=>{
-              await fetch('/api/chat/book-appointment', {
-                method: 'POST', credentials:'include',
-                headers: {
-                    'Content-Type':'application/json',
-                    'X-CSRFToken': tokenValue
-                },
-                body: JSON.stringify({ user_message: text })
-              });
-              alert('Appointment requested. A provider will contact you shortly.');
-              document.getElementById('chat-banner').style.display = 'none';
-            });
-          } else if (json.recommended_action === 'emergency_hotline') {
-            showBanner("If you are in immediate danger, please call your local emergency services now.");
-          }
-        } else {
-          console.error('API returned error:', json);
-          appendLocalMessage('System', 'Sorry, something went wrong. Try again later.');
-        }
-      } catch (err) {
-        console.error('Network error:', err);
-        appendLocalMessage('System', 'Network error. Please check your connection and try again.');
-      }
-    });
-
-    if (typeof io !== 'undefined') {
-        // Chat functionality is initialized in scripts.js
-        console.log('Chat page loaded, SocketIO should initialize');
+function helplineList(helplines) {
+  const ul = el('ul', 'mt-2 space-y-1');
+  (Array.isArray(helplines) ? helplines : []).forEach(h => {
+    const li = el('li');
+    const tel = String(h.tel || '').replace(/[^0-9]/g, '');
+    const label = h.name + ': ' + h.number;
+    if (tel) {
+      const a = el('a', 'font-semibold underline', label);
+      a.href = 'tel:' + tel;
+      li.appendChild(a);
     } else {
-        // It's fine if socketio is not there, we are using fetch
-        // console.error('SocketIO not loaded');
-        // showChatError('Chat service unavailable. Please refresh the page.');
+      li.appendChild(el('span', 'font-semibold', label));
     }
+    li.append(' (' + h.hours + ')');
+    ul.appendChild(li);
+  });
+  return ul;
+}
+
+/* Crisis: prominent card with the helplines the API returned; cheerful prompts go away. */
+function showCrisisBanner(helplines) {
+  crisisShown = true;
+  const banner = getBanner();
+  banner.className = 'bg-red-100 border-l-4 border-red-600 text-red-900 p-4 mb-4 text-lg';
+  banner.append(el('p', 'font-bold', 'You are not alone. If you are in immediate danger, call 112 now.'),
+                el('p', null, 'Free support, any time:'), helplineList(helplines));
+  document.querySelectorAll('.cheerful-prompt').forEach(n => n.remove());
+  const input = document.getElementById('chat-input');
+  if (input) input.placeholder = 'Type here when you are ready...';
+  banner.scrollIntoView({ block: 'nearest' });
+}
+
+function showSupportInfo(helplines) {
+  const banner = getBanner();
+  banner.className = 'bg-blue-50 border-l-4 border-blue-400 text-blue-900 p-3 mb-4 text-sm';
+  banner.append(el('p', null, 'Support lines you can use or share:'), helplineList(helplines));
+}
+
+function showAppointmentBanner(onBook) {
+  const banner = getBanner();
+  banner.className = 'bg-yellow-200 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4';
+  const btn = el('button', 'ml-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded', 'Book');
+  btn.type = 'button';
+  btn.addEventListener('click', onBook);
+  banner.append('It may help to speak to a clinician. ', btn);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const chatForm = document.getElementById('chat-form');
+  const chatInput = document.getElementById('chat-input');
+  const chatMessages = document.getElementById('chat-messages');
+  if (!chatForm || !chatInput || !chatMessages) return;
+
+  appendLocalMessage(BOT_NAME, "Hello, I'm Anya, an AI companion (not a therapist). How are you feeling today?");
+
+  chatForm.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    const csrfToken = document.querySelector('input[name="csrf_token"]');
+    if (!csrfToken) {
+      appendLocalMessage('System', 'Error: Security token not found. Please refresh the page.');
+      return;
+    }
+    const tokenValue = csrfToken.value;
+
+    appendLocalMessage('You', text);
+    chatInput.value = '';
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': tokenValue },
+        body: JSON.stringify({ message: text })
+      });
+      const json = await res.json();
+
+      if (json.ok) {
+        appendLocalMessage(BOT_NAME, json.reply);
+        const hasLines = Array.isArray(json.helplines) && json.helplines.length > 0;
+        if (json.escalate || json.recommended_action === 'emergency_hotline') {
+          showCrisisBanner(json.helplines);
+        } else if (json.recommended_action === 'recommend_appointment' && !crisisShown) {
+          showAppointmentBanner(async () => {
+            await fetch('/api/chat/book-appointment', {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json', 'X-CSRFToken': tokenValue },
+              body: JSON.stringify({ user_message: text })
+            });
+            alert('Appointment requested. A provider will contact you shortly.');
+            document.getElementById('chat-banner').style.display = 'none';
+          });
+        } else if (hasLines && !crisisShown) {
+          showSupportInfo(json.helplines);
+        }
+      } else {
+        appendLocalMessage('System', 'Sorry, something went wrong. Try again later.');
+      }
+    } catch (err) {
+      appendLocalMessage('System', 'Network error. Please check your connection and try again.');
+    }
+  });
 });
 
 function showChatError(message) {
-    const chatMessages = document.getElementById('chat-messages');
-    const errorDiv = document.createElement('div');
-    errorDiv.className = 'chat-message text-center';
-    errorDiv.innerHTML = `<div class="inline-block px-4 py-2 rounded-lg bg-red-100 text-red-800"><p><i class="fas fa-exclamation-triangle mr-2"></i>${message}</p></div>`;
-    chatMessages.appendChild(errorDiv);
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+  const chatMessages = document.getElementById('chat-messages');
+  if (chatMessages) appendLocalMessage('System', message);
 }

@@ -352,7 +352,7 @@
             <button onclick="exportReport()" class="btn-primary" aria-label="Export report data to CSV">
                 <i class="fas fa-download mr-2"></i>Export Data
             </button>
-            <a href="{{ url_for('telehealth_session', user_id=patient.id) }}" class="btn-primary bg-purple-600 hover:bg-purple-700" aria-label="Start a telehealth video call with the patient">
+            <a href="{{ url_for('provider.telehealth_session', user_id=patient.id) }}" class="btn-primary bg-purple-600 hover:bg-purple-700" aria-label="Start a telehealth video call with the patient">
                 <i class="fas fa-video mr-2"></i>Start Telehealth Call
             </a>
         </div>
@@ -402,7 +402,7 @@
         <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
             <i class="fas fa-prescription-bottle-alt text-blue-500 mr-3"></i>Send Prescription
         </h3>
-        <form action="{{ url_for('send_prescription', patient_id=patient.id) }}" method="POST" class="space-y-4">
+        <form action="{{ url_for('provider.send_prescription', patient_id=patient.id) }}" method="POST" class="space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div>
                 <label for="medication_name" class="block text-sm font-medium text-gray-700">Medication Name</label>
@@ -433,6 +433,15 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script nonce="{ g.csp_nonce }" src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{{ super() }}
+<script type="application/json" id="report-data" nonce="{{ g.csp_nonce }}">{{ {
+    'wellness': wellness_trend.digital_detox,
+    'mood_labels': mood_chart_labels, 'mood_data': mood_chart_data,
+    'mh_labels': mh_chart_labels, 'gad7': gad7_data, 'phq9': phq9_data,
+    'patient': patient.name, 'email': patient.email, 'institution': patient.institution or '',
+    'overall_score': ai_analysis.score if ai_analysis else 'N/A',
+    'points': gamification.points if gamification else 0,
+    'streak': gamification.streak if gamification else 0
+}|tojson }}</script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/wellness_report_inline_1.js') }}"></script>
 {% endblock %}

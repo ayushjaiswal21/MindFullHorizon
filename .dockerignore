@@ -1,0 +1,16 @@
+.env
+.git
+__pycache__/
+*.pyc
+.pytest_cache/
+instance/
+flask_session/
+*.db
+*.log
+data/**/*.mp3
+static/uploads/*
+static/gen/
+static/.webassets-cache/
+tests/
+docs/
+venv/

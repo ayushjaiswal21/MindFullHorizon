@@ -5,6 +5,8 @@ from flask_migrate import Migrate
 from flask_session import Session
 from flask_compress import Compress
 from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -12,6 +14,15 @@ migrate = Migrate()
 flask_session = Session()
 compress = Compress()
 csrf = CSRFProtect()
+# Campus networks share one IP, so keep the global limit generous; auth routes add stricter ones.
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["2000 per day", "300 per hour", "60 per minute"],
+    storage_uri="memory://" if os.getenv('FLASK_ENV') == 'development' else None,
+    strategy="fixed-window",
+    headers_enabled=True,
+    retry_after="http-date",
+)
 
 def init_extensions(app):
     """Initialize Flask extensions in the correct order."""

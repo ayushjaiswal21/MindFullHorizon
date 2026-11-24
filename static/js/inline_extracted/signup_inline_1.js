@@ -1,67 +1,21 @@
-
-// Enhanced interactions
 document.addEventListener('DOMContentLoaded', function() {
-    // Password confirmation validation
-    document.getElementById('confirm_password').addEventListener('input', function() {
-        const password = document.getElementById('password').value;
-        const confirmPassword = this.value;
+    const password = document.getElementById('password');
+    const confirm = document.getElementById('confirm_password');
+    const invite = document.getElementById('invite_code');
+    const role = document.getElementById('role');
 
-        if (password !== confirmPassword) {
-            this.setCustomValidity('Passwords do not match');
-            this.classList.add('border-red-300');
-            this.classList.remove('border-green-300');
-        } else {
-            this.setCustomValidity('');
-            this.classList.remove('border-red-300');
-            this.classList.add('border-green-300');
-        }
-    });
+    // Browser-side hint only; the server enforces the real password rules.
+    function checkMatch() {
+        const same = password.value === confirm.value;
+        confirm.setCustomValidity(same ? '' : 'Passwords do not match');
+        confirm.classList.toggle('border-red-300', !same);
+        confirm.classList.toggle('border-green-300', same && confirm.value !== '');
+    }
+    confirm.addEventListener('input', checkMatch);
+    password.addEventListener('input', checkMatch);
 
-    // Password strength indicator
-    document.getElementById('password').addEventListener('input', function() {
-        const password = this.value;
-        const strength = getPasswordStrength(password);
-
-        if (password.length > 0 && password.length < 6) {
-            this.setCustomValidity('Password must be at least 6 characters long');
-            this.classList.add('border-red-300');
-        } else {
-            this.setCustomValidity('');
-            this.classList.remove('border-red-300');
-            this.classList.add('border-green-300');
-        }
-
-        // Update form sections on role change
-        document.getElementById('role').addEventListener('change', function() {
-            const roleCards = document.querySelectorAll('.group');
-            roleCards.forEach(card => {
-                card.classList.add('animate-pulse');
-                setTimeout(() => card.classList.remove('animate-pulse'), 500);
-            });
-        });
-    });
-
-    // Add smooth scroll behavior for internal links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
+    // Counselor sign-up: a non-empty invite code switches the role; the server still checks the code.
+    const syncRole = () => { role.value = invite.value.trim() ? 'provider' : 'patient'; };
+    invite.addEventListener('input', syncRole);
+    invite.form.addEventListener('submit', syncRole);
 });
-
-function getPasswordStrength(password) {
-    let strength = 0;
-    if (password.length >= 6) strength++;
-    if (password.match(/[a-z]/)) strength++;
-    if (password.match(/[A-Z]/)) strength++;
-    if (password.match(/[0-9]/)) strength++;
-    if (password.match(/[^a-zA-Z0-9]/)) strength++;
-    return strength;
-}

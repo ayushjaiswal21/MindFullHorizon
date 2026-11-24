@@ -266,6 +266,21 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
+// Small toast used by pages that call showMessageBox(title, message, type); text only, never HTML.
+window.showMessageBox = window.showMessageBox || function (title, message, type) {
+    const box = document.createElement('div');
+    box.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    box.className = 'fixed top-20 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg text-white ' +
+        (type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600');
+    const strong = document.createElement('strong');
+    strong.textContent = title;
+    const text = document.createElement('div');
+    text.textContent = message;
+    box.append(strong, text);
+    document.body.appendChild(box);
+    setTimeout(() => box.remove(), 4000);
+};
+
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { ModalManager, modalManager };

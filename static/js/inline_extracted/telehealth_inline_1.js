@@ -1,6 +1,12 @@
 
     document.addEventListener('DOMContentLoaded', function() {
-        const socket = io();
+        const cfg = document.getElementById('telehealth-config').dataset;
+        const socket = window.socket || io();
+        const errorBox = document.getElementById('telehealth-error');
+        const showError = (msg) => {
+            errorBox.textContent = msg;
+            errorBox.classList.remove('hidden');
+        };
         const localVideo = document.getElementById('local-video');
         const remoteVideo = document.getElementById('remote-video');
         const muteAudioBtn = document.getElementById('mute-audio');
@@ -9,7 +15,7 @@
 
         let localStream;
         let peerConnection;
-        const room = 'telehealth_room_{{ patient_id }}'; // Use patient_id for room name
+        const room = cfg.room; // rendered server-side; the server decides whether this user may join
 
         const configuration = {
             iceServers: [
@@ -23,12 +29,17 @@
             .then(stream => {
                 localStream = stream;
                 localVideo.srcObject = stream;
-                socket.emit('join', { room: room });
+                socket.emit('join', { room: room }, (resp) => {
+                    if (resp && (resp.error || resp.ok === false)) showError('You cannot join this session. Please go back and open it from your dashboard.');
+                });
             })
             .catch(error => {
                 console.error('Error accessing media devices.', error);
-                alert('Could not access camera/microphone. Please ensure they are enabled.');
+                showError('Could not access camera/microphone. Please ensure they are enabled.');
             });
+
+        // The server may reject the join (not your patient / not your session).
+        socket.on('join_error', () => showError('You cannot join this session. Please go back and open it from your dashboard.'));
 
         // 2. Socket.IO event handlers
         socket.on('ready', () => {
@@ -73,7 +84,7 @@
                 peerConnection = null;
             }
             remoteVideo.srcObject = null;
-            alert('The other participant has disconnected.');
+            showError('The other participant has disconnected.');
         });
 
         // 3. WebRTC Peer Connection setup
@@ -124,7 +135,7 @@
                 peerConnection.close();
             }
             socket.emit('leave', { room: room });
-            window.location.href = "{{ url_for('patient.patient_dashboard') if session.user_role == 'patient' else url_for('provider_dashboard') }}";
+            window.location.href = cfg.homeUrl;
         });
 
         // Handle browser tab/window close

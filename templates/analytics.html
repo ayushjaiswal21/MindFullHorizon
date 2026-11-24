@@ -105,7 +105,7 @@
                             <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ insight.date.strftime('%Y-%m-%d') }}</td>
                             <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ insight.total_posts }}</td>
                             <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ insight.total_views }}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ "%.1f"|format(insight.engagement_rate) }}%</td>
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ ("%.1f"|format(insight.engagement_rate) ~ "%") if insight.engagement_rate is not none else "n/a" }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -129,7 +129,7 @@
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-sm text-gray-600">Average Screen Time:</span>
-                    <span class="font-semibold">{{ "%.1f"|format(analytics_data.institutional_data.avg_screen_time) }} hrs/day</span>
+                    <span class="font-semibold">{{ ("%.1f"|format(analytics_data.institutional_data.avg_screen_time) ~ " hrs/day") if analytics_data.institutional_data.avg_screen_time is not none else "n/a" }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-sm text-gray-600">Active Users:</span>
@@ -153,5 +153,6 @@
     </div>
 </div>
 
+<script type="application/json" id="analytics-data" nonce="{{ g.csp_nonce }}">{{ {'labels': analytics_data.chart_labels, 'screen_time': analytics_data.screen_time_data, 'wellness': analytics_data.wellness_score_data}|tojson }}</script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/analytics_inline_1.js') }}"></script>
 {% endblock %}

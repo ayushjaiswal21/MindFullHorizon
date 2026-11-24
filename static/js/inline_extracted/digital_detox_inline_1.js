@@ -94,9 +94,10 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         try {
-            const response = await fetch('/api/log-digital-detox', {
+            const response = await fetch('/patient/api/log-digital-detox', {
                 method: 'POST',
                 headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
                     'Content-Type': 'application/json',
                     'X-CSRFToken': data.csrf_token
                 },

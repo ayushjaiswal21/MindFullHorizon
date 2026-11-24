@@ -365,6 +365,59 @@ function openAssessmentModal(options) {
     }
   }
 
+  // AI text is untrusted: build nodes with textContent, never innerHTML
+  function fillList(el, items, iconClasses) {
+    el.textContent = '';
+    items.forEach(text => {
+      const li = document.createElement('li');
+      li.className = 'flex items-start';
+      const icon = document.createElement('i');
+      icon.className = 'fas ' + iconClasses + ' mt-1 mr-2';
+      const span = document.createElement('span');
+      span.textContent = String(text);
+      li.append(icon, span);
+      el.appendChild(li);
+    });
+  }
+
+  function showCrisisCard(helplines) {
+    const old = document.getElementById('crisis-card');
+    if (old) old.remove();
+    const card = document.createElement('div');
+    card.id = 'crisis-card';
+    card.setAttribute('role', 'alertdialog');
+    card.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4';
+    const box = document.createElement('div');
+    box.className = 'bg-white rounded-xl shadow-xl max-w-md w-full p-6';
+    const h = document.createElement('h2');
+    h.className = 'text-xl font-bold text-red-700 mb-2';
+    h.textContent = 'You are not alone';
+    const p = document.createElement('p');
+    p.className = 'text-gray-700 mb-3';
+    p.textContent = 'Your answers suggest you may be going through a very hard time. Please talk to someone now. These services are free:';
+    const ul = document.createElement('ul');
+    ul.className = 'mb-4 space-y-2';
+    (Array.isArray(helplines) ? helplines : []).forEach(hl => {
+      const li = document.createElement('li');
+      const tel = String(hl.tel || '').replace(/[^0-9]/g, '');
+      const a = document.createElement(tel ? 'a' : 'span');
+      if (tel) a.href = 'tel:' + tel;
+      a.className = 'font-semibold text-blue-700';
+      a.textContent = hl.name + ': ' + hl.number;
+      li.appendChild(a);
+      li.append(' (' + hl.hours + ')');
+      ul.appendChild(li);
+    });
+    const btn = document.createElement('button');
+    btn.className = 'btn btn-outline';
+    btn.textContent = 'Close';
+    btn.addEventListener('click', () => card.remove());
+    box.append(h, p, ul, btn);
+    card.appendChild(box);
+    document.body.appendChild(card);
+    btn.focus();
+  }
+
   async function completeAssessment() {
     if (window.__assessmentSaving) return;
     window.__assessmentSaving = true;
@@ -386,16 +439,20 @@ function openAssessmentModal(options) {
       }
 
       const payload = {
-        assessment_type: window.currentAssessment.title,
-        score: window.assessmentAnswers.standard.reduce((a, b) => a + b, 0),
+        assessment_type: window.currentAssessmentKey, // the server recomputes the score from responses
         responses: window.assessmentAnswers.standard,
         contextual_responses: window.assessmentAnswers.contextual
       };
 
       const json = await saveAssessment(payload);
-      alert(json?.message || 'Assessment saved.');
       const modal = document.getElementById('assessmentModal');
-      if (modal) hideModal(modal);
+      if (json && json.crisis) {
+        if (modal) hideModal(modal);
+        showCrisisCard(json.helplines);
+      } else {
+        alert(json?.message || 'Assessment saved.');
+        if (modal) hideModal(modal);
+      }
 
       // Dynamically update AI insights if available
       if (json.success && json.ai_insights) {
@@ -410,17 +467,13 @@ function openAssessmentModal(options) {
         // Update Recommendations
         const recsEl = document.getElementById('aiRecommendations');
         if (recsEl && insights.recommendations && Array.isArray(insights.recommendations)) {
-          recsEl.innerHTML = insights.recommendations.map(rec =>
-            `<li class="flex items-start"><i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i><span>${rec}</span></li>`
-          ).join('');
+          fillList(recsEl, insights.recommendations, 'fa-check-circle text-green-500');
         }
 
         // Update Resources
         const resEl = document.getElementById('aiResources');
         if (resEl && insights.resources && Array.isArray(insights.resources)) {
-          resEl.innerHTML = insights.resources.map(res =>
-            `<li class="flex items-start"><i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i><span>${res}</span></li>`
-          ).join('');
+          fillList(resEl, insights.resources, 'fa-phone text-blue-500');
         }
 
         // Show the container
@@ -481,6 +534,7 @@ function openAssessmentModal(options) {
     }
 
     window.currentAssessment = assessmentData;
+    window.currentAssessmentKey = typeKey; // canonical 'PHQ-9' / 'GAD-7', sent to the server
     window.currentQuestion = 0;
     window.assessmentAnswers = {
       standard: [],
@@ -521,53 +575,7 @@ function openAssessmentModal(options) {
       });
     });
 
-    // Save mood click handler (if not already implemented)
-    /* === MOOD SAVE: unified handler (INSERTED) === */
-    if (typeof document !== 'undefined') {
-      const saveMoodBtn = document.getElementById('save-mood-btn');
-      if (saveMoodBtn) {
-        saveMoodBtn.addEventListener('click', async () => {
-          const sel = document.querySelector('.mood-option.selected');
-          if (!sel) {
-            alert('Please select a mood first.');
-            return;
-          }
-          const moodVal = sel.getAttribute('data-mood');
-
-          const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-          const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
-
-          try {
-            const res = await fetch('/api/mood', {
-              method: 'POST',
-              credentials: 'same-origin',
-              headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken || ''
-              },
-              body: JSON.stringify({ value: Number(moodVal) })
-            });
-
-            const text = await res.text().catch(() => null);
-            let json;
-            try { json = JSON.parse(text); } catch (e) { json = { raw: text }; }
-
-            if (res.ok) {
-              alert(json?.message || 'Mood saved.');
-              saveMoodBtn.disabled = true;
-              if (typeof window._debugMoods === 'function') window._debugMoods();
-            } else {
-              console.warn('save-mood failed', res.status, json);
-              alert(json?.message || 'Failed to save mood.');
-            }
-          } catch (err) {
-            console.error('Error saving mood', err);
-            alert('Network error while saving mood.');
-          }
-        });
-      }
-    }
-    /* === END MOOD SAVE === */
+    // Mood saving lives in mood.js (single handler); do not bind #save-mood-btn here.
 
     // Close/open bindings
     const closeBtn = document.getElementById('closeAssessmentBtn');

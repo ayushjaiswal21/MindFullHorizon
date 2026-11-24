@@ -1,139 +1,40 @@
-# requirements.txt - MindFullHorizon Mental Health Platform
-# Updated: October 2025 - Production Optimized for Render.com
-# Tested with Python 3.10+
+# MindFull Horizon: runtime dependencies (direct imports only; pip resolves the rest).
+# Python 3.11 (see Dockerfile). Optional voice analysis: requirements-voice.txt. Tests: requirements-dev.txt.
+# Rule: add a package here only when code imports it; run `python scripts/scan_imports.py` before releases.
 
-# ===== CORE FLASK FRAMEWORK =====
+# Web framework and extensions
 Flask>=2.3.0,<3.0.0
+Werkzeug>=2.3.0,<3.0.0
 Flask-WTF>=1.1.0,<2.0.0
 Flask-SQLAlchemy>=3.0.0,<4.0.0
 Flask-Migrate>=4.0.0,<5.0.0
 Flask-Session>=0.5.0,<1.0.0
 Flask-Compress>=1.13,<2.0.0
 Flask-SocketIO>=5.3.0,<6.0.0
-Flask-CORS>=4.0.0,<5.0.0
 Flask-Dance>=7.0.0,<8.0.0
 Flask-Caching>=2.0.0,<3.0.0
 Flask-Limiter>=3.0.0,<4.0.0
+
+# Static asset bundling (app.py bundles js/css with these filters)
 Flask-Assets>=2.0,<3.0.0
 webassets>=2.0,<3.0.0
+jsmin>=3.0.1
+cssmin>=0.2.0
+Brotli>=1.0.0,<2.0.0          # optional: lets Flask-Compress serve brotli
 
-# ===== DATABASE & ORM =====
+# Database
 SQLAlchemy>=2.0.0,<3.0.0
-Werkzeug>=2.3.0,<3.0.0
-psycopg2-binary>=2.9.0,<3.0.0
 alembic>=1.11.0,<2.0.0
+psycopg2-binary>=2.9.0,<3.0.0  # PostgreSQL driver for DATABASE_URL in production
 
-# ===== PRODUCTION SERVER =====
+# Server (SocketIO needs the eventlet worker, one process)
 gunicorn>=21.0.0,<22.0.0
 eventlet>=0.33.0,<1.0.0
-waitress>=2.1.0,<3.0.0
 
-# ===== AI & CHATBOT SERVICES =====
-# Google Gemini AI (fallback)
-google-generativeai>=0.3.0,<1.0.0
-google-ai-generativelanguage>=0.4.0,<1.0.0
-google-api-core>=2.10.0,<3.0.0
-google-auth>=2.15.0,<3.0.0
-googleapis-common-protos>=1.58.0,<2.0.0
+# AI and text
+google-generativeai>=0.3.0,<1.0.0   # SDK is end-of-life; migrating to google-genai is tracked in docs/TRACKER.md
+textblob>=0.17.0,<1.0.0              # journal sentiment (pulls in nltk)
 
-
-# HTTP & API clients
-requests>=2.28.0,<3.0.0
-httpx>=0.24.0,<1.0.0
-requests-oauthlib>=1.3.0,<2.0.0
-oauthlib>=3.2.0,<4.0.0
-
-# ===== TEXT PROCESSING & NLP =====
-textblob>=0.17.0,<1.0.0
-nltk>=3.8.0,<4.0.0
-regex>=2023.0.0,<2024.0.0
-
-# ===== CORE UTILITIES =====
+# Misc
 python-dotenv>=1.0.0,<2.0.0
-python-dateutil>=2.8.0,<3.0.0
-python-multipart>=0.0.6,<1.0.0
-pytz>=2023.0.0,<2024.0.0
-Pillow>=9.0.0,<11.0.0
-Jinja2>=3.1.0,<4.0.0
-WTForms>=3.0.0,<4.0.0
-MarkupSafe>=2.1.0,<3.0.0
-
-# ===== REAL-TIME COMMUNICATION =====
-python-socketio>=5.8.0,<6.0.0
-python-engineio>=4.4.0,<5.0.0
-simple-websocket>=0.10.0,<1.0.0
-wsproto>=1.2.0,<2.0.0
-bidict>=0.22.0,<1.0.0
-
-# ===== SECURITY & NETWORKING =====
-certifi>=2023.0.0,<2024.0.0
-idna>=3.4.0,<4.0.0
-urllib3>=1.26.0,<2.0.0
-dnspython>=2.3.0,<3.0.0
-h11>=0.14.0,<1.0.0
-httpcore>=0.17.0,<1.0.0
-sniffio>=1.3.0,<2.0.0
-
-# ===== DATA PROCESSING =====
-joblib>=1.3.0,<2.0.0
-tqdm>=4.65.0,<5.0.0
-markdown-it-py>=2.2.0,<3.0.0
-rich>=13.0.0,<14.0.0
-Pygments>=2.14.0,<3.0.0
-
-# ===== ASYNC & CONCURRENCY =====
-anyio>=3.7.0,<4.0.0
-greenlet>=2.0.0,<3.0.0
-grpcio>=1.54.0,<2.0.0
-grpcio-status>=1.54.0,<2.0.0
-annotated-types>=0.5.0,<1.0.0
-pydantic>=1.10.0,<2.0.0
-pydantic_core>=2.10.0,<3.0.0
-typing_extensions>=4.5.0,<5.0.0
-
-
-# ===== COMPRESSION & ENCODING =====
-Brotli>=1.0.0,<2.0.0
-zstandard>=0.20.0,<1.0.0
-zipp>=3.15.0,<4.0.0
-charset-normalizer>=3.1.0,<4.0.0
-
-# ===== CACHING & RATE LIMITING =====
-cachelib>=0.10.0,<1.0.0
-cachetools>=5.3.0,<6.0.0
-limits>=3.5.0,<4.0.0
-
-# ===== UTILITY LIBRARIES =====
-blinker>=1.6.0,<2.0.0
-click>=8.1.0,<9.0.0
-colorama>=0.4.0,<1.0.0
-Deprecated>=1.2.0,<2.0.0
-itsdangerous>=2.1.0,<3.0.0
-Mako>=1.2.0,<2.0.0
-mdurl>=0.1.0,<1.0.0
-ordered-set>=4.1.0,<5.0.0
-packaging>=23.0.0,<24.0.0
-proto-plus>=1.22.0,<2.0.0
-protobuf>=4.21.0,<5.0.0
-pyasn1>=0.5.0,<1.0.0
-pyasn1_modules>=0.3.0,<1.0.0
-rsa>=4.9.0,<5.0.0
-six>=1.16.0,<2.0.0
-URLObject>=2.4.0,<3.0.0
-wrapt>=1.15.0,<2.0.0
-
-# ===== AUDIO PROCESSING =====
-SpeechRecognition>=3.10.0,<4.0.0
-pydub>=0.25.0,<1.0.0
-librosa>=0.10.0,<1.0.0
-scipy>=1.11.0,<2.0.0
-numpy>=1.24.0,<2.0.0
-
-# ===== PRODUCTION DEPLOYMENT NOTES =====
-# 1. All packages above are production-ready and tested
-# 2. Version constraints ensure compatibility and security
-# 3. No development-only packages included
-# 4. Optimized for Render.com deployment
-# 5. Database setup handled by create_schema_direct.py
-# 6. Environment setup: Create .env file with required variables
-# 7. Running the application: gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:$PORT app:app
+requests>=2.28.0,<3.0.0              # also used by the Docker healthcheck

@@ -1,0 +1,5 @@
+# Optional: voice-emotion analysis for /api/upload-voice (heavy: pulls numba, scipy, scikit-learn).
+# The app runs without it (LIBROSA_AVAILABLE is False and a neutral fallback is used).
+-r requirements.txt
+librosa>=0.10.0,<1.0.0
+numpy>=1.24.0,<2.0.0

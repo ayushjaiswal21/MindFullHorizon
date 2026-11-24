@@ -1,4 +1,6 @@
 
+const reportData = JSON.parse(document.getElementById('report-data').textContent);
+
 document.addEventListener('DOMContentLoaded', function() {
     initializeWellnessTrendsChart();
     initializeMoodTrendsChart();
@@ -9,7 +11,7 @@ function initializeWellnessTrendsChart() {
     const ctx = document.getElementById('wellness-trends-chart');
     if (!ctx) return;
     
-    const wellnessData = JSON.parse('{{ wellness_trend.digital_detox | tojson | safe }}');
+    const wellnessData = reportData.wellness;
     
     if (!wellnessData || wellnessData.length === 0) return;
     
@@ -106,8 +108,8 @@ function initializeMoodTrendsChart() {
     const ctx = document.getElementById('mood-trends-chart');
     if (!ctx) return;
 
-    const labels = JSON.parse('{{ mood_chart_labels | tojson | safe }}');
-    const data = JSON.parse('{{ mood_chart_data | tojson | safe }}');
+    const labels = reportData.mood_labels;
+    const data = reportData.mood_data;
 
     new Chart(ctx, {
         type: 'line',
@@ -163,9 +165,9 @@ function initializeMhAssessmentTrendsChart() {
     const ctx = document.getElementById('mh-assessment-trends-chart');
     if (!ctx) return;
 
-    const labels = JSON.parse('{{ mh_chart_labels | tojson | safe }}');
-    const gad7Data = JSON.parse('{{ gad7_data | tojson | safe }}');
-    const phq9Data = JSON.parse('{{ phq9_data | tojson | safe }}');
+    const labels = reportData.mh_labels;
+    const gad7Data = reportData.gad7;
+    const phq9Data = reportData.phq9;
 
     new Chart(ctx, {
         type: 'line',
@@ -236,26 +238,16 @@ function initializeMhAssessmentTrendsChart() {
 }
 
 function exportReport() {
-    // Simple CSV export functionality
-    const patientName = "{{ patient.name }}";
-    const reportData = {
-        patient: "{{ patient.name }}",
-        email: "{{ patient.email }}",
-        institution: "{{ patient.institution }}",
-        overallScore: "{{ ai_analysis.score if ai_analysis else 'N/A' }}",
-        totalPoints: "{{ gamification.points if gamification else 0 }}",
-        currentStreak: "{{ gamification.streak if gamification else 0 }}",
-        reportDate: new Date().toLocaleDateString()
-    };
-    
-    const csvContent = "data:text/csv;charset=utf-8," 
-        + "Patient,Email,Institution,Overall Score,Total Points,Current Streak,Report Date\n"
-        + `${reportData.patient},${reportData.email},${reportData.institution},${reportData.overallScore},${reportData.totalPoints},${reportData.currentStreak},${reportData.reportDate}`;
-    
-    const encodedUri = encodeURI(csvContent);
+    // Quote every field and neutralise spreadsheet formulas (=, +, -, @ at the start).
+    const cell = v => { v = String(v ?? ''); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g, '""') + '"'; };
+    const row = [reportData.patient, reportData.email, reportData.institution, reportData.overall_score,
+                 reportData.points, reportData.streak, new Date().toLocaleDateString()].map(cell).join(',');
+    const csv = "Patient,Email,Institution,Overall Score,Total Points,Current Streak,Report Date
+" + row;
+
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `wellness_report_${patientName.replace(/\s+/g, '_')}.csv`);
+    link.setAttribute("href", "data:text/csv;charset=utf-8," + encodeURIComponent(csv));
+    link.setAttribute("download", `wellness_report_${String(reportData.patient).replace(/\s+/g, '_')}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

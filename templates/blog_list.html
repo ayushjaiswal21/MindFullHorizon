@@ -52,7 +52,7 @@
                 {{ insights.most_popular_post.title }}
             </a>
             <p class="text-sm text-gray-600 mt-1">
-                by {{ insights.most_popular_post.author_name }} • 
+                by {{ insights.most_popular_post.author.name if insights.most_popular_post.author else 'Unknown' }} • 
                 Engagement Score: {{ "%.1f"|format(insights.most_popular_post.engagement_score) }}
             </p>
         </div>
@@ -126,9 +126,9 @@
                             Read More →
                         </a>
                         
-                        {% if session.get('user_id') == post.author_id %}
+                        {% if session.get('user_id') == post.author_id or session.get('user_role') == 'admin' %}
                         <div class="relative">
-                            <button class="text-gray-400 hover:text-gray-600 p-2 toggle-dropdown-btn" data-post-id="{{ post.id }}">
+                            <button type="button" aria-label="Post actions" class="text-gray-400 hover:text-gray-600 p-2 toggle-dropdown-btn" data-post-id="{{ post.id }}">
                                 <i class="fas fa-ellipsis-v"></i>
                             </button>
                             <div id="dropdown-{{ post.id }}" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 hidden">

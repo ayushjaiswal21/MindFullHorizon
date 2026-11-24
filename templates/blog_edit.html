@@ -109,6 +109,12 @@
                 </div>
             </div>
 
+            <div class="flex items-center pt-4">
+                <input type="hidden" name="is_published" value="false">
+                <input type="checkbox" id="is_published" name="is_published" value="true" {% if post.is_published %}checked{% endif %} class="mr-2">
+                <label for="is_published" class="text-sm text-gray-700">Published (uncheck to keep this post as a draft only you can see)</label>
+            </div>
+
             <!-- Action Buttons -->
             <div class="flex items-center justify-between pt-6 border-t border-gray-200">
                 <div class="text-sm text-gray-500">

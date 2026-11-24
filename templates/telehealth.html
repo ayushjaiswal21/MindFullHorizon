@@ -3,11 +3,15 @@
 {% block title %}Telehealth Session - Mindful Horizon{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
+{% set room_patient_id = patient_id if patient_id is defined else session.get('user_id') %}
+<div class="max-w-4xl mx-auto" id="telehealth-config"
+     data-room="telehealth_room_{{ room_patient_id }}"
+     data-home-url="{{ url_for('patient.patient_dashboard') if session.user_role == 'patient' else url_for('provider.provider_dashboard') }}">
     <div class="card">
         <h2 class="text-2xl font-bold text-gray-800 mb-6">
-            <i class="fas fa-video text-green-500 mr-2"></i>Telehealth Session with {{ patient_name }}
+            <i class="fas fa-video text-green-500 mr-2" aria-hidden="true"></i>Telehealth Session{% if patient_name is defined %} with {{ patient_name }}{% endif %}
         </h2>
+        <p id="telehealth-error" class="hidden mb-4 p-3 rounded bg-red-50 text-red-700 text-sm" role="alert"></p>
         
         <div class="bg-gray-900 rounded-lg p-4 md:p-8 text-center mb-6 relative">
             <!-- Remote Video Stream -->
@@ -15,14 +19,14 @@
             <!-- Local Video Stream -->
             <video id="local-video" autoplay playsinline muted class="absolute bottom-6 right-6 w-32 h-24 md:w-48 md:h-36 bg-black rounded-lg object-cover border-2 border-white"></video>
             
-            <p class="text-white text-lg mt-2">Connecting to {{ patient_name }}...</p>
-            <p class="text-gray-400 text-sm">Secure, HIPAA-compliant video conferencing</p>
+            <p id="telehealth-status" class="text-white text-lg mt-2" aria-live="polite">Connecting{% if patient_name is defined %} to {{ patient_name }}{% endif %}...</p>
+            <p class="text-gray-400 text-sm">Browser-based video call. Allow camera and microphone when asked.</p>
             
             <div class="flex justify-center space-x-4 mt-4">
-                <button id="mute-audio" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition duration-200">
+                <button id="mute-audio" aria-label="Toggle microphone" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition duration-200">
                     <i class="fas fa-microphone-slash"></i>
                 </button>
-                <button id="mute-video" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition duration-200">
+                <button id="mute-video" aria-label="Toggle camera" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition duration-200">
                     <i class="fas fa-video-slash"></i>
                 </button>
                 <button id="end-call" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-full transition duration-200">
@@ -34,25 +38,23 @@
         <div class="grid md:grid-cols-2 gap-6">
             <div class="bg-blue-50 p-4 rounded-lg">
                 <h3 class="font-semibold text-gray-800 mb-2">
-                    <i class="fas fa-shield-alt text-blue-500 mr-2"></i>Security & Privacy
+                    <i class="fas fa-shield-alt text-blue-500 mr-2" aria-hidden="true"></i>Privacy
                 </h3>
                 <ul class="text-sm text-gray-600 space-y-1">
-                    <li>• End-to-end encrypted video calls</li>
-                    <li>• HIPAA compliant platform</li>
-                    <li>• No session recordings without consent</li>
-                    <li>• Secure data transmission</li>
+                    <li>&bull; Video goes directly between the two browsers (WebRTC)</li>
+                    <li>&bull; Sessions are not recorded by this app</li>
+                    <li>&bull; Only the patient and their counselor can join this room</li>
                 </ul>
             </div>
             
             <div class="bg-green-50 p-4 rounded-lg">
                 <h3 class="font-semibold text-gray-800 mb-2">
-                    <i class="fas fa-headset text-green-500 mr-2"></i>Technical Support
+                    <i class="fas fa-headset text-green-500 mr-2" aria-hidden="true"></i>If the call does not connect
                 </h3>
                 <ul class="text-sm text-gray-600 space-y-1">
-                    <li>• 24/7 technical assistance available</li>
-                    <li>• Browser-based, no downloads required</li>
-                    <li>• Mobile device compatible</li>
-                    <li>• Backup phone option available</li>
+                    <li>&bull; Check that camera and microphone are allowed in the browser</li>
+                    <li>&bull; Reload the page and try again</li>
+                    <li>&bull; In an emergency call 112, or Tele-MANAS 14416</li>
                 </ul>
             </div>
         </div>
@@ -61,6 +63,6 @@
 {% endblock %}
 
 {% block extra_scripts %}
-<script nonce="{ g.csp_nonce }" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+{{ super() }}
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/telehealth_inline_1.js') }}"></script>
 {% endblock %}

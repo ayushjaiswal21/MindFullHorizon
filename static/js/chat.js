@@ -35,7 +35,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!currentTexts.includes(msg.text)) {
               const msgDiv = document.createElement('div');
               msgDiv.className = 'mb-2';
-              msgDiv.innerHTML = `<div><b>${msg.user}:</b> ${msg.text}</div>`;
+              const line = document.createElement('div');
+              const who = document.createElement('b');
+              who.textContent = msg.user + ':';
+              line.append(who, ' ' + msg.text); // textContent semantics: message text is never parsed as HTML
+              msgDiv.appendChild(line);
               container.appendChild(msgDiv);
             }
           });

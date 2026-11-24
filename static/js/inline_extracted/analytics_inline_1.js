@@ -1,14 +1,15 @@
 
 document.addEventListener('DOMContentLoaded', function() {
+    const chartData = JSON.parse(document.getElementById('analytics-data').textContent);
     // Screen Time Chart
     const screenTimeCtx = document.getElementById('screenTimeChart').getContext('2d');
     new Chart(screenTimeCtx, {
         type: 'line',
         data: {
-            labels: {{ analytics_data.chart_labels | tojson }},
+            labels: chartData.labels,
             datasets: [{
                 label: 'Average Daily Screen Time (hours)',
-                data: {{ analytics_data.screen_time_data | tojson }},
+                data: chartData.screen_time,
                 borderColor: 'rgb(59, 130, 246)',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 tension: 0.1
@@ -38,10 +39,10 @@ document.addEventListener('DOMContentLoaded', function() {
     new Chart(wellnessCtx, {
         type: 'line',
         data: {
-            labels: {{ analytics_data.chart_labels | tojson }},
+            labels: chartData.labels,
             datasets: [{
                 label: 'Average Wellness Score',
-                data: {{ analytics_data.wellness_score_data | tojson }},
+                data: chartData.wellness,
                 borderColor: 'rgb(239, 68, 68)',
                 backgroundColor: 'rgba(239, 68, 68, 0.1)',
                 tension: 0.1

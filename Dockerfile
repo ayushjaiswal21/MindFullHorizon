@@ -1,34 +1,26 @@
-FROM python:3.13-slim
+# Python 3.11: matches the pinned dependency set (numpy<2 etc. have no 3.13 wheels)
+FROM python:3.11-slim
 
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    postgresql-client \
-    redis-tools \
-    libpq-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first for better Docker layer caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
 COPY . .
 
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash app \
-    && chown -R app:app /app
+RUN useradd --create-home --shell /bin/bash app && chown -R app:app /app
 USER app
 
-# Expose port
+ENV FLASK_APP=app.py
+
 EXPOSE 5000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:5000/health', timeout=10)" || exit 1
+# Fails on non-2xx responses (requests.get alone would not)
+HEALTHCHECK --interval=30s --timeout=30s --start-period=15s --retries=3 \
+    CMD python -c "import requests; requests.get('http://localhost:5000/health', timeout=10).raise_for_status()" || exit 1
 
-# Start application with gunicorn and eventlet (Python 3.13 compatible)
-CMD ["gunicorn", "--worker-class", "eventlet", "--workers", "1", "--bind", "0.0.0.0:5000", "--preload", "app:app"]
+# SocketIO needs the eventlet worker and a single worker process
+CMD ["sh", "-c", "SKIP_CREATE_ALL=1 flask db upgrade && exec gunicorn --worker-class eventlet --workers 1 --bind 0.0.0.0:${PORT:-5000} app:app"]

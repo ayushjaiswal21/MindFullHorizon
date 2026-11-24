@@ -77,3 +77,21 @@ def provider_required(f):
         session.modified = True
         return f(*args, **kwargs)
     return decorated_function
+
+
+def can_join_telehealth(patient_id):
+    """True for the patient themself, or a provider of the same institution who has an appointment with them."""
+    from extensions import db
+    from models import Appointment, User
+    uid, role = session.get('user_id'), session.get('user_role')
+    if not uid:
+        return False
+    if role == 'patient':
+        return uid == patient_id
+    if role != 'provider':
+        return False
+    patient = db.session.get(User, patient_id)
+    if not patient or patient.role != 'patient' or patient.institution != session.get('user_institution'):
+        return False
+    return Appointment.query.filter(Appointment.user_id == patient_id, Appointment.provider_id == uid,
+                                    Appointment.status != 'rejected').first() is not None

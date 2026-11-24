@@ -3,7 +3,34 @@
 {% block title %}Provider Dashboard - Mindful Horizon{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
+<div class="max-w-7xl mx-auto" id="provider-config"
+     data-appointments-url="{{ url_for('provider.provider_appointments') }}"
+     data-accept-url="{{ url_for('provider.accept_appointment', appointment_id=0) }}"
+     data-reject-url="{{ url_for('provider.reject_appointment', appointment_id=0) }}"
+     data-report-url="{{ url_for('provider.wellness_report', user_id=0) }}"
+     data-message-url="{{ url_for('api_message') }}">
+    {% if crisis_events %}
+    <section class="mb-6 border-l-4 border-red-600 bg-red-50 p-4 rounded" role="alert" aria-labelledby="crisis-heading">
+        <h2 id="crisis-heading" class="text-lg font-bold text-red-800 mb-2">
+            <i class="fas fa-exclamation-circle mr-2" aria-hidden="true"></i>Crisis alerts needing follow-up ({{ crisis_events|length }})
+        </h2>
+        <ul class="space-y-2">
+            {% for ev in crisis_events %}
+            <li class="flex flex-wrap items-center justify-between gap-2 bg-white rounded p-3 border border-red-200">
+                <span class="text-sm text-gray-800">
+                    <a class="font-semibold text-red-700 underline" href="{{ url_for('provider.wellness_report', user_id=ev.user_id) }}">{{ ev.name }}</a>
+                    &middot; {{ ev.source }} &middot; severity {{ ev.severity }}{% if ev.reason %} &middot; {{ ev.reason }}{% endif %}
+                    &middot; <span class="text-gray-500">{{ ev.created_at }} UTC</span>
+                </span>
+                <form method="post" action="{{ url_for('provider.acknowledge_crisis', event_id=ev.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-3 py-1 rounded">Acknowledge</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+    </section>
+    {% endif %}
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-800 mb-2">Provider Dashboard</h1>
         <p class="text-gray-600">Welcome back, {{ user_name|e }}. Manage your caseload and access tools.</p>
@@ -17,19 +44,19 @@
             </h3>
             <div class="grid grid-cols-2 gap-4">
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-blue-600">{{ bi_data.patient_engagement|e }}%</div>
+                    <div class="text-2xl font-bold text-blue-600">{{ (bi_data.patient_engagement ~ "%") if bi_data.patient_engagement is not none else "n/a" }}</div>
                     <div class="text-sm text-gray-600">Patient Engagement</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-green-600">{{ bi_data.avg_session_duration|e }}min</div>
+                    <div class="text-2xl font-bold text-green-600">{{ (bi_data.avg_session_duration ~ " min") if bi_data.avg_session_duration is not none else "n/a" }}</div>
                     <div class="text-sm text-gray-600">Avg Session Duration</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-purple-600">{{ bi_data.completion_rate|e }}%</div>
+                    <div class="text-2xl font-bold text-purple-600">{{ (bi_data.completion_rate ~ "%") if bi_data.completion_rate is not none else "n/a" }}</div>
                     <div class="text-sm text-gray-600">Treatment Completion</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-2xl font-bold text-yellow-600">{{ bi_data.satisfaction_score|e }}/5</div>
+                    <div class="text-2xl font-bold text-yellow-600">{{ (bi_data.satisfaction_score ~ "/5") if bi_data.satisfaction_score is not none else "n/a" }}</div>
                     <div class="text-sm text-gray-600">Patient Satisfaction</div>
                 </div>
             </div>
@@ -77,9 +104,9 @@
                         <span>{{ t.title }}</span>
                         <div class="flex items-center space-x-2">
                             {% if t.type == 'appointment' %}
-                            <a href="{{ url_for('patient.patient_dashboard') }}" title="Open appointment" class="text-indigo-600"><i class="fas fa-calendar-alt"></i></a>
+                            <a href="{{ url_for('provider.provider_dashboard') }}#appointmentsTable" title="Open appointments" aria-label="Open appointments" class="text-indigo-600"><i class="fas fa-calendar-alt" aria-hidden="true"></i></a>
                             {% else %}
-                            <a href="#" title="Message" class="text-indigo-600"><i class="fas fa-envelope"></i></a>
+                            <a href="{{ url_for('provider.wellness_report', user_id=t.patient_id) }}" title="Open patient report" aria-label="Open patient report" class="text-indigo-600"><i class="fas fa-envelope" aria-hidden="true"></i></a>
                             {% endif %}
                         </div>
                     </li>
@@ -163,7 +190,6 @@
                 <thead>
                     <tr class="bg-gray-50">
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Patient Name</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Age</th>
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Risk</th>
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Last Session</th>
                         <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
@@ -172,7 +198,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                     {% for patient in caseload %}
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50" data-risk-name="{{ patient.name }}" data-risk="{{ patient.risk_level }}">
                         <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ patient.name|e }}</td>
                         <td class="px-4 py-3 text-sm">
                             <span class="px-2 py-1 rounded-full text-xs font-medium
@@ -186,18 +212,18 @@
                         <td class="px-4 py-3 text-sm">
                             <span class="px-2 py-1 rounded-full text-xs font-medium
                                 {% if patient.status == 'Inactive' %}bg-red-100 text-red-800
-                                {% else %}bg-green-100 text-green-800{% endif %}>
+                                {% else %}bg-green-100 text-green-800{% endif %}">
                                 {{ patient.status|e }}
                             </span>
                         </td>
                         <td class="px-4 py-3 text-sm">
-                            <a href="{{ url_for('provider.wellness_report', user_id=patient.user_id) }}" class="text-blue-600 hover:text-blue-800 mr-2" title="View Wellness Report">
+                            <a href="{{ url_for('provider.wellness_report', user_id=patient.user_id) }}" class="text-blue-600 hover:text-blue-800 mr-2" title="View Wellness Report" aria-label="View wellness report for {{ patient.name }}">
                                 <i class="fas fa-chart-bar" aria-hidden="true"></i>
                             </a>
-                            <a href="#" class="text-indigo-600 hover:text-indigo-800 mr-2 open-message-btn" data-patient-id="{{ patient.user_id }}" title="Message Patient">
+                            <a href="#" class="text-indigo-600 hover:text-indigo-800 mr-2 open-message-btn" data-patient-id="{{ patient.user_id }}" title="Message Patient" aria-label="Message {{ patient.name }}">
                                 <i class="fas fa-envelope" aria-hidden="true"></i>
                             </a>
-                            <a href="{{ url_for('telehealth_session', user_id=patient.user_id) }}" class="text-purple-600 hover:text-purple-800" title="Start Telehealth">
+                            <a href="{{ url_for('provider.telehealth_session', user_id=patient.user_id) }}" class="text-purple-600 hover:text-purple-800" title="Start Telehealth" aria-label="Start telehealth with {{ patient.name }}">
                                 <i class="fas fa-video" aria-hidden="true"></i>
                             </a>
                         </td>
@@ -208,24 +234,8 @@
         </div>
     </div>
 
-    <!-- Interoperability & DTx Information -->
-    <div class="dashboard-grid gap-6 grid md:grid-cols-2">
-        <div class="card border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-exchange-alt text-blue-500 mr-2" aria-hidden="true"></i>Interoperability
-            </h3>
-            <p class="text-gray-600 mb-4">
-                Our platform integrates seamlessly with major EHR systems and healthcare networks, 
-                ensuring secure data exchange and continuity of care.
-            </p>
-            <ul class="text-sm text-gray-600 space-y-2">
-                <li><i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>FHIR R4 Compliance</li>
-                <li><i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>HL7 Integration</li>
-                <li><i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>Epic MyChart Compatible</li>
-                <li><i class="fas fa-check text-green-500 mr-2" aria-hidden="true"></i>Cerner PowerChart Ready</li>
-            </ul>
-        </div>
-
+    <!-- Digital therapeutics -->
+    <div class="dashboard-grid gap-6 grid">
         <div class="card border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
             <h3 class="text-xl font-semibold mb-4 text-gray-800">
                 <i class="fas fa-mobile-alt text-purple-500 mr-2" aria-hidden="true"></i>Digital Therapeutics (DTx)
@@ -284,8 +294,8 @@
 
 {% endblock %}
 
-{% block scripts %}
-<script nonce="{{ g.csp_nonce }}" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+{% block extra_scripts %}
+{{ super() }}
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/provider_dashboard.js') }}"></script>
 
 <style>

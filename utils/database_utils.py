@@ -1,4 +1,6 @@
+import os
 from flask import current_app
+from extensions import db
 from sqlalchemy.exc import SQLAlchemyError
 
 def check_database():
@@ -16,7 +18,11 @@ def check_database():
         return False
 
 def init_db():
-    """Initialize the database with required tables."""
+    """Dev/test bootstrap: create_all. Production (and `SKIP_CREATE_ALL=1`, needed for the first
+    `flask db upgrade` on an empty DB) leaves the schema to Alembic migrations."""
+    if os.getenv('FLASK_ENV') == 'production' or os.getenv('SKIP_CREATE_ALL') == '1':
+        current_app.logger.warning("create_all skipped; run `flask db upgrade` (see docs/MIGRATIONS.md)")
+        return False
     try:
         with current_app.app_context():
             db.create_all()

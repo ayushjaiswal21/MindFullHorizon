@@ -91,6 +91,7 @@ def run_migrations_online():
                 logger.info('No changes in schema detected.')
 
     conf_args = current_app.extensions['migrate'].configure_args
+    conf_args.setdefault('render_as_batch', True)  # SQLite cannot ALTER constraints in place
     if conf_args.get("process_revision_directives") is None:
         conf_args["process_revision_directives"] = process_revision_directives
 

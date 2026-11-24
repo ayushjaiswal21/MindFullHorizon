@@ -66,12 +66,12 @@
                 </div>
             </div>
 
-            <!-- Enhanced Real-time Health Monitoring Card -->
+            <!-- Enhanced Health Snapshot Card -->
             <div class="patient-card p-6">
                 <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-2xl font-bold dashboard-title">Real-time Health Monitoring</h3>
+                    <h3 class="text-2xl font-bold dashboard-title">Health Snapshot</h3>
                     <div class="flex items-center">
-                        <span class="status-indicator status-online mr-3" title="Live Data"></span>
+                        <span class="status-indicator status-online mr-3"></span>
                         <i class="fas fa-heartbeat text-red-500 text-3xl metric-icon" aria-hidden="true"></i>
                     </div>
                 </div>
@@ -79,31 +79,31 @@
                     <div class="health-metric">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600 font-medium">Heart Rate</span>
-                            <span class="metric-value text-2xl">{{ data.rpm_data.heart_rate or 72 }} bpm</span>
+                            <span class="metric-value text-2xl">{% if data.rpm_data.heart_rate %}{{ data.rpm_data.heart_rate }} bpm{% else %}<span class="text-gray-400 text-base">No data yet</span>{% endif %}</span>
                         </div>
                     </div>
                     <div class="health-metric">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600 font-medium">Sleep Duration</span>
-                            <span class="metric-value text-2xl">{{ data.rpm_data.sleep_duration or 7.5 }}h</span>
+                            <span class="metric-value text-2xl">{% if data.rpm_data.sleep_duration %}{{ data.rpm_data.sleep_duration }}h{% else %}<span class="text-gray-400 text-base">No data yet</span>{% endif %}</span>
                         </div>
                     </div>
                     <div class="health-metric">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600 font-medium">Daily Steps</span>
-                            <span class="metric-value text-2xl">{{ (data.rpm_data.steps or 8500)|int|string|replace(',', ',') }}</span>
+                            <span class="metric-value text-2xl">{% if data.rpm_data.steps %}{{ data.rpm_data.steps }}{% else %}<span class="text-gray-400 text-base">No data yet</span>{% endif %}</span>
                         </div>
                     </div>
                     <div class="health-metric">
                         <div class="flex justify-between items-center">
                             <span class="text-gray-600 font-medium">Mood Score</span>
-                            <span class="metric-value text-2xl">{{ data.rpm_data.mood_score or 7 }}/10</span>
+                            <span class="metric-value text-2xl">{% if data.rpm_data.mood_score %}{{ data.rpm_data.mood_score }}/10{% else %}<span class="text-gray-400 text-base">No data yet</span>{% endif %}</span>
                         </div>
                     </div>
                 </div>
                 <div class="mt-4 pt-4 border-t border-gray-100">
                     <p class="text-xs text-gray-500 text-center">
-                        <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>Last updated: Live
+                        <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>Updates when readings or mood check-ins are recorded
                     </p>
                 </div>
             </div>
@@ -168,8 +168,8 @@
                         <div class="text-sm text-gray-600 font-medium">Badges Earned</div>
                     </div>
                     <div class="progress-stat">
-                        <div class="progress-value text-3xl">{{ data.rpm_data.mood_score or 7 }}/10</div>
-                        <div class="text-sm text-gray-600 font-medium">Avg Mood</div>
+                        <div class="progress-value text-3xl">{% if data.rpm_data.mood_score %}{{ data.rpm_data.mood_score }}/10{% else %}<span class="text-gray-400 text-base">No data yet</span>{% endif %}</div>
+                        <div class="text-sm text-gray-600 font-medium">Latest Mood</div>
                     </div>
                 </div>
             </div>

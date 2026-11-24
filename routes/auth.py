@@ -1,7 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
 from models import User, Gamification, db
 from datetime import datetime, date
+import hmac
+import os
 import re
+from extensions import limiter
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -20,6 +23,7 @@ def is_strong_password(password):
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit('10 per minute', methods=['POST'])
 def login():
     if request.method == 'POST':
         email = (request.form.get('email') or '').strip().lower()
@@ -27,7 +31,7 @@ def login():
         role = (request.form.get('role') or '').strip().lower()
 
         # Debug logging
-        current_app.logger.info(f"Login attempt - Email: {email}, Role: {role}")
+        current_app.logger.info(f"Login attempt - Role: {role}")
 
         if not all([email, password, role]):
             flash('Please provide email, password, and select a role.', 'error')
@@ -84,6 +88,7 @@ def login():
     return render_template('login.html')
 
 @auth_bp.route('/signup', methods=['GET', 'POST'])
+@limiter.limit('10 per minute', methods=['POST'])
 def signup():
     if request.method == 'POST':
         try:
@@ -94,17 +99,25 @@ def signup():
             confirm_password = request.form.get('confirm_password', '')
             role = request.form.get('role', '').strip().lower()
             institution = request.form.get('institution', 'Default University').strip()
+            invite_code = request.form.get('invite_code', '')
 
-            # Log registration attempt
-            current_app.logger.info(
-                f"Registration attempt - Name: {name}, Email: {email}, "
-                f"Role: {role}, Institution: {institution}"
-            )
+            current_app.logger.info(f"Registration attempt - Role: {role}")
 
             # Validate required fields
             if not all([name, email, password, confirm_password, role]):
                 flash('All fields are required.', 'error')
                 current_app.logger.warning("Signup failed - Missing required fields")
+                return render_template('signup.html')
+
+            if request.form.get('consent', '').strip().lower() not in ('yes', 'on', 'true', '1'):
+                flash('Please accept the privacy and consent notice to create an account.', 'error')
+                return render_template('signup.html')
+
+            # Only patients can self-register; providers need the invite code (disabled when the env var is unset).
+            expected = os.getenv('PROVIDER_INVITE_CODE', '')
+            provider_ok = role == 'provider' and expected and hmac.compare_digest(invite_code.encode(), expected.encode())
+            if role != 'patient' and not provider_ok:
+                flash('Provider accounts need a valid invite code.' if role == 'provider' else 'Invalid role.', 'error')
                 return render_template('signup.html')
 
             # Validate password match

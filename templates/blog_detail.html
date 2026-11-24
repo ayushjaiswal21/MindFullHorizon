@@ -73,7 +73,7 @@
                 <div class="flex items-center space-x-4">
                     <!-- Like Button -->
                     {% if session.get('user_id') %}
-                    <button id="likeBtn" onclick="toggleLike('{{ post.id }}')"
+                    <button id="likeBtn" type="button" data-action="like" aria-label="Like this post"
                             class="flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors {% if user_has_liked %}bg-red-100 text-red-600{% else %}bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600{% endif %}">
                         <i class="{% if user_has_liked %}fas{% else %}far{% endif %} fa-heart"></i>
                         <span id="likeCount">{{ post.like_count }}</span>
@@ -87,21 +87,21 @@
                     {% endif %}
                     
                     <!-- Share Button -->
-                    <button onclick="sharePost()" class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                    <button type="button" data-action="share" class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">
                         <i class="fas fa-share-alt"></i>
                         <span>Share</span>
                     </button>
                 </div>
                 
                 <!-- Author Actions -->
-                {% if session.get('user_id') == post.author_id %}
+                {% if can_manage %}
                 <div class="flex items-center space-x-2">
-                    <a href="{{ url_for('blog.blog_detail', post_id=post.id) }}" 
+                    <a href="{{ url_for('blog.blog_edit', post_id=post.id) }}" 
                        class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors">
                         <i class="fas fa-edit"></i>
                         <span>Edit</span>
                     </a>
-                    <button onclick="confirmDelete()" 
+                    <button type="button" data-action="delete-open" 
                             class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
                         <i class="fas fa-trash"></i>
                         <span>Delete</span>
@@ -117,7 +117,7 @@
         <div class="bg-white rounded-xl shadow-lg p-8">
             <h3 class="text-2xl font-semibold text-gray-900 mb-6 flex items-center">
                 <i class="far fa-comments mr-3 text-blue-500"></i>
-                Comments (<span id="commentCount">{{ comments|length }}</span>)
+                Comments (<span id="commentCount">{{ comment_total }}</span>)
             </h3>
             
             <!-- Add Comment Form -->
@@ -128,11 +128,12 @@
                         {{ session.user_name[0].upper() if session.user_name else 'U' }}
                     </div>
                     <div class="flex-1">
-                        <textarea id="commentText" placeholder="Share your thoughts..." 
+                        <label for="commentText" class="sr-only">Your comment</label>
+                        <textarea id="commentText" placeholder="Share your thoughts..." maxlength="1000" 
                                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" 
                                   rows="3"></textarea>
                         <div class="flex justify-end mt-3">
-                            <button onclick="addComment()" 
+                            <button type="button" data-action="comment" 
                                     class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                                 Post Comment
                             </button>
@@ -152,19 +153,19 @@
                 <div class="comment" data-comment-id="{{ comment.id }}">
                     <div class="flex items-start space-x-4">
                         <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                            {{ comment.user.name[0].upper() }}
+                            {{ (authors.get(comment.user_id) or '?')[0].upper() }}
                         </div>
                         <div class="flex-1">
                             <div class="bg-gray-50 rounded-lg p-4">
                                 <div class="flex items-center justify-between mb-2">
-                                    <h4 class="font-semibold text-gray-900">{{ comment.user.name }}</h4>
+                                    <h4 class="font-semibold text-gray-900">{{ authors.get(comment.user_id) or 'Unknown' }}</h4>
                                     <span class="text-sm text-gray-500">{{ comment.created_at.strftime('%B %d, %Y • %I:%M %p') }}</span>
                                 </div>
                                 <p class="text-gray-700">{{ comment.content }}</p>
                             </div>
                             
                             {% if session.get('user_id') %}
-                            <button onclick="toggleReplyForm('{{ comment.id }}')"
+                            <button type="button" data-action="reply-toggle" data-id="{{ comment.id }}"
                                     class="mt-2 text-sm text-blue-600 hover:text-blue-800">
                                 <i class="fas fa-reply mr-1"></i> Reply
                             </button>
@@ -177,15 +178,16 @@
                                         {{ session.user_name[0].upper() if session.user_name else 'U' }}
                                     </div>
                                     <div class="flex-1">
-                                        <textarea id="replyText-{{ comment.id }}" placeholder="Write a reply..." 
+                                        <label for="replyText-{{ comment.id }}" class="sr-only">Your reply</label>
+                                        <textarea id="replyText-{{ comment.id }}" placeholder="Write a reply..." maxlength="1000" 
                                                   class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" 
                                                   rows="2"></textarea>
                                         <div class="flex justify-end mt-2 space-x-2">
-                                            <button onclick="toggleReplyForm('{{ comment.id }}')"
+                                            <button type="button" data-action="reply-toggle" data-id="{{ comment.id }}"
                                                     class="px-3 py-1 text-sm text-gray-600 hover:text-gray-800">
                                                 Cancel
                                             </button>
-                                            <button onclick="addReply('{{ comment.id }}')"
+                                            <button type="button" data-action="reply-send" data-id="{{ comment.id }}"
                                                     class="px-4 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
                                                 Reply
                                             </button>
@@ -218,7 +220,7 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
         <p class="text-gray-600 mb-6">Are you sure you want to delete "<strong>{{ post.title }}</strong>"? This action cannot be undone.</p>
         <div class="flex space-x-4">
-            <button onclick="hideDeleteModal()" class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
+            <button type="button" data-action="delete-close" class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
                 Cancel
             </button>
             <form action="{{ url_for('blog.blog_delete', post_id=post.id) }}" method="post" class="flex-1">
@@ -231,218 +233,157 @@
     </div>
 </div>
 
-<script nonce="{{ g.csp_nonce }}">
-// Like functionality
-function toggleLike(postId) {
-    fetch(`/api/blog/${postId}/like`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            const likeBtn = document.getElementById('likeBtn');
-            const likeCount = document.getElementById('likeCount');
-            const heartIcon = likeBtn.querySelector('i');
-            
-            if (data.liked) {
-                likeBtn.className = 'flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors bg-red-100 text-red-600';
-                heartIcon.className = 'fas fa-heart';
-            } else {
-                likeBtn.className = 'flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600';
-                heartIcon.className = 'far fa-heart';
-            }
-            
-            likeCount.textContent = data.like_count;
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showMessageBox('Error', 'Failed to update like. Please try again.', 'error');
-    });
-}
-
-// Comment functionality
-function addComment() {
-    const commentText = document.getElementById('commentText');
-    const content = commentText.value.trim();
-    
-    if (!content) {
-        showMessageBox('Error', 'Please enter a comment.', 'error');
-        return;
-    }
-    
-    fetch(`/api/blog/{{ post.id }}/comment`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ content: content })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            commentText.value = '';
-            addCommentToDOM(data.comment);
-            document.getElementById('commentCount').textContent = data.comment_count;
-            showMessageBox('Success', 'Comment added successfully!', 'success');
-        } else {
-            showMessageBox('Error', data.message || 'Failed to add comment.', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showMessageBox('Error', 'Failed to add comment. Please try again.', 'error');
-    });
-}
-
-function addCommentToDOM(comment) {
-    const commentsList = document.getElementById('commentsList');
-    const commentHTML = `
-        <div class="comment" data-comment-id="${comment.id}">
-            <div class="flex items-start space-x-4">
-                <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                    ${comment.author_name[0].toUpperCase()}
-                </div>
-                <div class="flex-1">
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h4 class="font-semibold text-gray-900">${comment.author_name}</h4>
-                            <span class="text-sm text-gray-500">${comment.created_at}</span>
-                        </div>
-                        <p class="text-gray-700">${comment.content}</p>
+<template id="comment-template">
+    <div class="comment" data-comment-id="">
+        <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm" data-slot="initial"></div>
+            <div class="flex-1">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-semibold text-gray-900" data-slot="author"></h4>
+                        <span class="text-sm text-gray-500" data-slot="date"></span>
                     </div>
-                    {% if session.get('user_id') %}
-                    <button onclick="toggleReplyForm(${comment.id})" 
-                            class="mt-2 text-sm text-blue-600 hover:text-blue-800">
-                        <i class="fas fa-reply mr-1"></i> Reply
-                    </button>
-                    {% endif %}
-                    <div id="replyForm-${comment.id}" class="mt-4 ml-4 hidden">
-                        <!-- Reply form will be added here -->
-                    </div>
-                    <div id="replies-${comment.id}" class="mt-4 ml-4 space-y-3">
-                        <!-- Replies will be loaded here -->
-                    </div>
+                    <p class="text-gray-700" data-slot="content"></p>
                 </div>
             </div>
         </div>
-    `;
-    
-    if (commentsList.querySelector('.text-center')) {
-        commentsList.innerHTML = commentHTML;
-    } else {
-        commentsList.insertAdjacentHTML('afterbegin', commentHTML);
-    }
-}
+    </div>
+</template>
 
-// Reply functionality
-function toggleReplyForm(commentId) {
-    const replyForm = document.getElementById(`replyForm-${commentId}`);
-    replyForm.classList.toggle('hidden');
-    
-    if (!replyForm.classList.contains('hidden')) {
-        document.getElementById(`replyText-${commentId}`).focus();
-    }
-}
-
-function addReply(commentId) {
-    const replyText = document.getElementById(`replyText-${commentId}`);
-    const content = replyText.value.trim();
-    
-    if (!content) {
-        showMessageBox('Error', 'Please enter a reply.', 'error');
-        return;
-    }
-    
-    fetch(`/api/blog/{{ post.id }}/comment`, {
+<script nonce="{{ g.csp_nonce }}">
+(function () {
+    const URLS = {
+        like: {{ url_for('blog.blog_like', post_id=post.id)|tojson }},
+        comment: {{ url_for('blog.blog_comment', post_id=post.id)|tojson }},
+        replies: {{ url_for('blog.blog_replies', post_id=post.id, comment_id=0)|tojson }}
+    };
+    const TITLE = {{ post.title|tojson }};
+    const csrf = () => document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    const post = (url, body) => fetch(url, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ content: content, parent_id: commentId })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            replyText.value = '';
-            toggleReplyForm(commentId);
-            loadReplies(commentId);
-            document.getElementById('commentCount').textContent = data.comment_count;
-            showMessageBox('Success', 'Reply added successfully!', 'success');
-        } else {
-            showMessageBox('Error', data.message || 'Failed to add reply.', 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showMessageBox('Error', 'Failed to add reply. Please try again.', 'error');
-    });
-}
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf()},
+        body: JSON.stringify(body || {})
+    }).then(r => r.json());
 
-function loadReplies(commentId) {
-    fetch(`/api/blog/{{ post.id }}/comments/${commentId}/replies`)
-    .then(response => response.json())
-    .then(data => {
-        const repliesContainer = document.getElementById(`replies-${commentId}`);
-        repliesContainer.innerHTML = data.replies.map(reply => `
-            <div class="bg-gray-100 rounded-lg p-3">
-                <div class="flex items-center justify-between mb-1">
-                    <h5 class="font-medium text-gray-900 text-sm">${reply.author_name}</h5>
-                    <span class="text-xs text-gray-500">${reply.created_at}</span>
-                </div>
-                <p class="text-gray-700 text-sm">${reply.content}</p>
-            </div>
-        `).join('');
-    })
-    .catch(error => {
-        console.error('Error loading replies:', error);
-    });
-}
-
-// Share functionality
-function sharePost() {
-    if (navigator.share) {
-        navigator.share({
-            title: '{{ post.title }}',
-            text: 'Check out this blog post on mental health:',
-            url: window.location.href
-        });
-    } else {
-        // Fallback: copy URL to clipboard
-        navigator.clipboard.writeText(window.location.href).then(() => {
-            showMessageBox('Success', 'Post URL copied to clipboard!', 'success');
-        }).catch(() => {
-            showMessageBox('Info', 'Share this post: ' + window.location.href, 'info');
-        });
+    // User text is inserted with textContent only, never parsed as HTML.
+    function commentNode(c) {
+        const node = document.getElementById('comment-template').content.firstElementChild.cloneNode(true);
+        node.dataset.commentId = c.id;
+        node.querySelector('[data-slot=initial]').textContent = (c.author_name || '?')[0].toUpperCase();
+        node.querySelector('[data-slot=author]').textContent = c.author_name;
+        node.querySelector('[data-slot=date]').textContent = c.created_at;
+        node.querySelector('[data-slot=content]').textContent = c.content;
+        return node;
     }
-}
 
-// Delete functionality
-function confirmDelete() {
-    const modal = document.getElementById('deleteModal');
-    modal.style.display = 'flex';
-    modal.classList.remove('hidden');
-}
+    function replyNode(r) {
+        const box = document.createElement('div');
+        box.className = 'bg-gray-100 rounded-lg p-3';
+        const head = document.createElement('div');
+        head.className = 'flex items-center justify-between mb-1';
+        const who = document.createElement('h5');
+        who.className = 'font-medium text-gray-900 text-sm';
+        who.textContent = r.author_name;
+        const when = document.createElement('span');
+        when.className = 'text-xs text-gray-500';
+        when.textContent = r.created_at;
+        head.append(who, when);
+        const body = document.createElement('p');
+        body.className = 'text-gray-700 text-sm';
+        body.textContent = r.content;
+        box.append(head, body);
+        return box;
+    }
 
-function hideDeleteModal() {
-    const modal = document.getElementById('deleteModal');
-    modal.style.display = 'none';
-    modal.classList.add('hidden');
-}
+    function toggleLike() {
+        post(URLS.like).then(data => {
+            if (!data.success) return showMessageBox('Error', data.message || 'Please log in to like posts.', 'error');
+            const btn = document.getElementById('likeBtn');
+            const on = 'bg-red-100 text-red-600', off = 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600';
+            btn.className = 'flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ' + (data.liked ? on : off);
+            btn.querySelector('i').className = (data.liked ? 'fas' : 'far') + ' fa-heart';
+            document.getElementById('likeCount').textContent = data.like_count;
+        }).catch(() => showMessageBox('Error', 'Failed to update like. Please try again.', 'error'));
+    }
 
-// Load replies on page load
-document.addEventListener('DOMContentLoaded', function() {
-    const comments = document.querySelectorAll('.comment');
-    comments.forEach(comment => {
-        const commentId = comment.dataset.commentId;
-        loadReplies(commentId);
+    function addComment() {
+        const box = document.getElementById('commentText');
+        const content = box.value.trim();
+        if (!content) return showMessageBox('Error', 'Please enter a comment.', 'error');
+        post(URLS.comment, {content}).then(data => {
+            if (!data.success) return showMessageBox('Error', data.message || 'Failed to add comment.', 'error');
+            box.value = '';
+            const list = document.getElementById('commentsList');
+            list.querySelector('.text-center')?.remove();
+            list.appendChild(commentNode(data.comment));
+            document.getElementById('commentCount').textContent = data.comment_count;
+            showMessageBox('Success', 'Comment added.', 'success');
+        }).catch(() => showMessageBox('Error', 'Failed to add comment. Please try again.', 'error'));
+    }
+
+    function toggleReplyForm(id) {
+        const form = document.getElementById('replyForm-' + id);
+        if (!form) return;
+        form.classList.toggle('hidden');
+        if (!form.classList.contains('hidden')) document.getElementById('replyText-' + id)?.focus();
+    }
+
+    function addReply(id) {
+        const box = document.getElementById('replyText-' + id);
+        const content = box.value.trim();
+        if (!content) return showMessageBox('Error', 'Please enter a reply.', 'error');
+        post(URLS.comment, {content, parent_id: Number(id)}).then(data => {
+            if (!data.success) return showMessageBox('Error', data.message || 'Failed to add reply.', 'error');
+            box.value = '';
+            toggleReplyForm(id);
+            loadReplies(id);
+            document.getElementById('commentCount').textContent = data.comment_count;
+        }).catch(() => showMessageBox('Error', 'Failed to add reply. Please try again.', 'error'));
+    }
+
+    function loadReplies(id) {
+        fetch(URLS.replies.replace(/0\/replies$/, id + '/replies'))
+            .then(r => r.json())
+            .then(data => {
+                const box = document.getElementById('replies-' + id);
+                if (box) box.replaceChildren(...(data.replies || []).map(replyNode));
+            })
+            .catch(err => console.error('Error loading replies:', err));
+    }
+
+    function sharePost() {
+        if (navigator.share) {
+            navigator.share({title: TITLE, text: 'Check out this blog post on mental health:', url: location.href});
+        } else {
+            navigator.clipboard.writeText(location.href)
+                .then(() => showMessageBox('Success', 'Post URL copied to clipboard!', 'success'))
+                .catch(() => showMessageBox('Info', 'Share this post: ' + location.href, 'info'));
+        }
+    }
+
+    function deleteModal(show) {
+        const modal = document.getElementById('deleteModal');
+        modal.style.display = show ? 'flex' : 'none';
+        modal.classList.toggle('hidden', !show);
+    }
+
+    document.addEventListener('click', function (e) {
+        const el = e.target.closest('[data-action]');
+        if (!el) return;
+        ({
+            'like': toggleLike,
+            'comment': addComment,
+            'share': sharePost,
+            'reply-toggle': () => toggleReplyForm(el.dataset.id),
+            'reply-send': () => addReply(el.dataset.id),
+            'delete-open': () => deleteModal(true),
+            'delete-close': () => deleteModal(false)
+        })[el.dataset.action]?.();
     });
-});
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.comment').forEach(c => loadReplies(c.dataset.commentId));
+    });
+})();
 </script>
 {% endblock %}

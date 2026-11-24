@@ -1,26 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Select Your Role</title>
-    <script nonce="{ g.csp_nonce }" src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center">
-    <h1 class="text-3xl font-bold text-gray-800 mb-8">What brings you here?</h1>
-    
-    <form action="{{ url_for('save_role') }}" method="POST" class="flex flex-col md:flex-row gap-8">
+{% extends "base.html" %}
+
+{% block title %}Select Your Role - Mindful Horizon{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex flex-col items-center justify-center px-4 py-16">
+    <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">What brings you here?</h1>
+
+    <form action="{{ url_for('save_role') }}" method="POST" class="flex flex-col items-center gap-6">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        
-        <button type="submit" name="role" value="patient" class="bg-white rounded-lg shadow-md p-8 text-center w-64 hover:shadow-lg">
-            <h2 class="text-2xl font-bold text-gray-800">Patient</h2>
-            <p class="text-gray-500 mt-2">I'm here to improve my mental wellness.</p>
+
+        <button type="submit" name="role" value="patient" class="bg-white rounded-lg shadow-md p-8 text-center w-72 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <span class="block text-2xl font-bold text-gray-800">Student</span>
+            <span class="block text-gray-500 mt-2">I'm here to improve my mental wellness.</span>
         </button>
-        
-        <button type="submit" name="role" value="provider" class="bg-white rounded-lg shadow-md p-8 text-center w-64 hover:shadow-lg">
-            <h2 class="text-2xl font-bold text-gray-800">Provider</h2>
-            <p class="text-gray-500 mt-2">I'm here to help and provide care.</p>
-        </button>
+
+        <p class="text-sm text-gray-600 max-w-sm text-center">
+            Counselor accounts are created with an invite code from your institution. Use the
+            <a href="{{ url_for('auth.signup') }}" class="text-indigo-600 underline">sign-up page</a> if you have one.
+        </p>
     </form>
-</body>
-</html>
+</div>
+{% endblock %}

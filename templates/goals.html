@@ -34,7 +34,7 @@
             <h2 class="text-2xl font-bold text-gray-900 mb-4">Goal Analytics</h2>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div>
-                    <canvas id="screen-time-chart" data-log='{{ screen_time_log | safe }}'></canvas>
+                    <canvas id="screen-time-chart" data-log='{{ (screen_time_log or [])|tojson }}'></canvas>
                 </div>
                 <div>
                     <canvas id="wellness-chart"></canvas>

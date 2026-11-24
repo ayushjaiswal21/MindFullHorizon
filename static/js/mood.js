@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : null;
 
   function postMood(moodVal) {
-    return fetch('/api/save-mood', {
+    const noteEl = document.getElementById('mood-note');
+    return fetch('/patient/api/save-mood', {
       method: 'POST',
       credentials: 'same-origin',
       headers: {
@@ -12,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'X-Requested-With': 'XMLHttpRequest',
         ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {})
       },
-      body: JSON.stringify({ mood: moodVal })
+      body: JSON.stringify({ mood: moodVal, notes: noteEl ? noteEl.value : '' })
     }).then(async res => {
       const json = await res.json().catch(() => null);
       return { ok: res.ok, status: res.status, json };
@@ -38,7 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Please select a mood first.');
         return;
       }
-      const moodVal = sel.getAttribute('data-mood');
+      const moodVal = Number(sel.getAttribute('data-mood'));
       saveBtn.disabled = true;
       saveBtn.textContent = 'Saving...';
       try {
