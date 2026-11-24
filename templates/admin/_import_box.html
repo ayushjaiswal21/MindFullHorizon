@@ -1,0 +1,17 @@
+{#- CSV import box. Set before including: import_url, import_title, import_help. Uses static/js/admin_import.js (dry run first, then import). -#}
+{% from 'partials/icons.html' import icon %}
+<section class="card cl-block" aria-labelledby="import-h">
+  <div class="card-header"><h2 id="import-h" class="text-lg">{{ import_title }}</h2></div>
+  <div class="card-body">
+    <form id="import-form" data-import-url="{{ import_url }}" novalidate>
+      <div class="field"><label class="label" for="import-file">CSV file</label>
+        <input class="input" type="file" id="import-file" accept=".csv,text/csv" aria-describedby="import-help">
+        <p class="help" id="import-help">{{ import_help }}</p></div>
+      <div class="cl-actions">
+        <button type="button" class="btn btn-secondary" id="import-check">Check file</button>
+        <button type="button" class="btn btn-primary" id="import-run" disabled>Import</button>
+      </div>
+    </form>
+    <div id="import-result" class="mt-4" role="status" aria-live="polite"></div>
+  </div>
+</section>

@@ -1,0 +1,34 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_rx/_ui.html' import notice, config_block %}
+{% block title %}Reports{% endblock %}
+{% block page_scripts %}<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_reports.js') }}?v={{ asset_version }}" defer></script>{% endblock %}
+{% block rx_body %}
+{% set base = nav_url('admin.reports', '/admin/reports') %}
+{% set cur = tab if tab in ['stock', 'expiring', 'log', 'usage'] else 'stock' %}
+<div class="page-header"><div><h1>Reports</h1><p class="lead">Stock, expiry, the dispensing log and use by medicine. None of them names a patient.</p></div></div>
+{{ notice() }}
+<nav class="tabs" aria-label="Reports">
+  {% for key, label in [('stock', 'Stock on hand'), ('expiring', 'Expiring soon'), ('log', 'Dispensing log'), ('usage', 'Usage by medicine')] %}
+  <a href="{{ base }}?tab={{ key }}"{% if cur == key %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
+<form id="report-filters" class="cl-filters" novalidate>
+  {% if cur == 'expiring' %}
+  <div class="field"><label class="label" for="r-days">Days ahead (1 to 365)</label><input class="input" id="r-days" name="days" type="number" min="1" max="365" value="60"></div>
+  {% elif cur in ['log', 'usage'] %}
+  <div class="field"><label class="label" for="r-from">From</label><input class="input" id="r-from" name="from" type="{{ 'month' if cur == 'usage' else 'date' }}"></div>
+  <div class="field"><label class="label" for="r-to">To</label><input class="input" id="r-to" name="to" type="{{ 'month' if cur == 'usage' else 'date' }}"></div>
+  {% endif %}
+  <button type="submit" class="btn btn-primary">Show report</button>
+  <a class="btn btn-secondary" id="report-csv" href="{{ base }}/{{ cur }}.csv">{{ icon('download') }} Export CSV</a>
+</form>
+{% if cur == 'log' %}
+<p class="help">{% if desk %}You see full prescription numbers as the pharmacy desk. The log shows the last 7 days unless you choose a range of at most 92 days.{% else %}Prescription numbers are shown in part for administrators. The log shows the last 7 days unless you choose a range of at most 92 days.{% endif %}</p>
+{% elif cur == 'usage' %}
+<p class="help">Medicines given to fewer than 5 patients show no figure.</p>
+{% endif %}
+<p class="help" id="report-live" role="status" aria-live="polite"></p>
+<div id="report-out" aria-busy="false"></div>
+{{ config_block({'tab': cur, 'api': '/admin/api/reports/' ~ cur, 'csv': base ~ '/' ~ cur ~ '.csv', 'desk': desk}, config) }}
+{% endblock %}

@@ -1,610 +1,335 @@
-/* === saveAssessment helper (INSERTED BY SAFE PATCH) === */
-async function saveAssessment(payload) {
-  const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-  const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
-  try {
-    const res = await fetch('/patient/api/save-assessment', {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': csrfToken || ''
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const text = await res.text().catch(() => '');
-    if (!res.ok) {
-      console.error('saveAssessment failed', res.status, text);
-      const errEl = document.getElementById('assessment-error');
-      if (errEl) {
-        errEl.textContent = 'Failed to save assessment. Try again later.';
-        errEl.classList.remove('hidden');
-      }
-      throw new Error('Save failed: ' + res.status + ' ' + text);
-    }
-
-    try { return JSON.parse(text); } catch (e) { return text; }
-  } catch (err) {
-    console.error('saveAssessment error', err);
-    const errEl = document.getElementById('assessment-error');
-    if (errEl) {
-      errEl.textContent = 'Failed to save assessment. Try again later.';
-      errEl.classList.remove('hidden');
-    }
-    throw err;
-  }
-}
-/* === end saveAssessment helper === */
-// static/js/assessment-fixes.js
-// Robust bindings and showQuestion() implementation
-
-// mapping of human assessment types to keys used by the JS assessments object
-const typeMap = {
-  'GAD-7': 'GAD-7',
-  'PHQ-9': 'PHQ-9',
-  'gad-7': 'GAD-7',
-  'phq-9': 'PHQ-9',
-  'anxiety': 'GAD-7',     // optional friendly aliases
-  'depression': 'PHQ-9'
-};
-
-// Quick global guard to stop anchor href="#" from jumping
-document.addEventListener('click', function (e) {
-  const a = e.target.closest && e.target.closest('a[href="#"]');
-  if (a) {
-    if (e.cancelable) e.preventDefault();
-    e.stopPropagation();
-    const btn = a.closest('.start-assessment-btn') || a.querySelector('.start-assessment-btn');
-    if (btn) { btn.click(); }
-    return;
-  }
-});
-
-// Delegated handler: one place to catch all "start" clicks
-document.addEventListener('click', function (e) {
-  // find closest actionable element
-  const startBtn = e.target.closest('.start-assessment-btn, #start-assessment-btn, .view-assessment-details-btn, .start-assessment-link');
-  if (!startBtn) return;
-
-  // Prevent default browser nav (href="#") and stop bubbling to global handlers
-  if (e.cancelable) e.preventDefault();
-  e.stopPropagation();
-
-  // Avoid double initialization: guard
-  if (window.__assessmentOpening) return;
-  window.__assessmentOpening = true;
-
-  try {
-    const assessmentType = startBtn.dataset.assessmentType || startBtn.dataset.assessment || startBtn.getAttribute('data-assessment-type');
-    const questionsUrl = startBtn.dataset.questionsUrl || startBtn.getAttribute('data-questions-url') || '/static/questions.json';
-    openAssessmentModal({ assessmentType, questionsUrl });
-  } finally {
-    // release flag slightly later (in case open is async)
-    setTimeout(() => { window.__assessmentOpening = false; }, 300);
-  }
-});
-
-function openAssessmentModal(options) {
-  const { assessmentType, questionsUrl } = options;
-  if (typeof window.startAssessment === 'function') {
-    const key = typeMap[assessmentType] || assessmentType;
-    window.startAssessment(key);
-  } else {
-    console.error('startAssessment not available');
-  }
-}
-
+// PHQ-9 / GAD-7 screening flow for /patient/assessment.
+// Questions come from /static/questions.json. The server recomputes the score from the answers and returns
+// {success, score, band, crisis, helplines, ai_insights}. When crisis is true (PHQ-9 item 9 or a severe score)
+// the crisis banner with the helplines is shown first. No points or streaks are attached to any score.
 (function () {
-  // Prevent multiple bindings if the file loads twice
-  if (window.__assessmentFixesInit) {
-    console.warn('assessment-fixes.js already initialized');
-    return;
-  }
+  'use strict';
+  if (window.__assessmentFixesInit) return;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var picker = $('assessment-picker'), panel = $('assessmentModal');
+  // base.html loads this file before PT exists: bail out WITHOUT the init flag so the later include still wires the buttons.
+  if (!picker || !panel || !window.PT) return;
   window.__assessmentFixesInit = true;
-  console.log('assessment-fixes.js initialized');
 
-  function lockBodyScroll() {
-    document.documentElement.style.scrollBehavior = 'auto';
-    document.body.classList.add('modal-open');
+  var QUESTIONS_URL = picker.getAttribute('data-questions-url') || '/static/questions.json';
+  var MAX = { 'PHQ-9': 27, 'GAD-7': 21 };
+  var STEM = 'Over the last 2 weeks, how often have you been bothered by:';
+  var EXPLAIN = {
+    'minimal': 'Few or no symptoms were reported over the last two weeks.',
+    'mild': 'Some symptoms were reported. Notice how you feel over the next few weeks, and repeat the screening if things change.',
+    'moderate': 'Symptoms that may be affecting your daily life were reported. Consider speaking with your college counsellor or a doctor.',
+    'moderately severe': 'Symptoms that are likely affecting your daily life were reported. Please book a session with a counsellor or doctor soon.',
+    'severe': 'Many symptoms were reported. Please book a session with a counsellor or doctor soon, and reach out to someone you trust.'
+  };
+  var BADGE = { 'minimal': 'success', 'mild': 'info', 'moderate': 'warning', 'moderately severe': 'danger', 'severe': 'danger' };
+
+  var state = { all: null, key: null, def: null, phase: 'standard', i: 0, standard: [], contextual: {}, saving: false };
+
+  function setHidden(el, hidden) { if (el) el.hidden = !!hidden; }
+  function showError(msg) {
+    var el = $('assessment-error');
+    el.textContent = msg || '';
+    el.hidden = !msg;
   }
-  function unlockBodyScroll() {
-    document.body.classList.remove('modal-open');
-    document.documentElement.style.scrollBehavior = '';
+
+  function list() {
+    return state.phase === 'standard' ? state.def.questions : (state.def.contextual_questions || []);
+  }
+  function hasFollowUp() { return !!(state.def.contextual_questions && state.def.contextual_questions.length); }
+  function isLast() { return state.i === list().length - 1; }
+  function hasAnswers() {
+    return state.standard.some(function (v) { return v !== undefined; }) || Object.keys(state.contextual).length > 0;
   }
 
-  // Modal helper functions
-  function showModal() {
-    const modal = document.getElementById("assessmentModal");
-    if (!modal || modal.classList.contains("visible")) return;
+  function loadQuestions() {
+    if (state.all) return Promise.resolve(state.all);
+    return fetch(QUESTIONS_URL, { credentials: 'same-origin' }).then(function (res) {
+      if (!res.ok) throw new Error('http ' + res.status);
+      return res.json();
+    }).then(function (json) { state.all = json; return json; });
+  }
 
-    lockBodyScroll();
-    modal.style.display = "flex";
-    requestAnimationFrame(() => {
-      modal.classList.add("visible");
-      modal.classList.remove("hidden");
-      const first = modal.querySelector('input, button, [tabindex]:not([tabindex="-1"])');
-      if (first) first.focus({ preventScroll: true });
+  function start(key) {
+    setHidden($('assessment-loading'), false);
+    showError('');
+    setHidden(panel, false);
+    setHidden(picker, true);
+    setHidden($('assessment-form'), true);
+    loadQuestions().then(function (all) {
+      var def = all[key];
+      if (!def) throw new Error('unknown type');
+      state.key = key; state.def = def; state.phase = 'standard'; state.i = 0; state.standard = []; state.contextual = {};
+      $('assessmentTitle').textContent = def.title;
+      setHidden($('assessment-loading'), true);
+      setHidden($('assessment-form'), false);
+      render(true);
+    }).catch(function () {
+      setHidden($('assessment-loading'), true);
+      showError('Could not load the questions. Check your connection and try again.');
+      setHidden(picker, false);
     });
   }
 
-  function hideModal() {
-    const modal = document.getElementById("assessmentModal");
-    if (!modal || !modal.classList.contains("visible")) return;
-
-    unlockBodyScroll();
-    modal.classList.remove("visible");
-    modal.classList.add("hidden");
-
-    setTimeout(() => {
-      if (!modal.classList.contains("visible")) {
-        modal.style.display = "none";
-      }
-    }, 200); // smooth transition end
+  function choice(type, name, value, label, checked) {
+    var lab = document.createElement('label');
+    lab.className = 'choice';
+    var input = document.createElement('input');
+    input.type = type; input.name = name; input.value = value; input.checked = !!checked;
+    var span = document.createElement('span');
+    span.textContent = label;
+    lab.append(input, span);
+    return lab;
   }
 
-  // safe references for global variables (if original code uses them)
-  window.currentAssessment = window.currentAssessment || null;
-  window.currentQuestion = window.currentQuestion || 0;
-  window.assessmentAnswers = window.assessmentAnswers || [];
+  function render(moveFocus) {
+    var q = list()[state.i];
+    var n = list().length;
+    var standard = state.phase === 'standard';
+    showError('');
 
-  // showQuestion replacement targeting assessment-question-container
-  function showQuestion() {
-    const container = document.getElementById('assessment-question-container');
-    const progressEl = document.getElementById('assessment-progress');
-    const questionEl = document.getElementById('assessment-question');
-    const optionsEl = document.getElementById('assessment-options');
+    $('assessment-progress').textContent = standard
+      ? 'Question ' + (state.i + 1) + ' of ' + n
+      : 'Follow-up ' + (state.i + 1) + ' of ' + n + ' (optional)';
+    $('assessment-stem').textContent = q.type === 'scale' ? STEM : '';
+    $('assessment-question').textContent = q.text;
+    setHidden($('item9-note'), q.id !== 'phq9_9');
 
-    if (!container || !progressEl || !questionEl || !optionsEl || !window.currentAssessment) {
-      console.error('Assessment: required DOM elements missing or currentAssessment is null.');
+    var box = $('assessment-options');
+    box.textContent = '';
+    if (q.type === 'scale') {
+      q.options.forEach(function (opt, idx) {
+        var lab = choice('radio', 'answer', idx, (idx + 1) + '. ' + opt, state.standard[state.i] === idx);
+        lab.firstChild.addEventListener('change', function () { state.standard[state.i] = idx; showError(''); });
+        box.appendChild(lab);
+      });
+    } else if (q.type === 'multiple-choice') {
+      var picked = state.contextual[q.id] || [];
+      q.options.forEach(function (opt) {
+        var lab = choice('checkbox', 'answer', opt, opt, picked.indexOf(opt) > -1);
+        lab.firstChild.addEventListener('change', function (e) {
+          var cur = (state.contextual[q.id] || []).slice();
+          var at = cur.indexOf(opt);
+          if (e.target.checked && at < 0) cur.push(opt);
+          if (!e.target.checked && at > -1) cur.splice(at, 1);
+          if (cur.length) state.contextual[q.id] = cur; else delete state.contextual[q.id];
+        });
+        box.appendChild(lab);
+      });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.className = 'textarea';
+      ta.rows = 4; ta.maxLength = 1000; ta.name = 'answer';
+      ta.setAttribute('aria-labelledby', 'assessment-question');
+      ta.value = state.contextual[q.id] || '';
+      ta.addEventListener('input', PT.debounce(function () {
+        if (ta.value.trim()) state.contextual[q.id] = ta.value; else delete state.contextual[q.id];
+      }, 200));
+      ta.addEventListener('blur', function () { if (ta.value.trim()) state.contextual[q.id] = ta.value; });
+      box.appendChild(ta);
+    }
+
+    var back = $('prevBtn'), next = $('nextBtn'), alt = $('altBtn');
+    back.disabled = standard && state.i === 0;
+    var last = isLast();
+    if (standard) {
+      next.textContent = last ? 'Save and see result' : 'Next';
+      next.setAttribute('data-action', last ? 'save' : 'next');
+      alt.hidden = !(last && hasFollowUp());
+      alt.textContent = 'Answer optional follow-up questions';
+      alt.setAttribute('data-action', 'followup');
+    } else {
+      next.textContent = last ? 'Save and see result' : 'Next';
+      next.setAttribute('data-action', last ? 'save' : 'next');
+      alt.hidden = last;
+      alt.textContent = 'Skip the rest and save';
+      alt.setAttribute('data-action', 'save');
+    }
+    if (moveFocus) $('assessment-legend').focus();
+  }
+
+  function advance(action) {
+    if (state.saving) return;
+    if (state.phase === 'standard' && action !== 'back' && state.standard[state.i] === undefined) {
+      showError('Choose an answer to continue.');
+      var first = $('assessment-options').querySelector('input');
+      if (first) first.focus();
       return;
     }
-
-    container.classList.remove('hidden');
-
-    const qIndex = window.currentQuestion;
-    const question = window.currentAssessment.questions[qIndex];
-
-    progressEl.textContent = `Question ${qIndex + 1} of ${window.currentAssessment.questions.length}`;
-    questionEl.textContent = question.text;
-
-    optionsEl.innerHTML = '';
-
-    if (question.type === 'scale') {
-      question.options.forEach((opt, index) => {
-        const label = document.createElement('label');
-        label.className = 'flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50';
-        const input = document.createElement('input');
-        input.type = 'radio';
-        input.name = 'assessment-answer';
-        input.value = index;
-        input.className = 'mr-3';
-        if ((window.assessmentAnswers.standard[qIndex] || null) === index) {
-          input.checked = true;
-        }
-        input.addEventListener('change', () => {
-          selectAnswer(index);
-        });
-        const span = document.createElement('span');
-        span.className = 'text-gray-700';
-        span.textContent = opt;
-        label.appendChild(input);
-        label.appendChild(span);
-        optionsEl.appendChild(label);
-      });
-    } else if (question.type === 'multiple-choice') {
-      question.options.forEach((opt) => {
-        const label = document.createElement('label');
-        label.className = 'flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50';
-        const input = document.createElement('input');
-        input.type = 'checkbox';
-        input.name = 'assessment-answer';
-        input.value = opt;
-        input.className = 'mr-3';
-        if (window.assessmentAnswers.contextual[question.id]?.includes(opt)) {
-          input.checked = true;
-        }
-        input.addEventListener('change', () => {
-          selectAnswer(opt, true);
-        });
-        const span = document.createElement('span');
-        span.className = 'text-gray-700';
-        span.textContent = opt;
-        label.appendChild(input);
-        label.appendChild(span);
-        optionsEl.appendChild(label);
-      });
-    } else if (question.type === 'open-ended') {
-      const textarea = document.createElement('textarea');
-      textarea.name = 'assessment-answer';
-      textarea.className = 'w-full p-2 border rounded-lg';
-      textarea.rows = 4;
-      textarea.placeholder = 'Your thoughts...';
-      textarea.value = window.assessmentAnswers.contextual[question.id] || '';
-      textarea.addEventListener('input', (e) => {
-        selectAnswer(e.target.value);
-      });
-      optionsEl.appendChild(textarea);
-    }
-
-    // ensure nav exists and is wired
-    let nav = document.getElementById('assessment-nav');
-    if (!nav) {
-      const navArea = document.getElementById('assessment-nav-area') || container.parentElement;
-      nav = document.createElement('div');
-      nav.id = 'assessment-nav';
-      nav.className = 'flex justify-between mt-6';
-      nav.innerHTML = `<button id="prevBtn" class="btn btn-outline">Previous</button><button id="nextBtn" class="btn btn-primary">Next</button>`;
-      navArea.appendChild(nav);
-      document.getElementById('prevBtn').addEventListener('click', previousQuestion);
-      document.getElementById('nextBtn').addEventListener('click', nextQuestion);
-    }
-
-    const prevBtn = document.getElementById('prevBtn');
-    const nextBtn = document.getElementById('nextBtn');
-
-    prevBtn.disabled = window.currentQuestion === 0;
-
-    // Check if we're in contextual questions mode
-    const isContextualMode = window.currentAssessment.contextual_questions &&
-      window.currentAssessment.questions === window.currentAssessment.contextual_questions;
-
-    if (isContextualMode) {
-      // We're in contextual questions mode
-      if (window.currentQuestion === window.currentAssessment.questions.length - 1) {
-        // Last contextual question - show complete button
-        nextBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Complete Assessment';
-        nextBtn.onclick = completeAssessment;
-      } else {
-        // More contextual questions available
-        nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right ml-2"></i>';
-        nextBtn.onclick = nextQuestion;
-      }
-    } else {
-      // We're in standard questions mode
-      const hasContextualQuestions = window.currentAssessment.contextual_questions &&
-        window.currentAssessment.contextual_questions.length > 0;
-
-      if (window.currentQuestion === window.currentAssessment.questions.length - 1) {
-        // Last standard question
-        if (hasContextualQuestions) {
-          // Has contextual questions - show next button to move to contextual
-          nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right ml-2"></i>';
-          nextBtn.onclick = nextQuestion;
-        } else {
-          // No contextual questions - show complete button
-          nextBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Complete Assessment';
-          nextBtn.onclick = completeAssessment;
-        }
-      } else {
-        // More standard questions available
-        nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right ml-2"></i>';
-        nextBtn.onclick = nextQuestion;
-      }
-    }
-    nextBtn.disabled = false;
-  }
-
-  // fallback selectAnswer / next / prev / complete functions if not defined
-  function selectAnswer(value, isCheckbox = false) {
-    const qIndex = window.currentQuestion;
-    const question = window.currentAssessment.questions[qIndex];
-
-    if (question.type === 'scale') {
-      window.assessmentAnswers.standard[qIndex] = value;
-    } else if (question.type === 'multiple-choice') {
-      if (!window.assessmentAnswers.contextual[question.id]) {
-        window.assessmentAnswers.contextual[question.id] = [];
-      }
-      const answers = window.assessmentAnswers.contextual[question.id];
-      if (isCheckbox) {
-        const index = answers.indexOf(value);
-        if (index > -1) {
-          answers.splice(index, 1);
-        } else {
-          answers.push(value);
-        }
-      }
-    } else if (question.type === 'open-ended') {
-      window.assessmentAnswers.contextual[question.id] = value;
-    }
-  }
-
-  function previousQuestion() {
-    if (window.currentQuestion > 0) {
-      window.currentQuestion--;
-      showQuestion();
-    }
-  }
-
-  function nextQuestion() {
-    const qIndex = window.currentQuestion;
-    const question = window.currentAssessment.questions[qIndex];
-
-    // Validate answer for scale questions
-    if (question.type === 'scale' && window.assessmentAnswers.standard[qIndex] === undefined) {
-      alert('Please select an answer before continuing.');
+    if (action === 'save') { save(); return; }
+    if (action === 'followup') { state.phase = 'context'; state.i = 0; render(true); return; }
+    if (action === 'back') {
+      if (state.i > 0) state.i--;
+      else if (state.phase === 'context') { state.phase = 'standard'; state.i = state.def.questions.length - 1; }
+      render(true);
       return;
     }
-
-    // Check if this is the last standard question and we have contextual questions
-    const isLastStandardQuestion = qIndex === window.currentAssessment.questions.length - 1;
-    const hasContextualQuestions = window.currentAssessment.contextual_questions &&
-      window.currentAssessment.contextual_questions.length > 0;
-    const isContextualMode = window.currentAssessment.questions === window.currentAssessment.contextual_questions;
-
-    if (isLastStandardQuestion && hasContextualQuestions && !isContextualMode) {
-      // Move to contextual questions
-      showContextualQuestions();
-    } else if (qIndex < window.currentAssessment.questions.length - 1) {
-      // Move to next question
-      window.currentQuestion++;
-      showQuestion();
-    } else {
-      // No more questions, complete assessment
-      completeAssessment();
-    }
+    state.i++; // next
+    render(true);
   }
 
-  function showContextualQuestions() {
-    // Store the original questions so we can restore them if needed
-    if (!window.originalQuestions) {
-      window.originalQuestions = window.currentAssessment.questions;
+  function save() {
+    // Every standard item must be answered; the server recomputes the score from these and ignores any client score.
+    var n = state.def.questions.length;
+    for (var k = 0; k < n; k++) {
+      if (state.standard[k] === undefined) {
+        state.phase = 'standard'; state.i = k; render(true);
+        showError('Answer this question before saving.');
+        return;
+      }
     }
-
-    // Switch to contextual questions
-    window.currentAssessment.questions = window.currentAssessment.contextual_questions;
-    window.currentQuestion = 0;
-    showQuestion();
-
-    // Update the button to show completion
-    const nextBtn = document.getElementById('nextBtn');
-    if (nextBtn) {
-      nextBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Complete Assessment';
-      nextBtn.onclick = completeAssessment;
-    }
-  }
-
-  // AI text is untrusted: build nodes with textContent, never innerHTML
-  function fillList(el, items, iconClasses) {
-    el.textContent = '';
-    items.forEach(text => {
-      const li = document.createElement('li');
-      li.className = 'flex items-start';
-      const icon = document.createElement('i');
-      icon.className = 'fas ' + iconClasses + ' mt-1 mr-2';
-      const span = document.createElement('span');
-      span.textContent = String(text);
-      li.append(icon, span);
-      el.appendChild(li);
+    state.saving = true;
+    showError('');
+    var next = $('nextBtn');
+    var label = next.textContent;
+    next.disabled = true; next.setAttribute('aria-busy', 'true'); next.textContent = 'Saving';
+    var payload = {
+      assessment_type: state.key,
+      responses: state.standard.slice(0, n),
+      contextual_responses: state.contextual
+    };
+    PT.api('/patient/api/save-assessment', { method: 'POST', json: payload }).then(function (r) {
+      var d = r.data;
+      if (d && d.crisis) {
+        // A crisis payload is always shown, whatever the HTTP status or `success` says.
+        if (r.ok && d.success) { showResult(d); return; }
+        crisisBanner(d.helplines).focus();
+        fillInsights(d.ai_insights, false);
+        failSave('Your result could not be saved. Your answers are still here, so try saving again.');
+        return;
+      }
+      if (r.ok && d && d.success) { showResult(d); return; }
+      failSave((d && d.message) || 'Could not save your screening (error ' + r.status + '). Your answers are still here, so try again.');
+    }).catch(function () {
+      failSave('Could not reach the server. Your answers are still here, so try again.');
+    }).then(function () {
+      state.saving = false;
+      next.disabled = false; next.removeAttribute('aria-busy'); next.textContent = label;
     });
   }
 
-  function showCrisisCard(helplines) {
-    const old = document.getElementById('crisis-card');
-    if (old) old.remove();
-    const card = document.createElement('div');
-    card.id = 'crisis-card';
-    card.setAttribute('role', 'alertdialog');
-    card.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4';
-    const box = document.createElement('div');
-    box.className = 'bg-white rounded-xl shadow-xl max-w-md w-full p-6';
-    const h = document.createElement('h2');
-    h.className = 'text-xl font-bold text-red-700 mb-2';
+  // Save failed: keep the answers, say so, and never hide emergency help when item 9 was positive.
+  function failSave(msg) {
+    showError(msg);
+    PT.toast(msg, 'error');
+    var item9 = state.key === 'PHQ-9' && typeof state.standard[8] === 'number' && state.standard[8] > 0;
+    if (item9 && !$('crisis-card')) crisisBanner([]);
+  }
+
+  function crisisBanner(helplines) {
+    var slot = $('crisis-slot');
+    slot.textContent = '';
+    var b = document.createElement('div');
+    b.className = 'crisis-banner';
+    b.id = 'crisis-card';
+    b.setAttribute('role', 'alert');
+    b.tabIndex = -1;
+    var h = document.createElement('h2');
     h.textContent = 'You are not alone';
-    const p = document.createElement('p');
-    p.className = 'text-gray-700 mb-3';
+    var p = document.createElement('p');
     p.textContent = 'Your answers suggest you may be going through a very hard time. Please talk to someone now. These services are free:';
-    const ul = document.createElement('ul');
-    ul.className = 'mb-4 space-y-2';
-    (Array.isArray(helplines) ? helplines : []).forEach(hl => {
-      const li = document.createElement('li');
-      const tel = String(hl.tel || '').replace(/[^0-9]/g, '');
-      const a = document.createElement(tel ? 'a' : 'span');
+    var ul = document.createElement('ul');
+    ul.className = 'helpline-list';
+    if (!Array.isArray(helplines) || !helplines.length) {
+      var fb = document.querySelector('#helplines-fallback ul');
+      if (fb) ul = fb.cloneNode(true); // server-rendered list from utils/helplines.py
+      helplines = [];
+    }
+    helplines.forEach(function (hl) {
+      var li = document.createElement('li');
+      var tel = String(hl.tel || '').replace(/[^0-9]/g, '');
+      var a = document.createElement(tel ? 'a' : 'span');
       if (tel) a.href = 'tel:' + tel;
-      a.className = 'font-semibold text-blue-700';
       a.textContent = hl.name + ': ' + hl.number;
       li.appendChild(a);
       li.append(' (' + hl.hours + ')');
       ul.appendChild(li);
     });
-    const btn = document.createElement('button');
-    btn.className = 'btn btn-outline';
-    btn.textContent = 'Close';
-    btn.addEventListener('click', () => card.remove());
-    box.append(h, p, ul, btn);
-    card.appendChild(box);
-    document.body.appendChild(card);
-    btn.focus();
+    b.append(h, p, ul);
+    slot.appendChild(b);
+    return b;
   }
 
-  async function completeAssessment() {
-    if (window.__assessmentSaving) return;
-    window.__assessmentSaving = true;
-    try {
-      // Validate last contextual question if we're in contextual mode
-      const qIndex = window.currentQuestion;
-      const question = window.currentAssessment.questions[qIndex];
+  // AI text is untrusted: build nodes with textContent, never innerHTML.
+  function fillList(el, items) {
+    el.textContent = '';
+    items.forEach(function (t) {
+      var li = document.createElement('li');
+      li.textContent = String(t);
+      el.appendChild(li);
+    });
+  }
 
-      if (question.type === 'multiple-choice' && (!window.assessmentAnswers.contextual[question.id] || window.assessmentAnswers.contextual[question.id].length === 0)) {
-        alert('Please select at least one answer before completing.');
-        window.__assessmentSaving = false;
-        return;
-      }
-
-      if (question.type === 'open-ended' && (!window.assessmentAnswers.contextual[question.id] || window.assessmentAnswers.contextual[question.id].trim() === '')) {
-        alert('Please provide a response before completing.');
-        window.__assessmentSaving = false;
-        return;
-      }
-
-      const payload = {
-        assessment_type: window.currentAssessmentKey, // the server recomputes the score from responses
-        responses: window.assessmentAnswers.standard,
-        contextual_responses: window.assessmentAnswers.contextual
-      };
-
-      const json = await saveAssessment(payload);
-      const modal = document.getElementById('assessmentModal');
-      if (json && json.crisis) {
-        if (modal) hideModal(modal);
-        showCrisisCard(json.helplines);
-      } else {
-        alert(json?.message || 'Assessment saved.');
-        if (modal) hideModal(modal);
-      }
-
-      // Dynamically update AI insights if available
-      if (json.success && json.ai_insights) {
-        const insights = json.ai_insights;
-
-        // Update Summary
-        const summaryEl = document.getElementById('aiSummary');
-        if (summaryEl && insights.summary) {
-          summaryEl.textContent = insights.summary;
-        }
-
-        // Update Recommendations
-        const recsEl = document.getElementById('aiRecommendations');
-        if (recsEl && insights.recommendations && Array.isArray(insights.recommendations)) {
-          fillList(recsEl, insights.recommendations, 'fa-check-circle text-green-500');
-        }
-
-        // Update Resources
-        const resEl = document.getElementById('aiResources');
-        if (resEl && insights.resources && Array.isArray(insights.resources)) {
-          fillList(resEl, insights.resources, 'fa-phone text-blue-500');
-        }
-
-        // Show the container
-        const contentEl = document.getElementById('aiInsightsContent');
-        if (contentEl) {
-          contentEl.classList.remove('hidden');
-          // Scroll to insights
-          contentEl.scrollIntoView({ behavior: 'smooth' });
-        }
-      } else {
-        // If no insights returned immediately, maybe reload or show a message
-        if (confirm('Assessment saved. Reload page to see updated history?')) {
-          window.location.reload();
-        }
-      }
-    } catch (err) {
-      // Error is handled by saveAssessment
-    } finally {
-      setTimeout(() => { window.__assessmentSaving = false; }, 300);
+  function fillInsights(ins, generated) {
+    ins = ins || {};
+    var box = $('aiInsightsContent');
+    if (ins.summary || (ins.recommendations || []).length || (ins.resources || []).length) {
+      $('aiSummary').textContent = ins.summary || '';
+      fillList($('aiRecommendations'), Array.isArray(ins.recommendations) ? ins.recommendations : []);
+      fillList($('aiResources'), Array.isArray(ins.resources) ? ins.resources : []);
+      setHidden(box, false);
+      setHidden($('aiInsightsNote'), !generated);
     }
   }
 
-  // startAssessment: called when user clicks card/button
-  let allAssessments = {};
+  function showResult(d) {
+    setHidden(panel, true);
+    setHidden(picker, true);
+    var res = $('assessment-result');
+    setHidden(res, false);
 
-  // Load assessment questions with error handling
-  async function loadQuestions() {
-    if (Object.keys(allAssessments).length === 0) {
-      try {
-        const response = await fetch('/static/questions.json');
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-        allAssessments = await response.json();
-        console.log('Loaded assessments:', Object.keys(allAssessments));
-      } catch (error) {
-        console.error('Error loading assessment questions:', error);
-        const errEl = document.getElementById('assessment-error');
-        if (errEl) {
-          errEl.classList.remove('hidden');
-          const errorMessage = errEl.querySelector('p');
-          if (errorMessage) {
-            errorMessage.textContent = 'Could not load assessment questions. Please check your connection.';
-          }
-        } else {
-          alert('Could not load assessment questions. See console for details.');
-        }
-      }
-    }
+    var banner = d.crisis ? crisisBanner(d.helplines) : ($('crisis-slot').textContent = '', null);
+    var band = String(d.band || '').toLowerCase();
+    $('result-title').textContent = state.def.title;
+    $('result-score').textContent = String(d.score);
+    $('result-max').textContent = 'of ' + (MAX[state.key] || '') + ' on the ' + state.key;
+    var badge = $('result-band');
+    badge.className = 'badge badge-' + (BADGE[band] || 'neutral');
+    badge.textContent = band ? band.charAt(0).toUpperCase() + band.slice(1) : 'n/a';
+    $('result-explain').textContent = EXPLAIN[band] || '';
+
+    fillInsights(d.ai_insights, !!d.ai_insights_generated);
+    (banner || $('result-heading')).focus();
   }
 
-
-  window.startAssessment = async function (typeKey) {
-    await loadQuestions();
-
-    const assessmentData = allAssessments[typeKey];
-    if (!assessmentData) {
-      console.error(`Assessment type "${typeKey}" not found.`);
-      return;
-    }
-
-    window.currentAssessment = assessmentData;
-    window.currentAssessmentKey = typeKey; // canonical 'PHQ-9' / 'GAD-7', sent to the server
-    window.currentQuestion = 0;
-    window.assessmentAnswers = {
-      standard: [],
-      contextual: {}
-    };
-
-    const modal = document.getElementById('assessmentModal');
-    const title = document.getElementById('assessmentTitle');
-
-    if (title && window.currentAssessment) {
-      title.textContent = window.currentAssessment.title;
-    }
-
-    if (modal) {
-      showModal(modal);
-    }
-
-    showQuestion();
-  };
-
-
-
-  // Attach handlers to cards/buttons and mood options
-  document.addEventListener('DOMContentLoaded', function () {
-    // Mood options binding
-    document.querySelectorAll('.mood-option').forEach(opt => {
-      opt.addEventListener('click', () => {
-        // visual
-        document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
-        opt.classList.add('selected');
-        const btn = document.getElementById('save-mood-btn');
-        if (btn) btn.disabled = false;
-        // call selectMood if present
-        const m = opt.getAttribute('data-mood');
-        if (typeof window.selectMood === 'function') {
-          try { window.selectMood(parseInt(m, 10)); } catch (e) { console.warn(e); }
-        }
-      });
-    });
-
-    // Mood saving lives in mood.js (single handler); do not bind #save-mood-btn here.
-
-    // Close/open bindings
-    const closeBtn = document.getElementById('closeAssessmentBtn');
-    if (closeBtn) closeBtn.addEventListener('click', () => {
-      const modal = document.getElementById('assessmentModal');
-      if (modal) hideModal(modal);
-    });
-    const openBtn = document.getElementById('openAssessmentBtn');
-    if (openBtn) openBtn.addEventListener('click', () => {
-      window.startAssessment('anxiety');
-    });
-
-    // Event listener for closing the assessment modal
-    document.querySelectorAll('.close-assessment-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const modal = document.getElementById('assessmentModal');
-        if (modal) hideModal(modal);
-      });
-    });
-
-    // Define viewAssessmentDetails on the window object
-    if (typeof window.viewAssessmentDetails !== 'function') {
-      window.viewAssessmentDetails = function (assessmentId) {
-        // Placeholder logic for viewing assessment details.
-        // This could be implemented to fetch details and show another modal.
-        alert(`Viewing details for assessment ID: ${assessmentId}`);
-      };
+  // Wiring
+  document.addEventListener('click', function (e) {
+    var startBtn = e.target.closest && e.target.closest('.start-assessment-btn');
+    if (startBtn && picker.contains(startBtn)) {
+      e.preventDefault();
+      start(startBtn.getAttribute('data-assessment-type'));
     }
   });
 
-})();
+  $('assessment-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    advance($('nextBtn').getAttribute('data-action'));
+  });
+  $('prevBtn').addEventListener('click', function () { advance('back'); });
+  $('altBtn').addEventListener('click', function () { advance($('altBtn').getAttribute('data-action')); });
 
+  $('cancelBtn').addEventListener('click', function () {
+    function leave() {
+      setHidden(panel, true);
+      setHidden(picker, false);
+    }
+    if (!hasAnswers()) { leave(); return; }
+    PT.ask({ title: 'Stop this screening?', message: 'Your answers have not been saved.', confirmText: 'Stop screening', danger: true })
+      .then(function (ok) { if (ok) leave(); });
+  });
+
+  $('again-btn').addEventListener('click', function () { window.location.reload(); });
+
+  // Keys 1 to 4 pick the matching answer on scale questions (focus sits on the question after Next, so listen on the form).
+  $('assessment-form').addEventListener('keydown', function (e) {
+    var q = list()[state.i];
+    if (!q || q.type !== 'scale' || (e.target.tagName === 'TEXTAREA') || e.ctrlKey || e.metaKey || e.altKey) return;
+    var idx = parseInt(e.key, 10) - 1;
+    var inputs = $('assessment-options').querySelectorAll('input[type="radio"]');
+    if (idx >= 0 && idx < inputs.length) {
+      inputs[idx].checked = true;
+      inputs[idx].dispatchEvent(new Event('change', { bubbles: true }));
+      inputs[idx].focus();
+    }
+  });
+})();

@@ -1,0 +1,27 @@
+{% from 'rx_patient/_macros.html' import status_badge, collection_label, send_control %}
+{# One prescription in the list. `rx` is a PatientRx dict. Legacy rows get a warning and no actions. #}
+<article class="card" data-rx-id="{{ rx.id }}">
+    <div class="card-body">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+            <h2 class="pt-title">{% if rx.number %}<span class="rx-number">{{ rx.number }}</span>{% else %}Prescription{% endif %}</h2>
+            <span>{{ status_badge(rx) }}</span>
+        </div>
+        <dl class="kv mt-3">
+            <div><dt>Doctor</dt><dd>{{ rx.doctor_name or 'n/a' }}</dd></div>
+            <div><dt>Issued</dt><dd>{{ rx.issued_at|rx_date }}</dd></div>
+            {% if rx.status != 'legacy' %}
+            <div><dt>Valid until</dt><dd>{{ rx.valid_until|rx_date }}</dd></div>
+            <div><dt>Collection</dt><dd>{{ collection_label(rx) }}</dd></div>
+            {% endif %}
+        </dl>
+        {% if rx.status == 'legacy' %}
+        <p class="alert alert-warning mt-3" role="note">{{ rx_text.LEGACY_WARNING }}</p>
+        {% else %}
+        <p class="mt-4 flex gap-3 flex-wrap items-center">
+            <a class="btn btn-secondary btn-sm" href="{{ url_for('rx_patient.detail', rx_id=rx.id) }}">Details</a>
+            <a class="btn btn-secondary btn-sm" href="{{ url_for('rx_patient.print', rx_id=rx.id) }}">{{ icon('file') }} Print</a>
+            {{ send_control(rx) }}
+        </p>
+        {% endif %}
+    </div>
+</article>

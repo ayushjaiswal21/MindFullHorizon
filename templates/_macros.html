@@ -1,6 +1,101 @@
-{% macro back_to_dashboard_button() %}
-<a href="{{ url_for('patient.patient_dashboard') if session.user_role == 'patient' else url_for('provider.provider_dashboard') }}" 
-   class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
-</a>
+
+{# jsonld_scripts: one <script type="application/ld+json"> per dict. tojson escapes <, > and &, so it is safe inline. #}
+{% macro jsonld_scripts(items) %}
+{% for item in items %}<script type="application/ld+json" nonce="{{ g.csp_nonce }}">{{ item|tojson }}</script>
+{% endfor %}
+{% endmacro %}
+
+{# helpline_list: numbers always come from utils/helplines.py through the `helplines` context variable. #}
+{% macro helpline_list(helplines) %}
+<ul class="helpline-list">
+  {% for h in helplines %}<li><strong>{{ h.name }}</strong>: <a href="tel:{{ h.tel }}">{{ h.number }}</a>, {{ h.hours }}. {{ h.note }}</li>
+  {% endfor %}
+</ul>
+{% endmacro %}
+
+{#
+  form_field: label + control + help + inline error, wired with ids so components.js can validate it.
+  type: text | email | password | tel | textarea | select. For select pass options=[(value, text), ...].
+  Server errors: pass error='message'. match='#other-id' compares with another field (confirm password).
+#}
+{% macro form_field(name, label, type='text', value='', required=False, help=None, error=None, id=None,
+                    autocomplete=None, placeholder=None, minlength=None, maxlength=None, match=None,
+                    rows=5, options=None, optional=False, autofocus=False, show_count=False, data_msg_required=None) %}
+{% from 'partials/icons.html' import icon %}
+{% set fid = id or name %}
+{% set described = [] %}
+{% if help %}{% set _ = described.append(fid ~ '-help') %}{% endif %}
+{% if error %}{% set _ = described.append(fid ~ '-error') %}{% endif %}
+<div class="field">
+  <label class="label" for="{{ fid }}">{{ label }}{% if optional %} <span class="mfh-optional">(optional)</span>{% endif %}</label>
+  {% if type == 'password' %}<div class="password-field">{% endif %}
+  {% if type == 'textarea' %}
+  <textarea class="textarea" id="{{ fid }}" name="{{ name }}" rows="{{ rows }}"
+    {%- if required %} required{% endif %}{% if minlength %} minlength="{{ minlength }}"{% endif %}{% if maxlength %} maxlength="{{ maxlength }}"{% endif %}
+    {%- if placeholder %} placeholder="{{ placeholder }}"{% endif %}{% if data_msg_required %} data-msg-required="{{ data_msg_required }}"{% endif %}
+    {%- if error %} aria-invalid="true"{% endif %}{% if described %} aria-describedby="{{ described|join(' ') }}"{% endif %}>{{ value }}</textarea>
+  {% elif type == 'select' %}
+  <select class="select" id="{{ fid }}" name="{{ name }}"
+    {%- if required %} required{% endif %}{% if data_msg_required %} data-msg-required="{{ data_msg_required }}"{% endif %}
+    {%- if error %} aria-invalid="true"{% endif %}{% if described %} aria-describedby="{{ described|join(' ') }}"{% endif %}>
+    {% for opt_value, opt_text in (options or []) %}<option value="{{ opt_value }}"{% if opt_value == value %} selected{% endif %}>{{ opt_text }}</option>{% endfor %}
+  </select>
+  {% else %}
+  <input class="input" id="{{ fid }}" name="{{ name }}" type="{{ type }}" value="{{ value if type != 'password' else '' }}"
+    {%- if required %} required{% endif %}{% if autocomplete %} autocomplete="{{ autocomplete }}"{% endif %}
+    {%- if placeholder %} placeholder="{{ placeholder }}"{% endif %}{% if minlength %} minlength="{{ minlength }}"{% endif %}
+    {%- if maxlength %} maxlength="{{ maxlength }}"{% endif %}{% if match %} data-match="{{ match }}"{% endif %}
+    {%- if data_msg_required %} data-msg-required="{{ data_msg_required }}"{% endif %}{% if autofocus %} autofocus{% endif %}
+    {%- if error %} aria-invalid="true"{% endif %}{% if described %} aria-describedby="{{ described|join(' ') }}"{% endif %}>
+  {% endif %}
+  {% if type == 'password' %}
+    <button type="button" class="mfh-toggle" data-toggle-password aria-controls="{{ fid }}" aria-pressed="false" hidden>
+      <span class="mfh-eye">{{ icon('eye') }}</span><span class="mfh-eye-off">{{ icon('eye-off') }}</span>
+      <span class="mfh-visually-hidden mfh-toggle-label">Show password</span>
+    </button>
+  </div>
+  {% endif %}
+  {% if help %}<p class="help" id="{{ fid }}-help">{{ help }}</p>{% endif %}
+  {% if error %}<p class="error-text" id="{{ fid }}-error" role="alert">{{ error }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{# check: a checkbox row. The label body comes from the call block so it can hold links. #}
+{% macro check(name, value='yes', id=None, required=False, checked=False, error=None, data_msg_required=None) %}
+{% set cid = id or name %}
+<div class="field">
+  <div class="check">
+    <input type="checkbox" id="{{ cid }}" name="{{ name }}" value="{{ value }}"
+      {%- if required %} required{% endif %}{% if checked %} checked{% endif %}
+      {%- if data_msg_required %} data-msg-required="{{ data_msg_required }}"{% endif %}
+      {%- if error %} aria-invalid="true" aria-describedby="{{ cid }}-error"{% endif %}>
+    <label for="{{ cid }}">{{ caller() }}</label>
+  </div>
+  {% if error %}<p class="error-text" id="{{ cid }}-error" role="alert">{{ error }}</p>{% endif %}
+</div>
+{% endmacro %}
+
+{# empty_state: icon, title, one line of text, optional action link. #}
+{% macro empty_state(title, text=None, icon_name='info', action_label=None, action_href=None) %}
+{% from 'partials/icons.html' import icon %}
+<div class="empty-state">
+  {{ icon(icon_name) }}
+  <h3 class="empty-state-title">{{ title }}</h3>
+  {% if text %}<p class="empty-state-text">{{ text }}</p>{% endif %}
+  {% if action_label and action_href %}<a class="btn btn-primary" href="{{ action_href }}">{{ action_label }}</a>{% endif %}
+</div>
+{% endmacro %}
+
+{# alert: kind is info | success | warning | danger. Text from `message` or the call block. #}
+{% macro alert(kind='info', message=None, title=None, role=None) %}
+{% from 'partials/icons.html' import icon %}
+{% set icon_name = {'info': 'info', 'success': 'check', 'warning': 'alert', 'danger': 'alert'}.get(kind, 'info') %}
+<div class="alert alert-{{ kind }}"{% if role %} role="{{ role }}"{% endif %}>
+  {{ icon(icon_name) }}
+  <div>
+    {% if title %}<strong>{{ title }}</strong>{% endif %}
+    {% if message %}<span>{{ message }}</span>{% endif %}
+    {% if caller is defined %}{{ caller() }}{% endif %}
+  </div>
+</div>
 {% endmacro %}

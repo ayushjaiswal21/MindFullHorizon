@@ -1,0 +1,40 @@
+/* Provider pages only (dashboard, analytics, telehealth, wellness report).
+   Colours come from the design tokens in site.css; nothing here is a hard-coded theme colour. */
+
+.pv-filter[aria-pressed="true"] {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--primary-contrast);
+}
+
+.pv-crisis-list { list-style: none; margin: 0.75rem 0 0; padding: 0; }
+.pv-crisis-item {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem;
+    padding: 0.75rem 0; border-top: 1px solid var(--border);
+}
+.pv-crisis-item:first-child { border-top: 0; padding-top: 0; }
+
+.pv-chart { position: relative; height: 18rem; }
+.pv-chart canvas { width: 100% !important; }
+
+.pv-dialog {
+    background: var(--surface-raised); color: var(--text);
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 1.25rem; width: min(28rem, calc(100% - 2rem));
+}
+.pv-dialog::backdrop { background: var(--scrim); }
+
+.pv-stage {
+    position: relative; overflow: hidden; background: #000;
+    border-radius: var(--radius-lg); aspect-ratio: 16 / 9; max-height: 70vh; width: 100%;
+}
+.pv-remote { width: 100%; height: 100%; object-fit: cover; background: #000; }
+.pv-local {
+    position: absolute; right: 0.75rem; bottom: 0.75rem; width: 28%; max-width: 12rem;
+    aspect-ratio: 4 / 3; object-fit: cover; background: #000;
+    border: 2px solid var(--surface); border-radius: var(--radius);
+}
+.pv-ctl[aria-pressed="true"] { border-color: var(--danger); color: var(--danger); }
+
+.pv-report-meta { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; }
+.pv-prewrap { white-space: pre-wrap; }

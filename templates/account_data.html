@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Your data{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <div class="page-header">
+    <h1>Your data</h1>
+    <p class="lead">See what we keep about you, download a copy, or delete your account.</p>
+  </div>
+
+  <section class="card" aria-labelledby="stored-heading">
+    <div class="card-header"><h2 id="stored-heading">What is stored</h2></div>
+    <div class="card-body prose">
+      <p>Your profile (name, email, college), and the entries you create: check-ins, screening results, journal entries, voice logs, goals, medication reminders, wellness exercise logs, appointments and your points and streak. If you use the crisis support features, we keep a short record of the time and type of the alert, not your words.</p>
+      <p>Counsellors you have booked with can see your records. Their session notes are theirs and are not part of your download. Access to your records by counsellors is logged.</p>
+      {% if consents %}
+      <p class="muted">Your consent on file:
+        {% for c in consents %}{{ c.kind }} (version {{ c.version }}, {{ c.accepted_at.strftime('%Y-%m-%d') }}){% if not loop.last %}; {% endif %}{% endfor %}.</p>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="export-heading">
+    <div class="card-header"><h2 id="export-heading">Download your data</h2></div>
+    <div class="card-body">
+      <p>You get one JSON file with your own data. It does not include your password or anyone else's information.</p>
+      <form method="post" action="{{ url_for('auth.account_export') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit" class="btn btn-secondary">Download my data</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="delete-heading">
+    <div class="card-header"><h2 id="delete-heading">Delete your account</h2></div>
+    <div class="card-body">
+      <p class="text-danger">This permanently deletes your account and everything listed above. It cannot be undone. A short log entry with only your user number and the date stays, so we can show the deletion happened.</p>
+      <form method="post" action="{{ url_for('auth.account_delete') }}" autocomplete="off">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {% if google_only %}
+        <div class="field">
+          <label class="label" for="confirm_email">Type your email address ({{ user.email }})</label>
+          <input class="input" id="confirm_email" name="confirm_email" type="email" required>
+        </div>
+        <div class="field">
+          <label class="label" for="confirm_phrase">Type {{ delete_phrase }}</label>
+          <input class="input" id="confirm_phrase" name="confirm_phrase" type="text" required>
+        </div>
+        {% else %}
+        <div class="field">
+          <label class="label" for="password">Your current password</label>
+          <input class="input" id="password" name="password" type="password" required autocomplete="current-password">
+        </div>
+        {% endif %}
+        <button type="submit" class="btn btn-danger">Delete my account</button>
+      </form>
+    </div>
+  </section>
+</div>
+{% endblock %}

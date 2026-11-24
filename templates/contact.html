@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from 'partials/breadcrumbs.html' import breadcrumb %}
+{% from '_macros.html' import jsonld_scripts, helpline_list, form_field, alert %}
+
+{% block title %}Contact{% endblock %}
+{% block meta_description %}{{ page_description }}{% endblock %}
+{% block canonical %}{{ canonical_url }}{% endblock %}
+{% block robots %}index, follow{% endblock %}
+{% block breadcrumbs %}{{ breadcrumb([('Home', '/'), ('Contact', None)]) }}{% endblock %}
+{% block head_extra %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+{{ jsonld_scripts(jsonld) }}
+{% endblock %}
+
+{% block content %}
+{% set shown_email = contact_email or contact_recipient %}
+<div class="container section">
+  <div class="page-header">
+    <h1>Contact</h1>
+    <p class="lead">Send a message to the people who run Mindful Horizon: a question, a bug, a privacy request or feedback.</p>
+  </div>
+
+  <div class="contact-grid">
+    <div>
+      {% if sent %}
+        {% call alert('success', title='Message saved', role='status') %}
+          {% if email_configured %}
+            Your message was saved and queued to be emailed to the team. We do not send an automatic confirmation to you. We read messages in order.
+          {% else %}
+            Your message was saved for the team to read. Email forwarding is not set up on this service, so no email confirmation will be sent to you. We read messages in order.
+          {% endif %}
+        {% endcall %}
+        <p style="margin-top:1rem"><a class="btn btn-secondary" href="{{ url_for('pages.contact') }}">Send another message</a></p>
+      {% else %}
+        {% if form_error %}{{ alert('danger', message=form_error, role='alert') }}{% endif %}
+        <form method="post" action="{{ url_for('pages.contact') }}" class="auth-form" data-validate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="form_token" value="{{ form_token }}">
+          <div class="mfh-honeypot" aria-hidden="true">
+            <label for="website">Leave this field empty</label>
+            <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+          </div>
+          {{ form_field('name', 'Your name', required=True, value=values.name, error=errors.get('name'), autocomplete='name', maxlength=limits.name) }}
+          {{ form_field('email', 'Email address', type='email', required=True, value=values.email, error=errors.get('email'), autocomplete='email', maxlength=limits.email, help='We use it only to reply to you.') }}
+          {{ form_field('subject', 'Subject', optional=True, value=values.subject, error=errors.get('subject'), maxlength=limits.subject) }}
+          {{ form_field('message', 'Message', type='textarea', required=True, value=values.message, error=errors.get('message'), rows=7, minlength=limits.message_min, maxlength=limits.message_max, help='10 to 2000 characters.') }}
+          <div>
+            <button type="submit" class="btn btn-primary" data-loading-text="Sending">Send message</button>
+          </div>
+        </form>
+      {% endif %}
+    </div>
+
+    <aside class="grid gap-4" aria-label="Before you write">
+      <div class="panel-muted" role="note">
+        <p><strong>Response time</strong></p>
+        <p>We read messages in order. We cannot answer crisis messages. If you are in distress, call a helpline now:</p>
+        {{ helpline_list(helplines) }}
+      </div>
+      {% if shown_email %}
+      <div class="panel-muted">
+        <p><strong>Email</strong></p>
+        <p><a href="mailto:{{ shown_email }}">{{ shown_email }}</a></p>
+      </div>
+      {% endif %}
+      <div class="panel-muted">
+        <p><strong>Privacy requests</strong></p>
+        <p>To download or delete your data, use <a href="{{ account_data_url }}">your data page</a>. Your message is stored so the team can answer it; see the <a href="{{ url_for('pages.privacy') }}">privacy policy</a>.</p>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script defer src="{{ url_for('static', filename='js/components.js') }}" nonce="{{ g.csp_nonce }}"></script>
+{% endblock %}

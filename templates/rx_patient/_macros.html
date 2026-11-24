@@ -1,0 +1,28 @@
+{# Shared bits for the patient prescription pages. Input is a PatientRx dict (docs/CLINICAL_DESIGN.md 5.2). #}
+{% macro status_badge(rx) %}
+{% set s = rx.get('effective_status') or rx.get('status') %}
+{% if s in ('issued', 'partially_dispensed') %}<span class="badge badge-success">Active</span>
+{% elif s == 'dispensed' %}<span class="badge badge-neutral">Collected</span>
+{% elif s == 'cancelled' %}<span class="badge badge-danger">Cancelled</span>
+{% elif s == 'expired' %}<span class="badge badge-warning">Expired</span>
+{% elif s == 'legacy' %}<span class="badge badge-warning">Not verified</span>
+{% else %}<span class="badge badge-neutral">{{ s|replace('_', ' ')|capitalize }}</span>{% endif %}
+{% endmacro %}
+
+{% macro collection_label(rx) %}
+{%- set c = rx.get('collection') -%}
+{%- if c == 'complete' %}Collected{% elif c == 'partial' %}Partly collected{% else %}Not collected{% endif -%}
+{% endmacro %}
+
+{# Send-to-desk control. Hidden once sent; the sent note shows the date. data-rx-send is wired by rx_patient.js. #}
+{% macro send_control(rx) %}
+{% if rx.get('dispense_requested_at') %}
+<span class="muted" data-rx-sent>Sent to the pharmacy desk on {{ rx.dispense_requested_at|rx_date }}</span>
+{% elif rx.get('dispensable') %}
+<button type="button" class="btn btn-secondary btn-sm" data-rx-send
+        data-confirm="The pharmacy desk at your institution will be able to open this prescription, including the diagnosis, to prepare your medicines."
+        data-confirm-title="Send to the pharmacy desk?" data-confirm-text="Send"
+        data-url="{{ url_for('rx_patient.request_pharmacy', rx_id=rx.id) }}">Send to pharmacy desk</button>
+<span class="muted" data-rx-sent hidden>Sent to the pharmacy desk</span>
+{% endif %}
+{% endmacro %}

@@ -1,0 +1,32 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from '_macros.html' import empty_state %}
+{% from 'provider_rx/_ui.html' import ts, status_badge, pager %}
+{% block title %}Staff{% endblock %}
+{% block page_scripts %}<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_actions.js') }}?v={{ asset_version }}" defer></script>{% endblock %}
+{% block rx_body %}
+{% set f = filters or {} %}
+{% set base = nav_url('admin.staff', '/admin/staff') %}
+<div class="page-header"><div><h1>Staff</h1><p class="lead">Counsellors and doctors registered for your institution. Students are never listed here.</p></div></div>
+<form class="cl-filters" method="get" action="{{ base }}">
+  <div class="field"><label class="label" for="f-type">Type</label><select class="select" id="f-type" name="type"><option value="">All</option><option value="counsellor"{{ ' selected' if f.type == 'counsellor' }}>Counsellor</option><option value="doctor"{{ ' selected' if f.type == 'doctor' }}>Doctor</option></select></div>
+  <div class="field"><label class="label" for="f-status">Status</label><select class="select" id="f-status" name="status"><option value="">All</option><option value="active"{{ ' selected' if f.status == 'active' }}>Active</option><option value="deactivated"{{ ' selected' if f.status == 'deactivated' }}>Deactivated</option></select></div>
+  <button type="submit" class="btn btn-primary">Filter</button><a class="btn btn-ghost" href="{{ base }}">Reset</a>
+</form>
+{% if rows %}
+<div class="table-wrap"><table class="table"><caption class="sr-only">Counsellors and doctors</caption>
+<thead><tr><th scope="col">Name</th><th scope="col">Email</th><th scope="col">Type</th><th scope="col">Institution as typed</th><th scope="col">Joined</th><th scope="col">Status</th><th scope="col">Verification</th><th scope="col">Actions</th></tr></thead>
+<tbody>{% for r in rows %}
+<tr><th scope="row">{{ r.name }}</th><td class="cl-wrap">{{ r.email }}</td><td>{{ 'Doctor' if r.provider_type == 'doctor' else 'Counsellor' }}</td><td>{{ r.institution_typed }}</td><td>{{ ts(r.created_at, 'date') }}</td>
+<td>{% if r.deactivated %}<span class="badge badge-neutral">Deactivated</span>{% else %}<span class="badge badge-success">Active</span>{% endif %}</td>
+<td>{% if r.provider_type == 'doctor' and r.verification_state %}{{ status_badge(r.verification_state) }}{% else %}n/a{% endif %}</td>
+<td>{% if r.deactivated %}<button type="button" class="btn btn-secondary btn-sm" data-api-post="/admin/api/staff/{{ r.id }}/reactivate" data-done="Account reactivated" aria-label="Reactivate {{ r.name }}">Reactivate</button>
+{% else %}<button type="button" class="btn btn-danger btn-sm" data-api-post="/admin/api/staff/{{ r.id }}/deactivate" data-ask="They will not be able to sign in. Their data is kept." data-ask-title="Deactivate {{ r.name }}?" data-ask-text="Deactivate" data-ask-danger data-done="Account deactivated" aria-label="Deactivate {{ r.name }}">Deactivate</button>{% endif %}</td></tr>
+{% endfor %}</tbody></table></div>
+{{ pager(meta) }}
+{% elif f.type or f.status %}
+{{ empty_state('No staff match these filters', 'Change the type or status, or reset the filters.', 'search') }}
+{% else %}
+{{ empty_state('No staff yet', 'No counsellors or doctors have registered for your institution yet.', 'users') }}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,54 @@
+{#- "How this differs" section. Every statement is checked against the code and docs/research/competitive-2026.md
+    section 6 (checked November 2026). Contrasts are by category only; re-verify them before each release. -#}
+<section class="home-section" id="differences" aria-labelledby="differences-title">
+  <div class="container">
+    <h2 id="differences-title">How this differs from other options</h2>
+    <p class="intro">Six things this service does, stated as plainly as we can. Where an outside fact helps, it sits on a "Compared with" line with its source below.</p>
+
+    <dl class="diff-list">
+      <div class="diff" id="diff-1">
+        <dt>Counsellor alert with timed escalation</dt>
+        <dd>If a screening answer, journal entry or chat message shows signs of self-harm, an alert appears on the dashboard of your institution's counsellors. If nobody acknowledges it, counsellors are notified again after 15, 30 and 45 minutes (the default). At the second and third step an email also goes to an address the operator has set, but only if the operator has set one. It needs at least one counsellor account at your institution.</dd>
+        <dd class="compare-with"><strong>Compared with:</strong> the maker of one AI companion in a meditation app states that it is "not monitored in real time by a human".</dd>
+      </div>
+
+      <div class="diff" id="diff-2">
+        <dt>Crisis help does not depend on the AI</dt>
+        <dd>A fixed crisis check runs on every chat message before any AI model is asked. If it finds language about harming yourself, you see a fixed reply and these helplines, even if the AI is down: {% for h in helplines %}{{ h.name.split(' (')[0] }} <a href="tel:{{ h.tel }}">{{ h.number }}</a>{{ ', ' if not loop.last else '.' }}{% endfor %}</dd>
+        <dd class="compare-with"><strong>Compared with:</strong> the maker of one AI companion in a meditation app offers it only in the US, UK, Canada and Australia and points its US and Canadian users to a crisis line in those countries.</dd>
+      </div>
+
+      <div class="diff" id="diff-3">
+        <dt>PHQ-9 and GAD-7 scored on the server</dt>
+        <dd>Totals and score bands are calculated on our server, and a score sent by your browser is ignored. Any answer above zero on PHQ-9 question 9, or a PHQ-9 total of 20 or more, shows help numbers when you submit. The question 9 rule is our own design choice. A screening is not a diagnosis.</dd>
+      </div>
+
+      <div class="diff" id="diff-4">
+        <dt>Counsellors see linked students only</dt>
+        <dd>A counsellor sees an individual student only when the student is linked to them, for example by booking. Institution figures are totals, and any group smaller than 5 is hidden. One exception: open crisis alerts of an institution stay visible to its counsellors, and each such view is logged.</dd>
+      </div>
+
+      <div class="diff" id="diff-5">
+        <dt>Export and delete your data</dt>
+        <dd>From your account you can download the data stored about you and delete your account.
+          {% if session.get('user_id') %}<a href="{{ url_for('auth.account_data') }}">Open your data page</a>.{% else %}You need to be logged in to use this.{% endif %}</dd>
+      </div>
+
+      <div class="diff" id="diff-6">
+        <dt>A labelled AI that does not diagnose</dt>
+        <dd>The companion tells you it is an AI. It is instructed not to diagnose or name medicines or doses, and a filter replaces replies that state a diagnosis or a dose. It does not replace a counsellor, and it does not prescribe: counselling and prescribing are done by people.</dd>
+        <dd class="compare-with"><strong>Compared with:</strong> India's Telemedicine Practice Guidelines (2020 text, clause 5.4) do not allow AI platforms to counsel patients or prescribe medicines. That is why we describe the companion as a chat tool, not a counsellor.</dd>
+      </div>
+    </dl>
+
+    <details class="diff-sources">
+      <summary>Sources and date</summary>
+      <p>Checked November 2026. Vendors and rules change, so treat these as a dated snapshot. Both pages below were read on 24 November 2026.</p>
+      <ul>
+        <li data-claim="1 2"><a href="https://www.headspace.com/ebb" rel="noopener">https://www.headspace.com/ebb</a> (Headspace, Ebb page: language, countries, "not monitored in real time by a human", crisis number). Supports the compared-with lines for 1 and 2.</li>
+        <li data-claim="6"><a href="https://esanjeevani.mohfw.gov.in/assets/guidelines/Telemedicine_Practice_Guidelines.pdf" rel="noopener">https://esanjeevani.mohfw.gov.in/assets/guidelines/Telemedicine_Practice_Guidelines.pdf</a> (Telemedicine Practice Guidelines, clause 5.4). Supports the compared-with line for 6.</li>
+      </ul>
+      <p>Items 3, 4 and 5 describe this product's own behaviour and have no outside source.</p>
+    </details>
+  </div>
+</section>

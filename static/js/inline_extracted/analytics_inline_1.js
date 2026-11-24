@@ -1,70 +1,15 @@
+// Charts for the provider analytics page. Data comes from the #analytics-data JSON block.
+document.addEventListener('DOMContentLoaded', function () {
+    const el = document.getElementById('analytics-data');
+    if (!el || !window.MFHCharts) return;
+    const d = JSON.parse(el.textContent);
 
-document.addEventListener('DOMContentLoaded', function() {
-    const chartData = JSON.parse(document.getElementById('analytics-data').textContent);
-    // Screen Time Chart
-    const screenTimeCtx = document.getElementById('screenTimeChart').getContext('2d');
-    new Chart(screenTimeCtx, {
-        type: 'line',
-        data: {
-            labels: chartData.labels,
-            datasets: [{
-                label: 'Average Daily Screen Time (hours)',
-                data: chartData.screen_time,
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                title: {
-                    display: true,
-                    text: 'Daily Screen Time Trends'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
-    });
+    MFHCharts.make(document.getElementById('screenTimeChart'), d.labels,
+        [{ label: 'Average daily screen time (hours)', data: d.screen_time }],
+        { yMin: 0, yTitle: 'Hours' });
 
-    // Wellness Score Chart
-    const wellnessCtx = document.getElementById('wellnessChart').getContext('2d');
-    new Chart(wellnessCtx, {
-        type: 'line',
-        data: {
-            labels: chartData.labels,
-            datasets: [{
-                label: 'Average Wellness Score',
-                data: chartData.wellness,
-                borderColor: 'rgb(239, 68, 68)',
-                backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                tension: 0.1
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'top',
-                },
-                title: {
-                    display: true,
-                    text: 'Wellness Score Trends'
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 5
-                }
-            }
-        }
-    });
+    // A wellness score of 0 means "no score that day" (real scores run 1 to 5), so leave a gap.
+    MFHCharts.make(document.getElementById('wellnessChart'), d.labels,
+        [{ label: 'Average wellness score (1 to 5)', data: d.wellness.map(function (v) { return v ? v : null; }) }],
+        { yMin: 0, yMax: 5, yTitle: 'Score' });
 });

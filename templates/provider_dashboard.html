@@ -1,332 +1,260 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
 
-{% block title %}Provider Dashboard - Mindful Horizon{% endblock %}
+{% block title %}Provider dashboard - Mindful Horizon{% endblock %}
+
+{% macro stat(label, value, note='') %}
+<div class="stat">
+    <div class="stat-label">{{ label }}</div>
+    <div class="stat-value">{{ value }}</div>
+    {% if note %}<div class="stat-note">{{ note }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% block legacy_head %}{% endblock %}
+{% block legacy_scripts %}
+<script nonce="{{ g.csp_nonce }}" src="https://cdn.socket.io/4.7.4/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_2.js') }}"></script>
+{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto" id="provider-config"
+{% set bi = bi_data or {} %}
+{# Groups under 5 students are never shown, even if the server sent numbers. #}
+{% set hidden = bi.aggregates_hidden or bi.total_patients is none or bi.total_patients < 5 %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/provider.css') }}">
+<div class="container" id="provider-config"
      data-appointments-url="{{ url_for('provider.provider_appointments') }}"
      data-accept-url="{{ url_for('provider.accept_appointment', appointment_id=0) }}"
      data-reject-url="{{ url_for('provider.reject_appointment', appointment_id=0) }}"
+     data-complete-url="{{ url_for('provider.accept_appointment', appointment_id=0)|replace('/accept/', '/complete/') }}"
+     data-cancel-url="{{ url_for('provider.accept_appointment', appointment_id=0)|replace('/accept/', '/cancel/') }}"
      data-report-url="{{ url_for('provider.wellness_report', user_id=0) }}"
      data-message-url="{{ url_for('api_message') }}">
+
     {% if crisis_events %}
-    <section class="mb-6 border-l-4 border-red-600 bg-red-50 p-4 rounded" role="alert" aria-labelledby="crisis-heading">
-        <h2 id="crisis-heading" class="text-lg font-bold text-red-800 mb-2">
-            <i class="fas fa-exclamation-circle mr-2" aria-hidden="true"></i>Crisis alerts needing follow-up ({{ crisis_events|length }})
-        </h2>
-        <ul class="space-y-2">
+    <section class="alert alert-danger" role="alert" aria-labelledby="crisis-heading">
+        {{ icon('alert') }}
+        <div>
+        <h2 id="crisis-heading" class="text-lg">{{ crisis_events|length }} crisis alert{{ '' if crisis_events|length == 1 else 's' }} to follow up</h2>
+        <p>Contact the student and acknowledge the alert once you have followed up. Alert details show the source and severity only.</p>
+        <ul class="pv-crisis-list">
             {% for ev in crisis_events %}
-            <li class="flex flex-wrap items-center justify-between gap-2 bg-white rounded p-3 border border-red-200">
-                <span class="text-sm text-gray-800">
-                    <a class="font-semibold text-red-700 underline" href="{{ url_for('provider.wellness_report', user_id=ev.user_id) }}">{{ ev.name }}</a>
-                    &middot; {{ ev.source }} &middot; severity {{ ev.severity }}{% if ev.reason %} &middot; {{ ev.reason }}{% endif %}
-                    &middot; <span class="text-gray-500">{{ ev.created_at }} UTC</span>
+            <li class="pv-crisis-item">
+                <span>
+                    {% if ev.can_view is not defined or ev.can_view %}
+                    <a href="{{ url_for('provider.wellness_report', user_id=ev.user_id) }}"><strong>{{ ev.name }}</strong></a>
+                    {% else %}
+                    <strong>{{ ev.name }}</strong>
+                    {% endif %}
+                    <span>, source: {{ ev.source }}, severity {{ ev.severity }}{% if ev.escalation_level %}, <span class="badge badge-danger">Escalation level {{ ev.escalation_level }}</span>{% endif %}, {{ ev.created_at }} UTC</span>
                 </span>
                 <form method="post" action="{{ url_for('provider.acknowledge_crisis', event_id=ev.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white text-sm font-medium px-3 py-1 rounded">Acknowledge</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Acknowledge alert</button>
                 </form>
             </li>
             {% endfor %}
         </ul>
+        </div>
     </section>
     {% endif %}
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Provider Dashboard</h1>
-        <p class="text-gray-600">Welcome back, {{ user_name|e }}. Manage your caseload and access tools.</p>
-    </div>
 
-    <!-- Business Intelligence Section -->
-    <div class="dashboard-grid mb-8 gap-6 grid md:grid-cols-2">
-        <div class="card border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-chart-bar text-blue-500 mr-2" aria-hidden="true"></i>Practice Analytics
-            </h3>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-blue-600">{{ (bi_data.patient_engagement ~ "%") if bi_data.patient_engagement is not none else "n/a" }}</div>
-                    <div class="text-sm text-gray-600">Patient Engagement</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-green-600">{{ (bi_data.avg_session_duration ~ " min") if bi_data.avg_session_duration is not none else "n/a" }}</div>
-                    <div class="text-sm text-gray-600">Avg Session Duration</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-purple-600">{{ (bi_data.completion_rate ~ "%") if bi_data.completion_rate is not none else "n/a" }}</div>
-                    <div class="text-sm text-gray-600">Treatment Completion</div>
-                </div>
-                <div class="text-center">
-                    <div class="text-2xl font-bold text-yellow-600">{{ (bi_data.satisfaction_score ~ "/5") if bi_data.satisfaction_score is not none else "n/a" }}</div>
-                    <div class="text-sm text-gray-600">Patient Satisfaction</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-robot text-purple-500 mr-2" aria-hidden="true"></i>AI Tools & Analytics
-            </h3>
-            <div class="space-y-3">
-                <a href="{{ url_for('provider.ai_documentation') }}" class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 text-center">
-                    <i class="fas fa-file-medical-alt mr-2" aria-hidden="true"></i>AI Documentation
-                </a>
-                <a href="{{ url_for('provider.analytics') }}" class="block w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 text-center">
-                    <i class="fas fa-chart-line mr-2" aria-hidden="true"></i>Advanced Analytics
-                </a>
-                <p class="text-sm text-gray-600 text-center">AI-powered insights and institutional analytics</p>
-            </div>
+    <div class="page-header">
+        <h1>Provider dashboard</h1>
+        <p class="lead">Signed in as {{ user_name }}. You see the students assigned to you, plus summary figures for {{ institution or 'your institution' }}.</p>
+        <div class="page-actions">
+            <a href="{{ url_for('provider.analytics') }}" class="btn btn-secondary">{{ icon('chart') }} Analytics</a>
+            <a href="{{ url_for('provider.ai_documentation') }}" class="btn btn-secondary">{{ icon('file') }} Session notes</a>
         </div>
     </div>
 
-    <!-- Search, Filters and Tasks -->
-    <div class="grid md:grid-cols-3 gap-6 mb-6">
-        <div class="col-span-2">
-            <form method="get" action="{{ url_for('provider.provider_dashboard') }}" class="flex items-center space-x-3">
-                <input type="text" name="q" value="{{ search_q|default('') }}" placeholder="Search patients, email..." class="w-2/3 px-4 py-2 border border-gray-200 rounded-md focus:outline-none" />
-                <select name="risk" class="px-3 py-2 border border-gray-200 rounded-md">
-                    <option value="">All Risks</option>
-                    <option value="High" {% if filter_risk == 'High' %}selected{% endif %}>High</option>
-                    <option value="Medium" {% if filter_risk == 'Medium' %}selected{% endif %}>Medium</option>
-                    <option value="Low" {% if filter_risk == 'Low' %}selected{% endif %}>Low</option>
-                </select>
-                <button type="submit" class="btn-primary">Filter</button>
-                <a href="{{ url_for('provider.provider_dashboard') }}" class="text-sm text-gray-500 ml-2">Reset</a>
-            </form>
-        </div>
+    {% if rx_section %}{% include 'provider_rx/_dashboard_section.html' %}{% endif %}
 
-        <div>
-            <div class="card border border-gray-200 rounded-lg p-4 shadow-sm bg-white">
-                <h4 class="font-semibold mb-3">Tasks</h4>
+    <section class="section" aria-labelledby="summary-heading">
+        <h2 id="summary-heading" class="sr-only">Institution summary</h2>
+        {% if hidden %}
+        <div class="alert alert-info" role="status">{{ icon('info') }}<p>Too few students to show. Summary figures appear once at least 5 students at your institution have joined.</p></div>
+        {% endif %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {{ stat('Students', 'n/a' if hidden else bi.total_patients, 'Registered at your institution') }}
+            {{ stat('Active in 7 days', 'n/a' if hidden or bi.patient_engagement is none else (bi.patient_engagement ~ '%'), 'Logged any activity') }}
+            {{ stat('Session completion', 'n/a' if hidden or bi.completion_rate is none else (bi.completion_rate ~ '%'), 'Completed of completed plus cancelled') }}
+            {{ stat('Average screen time', 'n/a' if hidden or bi.avg_screen_time is none else (bi.avg_screen_time ~ ' h/day'), 'Last 7 days') }}
+        </div>
+    </section>
+
+    <div id="pendingNotification" class="alert alert-warning" role="status" hidden>
+        {{ icon('bell') }}
+        <p>You have <strong id="pendingCount">0</strong> pending appointment request(s) waiting for a reply.</p>
+    </div>
+
+    <section class="card section" aria-labelledby="appointments-heading">
+        <div class="card-header flex flex-wrap items-center justify-between gap-2">
+            <h2 id="appointments-heading">Appointments</h2>
+            <button type="button" id="refresh-appointments-btn" class="btn btn-ghost btn-sm">{{ icon('activity') }} Refresh</button>
+        </div>
+        <div class="card-body">
+            <div class="flex flex-wrap gap-2 mb-4" role="group" aria-label="Filter appointments by status">
+                <button type="button" class="btn btn-secondary btn-sm pv-filter filter-btn filter-appointments-btn active" data-status="all" aria-pressed="true">All <span id="allCount">0</span></button>
+                <button type="button" class="btn btn-secondary btn-sm pv-filter filter-btn filter-appointments-btn" data-status="pending" aria-pressed="false">Pending <span id="pendingBadge">0</span></button>
+                <button type="button" class="btn btn-secondary btn-sm pv-filter filter-btn filter-appointments-btn" data-status="accepted" aria-pressed="false">Accepted <span id="acceptedCount">0</span></button>
+                <button type="button" class="btn btn-secondary btn-sm pv-filter filter-btn filter-appointments-btn" data-status="completed" aria-pressed="false">Completed <span id="completedCount">0</span></button>
+                <button type="button" class="btn btn-secondary btn-sm pv-filter filter-btn filter-appointments-btn" data-status="rejected" aria-pressed="false">Rejected <span id="rejectedCount">0</span></button>
+                <button type="button" class="btn btn-secondary btn-sm pv-filter filter-btn filter-appointments-btn" data-status="cancelled" aria-pressed="false">Cancelled <span id="cancelledCount">0</span></button>
+            </div>
+            <p id="appointmentsStatus" class="help" role="status" aria-live="polite"></p>
+            <div class="table-wrap">
+                <table class="table" id="appointmentsTable">
+                    <caption class="sr-only">Appointment requests and sessions</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Student</th>
+                            <th scope="col">Date and time</th>
+                            <th scope="col">Type and notes</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="appointmentsBody">
+                        <tr><td colspan="5">Loading appointments</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+        <section class="card lg:col-span-2" aria-labelledby="caseload-heading">
+            <div class="card-header"><h2 id="caseload-heading">Assigned students</h2></div>
+            <div class="card-body">
+                <form method="get" action="{{ url_for('provider.provider_dashboard') }}" class="flex flex-wrap items-end gap-3 mb-4" id="caseloadFilter">
+                    <div class="field">
+                        <label class="label" for="caseloadSearch">Search by name or email</label>
+                        <input type="search" class="input" id="caseloadSearch" name="q" value="{{ search_q|default('') }}" autocomplete="off">
+                    </div>
+                    <div class="field">
+                        <label class="label" for="caseloadRisk">Risk level</label>
+                        <select class="select" id="caseloadRisk" name="risk">
+                            <option value="">All</option>
+                            <option value="High" {% if filter_risk == 'High' %}selected{% endif %}>High</option>
+                            <option value="Medium" {% if filter_risk == 'Medium' %}selected{% endif %}>Medium</option>
+                            <option value="Low" {% if filter_risk == 'Low' %}selected{% endif %}>Low</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                    <a href="{{ url_for('provider.provider_dashboard') }}" class="btn btn-ghost">Reset</a>
+                </form>
+                <p class="help">Risk level comes from the latest PHQ-9 and GAD-7 scores and open crisis alerts. It is a screening signal, not a diagnosis. Inactive means no digital wellness log in the last 7 days.</p>
+
+                {% if caseload %}
+                <div class="table-wrap">
+                    <table class="table" id="caseloadTable">
+                        <caption class="sr-only">Students assigned to you</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Student</th>
+                                <th scope="col">Risk</th>
+                                <th scope="col">Last session</th>
+                                <th scope="col">Activity</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for patient in caseload %}
+                            <tr data-risk-name="{{ patient.name }}" data-risk="{{ patient.risk_level }}" data-email="{{ patient.email }}">
+                                <th scope="row">{{ patient.name }}{% if patient.has_rx %} <span class="badge badge-info" title="Has an active prescription">Rx</span>{% endif %}</th>
+                                <td><span class="badge {{ 'badge-danger' if patient.risk_level == 'High' else 'badge-warning' if patient.risk_level == 'Medium' else 'badge-success' }}">{{ patient.risk_level }}</span></td>
+                                <td>{{ patient.last_session }}</td>
+                                <td><span class="badge {{ 'badge-neutral' if patient.status == 'Inactive' else 'badge-success' }}">{{ patient.status }}</span></td>
+                                <td>
+                                    <div class="flex flex-wrap gap-2">
+                                        <a href="{{ url_for('provider.wellness_report', user_id=patient.user_id) }}" class="btn btn-secondary btn-sm" aria-label="Wellness report for {{ patient.name }}">Report</a>
+                                        <button type="button" class="btn btn-secondary btn-sm open-message-btn" data-patient-id="{{ patient.user_id }}" data-patient-name="{{ patient.name }}" aria-label="Message {{ patient.name }}">Message</button>
+                                        <a href="{{ url_for('provider.telehealth_session', user_id=patient.user_id) }}" class="btn btn-secondary btn-sm" aria-label="Start a video session with {{ patient.name }}">Video</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div id="caseloadNoMatch" class="empty-state" hidden>
+                    {{ icon('search') }}
+                    <h3>No students match</h3>
+                    <p>Change the search or the risk level.</p>
+                </div>
+                {% elif search_q or filter_risk %}
+                <div class="empty-state">
+                    {{ icon('search') }}
+                    <h3>No students match these filters</h3>
+                    <p>Change the search or the risk level, or reset the filters.</p>
+                    <a href="{{ url_for('provider.provider_dashboard') }}" class="btn btn-secondary">Reset filters</a>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    {{ icon('users') }}
+                    <h3>No patients assigned yet</h3>
+                    <p>Students appear here after they book a session with you.</p>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="card" aria-labelledby="tasks-heading">
+            <div class="card-header"><h2 id="tasks-heading">Tasks</h2></div>
+            <div class="card-body">
                 {% if tasks %}
-                <ul class="space-y-2 text-sm">
+                <ul class="space-y-3">
                     {% for t in tasks[:5] %}
-                    <li class="flex justify-between items-center">
+                    <li class="flex items-start justify-between gap-2">
                         <span>{{ t.title }}</span>
-                        <div class="flex items-center space-x-2">
-                            {% if t.type == 'appointment' %}
-                            <a href="{{ url_for('provider.provider_dashboard') }}#appointmentsTable" title="Open appointments" aria-label="Open appointments" class="text-indigo-600"><i class="fas fa-calendar-alt" aria-hidden="true"></i></a>
-                            {% else %}
-                            <a href="{{ url_for('provider.wellness_report', user_id=t.patient_id) }}" title="Open patient report" aria-label="Open patient report" class="text-indigo-600"><i class="fas fa-envelope" aria-hidden="true"></i></a>
-                            {% endif %}
-                        </div>
+                        {% if t.type == 'appointment' %}
+                        <a href="{{ url_for('provider.provider_dashboard') }}#appointmentsTable" class="btn btn-ghost btn-sm">Open appointments</a>
+                        {% else %}
+                        <a href="{{ url_for('provider.wellness_report', user_id=t.patient_id) }}" class="btn btn-ghost btn-sm">Open report</a>
+                        {% endif %}
                     </li>
                     {% endfor %}
                 </ul>
                 {% else %}
-                <p class="text-sm text-gray-500">No pending tasks.</p>
+                <div class="empty-state">
+                    {{ icon('check') }}
+                    <h3>No pending tasks</h3>
+                    <p>Follow-ups for finished sessions and inactive students appear here.</p>
+                </div>
                 {% endif %}
             </div>
-        </div>
-    </div>
-
-    <!-- Pending Appointments Notification -->
-    <div id="pendingNotification" class="hidden bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <i class="fas fa-exclamation-triangle text-yellow-400 text-xl" aria-hidden="true"></i>
-            </div>
-            <div class="ml-3">
-                <p class="text-sm text-yellow-700">
-                    <span class="font-medium">New Appointment Requests!</span>
-                    You have <span id="pendingCount" class="font-bold">0</span> pending appointment(s) that need your attention.
-                </p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Appointment Management -->
-    <div class="card border border-gray-200 rounded-lg p-6 mb-8 bg-white">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-xl font-semibold text-gray-800">
-                <i class="fas fa-calendar-check text-blue-500 mr-2" aria-hidden="true"></i>Appointment Management
-            </h3>
-            <button id="refresh-appointments-btn" class="text-blue-600 hover:text-blue-800 text-sm">
-                <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>Refresh
-            </button>
-        </div>
-        
-        <!-- Filter Buttons -->
-        <div class="flex space-x-2 mb-4">
-            <button class="filter-btn active filter-appointments-btn" data-status="all">
-                All <span id="allCount" class="ml-1 px-2 py-1 bg-gray-200 text-xs rounded-full">0</span>
-            </button>
-            <button class="filter-btn filter-appointments-btn" data-status="pending">
-                Pending <span id="pendingBadge" class="ml-1 px-2 py-1 bg-yellow-200 text-xs rounded-full">0</span>
-            </button>
-            <button class="filter-btn filter-appointments-btn" data-status="accepted">
-                Accepted <span id="acceptedCount" class="ml-1 px-2 py-1 bg-green-200 text-xs rounded-full">0</span>
-            </button>
-            <button class="filter-btn filter-appointments-btn" data-status="rejected">
-                Rejected <span id="rejectedCount" class="ml-1 px-2 py-1 bg-red-200 text-xs rounded-full">0</span>
-            </button>
-        </div>
-        
-        <!-- Appointments Table -->
-        <div class="overflow-x-auto">
-            <table class="w-full table-auto border-collapse" id="appointmentsTable">
-                <thead>
-                    <tr class="bg-gray-50">
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Patient & Health Status</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Date & Time</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Type & Notes</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="appointmentsBody">
-                    <!-- Appointments will be loaded here -->
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Caseload Management -->
-    <div class="card border border-gray-200 rounded-lg p-6 mb-8 bg-white">
-        <h3 class="text-xl font-semibold mb-4 text-gray-800">
-            <i class="fas fa-users text-green-500 mr-2" aria-hidden="true"></i>Patient Caseload
-        </h3>
-        <div class="overflow-x-auto">
-            <table class="w-full table-auto border-collapse">
-                <thead>
-                    <tr class="bg-gray-50">
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Patient Name</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Risk</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Last Session</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Status</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    {% for patient in caseload %}
-                    <tr class="hover:bg-gray-50" data-risk-name="{{ patient.name }}" data-risk="{{ patient.risk_level }}">
-                        <td class="px-4 py-3 text-sm font-medium text-gray-900">{{ patient.name|e }}</td>
-                        <td class="px-4 py-3 text-sm">
-                            <span class="px-2 py-1 rounded-full text-xs font-medium
-                                {% if patient.risk_level == 'High' %}bg-red-100 text-red-800
-                                {% elif patient.risk_level == 'Medium' %}bg-yellow-100 text-yellow-800
-                                {% else %}bg-green-100 text-green-800{% endif %}">
-                                {{ patient.risk_level|e }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-sm text-gray-700">{{ patient.last_session|e }}</td>
-                        <td class="px-4 py-3 text-sm">
-                            <span class="px-2 py-1 rounded-full text-xs font-medium
-                                {% if patient.status == 'Inactive' %}bg-red-100 text-red-800
-                                {% else %}bg-green-100 text-green-800{% endif %}">
-                                {{ patient.status|e }}
-                            </span>
-                        </td>
-                        <td class="px-4 py-3 text-sm">
-                            <a href="{{ url_for('provider.wellness_report', user_id=patient.user_id) }}" class="text-blue-600 hover:text-blue-800 mr-2" title="View Wellness Report" aria-label="View wellness report for {{ patient.name }}">
-                                <i class="fas fa-chart-bar" aria-hidden="true"></i>
-                            </a>
-                            <a href="#" class="text-indigo-600 hover:text-indigo-800 mr-2 open-message-btn" data-patient-id="{{ patient.user_id }}" title="Message Patient" aria-label="Message {{ patient.name }}">
-                                <i class="fas fa-envelope" aria-hidden="true"></i>
-                            </a>
-                            <a href="{{ url_for('provider.telehealth_session', user_id=patient.user_id) }}" class="text-purple-600 hover:text-purple-800" title="Start Telehealth" aria-label="Start telehealth with {{ patient.name }}">
-                                <i class="fas fa-video" aria-hidden="true"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-    <!-- Digital therapeutics -->
-    <div class="dashboard-grid gap-6 grid">
-        <div class="card border border-gray-200 rounded-lg p-6 shadow-sm bg-white">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-mobile-alt text-purple-500 mr-2" aria-hidden="true"></i>Digital Therapeutics (DTx)
-            </h3>
-            <p class="text-gray-600 mb-4">
-                Evidence-based digital interventions that complement traditional therapy approaches 
-                with personalized, scalable mental health solutions.
-            </p>
-            <ul class="text-sm text-gray-600 space-y-2">
-                <li><i class="fas fa-brain text-blue-500 mr-2" aria-hidden="true"></i>Cognitive Behavioral Therapy Modules</li>
-                <li><i class="fas fa-heart text-red-500 mr-2" aria-hidden="true"></i>Mindfulness & Meditation Programs</li>
-                <li><i class="fas fa-chart-line text-green-500 mr-2" aria-hidden="true"></i>Progress Tracking & Analytics</li>
-                <li><i class="fas fa-bell text-yellow-500 mr-2" aria-hidden="true"></i>Personalized Intervention Triggers</li>
-            </ul>
-        </div>
+        </section>
     </div>
 </div>
 
-<!-- Patient Details Modal -->
-<div id="patientDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-    <div class="relative top-10 mx-auto p-5 border w-4/5 max-w-4xl shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <div class="flex justify-between items-center mb-4">
-                <h3 class="text-lg font-medium text-gray-900">Patient Health Report</h3>
-                <button id="hide-patient-details-btn" class="text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-times text-xl" aria-hidden="true"></i>
-                </button>
-            </div>
-            <div id="patientDetailsContent">
-                <!-- Patient details will be loaded here -->
-            </div>
-        </div>
+<dialog id="rejectionModal" class="pv-dialog" aria-labelledby="rejectionTitle">
+    <h2 id="rejectionTitle" class="text-lg">Reject this appointment</h2>
+    <p class="help">The student sees your reason. Say what they can do next, for example book another time.</p>
+    <div class="field">
+        <label class="label" for="rejectionReason">Reason</label>
+        <textarea id="rejectionReason" class="textarea" rows="4" aria-describedby="rejectionError"></textarea>
+        <p id="rejectionError" class="error-text" hidden>Enter a reason before rejecting.</p>
     </div>
-</div>
-
-<!-- Rejection Modal -->
-<div id="rejectionModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3 text-center">
-            <h3 class="text-lg font-medium text-gray-900">Reject Appointment</h3>
-            <div class="mt-2 px-7 py-3">
-                <p class="text-sm text-gray-500">Please provide a reason for rejecting this appointment:</p>
-                <textarea id="rejectionReason" class="mt-3 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" placeholder="Enter rejection reason..."></textarea>
-            </div>
-            <div class="items-center px-4 py-3">
-                <button id="confirmReject" class="px-4 py-2 bg-red-500 text-white text-base font-medium rounded-md w-24 mr-2 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300">
-                    Reject
-                </button>
-                <button id="cancelReject" class="px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-24 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                    Cancel
-                </button>
-            </div>
-        </div>
+    <div class="flex flex-wrap justify-end gap-2 mt-4">
+        <button type="button" id="cancelReject" class="btn btn-ghost">Cancel</button>
+        <button type="button" id="confirmReject" class="btn btn-danger">Reject appointment</button>
     </div>
-</div>
+</dialog>
 
-{% endblock %}
+<dialog id="messageDialog" class="pv-dialog" aria-labelledby="messageTitle">
+    <h2 id="messageTitle" class="text-lg">Send a message</h2>
+    <p class="help" id="messageTo"></p>
+    <div class="field">
+        <label class="label" for="messageText">Message</label>
+        <textarea id="messageText" class="textarea" rows="4" maxlength="1000"></textarea>
+        <p id="messageError" class="error-text" hidden>Enter a message before sending.</p>
+    </div>
+    <div class="flex flex-wrap justify-end gap-2 mt-4">
+        <button type="button" id="cancelMessage" class="btn btn-ghost">Cancel</button>
+        <button type="button" id="sendMessage" class="btn btn-primary">Send message</button>
+    </div>
+</dialog>
 
-{% block extra_scripts %}
-{{ super() }}
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/provider_dashboard.js') }}"></script>
-
-<style>
-.filter-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: #374151;
-    background-color: white;
-    border: 1px solid #d1d5db;
-    border-radius: 0.375rem;
-    transition: all 0.2s;
-}
-
-.filter-btn:hover {
-    background-color: #f9fafb;
-}
-
-.filter-btn:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px #3b82f6;
-}
-
-.filter-btn.active {
-    background-color: #2563eb;
-    color: white;
-    border-color: #2563eb;
-}
-
-.filter-btn.active:hover {
-    background-color: #1d4ed8;
-}
-</style>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/provider_dashboard.js') }}" defer></script>
 {% endblock %}

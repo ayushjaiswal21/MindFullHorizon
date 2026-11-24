@@ -1,0 +1,105 @@
+{% extends 'provider_rx/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_rx/_ui.html' import notice, config_block, ts, status_badge %}
+{% block title %}Prescription {{ rx.number or 'draft' }}{% endblock %}
+
+{% macro listed(status, text) %}{{ text if status == 'listed' and text else ('None reported' if status == 'none_reported' else 'Not recorded') }}{% endmacro %}
+
+{% block rx_body %}
+{% set base = nav_url('provider.rx_list', '/provider/prescriptions') %}
+{% set st = rx.effective_status or rx.status %}
+{% set urls = {
+  'cancel': nav_url('provider.rx_api_list', '/provider/api/rx/prescriptions') ~ '/' ~ rx.id ~ '/cancel',
+  'amend': nav_url('provider.rx_api_list', '/provider/api/rx/prescriptions') ~ '/' ~ rx.id ~ '/amend',
+  'prescribe': nav_url('provider.rx_prescribe', '/provider/prescribe'), 'list': base
+} %}
+{% for k in urls.keys()|list %}{% if config and config.get(k) %}{% set _ = urls.update({k: config.get(k)}) %}{% endif %}{% endfor %}
+<div class="page-header">
+  <div>
+    <h1>{% if rx.number %}Prescription <span class="cl-mono">{{ rx.number }}</span>{% else %}Draft prescription{% endif %}</h1>
+    <p class="lead">{{ status_badge(st) }} For {{ rx.patient.name if rx.patient else rx.patient_name }}. Issued prescriptions cannot be edited.</p>
+  </div>
+  <div class="page-actions">
+    {% if rx.number %}<a class="btn btn-secondary" href="{{ base }}/{{ rx.id }}/print">{{ icon('file') }} Print</a>{% endif %}
+    {% if can_amend %}<button type="button" class="btn btn-secondary" id="rd-amend">{{ icon('edit') }} Write a corrected prescription</button>{% endif %}
+    {% if can_cancel %}<button type="button" class="btn btn-danger" id="rd-cancel">Cancel prescription</button>{% endif %}
+    <a class="btn btn-ghost" href="{{ base }}">All prescriptions</a>
+  </div>
+</div>
+{{ notice() }}
+<p id="rd-status" class="sr-only" role="status" aria-live="polite"></p>
+<div class="alert alert-danger" id="rd-alert" role="alert" hidden>{{ icon('alert') }}<p id="rd-alert-text"></p></div>
+
+{% if st == 'cancelled' %}<div class="alert alert-danger" role="status">{{ icon('x') }}<p>This prescription was cancelled{% if rx.cancelled_at %} on {{ ts(rx.cancelled_at) }}{% endif %}. The patient and the pharmacy desk see it as cancelled.</p></div>
+{% elif st == 'expired' %}<div class="alert alert-warning" role="status">{{ icon('clock') }}<p>This prescription has expired and cannot be collected.</p></div>{% endif %}
+
+<div class="cl-split cl-block">
+  <section class="card" aria-labelledby="rd-h1">
+    <div class="card-header"><h2 id="rd-h1">Prescription</h2></div>
+    <div class="card-body">
+      <dl class="cl-dl">
+        <dt>Patient</dt><dd>{{ rx.patient.name if rx.patient else rx.patient_name }}</dd>
+        <dt>Diagnosis</dt><dd>{{ rx.diagnosis or 'n/a' }}</dd>
+        <dt>Allergies</dt><dd>{{ listed(rx.allergies_status, rx.allergies) }}</dd>
+        <dt>Current medicines</dt><dd>{{ listed(rx.current_meds_status, rx.current_meds) }}</dd>
+        <dt>Issued</dt><dd>{{ ts(rx.issued_at) }}</dd>
+        <dt>Valid until</dt><dd>{{ ts(rx.valid_until) }}</dd>
+        <dt>Collection</dt><dd>{{ {'none': 'Not collected', 'partial': 'Partly collected', 'complete': 'Collected'}.get(rx.collection, 'n/a') }}</dd>
+      </dl>
+    </div>
+  </section>
+  <section class="card" aria-labelledby="rd-h2">
+    <div class="card-header"><h2 id="rd-h2">Timeline</h2></div>
+    <div class="card-body">
+      <ol class="cl-timeline">
+        <li>Issued: {{ ts(rx.issued_at) }}</li>
+        <li>Sent to the pharmacy desk by the patient: {% if rx.dispense_requested_at %}{{ ts(rx.dispense_requested_at) }}{% else %}not yet{% endif %}</li>
+        <li>Collection: {{ {'none': 'not collected', 'partial': 'partly collected', 'complete': 'collected'}.get(rx.collection, 'n/a') }}</li>
+        {% if st == 'cancelled' %}<li>Cancelled{% if rx.cancelled_at %}: {{ ts(rx.cancelled_at) }}{% endif %}</li>{% endif %}
+      </ol>
+    </div>
+  </section>
+</div>
+
+<section class="card cl-block" aria-labelledby="rd-h3">
+  <div class="card-header"><h2 id="rd-h3">Medicines</h2></div>
+  <div class="card-body">
+    {% if rx["items"] %}
+    <div class="table-wrap"><table class="table">
+      <caption class="sr-only">Medicines on this prescription</caption>
+      <thead><tr><th scope="col">Medicine</th><th scope="col">Dose</th><th scope="col">Frequency</th><th scope="col">Days</th><th scope="col" class="cl-right">Collected</th><th scope="col">Instructions</th></tr></thead>
+      <tbody>
+        {% for i in rx["items"] %}
+        <tr><th scope="row">{{ i.medicine_label }}</th><td>{{ i.dose_text }}</td><td>{{ i.frequency }}</td><td>{{ i.duration_days }}</td>
+          <td class="cl-right">{{ i.quantity_dispensed or 0 }} of {{ i.quantity }}</td><td>{{ i.instructions or 'n/a' }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table></div>
+    {% else %}
+    <div class="empty-state">{{ icon('pill') }}<h3 class="empty-state-title">No medicines on this prescription</h3></div>
+    {% endif %}
+  </div>
+</section>
+
+<dialog class="cl-dialog" id="rd-dialog" aria-labelledby="rd-dialog-h">
+  <h2 id="rd-dialog-h">Cancel this prescription?</h2>
+  <p>The patient and the pharmacy desk will see it as cancelled.{% if st == 'partially_dispensed' %} Only what has not been collected is cancelled.{% endif %}</p>
+  <div class="field">
+    <label class="label" for="rd-reason">Reason</label>
+    <select class="select" id="rd-reason">
+      <option value="error">Error in the prescription</option>
+      <option value="patient_request">Patient request</option>
+      <option value="clinical_change">Clinical change</option>
+    </select>
+  </div>
+  <div class="cl-row cl-row-end">
+    <button type="button" class="btn btn-secondary" id="rd-dialog-close">Keep prescription</button>
+    <button type="button" class="btn btn-danger" id="rd-dialog-ok">Cancel prescription</button>
+  </div>
+</dialog>
+{{ config_block(urls, {'id': rx.id}) }}
+{% endblock %}
+
+{% block page_scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/rx_detail.js') }}?v={{ asset_version }}" defer></script>
+{% endblock %}

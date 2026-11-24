@@ -1,358 +1,276 @@
-<!DOCTYPE html>
-<html lang="en" class="scroll-smooth" data-nonce="{{ g.csp_nonce }}">
-<head>
-    <meta charset="UTF-8">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="description" content="MindFullHorizon - Your personal path to mental wellness with AI-powered tools, progress tracking, and professional support">
-    <meta name="keywords" content="mental health, wellness, AI therapy, progress tracking, telehealth, mindfulness">
-    <meta name="author" content="MindFullHorizon Team">
-    <meta property="og:title" content="MindFullHorizon - Mental Wellness Platform">
-    <meta property="og:description" content="AI-powered mental health companion with progress tracking and professional support">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="{{ request.url }}">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="MindFullHorizon - Mental Wellness Platform">
-    <meta name="twitter:description" content="AI-powered mental health companion with progress tracking and professional support">
-    <meta name="theme-color" content="#667eea">
-    <meta name="msapplication-TileColor" content="#667eea">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="format-detection" content="telephone=no">
-
-    <!-- Preload critical resources -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="dns-prefetch" href="//translate.google.com">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" as="style">
-
-    <title>{% block title %}Mindful Horizon - Mental Wellness Platform{% endblock %}</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    
-
-    <!-- Fonts with display swap for performance -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-
-    <!-- Advanced CSS with modern features -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    
-    <!-- Preload Font Awesome with fallback -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
-    
-    <!-- Local CSS -->
-    {% assets "css_all" %}
-    <link rel="stylesheet" href="{{ ASSET_URL }}">
-    {% endassets %}
-
-    <!-- Advanced meta tags for better performance -->
-    
-    <meta name="application-name" content="MindFullHorizon">
-    <meta name="apple-mobile-web-app-title" content="MindFullHorizon">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="mobile-web-app-capable" content="yes">
-
-    {% block extra_head %}{% endblock %}
-</head>
-
-{% from '_macros.html' import back_to_dashboard_button %}
-<body class="advanced-ui antialiased text-gray-900 bg-gradient-to-br from-white via-blue-50 to-purple-50 min-h-screen">
-    <!-- Skip to main content link for accessibility -->
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-    <!-- Advanced Navigation with Blue Gradient -->
-    <nav class="advanced-nav fixed top-0 left-0 w-full z-50 backdrop-blur-xl bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400 border-b border-blue-300 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <!-- Logo with Advanced Styling -->
-                <div class="flex-shrink-0">
-                    {% if session.user_email %}
-                        {% if session.user_role == 'patient' %}
-                            <a href="{{ url_for('patient.patient_dashboard') }}" class="advanced-logo group">
-                                <div class="logo-icon-container">
-                                    <i class="fas fa-brain logo-icon" aria-hidden="true"></i>
-                                </div>
-                                <span class="logo-text">MindFull<span class="text-blue-600">Horizon</span></span>
-                            </a>
-                        {% else %}
-                            <a href="{{ url_for('provider.provider_dashboard') }}" class="advanced-logo group">
-                                <div class="logo-icon-container">
-                                    <i class="fas fa-brain logo-icon"></i>
-                                </div>
-                                <span class="logo-text">MindFull<span class="text-blue-600">Horizon</span></span>
-                            </a>
-                        {% endif %}
-                    {% else %}
-                        <a href="{{ url_for('core.index') }}" class="advanced-logo group">
-                            <div class="logo-icon-container">
-                                <i class="fas fa-brain logo-icon"></i>
-                            </div>
-                            <span class="logo-text">MindFull<span class="text-blue-600">Horizon</span></span>
-                        </a>
-                    {% endif %}
-                </div>
-
-                <!-- Advanced Navigation Menu -->
-                <div class="hidden md:block">
-                    <div class="ml-10 flex items-baseline space-x-1">
-                        {% if session.user_email %}
-                            {% if session.user_role == 'patient' %}
-                                <a href="{{ url_for('patient.medication') }}" class="nav-link-item">
-                                    <i class="fas fa-pills nav-icon" aria-hidden="true"></i>
-                                    <span>Medications</span>
-                                </a>
-                                <a href="{{ url_for('patient.breathing') }}" class="nav-link-item">
-                                    <i class="fas fa-wind nav-icon" aria-hidden="true"></i>
-                                    <span>Breathe</span>
-                                </a>
-                                <a href="{{ url_for('patient.yoga') }}" class="nav-link-item">
-                                    <i class="fas fa-child nav-icon" aria-hidden="true"></i>
-                                    <span>Yoga</span>
-                                </a>
-                                <a href="{{ url_for('music') }}" class="nav-link-item">
-                                    <i class="fas fa-music nav-icon" aria-hidden="true"></i>
-                                    <span>Music</span>
-                                </a>
-                            {% endif %}
-                            <a href="{{ url_for('blog.blog_list') }}" class="nav-link-item">
-                                <i class="fas fa-blog nav-icon" aria-hidden="true"></i>
-                                <span>Blog</span>
-                            </a>
-
-                            <!-- Google Translate Element -->
-                            <div id="google_translate_element"></div>
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_1.js') }}"></script>
-<script nonce="{{ g.csp_nonce }}" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
-                            <!-- User Menu with Advanced Dropdown -->
-                            <div class="relative user-menu-container">
-                                <button id="user-menu-btn" class="user-menu-btn">
-                                    <div class="user-avatar">
-                                        {{ session.user_name[0].upper() if session.user_name else 'U' }}
-                                    </div>
-                                    <span class="user-name">{{ session.user_name or 'User' }}</span>
-                                    <i class="fas fa-chevron-down transition-transform duration-200" aria-hidden="true"></i>
-                                </button>
-                                <div id="user-menu" class="user-menu-dropdown">
-                                    <div class="user-menu-header">
-                                        <div class="user-avatar-large">
-                                            {{ session.user_name[0].upper() if session.user_name else 'U' }}
-                                        </div>
-                                        <div>
-                                            <div class="user-name-large">{{ session.user_name or 'User' }}</div>
-                                            <div class="user-email">{{ session.user_email }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="user-menu-divider"></div>
-                                    <a href="{{ url_for('profile') }}" class="user-menu-item">
-                                        <i class="fas fa-user" aria-hidden="true"></i>
-                                        <span>Profile Settings</span>
-                                    </a>
-                                    <a href="{{ url_for('patient.progress') }}" class="user-menu-item">
-                                        <i class="fas fa-chart-line" aria-hidden="true"></i>
-                                        <span>Progress Report</span>
-                                    </a>
-                                    <a href="{{ url_for('auth.logout') }}" class="user-menu-item">
-                                        <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
-                                        <span>Sign Out</span>
-                                    </a>
-                                </div>
-                            </div>
-                        {% else %}
-                            <a href="{{ url_for('blog.blog_list') }}" class="nav-link-item">
-                                <i class="fas fa-blog nav-icon"></i>
-                                <span>Blog</span>
-                            </a>
-                            <a href="{{ url_for('auth.login') }}" class="nav-link-item-secondary">Login</a>
-                            <a href="{{ url_for('auth.signup') }}" class="advanced-cta-btn">
-                                <span>Get Started</span>
-                                <i class="fas fa-rocket ml-2" aria-hidden="true"></i>
-                            </a>
-                        {% endif %}
-                    </div>
-                </div>
-
-                <!-- Mobile menu button -->
-                <div class="md:hidden">
-                    <button id="mobile-menu-btn" type="button" class="mobile-menu-btn">
-                        <span class="sr-only">Open main menu</span>
-                        <div class="hamburger">
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mobile menu -->
-        <div id="mobile-menu" class="mobile-menu">
-            <div class="mobile-menu-content bg-gradient-to-r from-blue-600 via-blue-500 to-blue-400">
-                {% if session.user_email %}
-                    {% if session.user_role == 'patient' %}
-                        <a href="{{ url_for('patient.medication') }}" class="mobile-menu-item">
-                            <i class="fas fa-pills" aria-hidden="true"></i>
-                            <span>Medications</span>
-                        </a>
-                        <a href="{{ url_for('patient.breathing') }}" class="mobile-menu-item">
-                            <i class="fas fa-wind" aria-hidden="true"></i>
-                            <span>Breathe</span>
-                        </a>
-                        <a href="{{ url_for('patient.yoga') }}" class="mobile-menu-item">
-                            <i class="fas fa-child" aria-hidden="true"></i>
-                            <span>Yoga</span>
-                        </a>
-                        <a href="{{ url_for('music') }}" class="mobile-menu-item">
-                            <i class="fas fa-music" aria-hidden="true"></i>
-                            <span>Music</span>
-                        </a>
-                    {% endif %}
-                    <a href="{{ url_for('blog.blog_list') }}" class="mobile-menu-item">
-                        <i class="fas fa-blog" aria-hidden="true"></i>
-                        <span>Blog</span>
-                    </a>
-                    <div class="mobile-menu-divider"></div>
-                    <a href="{{ url_for('auth.logout') }}" class="mobile-menu-item text-red-600">
-                        <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
-                        <span>Sign Out</span>
-                    </a>
-                {% else %}
-                    <a href="{{ url_for('blog.blog_list') }}" class="mobile-menu-item">Blog</a>
-                    <a href="{{ url_for('auth.login') }}" class="mobile-menu-item">Login</a>
-                    <a href="{{ url_for('auth.signup') }}" class="mobile-menu-item advanced-cta-btn">
-                        <span>Get Started</span>
-                        <i class="fas fa-rocket ml-2"></i>
-                    </a>
-                {% endif %}
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content Area -->
-    <main id="main-content" class="main-content">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="message-container">
-                    {% for category, message in messages %}
-                        <div class="advanced-alert alert-{{ 'success' if category == 'success' else 'error' if category == 'error' else 'warning' if category == 'warning' else 'info' }}">
-                            <div class="alert-icon">
-                                <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' if category == 'error' else 'exclamation-triangle' if category == 'warning' else 'info-circle' }}"></i>
-                            </div>
-                            <div class="alert-content">
-                                <div class="alert-title">{{ category.title() if category else 'Notice' }}</div>
-                                <div class="alert-message">{{ message }}</div>
-                            </div>
-                            <button class="alert-close alert-close-btn">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
-
-        {% block content %}{% endblock %}
-    </main>
-
-    <!-- Advanced Footer -->
-    <footer class="advanced-footer">
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3 class="footer-title">MindFullHorizon</h3>
-                <p class="footer-description">Your personal path to mental wellness with AI-powered tools and professional support.</p>
-                <div class="footer-social">
-                    <a href="#" class="social-link" aria-label="Facebook">
-                        <i class="fab fa-facebook-f"></i>
-                    </a>
-                    <a href="#" class="social-link" aria-label="Twitter">
-                        <i class="fab fa-twitter"></i>
-                    </a>
-                    <a href="#" class="social-link" aria-label="LinkedIn">
-                        <i class="fab fa-linkedin-in"></i>
-                    </a>
-                    <a href="#" class="social-link" aria-label="Instagram">
-                        <i class="fab fa-instagram"></i>
-                    </a>
-                </div>
-            </div>
-
-            <div class="footer-section">
-                <h4 class="footer-subtitle">Quick Links</h4>
-                <ul class="footer-links">
-                    <li><a href="{{ url_for('core.index') }}">Home</a></li>
-                    <li><a href="{{ url_for('blog.blog_list') }}">Blog</a></li>
-                    <li><a href="{{ url_for('auth.login') }}">Login</a></li>
-                    <li><a href="{{ url_for('auth.signup') }}">Sign Up</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h4 class="footer-subtitle">Support</h4>
-                <ul class="footer-links">
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Contact Us</a></li>
-                    <li><a href="#">Help Center</a></li>
-                </ul>
-            </div>
-
-            <div class="footer-section">
-                <h4 class="footer-subtitle">Resources</h4>
-                <ul class="footer-links">
-                    <li><a href="#">Mental Health Resources</a></li>
-                    <li><a href="tel:14416">Crisis Support (Tele-MANAS 14416)</a></li>
-                    <li><a href="#">Professional Help</a></li>
-                    <li><a href="#">Community Guidelines</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="footer-bottom">
-            <div class="footer-bottom-content">
-                <p>&copy; 2025 MindFullHorizon. All rights reserved.</p>
-                <p class="footer-made-with">
-                    Made with <i class="fas fa-heart text-red-500" aria-hidden="true"></i> for mental wellness
-                </p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Advanced Scroll to Top Button -->
-    <button id="scroll-to-top" class="scroll-to-top" aria-label="Scroll to top">
-        <i class="fas fa-chevron-up"></i>
-    </button>
-
-    <!-- Advanced Loading Overlay -->
-    <div id="loading-overlay" class="loading-overlay">
-        <div class="loading-content">
-            <div class="loading-spinner"></div>
-            <p class="loading-text">Loading your experience...</p>
-        </div>
+{#- Site shell. Contract: docs/DESIGN_SYSTEM.md ("Shell contract").
+    Blocks: title, meta_description, canonical, robots, og_image, breadcrumbs, head_extra, content, scripts.
+    Old names extra_head and extra_scripts still work (nested inside head_extra and scripts).
+    legacy_head and legacy_scripts carry the Font Awesome link, old page CSS, Socket.IO, Chart.js and the old page
+    bundles for templates that are not migrated yet. Empty both blocks (and delete them here) once no template
+    uses fa-* classes, io(), Chart or the old bundle.
+    To use a custom-domain logo: replace static/img/favicon.svg, favicon.ico, apple-touch-icon.png, icon-192.png,
+    icon-512.png and og-default.png/.webp (1200x630), and update the brand mark SVG in the header below. -#}
+{% from 'partials/icons.html' import icon %}
+{%- set role = session.get('user_role') if session.get('user_email') else None %}
+{% set home_href = nav_url('patient.patient_dashboard', '/') if role == 'patient' else nav_url('admin.dashboard', '/admin/dashboard') if role == 'admin' else nav_url('provider.provider_dashboard', '/') if role else nav_url('core.index', '/') %}
+{% set search_href = nav_url('seo.search', '/search') %}
+{%- macro nav_item(endpoint, label, fallback, ic=None) -%}
+  {%- set href = nav_url(endpoint, fallback) -%}
+  <a class="nav-link" href="{{ href }}"{% if request.path == href %} aria-current="page"{% endif %}>{% if ic %}{{ icon(ic, size=18) }}{% endif %}<span>{{ label }}</span></a>
+{%- endmacro %}
+{% macro group(id, label, right=False) -%}
+  <div class="menu-group{{ ' is-right' if right }}" data-menu-group>
+    <button type="button" aria-expanded="false" aria-controls="{{ id }}"><span>{{ label }}</span>{{ icon('chevron-down', size=16) }}</button>
+    <div class="menu-popover" id="{{ id }}">
+      <span class="menu-group-title">{{ label }}</span>
+      {{ caller() }}
     </div>
+  </div>
+{%- endmacro %}
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-nonce="{{ g.csp_nonce }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  {#- Applies the saved or system theme before first paint so there is no flash. Carries the CSP nonce. -#}
+  <script nonce="{{ g.csp_nonce }}">(function(){var d=document.documentElement,t=null;d.classList.add('js');try{t=localStorage.getItem('mfh_theme')}catch(e){}if(t!=='light'&&t!=='dark'){t=window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}d.setAttribute('data-theme',t)})();</script>
+  {%- set page_title %}{% block title %}MindFull Horizon{% endblock %}{% endset %}
+  {%- set page_desc %}{% block meta_description %}Mood tracking, PHQ-9 and GAD-7 screening, and counsellor sessions for college students in India.{% endblock %}{% endset %}
+  {%- set page_canonical %}{% block canonical %}{{ site_url }}{{ request.path }}{% endblock %}{% endset %}
+  {%- set page_og_image %}{% block og_image %}{{ site_url }}{{ url_for('static', filename='img/og-default.png') }}{% endblock %}{% endset %}
+  {%- set page_title = page_title|trim|striptags %}
+  {%- set page_desc = page_desc|trim|striptags %}
+  {%- set page_canonical = page_canonical|trim|striptags %}
+  {%- set page_og_image = page_og_image|trim|striptags %}
+  <title>{{ page_title ~ ' | MindFull Horizon' if page_title != 'MindFull Horizon' else page_title }}</title>
+  <meta name="description" content="{{ page_desc }}">
+  <link rel="canonical" href="{{ page_canonical }}">
+  <meta name="robots" content="{% block robots %}noindex, nofollow{% endblock %}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta name="theme-color" content="#F3F5F6" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#13171C" media="(prefers-color-scheme: dark)">
+  <meta name="application-name" content="MindFull Horizon">
+  <meta name="apple-mobile-web-app-title" content="MindFull Horizon">
 
-    <!-- Scripts with nonce and error handling -->
-    <script nonce="{{ g.csp_nonce }}" src="https://cdn.socket.io/4.7.4/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script nonce="{{ g.csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    {% assets "js_all" %}
-        <script nonce="{{ g.csp_nonce }}" type="text/javascript" src="{{ ASSET_URL }}" crossorigin="anonymous"></script>
-    {% endassets %}
+  <meta property="og:site_name" content="MindFull Horizon">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="en_IN">
+  <meta property="og:title" content="{{ page_title }}">
+  <meta property="og:description" content="{{ page_desc }}">
+  <meta property="og:url" content="{{ page_canonical }}">
+  <meta property="og:image" content="{{ page_og_image }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ page_title }}">
+  <meta name="twitter:description" content="{{ page_desc }}">
+  <meta name="twitter:image" content="{{ page_og_image }}">
 
-    <!-- Handle socket.io connection with error handling -->
-    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_2.js') }}"></script>
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" sizes="any">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+  <link rel="manifest" href="{{ url_for('static', filename='site.webmanifest') }}">
 
-    <!-- Advanced Inline Scripts -->
-    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_3.js') }}"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}?v={{ asset_version }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}?v={{ asset_version }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v={{ asset_version }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}?v={{ asset_version }}" media="print">
+  {% block legacy_head %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+  {% endblock %}
 
-        {% block extra_scripts %}
-    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_4.js') }}"></script>
-    {% endblock %}
-    <script nonce="{{ g.csp_nonce }}" src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/ui-init.js') }}"></script>
-    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/mood.js') }}"></script>
-    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/chat.js') }}"></script>
-    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/breathing.js') }}"></script>
-    <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/assessment-fixes.js') }}" defer></script>
+  <script type="application/ld+json">{{ {
+    "@context": "https://schema.org",
+    "@graph": [
+      {"@type": "Organization", "@id": site_url ~ "/#organization", "name": "MindFull Horizon", "url": site_url ~ "/",
+       "logo": site_url ~ url_for('static', filename='img/icon-512.png')},
+      {"@type": "WebSite", "@id": site_url ~ "/#website", "name": "MindFull Horizon", "url": site_url ~ "/", "inLanguage": "en-IN",
+       "publisher": {"@id": site_url ~ "/#organization"},
+       "potentialAction": {"@type": "SearchAction", "target": site_url ~ search_href ~ "?q={search_term_string}", "query-input": "required name=search_term_string"}}
+    ]
+  } | tojson }}</script>
+  {% block head_extra %}{% block extra_head %}{% endblock %}{% endblock %}
+</head>
+<body data-consent-version="{{ consent_version }}" data-event-url="/api/event" data-icons="{{ url_for('static', filename='img/icons.svg') }}">
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div class="progress-bar" aria-hidden="true"><span id="mfh-progress"></span></div>
+
+  <header class="site-header">
+    <div class="container site-header-inner">
+      <a class="brand" href="{{ home_href }}">
+        <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect class="brand-rect" width="32" height="32" rx="6"/><path class="brand-glyph" d="M4.5 22V10h2.8L10 15l2.7-5h2.8v12h-2.8v-6.6l-1.8 3.1H9.1l-1.8-3.1V22zM18 10h2.8v4.6h3.9V10h2.8v12h-2.8v-4.6h-3.9V22H18z"/></svg>
+        <span>MindFull Horizon</span>
+      </a>
+
+      <div class="site-menu" id="site-menu" data-site-menu>
+        <nav class="site-nav" aria-label="Main">
+          {% if role == 'patient' %}
+            {{ nav_item('patient.patient_dashboard', 'Dashboard', '/patient/dashboard') }}
+            {{ nav_item('patient.assessment', 'Assessments', '/patient/assessment') }}
+            {{ nav_item('chat', 'Chat', '/chat') }}
+            {{ nav_item('patient.schedule_appointment', 'Appointments', '/patient/schedule') }}
+            {% call group('menu-wellness', 'Wellness') %}
+              {{ nav_item('patient.patient_journal', 'Journal', '/patient/journal', 'journal') }}
+              {{ nav_item('patient.goals', 'Goals', '/patient/goals', 'target') }}
+              {{ nav_item('patient.progress', 'Progress', '/patient/progress', 'chart') }}
+              {{ nav_item('patient.breathing', 'Breathing', '/patient/breathing', 'wind') }}
+              {{ nav_item('patient.yoga', 'Yoga', '/patient/yoga', 'activity') }}
+              {{ nav_item('music', 'Music', '/music', 'music') }}
+              {{ nav_item('patient.medication', 'Medications', '/patient/medication', 'pill') }}
+            {% endcall %}
+          {% elif role == 'provider' %}
+            {{ nav_item('provider.provider_dashboard', 'Dashboard', '/provider/dashboard') }}
+            {{ nav_item('provider.provider_appointments', 'Appointments', '/provider/appointments') }}
+            {{ nav_item('provider.analytics', 'Analytics', '/provider/analytics') }}
+            {% if rx_section and rx_section.show %}{{ nav_item('provider.rx_list', 'Prescriptions', '/provider/prescriptions', 'pill') }}{% endif %}
+            {{ nav_item('blog.blog_list', 'Blog', '/blog/') }}
+          {% elif role == 'admin' %}
+            {{ nav_item('admin.dashboard', 'Overview', '/admin/dashboard') }}
+            {% call group('menu-people', 'People') %}
+              {{ nav_item('admin.staff', 'Staff', '/admin/staff', 'users') }}
+              {{ nav_item('admin.verification', 'Verification', '/admin/verification', 'shield') }}
+            {% endcall %}
+            {% if prescriptions_enabled %}
+            {% call group('menu-medicines', 'Medicines') %}
+              {{ nav_item('admin.catalogue', 'Catalogue', '/admin/catalogue', 'pill') }}
+              {{ nav_item('admin.inventory', 'Inventory', '/admin/inventory', 'file') }}
+              {% if desk %}{{ nav_item('admin.dispensing', 'Dispensing', '/admin/dispensing', 'check') }}{% endif %}
+              {{ nav_item('admin.reports', 'Reports', '/admin/reports', 'chart') }}
+            {% endcall %}
+            {% endif %}
+            {% call group('menu-governance', 'Governance') %}
+              {{ nav_item('admin.audit', 'Audit log', '/admin/audit', 'eye') }}
+              {{ nav_item('admin.annual', 'Annual report', '/admin/annual-report', 'download') }}
+              {{ nav_item('admin.messages', 'Messages', '/admin/messages', 'mail') }}
+            {% endcall %}
+          {% elif role %}
+            {{ nav_item('blog.blog_list', 'Blog', '/blog/') }}
+          {% else %}
+            {{ nav_item('blog.blog_list', 'Blog', '/blog/') }}
+            {{ nav_item('pages.faq', 'FAQ', '/faq') }}
+            {{ nav_item('pages.contact', 'Contact', '/contact') }}
+          {% endif %}
+        </nav>
+
+        <form class="site-search" role="search" action="{{ search_href }}" method="get">
+          <label class="sr-only" for="site-search-q">Search MindFull Horizon</label>
+          <input class="input" id="site-search-q" type="search" name="q" placeholder="Search" autocomplete="off" maxlength="100">
+          <button type="submit" aria-label="Search">{{ icon('search', size=18) }}</button>
+        </form>
+
+        <a class="menu-help" href="#helplines">{{ icon('phone', size=18) }}<span>Helplines</span></a>
+
+        {% if role %}
+          <div class="menu-group is-right" data-menu-group>
+            <button type="button" aria-expanded="false" aria-controls="menu-account"><span class="user-initial" aria-hidden="true">{{ (session.get('user_name') or 'U')[0]|upper }}</span><span class="sr-only">Account menu for </span><span class="user-name">{{ session.get('user_name') or 'Account' }}</span>{{ icon('chevron-down', size=16) }}</button>
+            <div class="menu-popover" id="menu-account">
+              <span class="menu-group-title">Account</span>
+              {{ nav_item('profile', 'Profile', '/profile', 'user') }}
+              {% if role == 'patient' and prescriptions_enabled %}{{ nav_item('patient.my_prescriptions', 'Prescriptions', '/patient/my-prescriptions', 'pill') }}{% endif %}
+              {{ nav_item('auth.logout', 'Sign out', '/logout', 'logout') }}
+            </div>
+          </div>
+        {% else %}
+          <div class="site-auth">
+            <a class="btn btn-secondary" href="{{ nav_url('auth.login', '/login') }}">Log in</a>
+            <a class="btn btn-primary" href="{{ nav_url('auth.signup', '/signup') }}">Create account</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="site-header-actions">
+        <button type="button" class="icon-btn theme-toggle" data-theme-toggle aria-label="Switch to dark theme">{{ icon('moon', cls='icon-moon') }}{{ icon('sun', cls='icon-sun') }}</button>
+        <button type="button" class="icon-btn menu-toggle" aria-expanded="false" aria-controls="site-menu" aria-label="Open menu" data-menu-toggle>{{ icon('menu', cls='icon-open') }}{{ icon('x', cls='icon-close') }}</button>
+      </div>
+    </div>
+  </header>
+
+  {% block breadcrumbs %}{% endblock %}
+
+  <main id="main-content" tabindex="-1">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <script type="application/json" id="flash-data">{{ messages | tojson }}</script>
+      {% endif %}
+      <noscript>
+        <div class="container" style="padding-top:1rem">
+          <div class="alert alert-warning">{{ icon('alert') }}<p>JavaScript is turned off. Pages still load, but the mood check-in, chat, charts and the menu button need it.</p></div>
+          {% for category, message in messages or [] %}
+            <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category in ('error', 'danger') else 'warning' if category == 'warning' else 'info' }}" role="status"><p>{{ message }}</p></div>
+          {% endfor %}
+        </div>
+      </noscript>
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <p class="brand">MindFull Horizon</p>
+          <p class="footer-about">Mood tracking, PHQ-9 and GAD-7 screening, and counsellor sessions for college students in India. It is a screening and support tool, not a diagnosis or an emergency service.</p>
+        </div>
+        <div>
+          <h2>Explore</h2>
+          <ul>
+            <li><a href="{{ nav_url('core.index', '/') }}">Home</a></li>
+            <li><a href="{{ nav_url('blog.blog_list', '/blog/') }}">Blog</a></li>
+            <li><a href="/faq">FAQ</a></li>
+            <li><a href="/contact">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h2>Legal</h2>
+          <ul>
+            <li><a href="/privacy">Privacy</a></li>
+            <li><a href="/terms">Terms</a></li>
+            <li><button type="button" class="footer-link-btn" data-consent-open>Cookie settings</button></li>
+          </ul>
+        </div>
+        <div id="helplines" tabindex="-1">
+          <h2>If you need help now</h2>
+          <ul class="helpline-list">
+            {% for h in helplines %}
+            <li><a href="tel:{{ h.tel }}">{{ h.name.split(' (')[0] }}: {{ h.number }}</a><span class="muted">{{ h.hours }}. {{ h.note }}</span></li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; {{ site_last_updated[:4] }} MindFull Horizon</p>
+        <p>Last updated {{ site_last_updated_display }}</p>
+      </div>
+    </div>
+  </footer>
+
+  <button type="button" class="back-to-top" id="back-to-top" aria-label="Back to top">{{ icon('chevron-up') }}</button>
+  <div class="toast-region" id="toast-region" role="status" aria-live="polite" aria-atomic="false"></div>
+
+  <section class="consent-banner" id="consent-banner" aria-labelledby="consent-title" hidden>
+    <div class="container consent-inner">
+      <div>
+        <h2 id="consent-title" tabindex="-1">Cookies and analytics</h2>
+        <p>Essential cookies keep you signed in and protect forms, and are always on. If you accept analytics, we count page views and a few clicks on our own server, with the utm_source, utm_medium and utm_campaign of the link you arrived from. We never send what you type into the journal, chat or assessments. We use no advertising cookies.</p>
+        <p>Your choice is saved as a cookie and in local storage, both named mfh_consent, for 12 months. Your theme choice is kept in local storage. <a href="/privacy">Privacy policy</a></p>
+      </div>
+      <div class="consent-actions">
+        <button type="button" class="btn btn-secondary" data-consent="essential">Essential only</button>
+        <button type="button" class="btn btn-secondary" data-consent="analytics">Accept analytics</button>
+      </div>
+    </div>
+  </section>
+
+  {% block legacy_scripts %}
+  <script nonce="{{ g.csp_nonce }}" src="https://cdn.socket.io/4.7.4/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script nonce="{{ g.csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  {% assets "js_all" %}
+  <script nonce="{{ g.csp_nonce }}" src="{{ ASSET_URL }}" crossorigin="anonymous"></script>
+  {% endassets %}
+  <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_2.js') }}"></script>
+  <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/mood.js') }}"></script>
+  <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/chat.js') }}"></script>
+  <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/breathing.js') }}"></script>
+  <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/assessment-fixes.js') }}" defer></script>
+  {% endblock %}
+  <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/shell.js') }}?v={{ asset_version }}" defer></script>
+  <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/components.js') }}?v={{ asset_version }}" defer></script>
+  {% block scripts %}{% block extra_scripts %}{% endblock %}{% endblock %}
 </body>
 </html>

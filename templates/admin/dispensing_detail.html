@@ -1,0 +1,54 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from '_macros.html' import empty_state %}
+{% from 'provider_rx/_ui.html' import ts, status_badge, notice, config_block %}
+{% block title %}Dispense {{ rx.number }}{% endblock %}
+{% block page_scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_actions.js') }}?v={{ asset_version }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_dispensing.js') }}?v={{ asset_version }}" defer></script>
+{% endblock %}
+{% block rx_body %}
+{% set base = nav_url('admin.dispensing', '/admin/dispensing') %}
+{% set closed = rx.status in ['cancelled', 'expired', 'dispensed'] %}
+<div class="page-header"><div><h1>Prescription <span class="cl-mono">{{ rx.number }}</span></h1><p class="lead">{{ status_badge(rx.status) }} <a class="cl-link" href="{{ base }}">Back to dispensing</a></p></div>
+  <div class="page-actions"><a class="btn btn-secondary" href="{{ base }}/{{ rx.id }}/print" target="_blank" rel="noopener noreferrer">{{ icon('file') }} Print</a></div></div>
+{{ notice() }}
+{% for w in rx.warnings or [] %}<div class="alert alert-warning" role="status">{{ icon('alert') }}<p>{{ w }}</p></div>{% endfor %}
+{% if closed %}<div class="alert alert-warning" role="status">{{ icon('alert') }}<p>This prescription cannot be dispensed: it is {{ rx.status|replace('_', ' ') }}.</p></div>{% endif %}
+
+<section class="card cl-block" aria-labelledby="h-rx"><div class="card-header"><h2 id="h-rx" class="text-lg">Prescription</h2></div>
+<div class="card-body"><dl class="cl-dl"><dt>Patient</dt><dd>{{ rx.patient_name }}</dd><dt>Doctor</dt><dd>{{ rx.doctor_name }}</dd><dt>Valid until</dt><dd>{{ ts(rx.valid_until) }}</dd></dl></div></section>
+
+<section class="card cl-block" aria-labelledby="h-s1"><div class="card-header"><h2 id="h-s1" class="text-lg">Step 1: choose what to give</h2></div>
+<div class="card-body">
+{% if rx['items'] %}
+<div class="table-wrap"><table class="table"><caption class="sr-only">Medicines on this prescription</caption>
+<thead><tr><th scope="col">Medicine</th><th scope="col" class="cl-right">Prescribed</th><th scope="col" class="cl-right">Already given</th><th scope="col" class="cl-right">Remaining</th><th scope="col">Give now</th></tr></thead>
+<tbody>{% for it in rx['items'] %}<tr><th scope="row">{{ it.medicine_label }}</th><td class="cl-right">{{ it.quantity }}</td><td class="cl-right">{{ it.quantity_dispensed }}</td><td class="cl-right">{{ it.remaining }}</td>
+<td><label class="sr-only" for="give-{{ it.item_id }}">Quantity to give for {{ it.medicine_label }}</label><input class="input" id="give-{{ it.item_id }}" type="number" min="0" max="{{ it.remaining }}" step="1" value="{{ it.remaining }}" data-item="{{ it.item_id }}"{{ ' disabled' if closed or it.remaining == 0 }}></td></tr>{% endfor %}</tbody></table></div>
+<p class="help">You can give less than the remaining amount. You cannot give more.</p>
+<button type="button" class="btn btn-primary mt-3" id="prepare-btn"{{ ' disabled' if closed }}>Prepare</button>
+{% else %}{{ empty_state('No medicines', 'This prescription has no medicine lines.', 'pill') }}{% endif %}
+<div id="plan" class="mt-4" role="status" aria-live="polite"></div>
+</div></section>
+
+<section class="card cl-block" id="confirm-panel" aria-labelledby="h-s2" hidden><div class="card-header"><h2 id="h-s2" class="text-lg">Step 2: confirm</h2></div>
+<div class="card-body">
+  <div class="field"><div class="check"><input type="checkbox" id="identity"><label for="identity">I have checked the patient's identity and the prescription number</label></div></div>
+  <div class="cl-grid-2"><div class="field"><label class="label" for="ph-name">Pharmacist name</label><input class="input" id="ph-name" type="text" minlength="3" maxlength="100" autocomplete="off" required></div>
+  <div class="field"><label class="label" for="ph-reg">Pharmacist registration number</label><input class="input" id="ph-reg" type="text" minlength="3" maxlength="40" autocomplete="off" required></div></div>
+  <p class="error-text" id="confirm-error" role="alert" hidden></p>
+  <button type="button" class="btn btn-primary" id="confirm-btn">Confirm dispensing</button>
+</div></section>
+<div id="receipt" role="status" aria-live="polite"></div>
+
+{% if transactions %}
+<section class="card" aria-labelledby="h-tx"><div class="card-header"><h2 id="h-tx" class="text-lg">Given from this prescription</h2></div>
+<div class="card-body"><p class="help">A line can be reversed once, within 24 hours, to undo a desk error. Returned medicine is not put back on the shelf by this feature; use an adjustment for any other correction.</p>
+<div class="table-wrap"><table class="table"><caption class="sr-only">Dispensed lines</caption>
+<thead><tr><th scope="col">Medicine</th><th scope="col" class="cl-right">Units</th><th scope="col">When</th><th scope="col">Action</th></tr></thead>
+<tbody>{% for t in transactions %}<tr><th scope="row">{{ t.label }}</th><td class="cl-right">{{ t.quantity }}</td><td>{{ ts(t.created_at) }}</td>
+<td>{% if t.reversible %}<button type="button" class="btn btn-danger btn-sm" data-api-post="/admin/api/dispensing/transactions/{{ t.tx_id }}/reverse" data-idem data-ask="The units go back to stock and this prescription shows them as not given." data-ask-title="Reverse this line?" data-ask-text="Reverse" data-ask-danger data-done="Line reversed" aria-label="Reverse {{ t.label }}">Reverse</button>{% else %}<span class="muted">Not reversible</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div></div></section>
+{% endif %}
+{{ config_block({'prepare': '/admin/api/dispensing/%d/prepare'|format(rx.id), 'confirm': '/admin/api/dispensing/%d/confirm'|format(rx.id)}, config) }}
+{% endblock %}

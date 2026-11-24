@@ -1,0 +1,61 @@
+{% extends 'provider_rx/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_rx/_ui.html' import ts %}
+{% block title %}Prescription {{ rx.number }}{% endblock %}
+
+{% macro listed(status, text) %}{{ text if status == 'listed' and text else ('None reported' if status == 'none_reported' else 'Not recorded') }}{% endmacro %}
+
+{% block rx_body %}
+{% set st = rx.effective_status or rx.status %}
+{% set pname = rx.patient.name if rx.patient else rx.patient_name %}
+{% set back = nav_url('provider.rx_list', '/provider/prescriptions') %}
+<div class="cl-row cl-between no-print cl-block">
+  <a class="btn btn-ghost" href="{{ back }}">{{ icon('arrow-left') }} Back</a>
+  <button type="button" class="btn btn-primary" data-action="print">{{ icon('file') }} Print</button>
+</div>
+
+<article class="rx-sheet" aria-labelledby="rx-title">
+  {% if st == 'cancelled' %}<div class="rx-banner" role="status">CANCELLED</div>
+  {% elif st == 'expired' %}<div class="rx-banner" role="status">EXPIRED</div>{% endif %}
+  <header class="rx-head">
+    <div>
+      <h1 id="rx-title">{{ rx.institution_name or 'Institution not recorded' }}</h1>
+      <p>E-prescription</p>
+    </div>
+    <div>
+      <p><strong>{{ rx.doctor_name }}</strong></p>
+      <p>Reg. No. {{ rx.doctor_reg_no }}, {{ rx.doctor_council }}</p>
+      {% if rx.doctor_specialisation %}<p>{{ rx.doctor_specialisation }}</p>{% endif %}
+    </div>
+  </header>
+
+  <dl class="cl-dl cl-block">
+    <dt>Prescription number</dt><dd><span class="cl-mono rx-number">{{ rx.number }}</span></dd>
+    <dt>Issued</dt><dd>{{ ts(rx.issued_at) }}</dd>
+    <dt>Valid until</dt><dd>{{ ts(rx.valid_until) }}</dd>
+    <dt>Patient</dt><dd>{{ pname }}</dd>
+    <dt>Diagnosis</dt><dd>{{ rx.diagnosis or 'Not recorded' }}</dd>
+    <dt>Allergies</dt><dd>{{ listed(rx.allergies_status, rx.allergies) }}</dd>
+    <dt>Current medicines</dt><dd>{{ listed(rx.current_meds_status, rx.current_meds) }}</dd>
+  </dl>
+
+  <div class="table-wrap">
+    <table class="table">
+      <caption class="sr-only">Medicines prescribed</caption>
+      <thead><tr><th scope="col">No.</th><th scope="col">Medicine</th><th scope="col">Dose</th><th scope="col">Frequency</th><th scope="col">Days</th><th scope="col" class="cl-right">Quantity</th><th scope="col">Instructions</th></tr></thead>
+      <tbody>
+        {% for i in rx['items'] %}
+        <tr><td>{{ i.line_no or loop.index }}</td><th scope="row">{{ i.medicine_label }}</th><td>{{ i.dose_text }}</td><td>{{ i.frequency }}</td><td>{{ i.duration_days }}</td><td class="cl-right">{{ i.quantity }}</td><td>{{ i.instructions or '' }}</td></tr>
+        {% else %}
+        <tr><td colspan="7">No medicines recorded.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <footer class="rx-foot">
+    <p>Issued electronically through MindFull Horizon after a consultation on {{ ts(rx.consult_date or rx.consult_started_at or rx.issued_at, 'date') }}. This document has no handwritten or digital signature. Check its status at {{ site_url }}/rx/{{ rx.number }}.</p>
+    <p class="muted">This is an e-prescription. Printed {{ ts(printed_at) }}.</p>
+  </footer>
+</article>
+{% endblock %}

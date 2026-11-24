@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy notice and consent{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <div class="page-header">
+    <h1>Before you continue</h1>
+    <p class="lead">Please read how Mind Full Horizon uses your information and confirm your age. You can do this once; we keep a record of what you accepted and when.</p>
+  </div>
+
+  <form method="post" action="{{ url_for('auth.consent') }}" class="card" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="card-body">
+      <div class="panel-muted">
+        <p>Mind Full Horizon stores the information you enter (check-ins, screenings, journal, goals, appointments) so the tools work for you. Counsellors you book with can see your data. Other counsellors at your college cannot, except that an open crisis alert shows your name to all counsellors there so someone can follow up. You can download or delete your data at any time from <a href="{{ url_for('auth.account_data') }}">Your data</a>.</p>
+        <p class="muted">Notice version {{ consent_version }}. Draft pending legal review. Read the full <a href="/privacy">Privacy Policy</a> and <a href="/terms">Terms</a>.</p>
+      </div>
+
+      <div class="field">
+        <label class="check" for="consent">
+          <input type="checkbox" id="consent" name="consent" value="yes" required>
+          <span>I have read the <a href="/privacy">Privacy Policy</a> and the <a href="/terms">Terms</a>, and I agree to my information being used as described.</span>
+        </label>
+      </div>
+      <div class="field">
+        <label class="check" for="age_confirm">
+          <input type="checkbox" id="age_confirm" name="age_confirm" value="yes" required>
+          <span>I am 18 years old or older.</span>
+        </label>
+      </div>
+
+      <div class="page-actions">
+        <button type="submit" class="btn btn-primary">Accept and continue</button>
+        <a class="btn btn-ghost" href="{{ url_for('auth.logout') }}">Log out</a>
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

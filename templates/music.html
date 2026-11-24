@@ -1,86 +1,114 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
+
+{% block title %}Calming audio | MindFull Horizon{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
+{% endblock %}
 
 {% block content %}
-<div style="max-width:900px; margin:40px auto; text-align:center;">
-  <h1 style="color:#2563eb; font-size:2rem;">Mood Music — Binaural Beats</h1>
-  <p style="color:#475569;">Choose a mood and we'll play matching binaural-beats audio from the local dataset in the page. Use headphones for the best effect.</p>
+<div class="container section" id="music-root">
+  <header class="page-header">
+    <h1>Calming audio</h1>
+    <p class="lead">Pick how you feel to see matching tone tracks (binaural beats, isochronic and solfeggio tones). Use headphones for binaural tracks.</p>
+  </header>
 
-  <div id="music-buttons" style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:20px;">
-    <button class="mood-btn" data-mood="happy">Happy</button>
-    <button class="mood-btn" data-mood="sad">Sad</button>
-    <button class="mood-btn" data-mood="angry">Angry</button>
-    <button class="mood-btn" data-mood="calm">Calm</button>
-    <button class="mood-btn" data-mood="anxious">Anxious</button>
-    <button class="mood-btn" data-mood="focus">Focus</button>
-  </div>
+  <div class="wl-stack">
+    <section class="card" aria-labelledby="mood-heading">
+      <div class="card-header"><h2 id="mood-heading" class="text-lg">How do you feel?</h2></div>
+      <div class="card-body wl-stack">
+        <div id="music-buttons" class="mood-choices" role="group" aria-label="Mood">
+          <button type="button" class="btn btn-secondary mood-btn" data-mood="happy" aria-pressed="false">Happy</button>
+          <button type="button" class="btn btn-secondary mood-btn" data-mood="sad" aria-pressed="false">Sad</button>
+          <button type="button" class="btn btn-secondary mood-btn" data-mood="angry" aria-pressed="false">Angry</button>
+          <button type="button" class="btn btn-secondary mood-btn" data-mood="calm" aria-pressed="false">Calm</button>
+          <button type="button" class="btn btn-secondary mood-btn" data-mood="anxious" aria-pressed="false">Anxious</button>
+          <button type="button" class="btn btn-secondary mood-btn" data-mood="focus" aria-pressed="false">Focus</button>
+        </div>
+        <p id="music-note" class="wl-note" role="status">Choose a mood to list tracks. Nothing plays until you press Play.</p>
+        <p class="wl-note">Research on binaural beats is limited and mixed. Treat these as background sound, not treatment. Keep the volume low and stop if you feel uncomfortable.</p>
+      </div>
+    </section>
 
-  <p id="music-note" style="color:#64748b; margin-top:12px;">We'll play matching binaural beats from the local dataset if available.</p>
+    <section id="player-container" class="card" aria-labelledby="player-heading" hidden>
+      <div class="card-header"><h2 id="player-heading" class="text-lg">Player</h2></div>
+      <div class="card-body player-bar">
+        <p id="now-playing" class="mb-0" hidden>Now playing: <strong id="now-playing-label"></strong></p>
+        <audio id="mood-audio" controls preload="none"></audio>
+        <div id="player-controls" class="wl-actions">
+          <button type="button" id="play-all" class="btn btn-primary btn-sm">Play from the top</button>
+          <button type="button" id="next-track" class="btn btn-secondary btn-sm">Next track</button>
+          <button type="button" id="clear-playlist" class="btn btn-ghost btn-sm">Clear list</button>
+        </div>
+      </div>
+    </section>
 
-  <div id="player-container" style="margin-top:18px; text-align:center;">
-    <div id="now-playing" style="color:#1f2937; font-weight:600; margin-bottom:8px; display:none;">Now Playing: <span id="now-playing-label"></span></div>
-    <audio id="mood-audio" controls style="width:100%; max-width:700px; display:none;"></audio>
-    <div id="player-controls" style="margin-top:8px; display:none;">
-      <button id="play-all" class="mood-btn" style="padding:6px 12px;">Play All</button>
-      <button id="next-track" class="mood-btn" style="padding:6px 12px;">Next ▶</button>
-      <button id="clear-playlist" class="mood-btn" style="padding:6px 12px;">Clear</button>
+    <section id="playlist-container" class="card" aria-labelledby="tracks-heading" hidden>
+      <div class="card-header"><h2 id="tracks-heading" class="text-lg">Tracks</h2></div>
+      <div class="card-body wl-stack">
+        <form id="filters" class="filter-grid" novalidate>
+          <div class="field">
+            <label for="filter-type" class="label">Type</label>
+            <select id="filter-type" class="select">
+              <option value="all" selected>All</option>
+              <option value="solfeggio">Solfeggio (long)</option>
+              <option value="isochronic">Isochronic</option>
+              <option value="pure">Pure tone</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="filter-brainwave" class="label">Brainwave band</label>
+            <select id="filter-brainwave" class="select">
+              <option value="all" selected>All</option>
+              <option value="delta">Delta (0.5 to 4 Hz)</option>
+              <option value="theta">Theta (4 to 8 Hz)</option>
+              <option value="alpha">Alpha (8 to 12 Hz)</option>
+              <option value="beta">Beta (12 to 30 Hz)</option>
+              <option value="gamma">Gamma (30 Hz and up)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="sort-by" class="label">Sort by</label>
+            <select id="sort-by" class="select">
+              <option value="default" selected>Best match</option>
+              <option value="frequency_asc">Frequency, low to high</option>
+              <option value="frequency_desc">Frequency, high to low</option>
+              <option value="duration">Long tracks first</option>
+              <option value="brainwave">Brainwave band</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="min-freq" class="label">Lowest Hz</label>
+            <input id="min-freq" type="number" class="input" min="0.5" max="100" step="0.5" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="max-freq" class="label">Highest Hz</label>
+            <input id="max-freq" type="number" class="input" min="0.5" max="100" step="0.5" inputmode="decimal">
+          </div>
+          <div class="field">
+            <label for="search-text" class="label">Search</label>
+            <input id="search-text" type="search" class="input" maxlength="80" autocomplete="off">
+          </div>
+          <div class="field">
+            <button type="button" id="reset-filters" class="btn btn-secondary">Reset filters</button>
+          </div>
+        </form>
+        <div id="playlist" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <div id="music-empty" class="empty-state" hidden>
+      {{ icon('music', size=32) }}
+      <h2>No tracks for this mood</h2>
+      <p id="music-empty-text">This library has no matching audio yet. Try another mood, or use the breathing guide instead.</p>
+      <a class="btn btn-secondary" href="{{ url_for('patient.breathing') if session.get('user_role') == 'patient' else url_for('core.index') }}">{{ 'Open breathing guide' if session.get('user_role') == 'patient' else 'Back to home' }}</a>
     </div>
-  </div>
-
-  <div id="playlist-container" style="margin-top:20px; text-align:left; display:none;">
-    <h3 style="color:#2563eb; font-size:1.2rem; margin-bottom:10px;">Select a track</h3>
-
-    <div id="filters" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:10px;">
-      <div>
-        <label for="filter-type" style="font-size:0.9rem; color:#475569;">Type</label><br />
-        <select id="filter-type" style="padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;">
-          <option value="all" selected>All</option>
-          <option value="solfeggio">Solfeggio (Long)</option>
-          <option value="isochronic">Isochronic</option>
-          <option value="pure">Pure</option>
-        </select>
-      </div>
-      <div>
-        <label for="filter-brainwave" style="font-size:0.9rem; color:#475569;">Brainwave</label><br />
-        <select id="filter-brainwave" style="padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;">
-          <option value="all" selected>All</option>
-          <option value="alpha">Alpha (8-12 Hz)</option>
-          <option value="beta">Beta (12-30 Hz)</option>
-          <option value="delta">Delta (0.5-4 Hz)</option>
-          <option value="gamma">Gamma (30+ Hz)</option>
-          <option value="theta">Theta (4-8 Hz)</option>
-        </select>
-      </div>
-      <div>
-        <label for="sort-by" style="font-size:0.9rem; color:#475569;">Sort By</label><br />
-        <select id="sort-by" style="padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;">
-          <option value="default" selected>Relevance</option>
-          <option value="frequency_asc">Frequency (Low to High)</option>
-          <option value="frequency_desc">Frequency (High to Low)</option>
-          <option value="duration">Duration (Long First)</option>
-          <option value="brainwave">Brainwave Type</option>
-        </select>
-      </div>
-      <div style="min-width:140px;">
-        <label for="min-freq" style="font-size:0.9rem; color:#475569;">Min Freq (Hz)</label><br />
-        <input id="min-freq" type="number" placeholder="0.5" min="0.5" max="100" step="0.5" style="width:100%; padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;" />
-      </div>
-      <div style="min-width:140px;">
-        <label for="max-freq" style="font-size:0.9rem; color:#475569;">Max Freq (Hz)</label><br />
-        <input id="max-freq" type="number" placeholder="100" min="0.5" max="100" step="0.5" style="width:100%; padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;" />
-      </div>
-      <div style="flex:1; min-width:220px;">
-        <label for="search-text" style="font-size:0.9rem; color:#475569;">Search</label><br />
-        <input id="search-text" type="text" placeholder="Search label or filename..." style="width:100%; padding:6px 10px; border:1px solid #e2e8f0; border-radius:8px;" />
-      </div>
-      <div style="margin-top:20px;">
-        <button id="reset-filters" style="padding:6px 12px; border:1px solid #e2e8f0; border-radius:8px; background:#f8fafc; color:#475569; cursor:pointer;">Reset Filters</button>
-      </div>
-    </div>
-
-    <div id="playlist" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:10px;"></div>
   </div>
 </div>
+{% endblock %}
 
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/music_inline_1.js') }}"></script>
-
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/wellness-common.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/music_inline_1.js') }}" defer></script>
 {% endblock %}

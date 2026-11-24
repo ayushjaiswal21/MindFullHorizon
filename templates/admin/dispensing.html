@@ -1,0 +1,33 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from '_macros.html' import empty_state %}
+{% from 'provider_rx/_ui.html' import ts, notice %}
+{% block title %}Dispensing{% endblock %}
+{% block page_scripts %}<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_dispensing.js') }}?v={{ asset_version }}" defer></script>{% endblock %}
+{% block rx_body %}
+{% set base = nav_url('admin.dispensing', '/admin/dispensing') %}
+<div class="page-header"><div><h1>Dispensing</h1><p class="lead">Find a prescription by its number, or open one a student sent to the desk. There is no list of all prescriptions.</p></div></div>
+{{ notice() }}
+<form id="lookup-form" class="card cl-block" data-url="/admin/api/dispensing/lookup" data-detail-url="{{ base }}" novalidate>
+  <div class="card-body">
+    <div class="field"><label class="label" for="rx-number">Prescription number</label>
+      <input class="input cl-mono" id="rx-number" type="text" autocomplete="off" autocapitalize="characters" maxlength="24" required aria-describedby="rx-number-help lookup-error">
+      <p class="help" id="rx-number-help">For example RX2611-7K3M9QX4PD2. The last character is a check character, so typing mistakes are caught.</p>
+      <p class="error-text" id="lookup-error" role="alert" hidden></p></div>
+    <button type="submit" class="btn btn-primary">{{ icon('search') }} Find prescription</button>
+    <p class="help" id="lookup-live" role="status" aria-live="polite"></p>
+  </div>
+</form>
+<section aria-labelledby="queue-h"><h2 id="queue-h" class="text-lg mb-3">Sent to the desk</h2>
+{% if queue %}
+<div class="table-wrap"><table class="table"><caption class="sr-only">Prescriptions sent to the pharmacy desk</caption>
+<thead><tr><th scope="col">Prescription</th><th scope="col">Patient</th><th scope="col" class="cl-right">Medicines</th><th scope="col">Sent</th><th scope="col">Action</th></tr></thead>
+<tbody>{% for q in queue %}
+<tr><th scope="row" class="cl-mono">{{ q.number }}</th><td>{{ q.initials }}</td><td class="cl-right">{{ q['items'] }}</td><td>{{ ts(q.requested_at) }}</td>
+<td><a class="btn btn-secondary btn-sm" href="{{ base }}/{{ q.id }}" aria-label="Open prescription {{ q.number }}">Open</a></td></tr>
+{% endfor %}</tbody></table></div>
+{% else %}
+{{ empty_state('Nothing waiting', 'No prescriptions have been sent to the desk.', 'check') }}
+{% endif %}
+</section>
+{% endblock %}

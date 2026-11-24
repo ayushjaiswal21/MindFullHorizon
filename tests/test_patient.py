@@ -4,6 +4,7 @@ from datetime import date, datetime, timedelta, timezone
 import pytest
 
 from extensions import db
+from utils.timeutil import ist_today
 from models import (BreathingExerciseLog, Gamification, Goal, MedicationLog, Medication,
                     MoodLog, Appointment, User)
 
@@ -56,14 +57,14 @@ def test_streak_same_day_and_gap(app, patient_client):
     assert _gam(app, uid)[1] == 1
     with app.app_context():
         g = Gamification.query.filter_by(user_id=uid).first()
-        g.last_activity = datetime.now(timezone.utc).date() - timedelta(days=1)
+        g.last_activity = ist_today() - timedelta(days=1)
         g.streak = 4
         db.session.commit()
     c.post("/patient/yoga", data={"session_name": "Sun", "duration_minutes": "10"})
     assert _gam(app, uid)[1] == 5
     with app.app_context():
         g = Gamification.query.filter_by(user_id=uid).first()
-        g.last_activity = datetime.now(timezone.utc).date() - timedelta(days=5)
+        g.last_activity = ist_today() - timedelta(days=5)
         db.session.commit()
     c.post("/patient/yoga", data={"session_name": "Sun", "duration_minutes": "10"})
     assert _gam(app, uid)[1] == 1
@@ -213,7 +214,7 @@ def test_schedule_validation(app, patient_client, make_user):
     r = c.post("/patient/schedule", data=ok)
     assert r.status_code == 302
     r = c.post("/patient/schedule", data=ok)  # same slot again
-    assert r.status_code == 400
+    assert r.status_code == 409
     with app.app_context():
         assert Appointment.query.count() == 1
 
@@ -254,7 +255,7 @@ def test_journal_roundtrip_and_isolation(app, patient_client, make_user, login):
         assert [(e.user_id, e.title) for e in rows] == [(uid, "Day one")]
         eid = rows[0].id
     assert "Day one" in c.get("/patient/journal").get_data(as_text=True)
-    assert _gam(app, uid)[0] == 15
+    assert _gam(app, uid)[0] == 15 + 5  # 15 for the entry, 5 for the first page visit of the day
     # another patient cannot see or delete it
     other = make_user("patient")
     c2 = app.test_client()
@@ -283,7 +284,7 @@ def test_voice_upload_list_delete(app, patient_client, make_user):
         assert len(logs) == 1 and logs[0].user_id == uid and logs[0].emotion
         lid = logs[0].id
     assert c.get("/patient/voice-logs").status_code == 200
-    assert _gam(app, uid)[0] == 20
+    assert _gam(app, uid)[0] == 20 + 5  # 20 for the voice log, 5 for the first page visit of the day
     other = make_user("patient")
     c2 = app.test_client()
     from conftest import _login_as

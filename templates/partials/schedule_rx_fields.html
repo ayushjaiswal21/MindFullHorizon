@@ -1,0 +1,15 @@
+{# Doctor-only fields of the appointment form. Always rendered so the form works without JavaScript;
+   schedule_rx.js hides them while a counsellor or nobody is selected. The server checks them for doctors only. #}
+{% if providers|selectattr('provider_type', 'equalto', 'doctor')|list %}
+<fieldset class="field rx-doctor-only" data-doctor-only>
+    <legend class="label">How will you meet the doctor?</legend>
+    <div class="check"><input type="radio" id="modality-video" name="modality" value="video"{% if f.get('modality') == 'video' %} checked{% endif %}><label for="modality-video">Video call</label></div>
+    <div class="check"><input type="radio" id="modality-in-person" name="modality" value="in_person"{% if f.get('modality') == 'in_person' %} checked{% endif %}><label for="modality-in-person">In person</label></div>
+    <p class="help">Only needed when you book a doctor. A doctor can prescribe only after a video or in-person consultation.</p>
+    {% if erx_active %}
+    <p class="help">You have already allowed e-prescriptions. You can withdraw this on your prescriptions page.</p>
+    {% else %}
+    <div class="check mt-3"><input type="checkbox" id="erx-consent" name="erx_consent"{% if f.get('erx_consent') %} checked{% endif %}><label for="erx-consent">{{ erx_text }}</label></div>
+    {% endif %}
+</fieldset>
+{% endif %}

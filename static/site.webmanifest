@@ -1,0 +1,14 @@
+{
+  "name": "MindFull Horizon",
+  "short_name": "MindFull Horizon",
+  "description": "Mood tracking, PHQ-9 and GAD-7 screening, and counsellor sessions for college students in India.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#F7F8F7",
+  "theme_color": "#0F766E",
+  "icons": [
+    {"src": "/static/img/icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "/static/img/icon-512.png", "sizes": "512x512", "type": "image/png"}
+  ]
+}

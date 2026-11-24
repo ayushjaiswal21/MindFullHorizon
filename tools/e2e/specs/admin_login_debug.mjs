@@ -1,0 +1,12 @@
+import { launch, B } from '../lib.mjs';
+const { browser, page } = await launch('light');
+await page.goto(B + '/admin/login');
+console.log(await page.$$eval('form', fs => fs.map(f => f.method + ' ' + [...f.elements].map(e => e.name + '(' + e.type + ')').join(','))));
+await page.fill('input[name=email]', 'demo.admin@example.com');
+await page.fill('input[name=password]', 'Demo@Pass2026');
+await page.click('form:has(input[name=password]) button[type=submit]');
+await page.waitForTimeout(2500);
+console.log(page.url());
+console.log((await page.innerText('main')).replace(/\s+/g, ' ').slice(0, 300));
+console.log(page.errors);
+await browser.close();

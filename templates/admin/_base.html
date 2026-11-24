@@ -1,0 +1,14 @@
+{#- Layout for the clinical screens. Pages override: title, rx_body (with their own .page-header), page_scripts. -#}
+{% extends "base.html" %}
+{% block legacy_head %}{% endblock %}
+{% block legacy_scripts %}{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/clinical.css') }}?v={{ asset_version }}">{% endblock %}
+{% block content %}
+<div class="container">
+  {% block rx_body %}{% endblock %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/clinical-common.js') }}?v={{ asset_version }}" defer></script>
+{% block page_scripts %}{% endblock %}
+{% endblock %}

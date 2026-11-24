@@ -1,0 +1,45 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from '_macros.html' import empty_state %}
+{% from 'provider_rx/_ui.html' import avail_badge, pager, notice %}
+{% block title %}Inventory{% endblock %}
+{% block page_scripts %}<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_inventory.js') }}?v={{ asset_version }}" defer></script>{% endblock %}
+{% block rx_body %}
+{% set base = nav_url('admin.inventory', '/admin/inventory') %}
+{% set st = stats or {} %}
+{% set f = request.args %}
+<div class="page-header"><div><h1>Inventory</h1><p class="lead">Stock on hand at your institution. Expired stock is not counted as usable and stays listed until the pharmacy desk writes it off.</p></div>
+  <div class="page-actions cl-actions">{% if desk %}<a class="btn btn-primary" href="{{ base }}/receive">{{ icon('plus') }} Receive stock</a>{% endif %}
+  <a class="btn btn-secondary" href="{{ base }}/stock.csv">{{ icon('download') }} Export CSV</a>
+  <a class="btn btn-ghost" href="{{ base }}/batches">All batches</a></div></div>
+{{ notice() }}
+{% if not desk %}<div class="alert alert-info" role="note">{{ icon('info') }}<p>You can read stock levels. Receiving, adjusting and writing off stock is done by the pharmacy desk.</p></div>{% endif %}
+<div class="cl-grid">
+  <div class="stat"><div class="stat-label">Medicines low</div><div class="stat-value">{{ 'n/a' if st.low is none else st.low }}</div></div>
+  <div class="stat"><div class="stat-label">Out of stock</div><div class="stat-value">{{ 'n/a' if st.out is none else st.out }}</div></div>
+  <div class="stat"><div class="stat-label">Expiring within 60 days</div><div class="stat-value">{{ 'n/a' if st.near_expiry is none else st.near_expiry }}</div></div>
+  <div class="stat"><div class="stat-label">Expired, awaiting write-off</div><div class="stat-value">{{ 'n/a' if st.awaiting_writeoff is none else st.awaiting_writeoff }}</div></div>
+</div>
+<form class="cl-filters" method="get" action="{{ base }}">
+  <div class="field"><label class="label" for="f-q">Search</label><input class="input" id="f-q" type="search" name="q" value="{{ f.get('q', '') }}" maxlength="100"></div>
+  <div class="field"><label class="label" for="f-status">Status</label><select class="select" id="f-status" name="status"><option value="">All</option>{% for k, l in [('in_stock', 'In stock'), ('low', 'Low'), ('out', 'Out of stock')] %}<option value="{{ k }}"{{ ' selected' if f.get('status') == k }}>{{ l }}</option>{% endfor %}</select></div>
+  <button type="submit" class="btn btn-primary">Filter</button><a class="btn btn-ghost" href="{{ base }}">Reset</a>
+</form>
+<p class="help" id="inv-live" role="status" aria-live="polite"></p>
+{% if rows %}
+<div class="table-wrap"><table class="table"><caption class="sr-only">Stock per medicine</caption>
+<thead><tr><th scope="col">Medicine</th><th scope="col" class="cl-right">Usable on hand</th><th scope="col" class="cl-right">Expired, awaiting write-off</th><th scope="col">Reorder level</th><th scope="col">Status</th><th scope="col">Batches</th></tr></thead>
+<tbody>{% for r in rows %}
+<tr{% if r.expired %} class="is-flagged"{% endif %}><th scope="row">{{ r.label }}</th><td class="cl-right">{{ r.usable }}</td><td class="cl-right">{{ r.expired }}</td>
+<td>{% if desk %}<form class="cl-inline-form js-reorder" data-url="/admin/api/inventory/reorder/{{ r.medicine_id }}"><label class="sr-only" for="rl-{{ r.medicine_id }}">Reorder level for {{ r.label }}</label><input class="input" id="rl-{{ r.medicine_id }}" type="number" min="0" max="100000" step="1" value="{{ r.reorder_level if r.reorder_level is not none }}"><button type="submit" class="btn btn-secondary btn-sm">Save</button></form>{% else %}{{ 'n/a' if r.reorder_level is none else r.reorder_level }}{% endif %}</td>
+<td>{{ avail_badge(r.status) }}</td><td><a class="btn btn-ghost btn-sm" href="{{ base }}/batches?medicine_id={{ r.medicine_id }}" aria-label="Batches of {{ r.label }}">Batches</a></td></tr>
+{% endfor %}</tbody></table></div>
+{{ pager(meta) }}
+{% elif f.get('q') or f.get('status') %}
+{{ empty_state('No medicines match these filters', 'Change the search or status, or reset the filters.', 'search') }}
+{% elif desk %}
+{{ empty_state('No stock recorded yet', 'No stock recorded yet.', 'pill', 'Receive stock', base ~ '/receive') }}
+{% else %}
+{{ empty_state('No stock recorded yet', 'No stock recorded yet.', 'pill') }}
+{% endif %}
+{% endblock %}

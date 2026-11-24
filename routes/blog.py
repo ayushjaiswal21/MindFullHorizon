@@ -1,8 +1,13 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request, jsonify, abort
 from models import BlogPost, BlogComment, BlogLike, db, User
 from decorators import login_required, api_login_required
+from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import joinedload
 from datetime import datetime
+from utils.cache_utils import cached, BLOG_TTL
+from utils.pagination import paginate, page_meta
+from utils.query_utils import with_blog_counts
 
 blog_bp = Blueprint('blog', __name__, url_prefix='/blog')
 
@@ -10,12 +15,12 @@ _TRUE = ('1', 'true', 'on', 'yes', 'y')
 
 
 def _can_manage(post):
-    """Author or admin may edit/delete."""
-    return session.get('user_id') == post.author_id or session.get('user_role') == 'admin'
+    """Only the author may edit/delete (the DB has no 'admin' role)."""
+    return session.get('user_id') == post.author_id
 
 
 def _visible_post_or_404(post_id):
-    """Drafts are visible only to their author (or an admin)."""
+    """Drafts are visible only to their author."""
     post = BlogPost.query.get_or_404(post_id)
     if not post.is_published and not (session.get('user_id') and _can_manage(post)):
         abort(404)
@@ -33,21 +38,26 @@ def _published_flag(default):
 @blog_bp.route('/')
 def blog_list():
     try:
-        posts = BlogPost.query.filter_by(is_published=True).order_by(BlogPost.created_at.desc()).all()
-        # Get blog insights for display
-        insights = {
-            'total_posts': len(posts),
-            'total_likes': 0,
-            'total_comments': 0,
-            'total_views': sum([post.views or 0 for post in posts]) if posts else 0,
-            'most_popular_post': None
-        }
-        if posts:
-            insights['most_popular_post'] = max(posts, key=lambda p: p.views or 0)
+        published = BlogPost.query.filter_by(is_published=True)
+        # ?page= / ?per_page= (default 20, max 100); like/comment counts for the page come from two grouped queries
+        rows, pagination = paginate(
+            published.options(joinedload(BlogPost.author)).order_by(BlogPost.created_at.desc(), BlogPost.id.desc()))
+        posts = with_blog_counts(rows)
+        insights = cached('blog', ('insights',), BLOG_TTL, _blog_insights)  # public aggregate: same for every visitor
     except SQLAlchemyError:
         posts = []
+        pagination = page_meta(1, 20, 0)
         insights = None
-    return render_template('blog_list.html', posts=posts, insights=insights)
+    return render_template('blog_list.html', posts=posts, insights=insights, pagination=pagination)
+
+
+def _blog_insights():
+    total, views = db.session.query(func.count(BlogPost.id), func.coalesce(func.sum(BlogPost.views), 0)).filter(
+        BlogPost.is_published.is_(True)).one()
+    top = (BlogPost.query.filter_by(is_published=True).order_by(BlogPost.views.desc(), BlogPost.id.desc())
+           .with_entities(BlogPost.id, BlogPost.title, BlogPost.views).first())
+    return {'total_posts': total, 'total_likes': 0, 'total_comments': 0, 'total_views': int(views),
+            'most_popular_post': {'id': top.id, 'title': top.title, 'views': top.views or 0} if top else None}
 
 @blog_bp.route('/<int:post_id>')
 def blog_detail(post_id):
@@ -58,7 +68,7 @@ def blog_detail(post_id):
     db.session.commit()
 
     # Top-level comments; replies are loaded under their parent
-    comments = BlogComment.query.filter_by(post_id=post_id, parent_id=None).order_by(BlogComment.created_at.asc()).all()
+    comments = BlogComment.query.filter_by(post_id=post_id, parent_id=None).order_by(BlogComment.created_at.asc()).limit(200).all()  # cap
     comment_total = BlogComment.query.filter_by(post_id=post_id).count()
     # BlogComment has no `user` relationship, so look the names up in one query.
     authors = {u.id: u.name for u in User.query.filter(User.id.in_({c.user_id for c in comments})).all()} if comments else {}
@@ -222,9 +232,11 @@ def blog_comment(post_id):
 def blog_replies(post_id, comment_id):
     """Replies to one comment (public, like the post itself)."""
     _visible_post_or_404(post_id)
-    replies = BlogComment.query.filter_by(post_id=post_id, parent_id=comment_id).order_by(BlogComment.created_at.asc()).all()
+    # default page 100: the reply UI has no paging yet; `meta` says when there are more
+    replies, meta = paginate(BlogComment.query.filter_by(post_id=post_id, parent_id=comment_id)
+                             .order_by(BlogComment.created_at.asc(), BlogComment.id.asc()), default=100)
     users = {u.id: u for u in User.query.filter(User.id.in_({r.user_id for r in replies})).all()} if replies else {}
-    return jsonify({'success': True, 'replies': [_comment_json(r, users.get(r.user_id)) for r in replies]})
+    return jsonify({'success': True, 'replies': [_comment_json(r, users.get(r.user_id)) for r in replies], 'meta': meta})
 
 
 def _comment_json(comment, user):

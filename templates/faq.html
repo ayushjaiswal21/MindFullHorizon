@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% from 'partials/breadcrumbs.html' import breadcrumb %}
+{% from '_macros.html' import jsonld_scripts %}
+
+{% block title %}Frequently asked questions{% endblock %}
+{% block meta_description %}{{ page_description }}{% endblock %}
+{% block canonical %}{{ canonical_url }}{% endblock %}
+{% block robots %}index, follow{% endblock %}
+{% block breadcrumbs %}{{ breadcrumb([('Home', '/'), ('FAQ', None)]) }}{% endblock %}
+{% block head_extra %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+{{ jsonld_scripts(jsonld) }}
+{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <div class="page-header page-narrow">
+    <h1>Frequently asked questions</h1>
+    <p class="lead">Short answers about what the app does, who sees your data and what happens in a crisis.</p>
+  </div>
+
+  <div class="mfh-accordion page-narrow" data-accordion>
+    {% for item in faqs %}
+    <details id="faq-{{ item.id }}">
+      <summary>{{ item.q }}</summary>
+      <div class="mfh-answer">
+        <p>{{ item.a }}</p>
+        {% if item.link %}<p><a href="{{ account_data_url if item.link[0] == 'auth.account_data' else url_for(item.link[0]) }}">{{ item.link[1] }}</a></p>{% endif %}
+      </div>
+    </details>
+    {% endfor %}
+  </div>
+
+  <p class="muted page-narrow" style="margin-top:1.5rem">Question not covered here? Use the <a href="{{ url_for('pages.contact') }}">contact page</a>. If you are in crisis, call Tele-MANAS on {{ tele_manas }} or emergency services on {{ emergency_number }}.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script defer src="{{ url_for('static', filename='js/components.js') }}" nonce="{{ g.csp_nonce }}"></script>
+{% endblock %}

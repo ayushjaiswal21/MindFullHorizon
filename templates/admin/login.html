@@ -1,0 +1,16 @@
+{% extends 'admin/_base.html' %}
+{% from '_macros.html' import form_field %}
+{% block title %}Administrator sign in{% endblock %}
+{% block rx_body %}
+<div class="page-header"><div><h1>Administrator sign in</h1><p class="lead">For institution administrators. Students and counsellors sign in on the <a class="cl-link" href="{{ nav_url('auth.login', '/login') }}">main sign-in page</a>.</p></div></div>
+<form class="card max-w-sm mb-6" method="post" action="{{ nav_url('admin.login', '/admin/login') }}" data-validate novalidate>
+  <div class="card-body">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+    {{ form_field('email', 'Email', type='email', value=(form or {}).get('email', ''), required=True, autocomplete='username', maxlength=254) }}
+    {{ form_field('password', 'Password', type='password', required=True, autocomplete='current-password') }}
+    <button type="submit" class="btn btn-primary w-full">Sign in</button>
+  </div>
+</form>
+<p><a class="cl-link" href="{{ nav_url('core.index', '/') }}">Back to the public site</a></p>
+{% endblock %}

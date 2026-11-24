@@ -1,0 +1,76 @@
+{# Shared post form for blog_create.html and blog_edit.html. `post` is None when creating. #}
+{% macro blog_form(post, action, submit_label, cancel_url, local_drafts=False) -%}
+{% set categories = [
+  ('general', 'General'), ('anxiety', 'Anxiety and stress'), ('depression', 'Low mood'), ('mindfulness', 'Mindfulness'),
+  ('self_care', 'Self care'), ('therapy', 'Therapy and counselling'), ('recovery', 'Recovery'),
+  ('relationships', 'Relationships'), ('workplace', 'Work and internships'), ('student', 'Student life')] %}
+<form method="post" action="{{ action }}" id="blog-form"{% if local_drafts %} data-draft-key="blog_draft"{% endif %}>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+  {% if local_drafts %}
+  <div class="alert alert-info" id="draftBanner" hidden>
+    <p>A draft saved on this device was found. <span id="draftAge"></span></p>
+    <button type="button" class="btn btn-secondary btn-sm" id="restore-draft-btn">Restore draft</button>
+    <button type="button" class="btn btn-ghost btn-sm" id="discard-draft-btn">Discard</button>
+  </div>
+  {% endif %}
+
+  <div class="field">
+    <label class="label" for="title">Title (required)</label>
+    <input class="input" type="text" id="title" name="title" required maxlength="200" value="{{ post.title if post else '' }}">
+  </div>
+
+  <div class="editor-grid two">
+    <div class="field">
+      <label class="label" for="category">Category</label>
+      <select class="select" id="category" name="category">
+        {% for value, label in categories %}
+        <option value="{{ value }}"{% if post and post.category == value %} selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label class="label" for="tags">Tags (optional)</label>
+      <input class="input" type="text" id="tags" name="tags" value="{{ (post.tags or '') if post else '' }}" aria-describedby="tags-help">
+      <p class="help" id="tags-help">Separate tags with commas.</p>
+    </div>
+  </div>
+
+  <div class="field">
+    <label class="label" for="content">Post (required)</label>
+    <textarea class="textarea" id="content" name="content" rows="12" required aria-describedby="content-help">{{ post.content if post else '' }}</textarea>
+    <p class="help" id="content-help"><span id="wordCount">0</span> words. Posts are shown as plain text. Do not include names or private details of other people.</p>
+  </div>
+
+  <div class="field">
+    <button id="toggle-preview-btn" type="button" class="btn btn-ghost btn-sm" aria-expanded="false" aria-controls="previewContainer">
+      <span id="previewToggleText">Show preview</span>
+    </button>
+    <div id="previewContainer" class="preview prose" hidden>
+      <h2 id="previewTitle"></h2>
+      <p class="blog-meta"><span id="previewCategory"></span> <span id="previewTags"></span></p>
+      <div id="previewContent" class="article-body"></div>
+    </div>
+  </div>
+
+  <div class="field">
+    <input type="hidden" name="is_published" value="false">
+    <label class="check">
+      <input type="checkbox" id="is_published" name="is_published" value="true"{% if not post or post.is_published %} checked{% endif %}>
+      <span>Published. Untick to keep this post as a draft that only you can see.</span>
+    </label>
+  </div>
+
+  <div class="editor-foot">
+    <div class="group">
+      {% if local_drafts %}<button id="save-draft-btn" type="button" class="btn btn-secondary">Save draft on this device</button>{% endif %}
+      {% if post %}<span class="help">Last updated {{ post.updated_at.strftime('%d %b %Y, %I:%M %p') }}</span>{% endif %}
+    </div>
+    <div class="group">
+      <a class="btn btn-ghost" href="{{ cancel_url }}">Cancel</a>
+      <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
+    </div>
+  </div>
+  <p class="help" id="editor-status" role="status" aria-live="polite"></p>
+</form>
+{%- endmacro %}

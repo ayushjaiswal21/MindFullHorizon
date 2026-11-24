@@ -6,7 +6,7 @@ from datetime import date, datetime, timedelta
 import pytest
 
 from extensions import db
-from models import Appointment, Assessment, ClinicalNote, CrisisEvent, DigitalDetoxLog, Prescription
+from models import Appointment, Assessment, ClinicalNote, CrisisEvent, DigitalDetoxLog, Prescription, ProviderPatient
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JS_DIR = os.path.join(ROOT, "static", "js")
@@ -37,6 +37,12 @@ def add(app, obj):
         return obj.id
 
 
+def assign(app, provider, *patients):
+    """P-02: a provider only sees patients linked by a ProviderPatient row."""
+    for p in patients:
+        add(app, ProviderPatient(provider_id=provider, patient_id=p, source="manual"))
+
+
 def test_dashboard_exposes_urls_for_js(app, provider_client):
     c, _ = provider_client
     html = c.get("/provider/dashboard").get_data(as_text=True)
@@ -49,20 +55,22 @@ def test_dashboard_exposes_urls_for_js(app, provider_client):
 
 
 def test_institution_match_is_exact_not_keyword(app, make_user, provider_client):
-    c, _ = provider_client  # Test University
-    make_user("patient", email="same@t.l", institution="  test UNIVERSITY ", name="Same Student")
-    make_user("patient", email="other@t.l", institution="Other University", name="Other Student")
-    make_user("patient", email="kw@t.l", institution="Test College", name="Keyword Student")
+    c, pid = provider_client  # Test University
+    ids = [make_user("patient", email="same@t.l", institution="  test UNIVERSITY ", name="Same Student"),
+           make_user("patient", email="other@t.l", institution="Other University", name="Other Student"),
+           make_user("patient", email="kw@t.l", institution="Test College", name="Keyword Student")]
+    assign(app, pid, *ids)  # even stray links cannot cross institutions
     html = c.get("/provider/dashboard").get_data(as_text=True)
     assert "Same Student" in html
     assert "Other Student" not in html and "Keyword Student" not in html
 
 
 def test_risk_comes_from_phq_gad_not_screen_time(app, make_user, provider_client):
-    c, _ = provider_client
+    c, pid = provider_client
     hi = make_user("patient", name="Screen Only")
     sev = make_user("patient", name="Severe Phq")
     mod = make_user("patient", name="Moderate Gad")
+    assign(app, pid, hi, sev, mod)
     add(app, DigitalDetoxLog(user_id=hi, date=date.today(), screen_time_hours=11, ai_score="Good"))
     add(app, Assessment(user_id=sev, assessment_type="PHQ-9", score=17))
     add(app, Assessment(user_id=mod, assessment_type="GAD-7", score=12))
@@ -74,6 +82,7 @@ def test_risk_comes_from_phq_gad_not_screen_time(app, make_user, provider_client
 def test_latest_detox_and_note_use_newest(app, make_user, provider_client):
     c, pid = provider_client
     p = make_user("patient", name="Dated")
+    assign(app, pid, p)
     add(app, DigitalDetoxLog(user_id=p, date=date.today() - timedelta(days=5), screen_time_hours=2, ai_score="OldScore"))
     add(app, DigitalDetoxLog(user_id=p, date=date.today(), screen_time_hours=2, ai_score="NewScore"))
     add(app, ClinicalNote(provider_id=pid, patient_id=p, session_date=datetime(2020, 1, 1)))
@@ -87,10 +96,11 @@ def test_appointments_api_bands_and_none(app, make_user, provider_client):
     a = make_user("patient", name="PhqPatient")
     b = make_user("patient", name="GadPatient")
     n = make_user("patient", name="NoData")
+    assign(app, pid, a, b, n)
     add(app, Assessment(user_id=a, assessment_type="PHQ-9", score=20))
     add(app, Assessment(user_id=b, assessment_type="GAD-7", score=12))
-    for uid in (a, b, n):
-        add(app, Appointment(user_id=uid, provider_id=pid, date=date.today(), time="10:00", appointment_type="video"))
+    for i, uid in enumerate((a, b, n)):  # one slot per appointment: a provider cannot hold two live ones at the same time
+        add(app, Appointment(user_id=uid, provider_id=pid, date=date.today(), time=f"1{i}:00", appointment_type="video"))
     data = c.get("/provider/appointments").get_json()
     by = {x["patient_name"]: x for x in data["appointments"]}
     assert by["PhqPatient"]["urgency_level"] == "high"
@@ -115,42 +125,44 @@ def test_accept_does_not_claim_other_institution(app, make_user, provider_client
         assert db.session.get(Appointment, fa).provider_id is None
 
 
-def test_patient_scoped_pages_blocked_for_other_institution(app, make_user, provider_client):
-    c, _ = provider_client
+def test_patient_scoped_pages_blocked_for_other_institution(app, make_user, provider_client, monkeypatch):
+    c, pid = provider_client
     foreign = make_user("patient", institution="Other University")
     local = make_user("patient")
+    assign(app, pid, local, foreign)
     assert c.get(f"/provider/wellness-report/{foreign}").status_code == 404
     assert c.get(f"/provider/wellness-report/{local}").status_code == 200
-    r = c.post(f"/provider/send_prescription/{foreign}", data={"medication_name": "X", "dosage": "1"})
-    assert r.status_code == 404
+    # The old open prescription form is gone (design 5.3): 404 for every patient, flag on or off, nothing written.
+    for pid_ in (foreign, local):
+        assert c.post(f"/provider/send_prescription/{pid_}", data={"medication_name": "X", "dosage": "1"}).status_code == 404
     with app.app_context():
         assert Prescription.query.count() == 0
-    r = c.post(f"/provider/send_prescription/{local}", data={"medication_name": "X", "dosage": "1"})
-    assert r.status_code == 302
-    with app.app_context():
-        assert Prescription.query.count() == 1
     assert c.get(f"/provider/telehealth/{foreign}").status_code == 404
 
 
-def test_appointment_makes_patient_reachable(app, make_user, provider_client):
+def test_appointment_row_alone_does_not_make_patient_reachable(app, make_user, provider_client):
+    # P-02: reach comes from a ProviderPatient row (created when the patient books), not from an appointment row.
     c, pid = provider_client
     foreign = make_user("patient", institution="Other University")
     add(app, Appointment(user_id=foreign, provider_id=pid, date=date.today(), time="9:00", appointment_type="video"))
-    assert c.get(f"/provider/wellness-report/{foreign}").status_code == 200
+    assert c.get(f"/provider/wellness-report/{foreign}").status_code == 404
 
 
 def test_wellness_report_page_wiring(app, make_user, provider_client):
-    c, _ = provider_client
+    c, pid = provider_client
     p = make_user("patient", name="Report Person")
+    assign(app, pid, p)
     html = c.get(f"/provider/wellness-report/{p}").get_data(as_text=True)
-    assert f'/provider/send_prescription/{p}' in html
+    assert "send_prescription" not in html and "Send prescription" not in html  # old form removed
+    assert 'id="meds-panel"' in html  # read-only medications panel
     assert 'id="report-data"' in html and "Report Person" in html
     assert 'nonce="{ g' not in html
 
 
 def test_telehealth_room_rendered_server_side(app, make_user, provider_client):
-    c, _ = provider_client
+    c, pid = provider_client
     p = make_user("patient", name="Tele Person")
+    assign(app, pid, p)
     html = c.get(f"/provider/telehealth/{p}").get_data(as_text=True)
     assert f'data-room="telehealth_room_{p}"' in html
     assert "cdnjs.cloudflare.com/ajax/libs/socket.io" not in html  # base.html is the single socket.io source
@@ -166,8 +178,9 @@ def test_analytics_page_renders(app, make_user, provider_client):
 
 
 def test_ai_documentation_post(app, make_user, provider_client):
-    c, _ = provider_client
+    c, pid = provider_client
     p = make_user("patient", email="doc@t.l")
+    assign(app, pid, p)
     r = c.post("/provider/ai-documentation", data={"transcript": "session text", "patient_email": "doc@t.l"})
     assert r.status_code == 200
     with app.app_context():
@@ -217,14 +230,18 @@ def test_login_has_no_demo_credentials_and_signup_has_consent(client):
 
 def test_base_has_no_dangling_icons_and_single_socketio(client):
     html = client.get("/login").get_data(as_text=True)
-    assert "icon-192x192" not in html and "icon-512" not in html
+    # every static file the page references must exist (the old base pointed at icons that were never shipped)
+    for ref in set(re.findall(r'(?:src|href)="(/static/[^"?#]+)', html + client.get("/login").get_data(as_text=True))):
+        assert os.path.exists(os.path.join(ROOT, ref.lstrip("/").replace("/", os.sep))), ref
+    assert "icon-192x192" not in html  # the legacy manifest icon name
     assert html.count("socket.io.min.js") == 1
     assert html.count("chart.umd.min.js") == 1
 
 
 def test_long_assessment_titles_count(app, make_user, provider_client):
-    c, _ = provider_client
+    c, provider_id = provider_client
     p = make_user("patient", name="Old Title")
+    assign(app, provider_id, p)
     add(app, Assessment(user_id=p, assessment_type="PHQ-9 Depression Screening", score=22))
     html = c.get("/provider/dashboard").get_data(as_text=True)
     assert 'data-risk-name="Old Title" data-risk="High"' in html

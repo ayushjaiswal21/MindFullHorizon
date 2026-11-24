@@ -1,6 +1,6 @@
 # MindFull Horizon
 
-A Flask web app for college-student mental-health monitoring. Students check in (PHQ-9 / GAD-7, mood, journal, breathing, yoga, music), chat with an AI wellness companion, track goals and medication, and book sessions. Campus counselors get a provider dashboard with caseload, appointments, prescriptions and wellness reports.
+A Flask web app for college-student mental-health monitoring. Students check in (PHQ-9 / GAD-7, mood, journal, breathing, yoga, music), chat with an AI wellness companion, track goals and medication, and book sessions. Counsellors and doctors get a dashboard for their assigned students (appointments, crisis alerts, notes, prescriptions), and institution admins run doctor verification, the medicine inventory and aggregate reports.
 
 > **Not a medical device.** MindFull Horizon supports everyday wellbeing and screening; it does not diagnose or treat any condition. If you or someone else is in danger, call **112**, or **Tele-MANAS 14416** (India, free, 24x7).
 
@@ -12,7 +12,8 @@ Status: work in progress. See [docs/STATUS.md](docs/STATUS.md) for what works, k
 |------|-------------|
 | Students | PHQ-9 / GAD-7 assessments, mood log, journal with sentiment, breathing, yoga (video library), music (binaural), digital detox, goals, medication log, gamification, progress and wellness reports |
 | AI | Gemini-powered chat companion with a severity heuristic, assessment insights, journal and goal suggestions (falls back to canned text without an API key) |
-| Providers | Caseload and risk level, appointment accept/reject, prescriptions, analytics, AI note drafting, telehealth signalling (WebRTC over SocketIO) |
+| Counsellors and doctors | Assigned students only, risk and crisis alerts with escalation, appointments, analytics, AI note drafting, telehealth signalling (WebRTC over SocketIO), e-prescriptions for verified doctors |
+| Admins | Doctor verification, medicine catalogue and stock, two-step dispensing, aggregate reports, audit log, annual report |
 | Community | Blog with likes and comments |
 
 ## Quick start
@@ -21,15 +22,15 @@ Status: work in progress. See [docs/STATUS.md](docs/STATUS.md) for what works, k
 python -m venv venv && venv\Scripts\activate        # Windows (use source venv/bin/activate on Linux/macOS)
 pip install -r requirements.txt
 copy .env.example .env                               # then edit .env (SECRET_KEY, GEMINI_API_KEY)
-python app.py                                        # http://127.0.0.1:5000
+python scripts/local_demo.py                         # http://127.0.0.1:5000 with demo accounts
 ```
 
-The SQLite database is created automatically on first start (`instance/mindful_horizon.db`).
+`scripts/local_demo.py` uses a throwaway database (`instance/demo.db`) and creates demo accounts that all use the password `Demo@Pass2026` (student `demo.patient@example.com`, counsellor `demo.provider@example.com`, doctor `demo.doctor@example.com`, admin `demo.admin@example.com` via `/admin/login`). Never use it for a real deployment. Plain `python app.py` starts the app with an empty database (`instance/mindful_horizon.db`). Deployment on Render and Neon: [docs/DEPLOY.md](docs/DEPLOY.md).
 
 ## Tests
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements/dev.txt
 pytest tests -q
 ```
 
@@ -39,7 +40,9 @@ Tests use a throw-away SQLite database and never call Gemini.
 
 ```
 app.py            Flask app setup, SocketIO, OAuth, remaining legacy routes
-routes/           Blueprints: auth, core, patient, provider, blog, assessment, mood, chat
+routes/           Blueprints: auth, core, patient, provider, blog, assessment, mood, chat, admin, rx, seo, pages, ops
+services/         Prescriptions, inventory and dispensing logic
+tools/            frontend build (Tailwind) and real-browser checks (e2e)
 models.py         SQLAlchemy models (source of truth for the schema)
 ai/               Gemini service, severity heuristic; prompts in ai_prompts/
 utils/            DB helpers, gamification
@@ -63,7 +66,7 @@ Set `SECRET_KEY`, `GEMINI_API_KEY`, `DATABASE_URL`, `FLASK_ENV=production`. The 
 
 ## Security and privacy
 
-Please report vulnerabilities privately; see [SECURITY.md](SECURITY.md). The app handles sensitive health data: never commit `.env`, rotate any key that was shared, and read the open issues in [docs/STATUS.md](docs/STATUS.md) before any public deployment.
+Please report vulnerabilities privately; see [SECURITY.md](docs/SECURITY.md). The app handles sensitive health data: never commit `.env`, rotate any key that was shared, and read the open issues in [docs/STATUS.md](docs/STATUS.md) before any public deployment.
 
 ## License
 

@@ -1,0 +1,18 @@
+/* Print: content only. Black on white, no chrome, link URLs after prose links. Loaded with media="print". */
+@media print {
+  :root, :root[data-theme="dark"] { --bg: #fff; --surface: #fff; --surface-2: #fff; --text: #000; --text-muted: #000; --border: #999; --primary: #000; --primary-hover: #000; --input-border: #666; }
+  html, body { background: #fff !important; color: #000 !important; font-size: 11pt; min-height: 0; display: block; }
+  .site-header, .site-footer, .skip-link, .progress-bar, .toast-region, .consent-banner, .back-to-top, .breadcrumbs,
+  .crisis-banner, .page-actions, .tabs, noscript, button, .btn, [data-print="hide"] { display: none !important; }
+  main { display: block; padding: 0; }
+  .container { max-width: none; padding-inline: 0; }
+  a { color: #000; text-decoration: underline; }
+  .prose a[href^="http"]::after, .prose a[href^="/"]::after { content: " (" attr(href) ")"; font-size: .85em; word-break: break-all; }
+  .card, .stat, .alert, .panel-muted, .table-wrap, .empty-state { box-shadow: none; border: 1px solid #999; background: #fff; break-inside: avoid; page-break-inside: avoid; }
+  tr, img, figure, blockquote, pre { break-inside: avoid; page-break-inside: avoid; }
+  thead { display: table-header-group; }
+  h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
+  .table th { background: #fff; border-bottom: 1px solid #000; }
+  .badge { border: 1px solid #000; background: #fff; color: #000; }
+  .table-wrap { overflow: visible; }
+}

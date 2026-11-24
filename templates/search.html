@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}Search - Mindful Horizon{% endblock %}
+{% block meta_description %}Search public pages and blog articles on Mindful Horizon.{% endblock %}
+{% block canonical %}{{ canonical_url }}{% endblock %}
+{% block robots %}noindex, nofollow{% endblock %}
+
+{% macro result_list(items, q) %}
+<ul class="list-none p-0 m-0">
+    {% for r in items %}
+    <li class="py-3">
+        <a href="{{ r.path }}"><strong>{{ r.title|highlight(q) }}</strong></a>
+        {% if r.description %}<p class="muted m-0">{{ r.description|highlight(q) }}</p>{% endif %}
+    </li>
+    {% endfor %}
+</ul>
+{% endmacro %}
+
+{% block content %}
+<div class="container section">
+    <div class="page-header">
+        <h1>Search</h1>
+        <p class="lead">Search public pages and blog articles. Your journal, chats and notes are never searched.</p>
+    </div>
+
+    <form action="{{ url_for('seo.search') }}" method="get" role="search" class="field" style="max-width: 36rem;">
+        <label class="label" for="search-q">Search Mindful Horizon</label>
+        <div class="flex gap-2">
+            <input class="input" id="search-q" type="search" name="q" value="{{ q }}" maxlength="100" autocomplete="off">
+            <button class="btn btn-primary" type="submit">Search</button>
+        </div>
+    </form>
+
+    {% if q %}
+        {% if not (pages or posts or shortcuts) %}
+        <div class="empty-state">
+            <h2>No results</h2>
+            <p>Nothing matched "{{ q }}". Try a shorter word, such as "mood" or "privacy".</p>
+        </div>
+        {% endif %}
+
+        {% if shortcuts %}
+        <section class="card mt-4">
+            <div class="card-header"><h2>Your tools</h2></div>
+            <div class="card-body">{{ result_list(shortcuts, q) }}</div>
+        </section>
+        {% endif %}
+
+        {% if pages %}
+        <section class="card mt-4">
+            <div class="card-header"><h2>Pages</h2></div>
+            <div class="card-body">{{ result_list(pages, q) }}</div>
+        </section>
+        {% endif %}
+
+        {% if posts %}
+        <section class="card mt-4">
+            <div class="card-header"><h2>Blog articles</h2></div>
+            <div class="card-body">{{ result_list(posts, q) }}</div>
+        </section>
+        {% endif %}
+    {% else %}
+        {% if shortcuts %}
+        <section class="card mt-4">
+            <div class="card-header"><h2>Your tools</h2></div>
+            <div class="card-body">{{ result_list(shortcuts, q) }}</div>
+        </section>
+        {% endif %}
+        <section class="card mt-4">
+            <div class="card-header"><h2>All pages</h2></div>
+            <div class="card-body">{{ result_list(pages, q) }}</div>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

@@ -270,8 +270,8 @@ document.addEventListener('keydown', (event) => {
 window.showMessageBox = window.showMessageBox || function (title, message, type) {
     const box = document.createElement('div');
     box.setAttribute('role', type === 'error' ? 'alert' : 'status');
-    box.className = 'fixed top-20 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg text-white ' +
-        (type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-green-600' : 'bg-blue-600');
+    box.className = 'fixed top-20 right-4 z-50 max-w-sm p-4 alert ' +
+        (type === 'error' ? 'alert-danger' : type === 'success' ? 'alert-success' : 'alert-info');
     const strong = document.createElement('strong');
     strong.textContent = title;
     const text = document.createElement('div');

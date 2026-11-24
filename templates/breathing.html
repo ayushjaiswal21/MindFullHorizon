@@ -1,169 +1,171 @@
 {% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
 
-{% block title %}Breathing Exercises - MindFull Horizon{% endblock %}
+{% block title %}Breathing exercises | MindFull Horizon{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8 text-center">
-        <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Mindful Breathing</h1>
-        <p class="text-lg text-gray-600">Master the art of conscious breathing for stress relief and mental clarity</p>
+<div class="container section">
+  <header class="page-header">
+    <h1>Breathing exercises</h1>
+    <p class="lead">Follow a timed breathing pattern, then save the session to your history.</p>
+    <div class="page-actions">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('patient.patient_dashboard') }}">{{ icon('arrow-left') }} Back to dashboard</a>
     </div>
+  </header>
 
-    <!-- Interactive Breathing Visualizer -->
-    <div class="card p-8 mb-8">
-        <div class="text-center mb-6">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-2">Breathing Guide</h2>
-            <p id="breathing-instruction" class="text-xl text-indigo-600 font-medium">Select an exercise to begin</p>
+  <div class="wl-stack">
+    <section class="card" id="breathing-root" aria-labelledby="guide-heading">
+      <div class="card-header"><h2 id="guide-heading" class="text-lg">Breathing guide</h2></div>
+      <div class="card-body breath">
+        <fieldset class="pattern-set" id="pattern-set">
+          <legend>Pattern</legend>
+          <label class="pattern-option">
+            <input type="radio" name="pattern" value="box" id="start-box-breathing" checked>
+            <span class="pattern-box"><strong>Box breathing</strong><span>In 4, hold 4, out 4, hold 4</span><span class="pattern-how">Steadies you before a test. Stop if dizzy.</span></span>
+          </label>
+          <label class="pattern-option">
+            <input type="radio" name="pattern" value="478" id="start-4-7-8-breathing">
+            <span class="pattern-box"><strong>4-7-8 breathing</strong><span>In 4, hold 7, out 8</span><span class="pattern-how">A long out-breath to wind down. Stop if dizzy.</span></span>
+          </label>
+          <label class="pattern-option">
+            <input type="radio" name="pattern" value="diaphragmatic" id="start-diaphragmatic-breathing">
+            <span class="pattern-box"><strong>Diaphragmatic breathing</strong><span>In 4, out 6</span><span class="pattern-how">Slow belly breathing that eases tension. Stop if dizzy.</span></span>
+          </label>
+          <label class="pattern-option">
+            <input type="radio" name="pattern" value="pursed" id="start-pursed-lip-breathing">
+            <span class="pattern-box"><strong>Pursed-lip breathing</strong><span>In 2, out 4</span><span class="pattern-how">Breathe out through pursed lips to slow your breath. Stop if dizzy.</span></span>
+          </label>
+        </fieldset>
+
+        <div class="breath-options">
+          <div class="field" style="max-width:14rem">
+            <label for="session-minutes" class="label">Length in minutes</label>
+            <input type="number" id="session-minutes" class="input" min="1" max="180" step="1" value="5" inputmode="numeric" aria-describedby="session-minutes-help session-minutes-error">
+            <p id="session-minutes-help" class="help">1 to 180 minutes.</p>
+            <p id="session-minutes-error" class="error-text" hidden></p>
+          </div>
+          <label class="switch" for="animated-toggle">
+            <input type="checkbox" role="switch" id="animated-toggle">
+            <span class="switch-track" aria-hidden="true"></span>
+            <span class="switch-text"><strong>Animated guide</strong><span>The circle grows and shrinks with your breath. Off by default if your device asks for reduced motion.</span></span>
+          </label>
         </div>
-        
-        <!-- Breathing Circle Visualizer -->
-        <div class="flex justify-center mb-8">
-            <div id="breathing-visualizer" class="relative w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-full transition-all duration-1000 ease-in-out flex items-center justify-center shadow-lg">
-                <div id="breathing-circle" class="w-32 h-32 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-full transition-all duration-1000 ease-in-out shadow-xl"></div>
-                <div id="breathing-text" class="absolute text-white font-bold text-lg">Breathe</div>
+
+        <div id="breathing-visualizer" class="breath-stage" aria-hidden="true">
+          <div class="breath-ring"></div>
+          <div id="breathing-circle" class="breath-circle"></div>
+          <div id="breathing-text" class="breath-count">0</div>
+        </div>
+        <p id="breathing-instruction" class="breath-phase" aria-live="polite">Ready</p>
+        <p id="breathing-cycle" class="breath-meta"></p>
+        <p id="timer-display" class="breath-timer">0:00 left</p>
+        <progress id="breathing-progress" class="breath-progress" max="100" value="0" aria-label="Session progress"></progress>
+        <p id="breathing-status" class="help" role="status">Pick a pattern and a length, then press Start.</p>
+
+        <div class="wl-actions">
+          <button type="button" class="btn btn-primary" id="start-btn">Start</button>
+          <button type="button" class="btn btn-secondary" id="pause-btn" disabled>Pause</button>
+          <button type="button" class="btn btn-ghost" id="stop-btn" disabled>Stop</button>
+        </div>
+
+        <div id="save-prompt" class="alert alert-success" hidden style="width:100%">
+          <p id="save-prompt-text" class="mb-2"></p>
+          <button type="button" class="btn btn-primary btn-sm" id="save-session-btn">Save this session</button>
+        </div>
+
+        <p class="wl-note">Breathing exercises are for relaxation, not medical treatment. If you feel dizzy or light-headed, stop and breathe normally. Holding your breath may not suit you if you have a heart or lung condition.</p>
+      </div>
+    </section>
+
+    <section aria-labelledby="stats-heading">
+      <h2 id="stats-heading" class="text-lg mb-2">Your totals</h2>
+      <div class="wl-stats">
+        <div class="stat"><div class="stat-label">Sessions</div><div class="stat-value">{{ stats.total_sessions or 0 }}</div></div>
+        <div class="stat"><div class="stat-label">Minutes</div><div class="stat-value">{{ stats.total_minutes or 0 }}</div></div>
+        <div class="stat"><div class="stat-label">Days in a row</div><div class="stat-value mb-2">{{ stats.streak or 0 }}</div></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="guided-heading">
+      <div class="card-header"><h2 id="guided-heading" class="text-lg">Ready-made sessions</h2></div>
+      <div class="card-body">
+        <div class="wl-grid" style="grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))">
+          <button type="button" class="session-card start-guided-session-btn" data-session-type="breathing" data-session-name="morning" data-session-duration="5" data-pattern="box">
+            <strong>Morning reset</strong><span>Box breathing, 5 minutes</span>
+          </button>
+          <button type="button" class="session-card start-guided-session-btn" data-session-type="breathing" data-session-name="stress" data-session-duration="10" data-pattern="478">
+            <strong>Winding down</strong><span>4-7-8 breathing, 10 minutes</span>
+          </button>
+          <button type="button" class="session-card start-guided-session-btn" data-session-type="breathing" data-session-name="sleep" data-session-duration="8" data-pattern="diaphragmatic">
+            <strong>Before sleep</strong><span>Diaphragmatic breathing, 8 minutes</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="wl-grid wl-grid-2">
+      <section class="card" aria-labelledby="log-heading">
+        <div class="card-header"><h2 id="log-heading" class="text-lg">Log a session by hand</h2></div>
+        <div class="card-body">
+          <form id="breathing-log-form" method="POST" data-validate novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="field">
+              <label for="exercise_name" class="label">Exercise</label>
+              <select id="exercise_name" name="exercise_name" class="select" required>
+                <option value="">Select an exercise</option>
+                <option value="Box Breathing">Box breathing</option>
+                <option value="4-7-8 Breathing">4-7-8 breathing</option>
+                <option value="Diaphragmatic Breathing">Diaphragmatic breathing</option>
+                <option value="Pursed-lip Breathing">Pursed-lip breathing</option>
+                <option value="Guided Session">Ready-made session</option>
+                <option value="Custom">Other</option>
+              </select>
             </div>
-        </div>
-
-        <!-- Exercise Controls -->
-        <div class="flex flex-wrap justify-center gap-4 mb-6">
-<button class="btn btn-primary" id="start-4-7-8-breathing" aria-label="Start 4-7-8 breathing exercise">Start 4-7-8 Breathing</button>
-            <button class="btn btn-primary" id="start-box-breathing" aria-label="Start box breathing exercise">Start Box Breathing</button>
-            <button class="btn btn-primary" id="start-diaphragmatic-breathing" aria-label="Start diaphragmatic breathing exercise">Start Diaphragmatic Breathing</button>
-            <button class="btn btn-primary" id="start-pursed-lip-breathing" aria-label="Start pursed-lip breathing exercise">Start Pursed-Lip Breathing</button>
-        </div>
-
-        <!-- Timer and Controls -->
-        <div class="text-center">
-            <div id="timer-display" class="text-3xl font-bold text-gray-800 mb-4 hidden">00:00</div>
-            <div class="flex justify-center gap-4">
-<button class="btn btn-success" id="start-btn" aria-label="Start the breathing session">Start Session</button>
-                <button id="pause-btn" class="btn-secondary hidden" aria-label="Pause the breathing session">
-                    <i class="fas fa-pause mr-2"></i>Pause
-                </button>
-                <button id="stop-btn" class="btn-danger hidden" aria-label="Stop the breathing session">
-                    <i class="fas fa-stop mr-2"></i>Stop
-                </button>
+            <div class="field">
+              <label for="duration_minutes" class="label">Minutes</label>
+              <input type="number" id="duration_minutes" name="duration_minutes" class="input" required min="1" max="180" step="1" inputmode="numeric" aria-describedby="duration_minutes-error">
+              <p id="duration_minutes-error" class="error-text" hidden></p>
             </div>
+            <button type="submit" class="btn btn-primary" data-loading-text="Saving">Save session</button>
+          </form>
+          <div id="form-message" role="status"></div>
         </div>
+      </section>
+
+      <section class="card" aria-labelledby="recent-heading">
+        <div class="card-header"><h2 id="recent-heading" class="text-lg">Recent sessions</h2></div>
+        <div class="card-body">
+          {% if recent_logs %}
+          <div class="table-wrap">
+            <table class="table">
+              <thead><tr><th scope="col">Exercise</th><th scope="col">Minutes</th><th scope="col">Date (UTC)</th></tr></thead>
+              <tbody>
+                {% for log in recent_logs %}
+                <tr><td>{{ log.exercise_name }}</td><td>{{ log.duration_minutes }}</td><td>{{ log.created_at.strftime('%d %b %Y, %H:%M') }}</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            {{ icon('wind', size=32) }}
+            <h3>No sessions yet</h3>
+            <p>Finish a guided session or log one by hand to start your history.</p>
+          </div>
+          {% endif %}
+        </div>
+      </section>
     </div>
-
-    <!-- Session Statistics -->
-    <div class="grid md:grid-cols-3 gap-6 mb-8">
-        <div class="card p-6 text-center">
-            <div class="text-3xl font-bold text-blue-600 mb-2">{{ stats.total_sessions or 0 }}</div>
-            <div class="text-gray-600">Total Sessions</div>
-        </div>
-        <div class="card p-6 text-center">
-            <div class="text-3xl font-bold text-green-600 mb-2">{{ stats.total_minutes or 0 }}</div>
-            <div class="text-gray-600">Total Minutes</div>
-        </div>
-        <div class="card p-6 text-center">
-            <div class="text-3xl font-bold text-purple-600 mb-2">{{ stats.streak or 0 }}</div>
-            <div class="text-gray-600">Day Streak</div>
-        </div>
-    </div>
-
-    <!-- Guided Sessions -->
-    <div class="card p-6 mb-8">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">
-            <i class="fas fa-headphones text-blue-500 mr-2"></i>Guided Breathing Sessions
-        </h3>
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg cursor-pointer hover:shadow-md transition-shadow start-guided-session-btn" data-session-type="breathing" data-session-name="morning" data-session-duration="5">
-                <h4 class="font-semibold text-blue-800 mb-2">Morning Wake-Up</h4>
-                <p class="text-sm text-blue-600 mb-2">5 minutes • Energizing</p>
-                <div class="text-xs text-blue-500">Perfect to start your day</div>
-            </div>
-            <div class="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-lg cursor-pointer hover:shadow-md transition-shadow start-guided-session-btn" data-session-type="breathing" data-session-name="stress" data-session-duration="10">
-                <h4 class="font-semibold text-green-800 mb-2">Stress Relief</h4>
-                <p class="text-sm text-green-600 mb-2">10 minutes • Calming</p>
-                <div class="text-xs text-green-500">Release tension and anxiety</div>
-            </div>
-            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg cursor-pointer hover:shadow-md transition-shadow start-guided-session-btn" data-session-type="breathing" data-session-name="sleep" data-session-duration="8">
-                <h4 class="font-semibold text-purple-800 mb-2">Sleep Preparation</h4>
-                <p class="text-sm text-purple-600 mb-2">8 minutes • Relaxing</p>
-                <div class="text-xs text-purple-500">Prepare for restful sleep</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Manual Session Logging -->
-    <div class="grid lg:grid-cols-2 gap-8">
-        <div class="card p-6">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-plus-circle text-blue-500 mr-2"></i>Log a Session
-            </h3>
-            
-            <form id="breathing-log-form" method="POST" class="space-y-4">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <div>
-                    <label for="exercise_name" class="block text-sm font-medium text-gray-700 mb-1">Exercise Type</label>
-                    <select id="exercise_name" name="exercise_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="">Select exercise type</option>
-                        <option value="Box Breathing">Box Breathing</option>
-                        <option value="4-7-8 Breathing">4-7-8 Breathing</option>
-                        <option value="Triangle Breathing">Triangle Breathing</option>
-                        <option value="Coherence Breathing">Coherence Breathing</option>
-                        <option value="Guided Session">Guided Session</option>
-                        <option value="Custom">Custom</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label for="duration_minutes" class="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
-                    <input type="number" id="duration_minutes" name="duration_minutes" required min="1" max="60" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                           placeholder="e.g., 10">
-                </div>
-                
-                <div>
-                    <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
-                    <textarea id="notes" name="notes" rows="3" 
-                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                              placeholder="How did you feel during this session?"></textarea>
-                </div>
-                
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" aria-label="Log the breathing session">
-                    <i class="fas fa-save mr-2"></i>Log Session
-                </button>
-            </form>
-            
-            <div id="form-message" class="mt-4 hidden"></div>
-        </div>
-
-        <!-- Recent Sessions -->
-        <div class="card p-6">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800">
-                <i class="fas fa-history text-green-500 mr-2"></i>Recent Sessions
-            </h3>
-            
-            {% if recent_logs %}
-                <div class="space-y-3 max-h-80 overflow-y-auto">
-                    {% for log in recent_logs %}
-                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                            <div class="flex justify-between items-start">
-                                <div>
-                                    <p class="font-medium text-gray-800">{{ log.exercise_name }}</p>
-                                    <p class="text-sm text-gray-600">{{ log.duration_minutes }} minutes</p>
-                                    {% if log.notes %}
-                                        <p class="text-xs text-gray-500 mt-1">{{ log.notes }}</p>
-                                    {% endif %}
-                                </div>
-                                <p class="text-xs text-gray-500">{{ log.created_at.strftime('%m/%d %H:%M') }}</p>
-                            </div>
-                        </div>
-                    {% endfor %}
-                </div>
-            {% else %}
-                <div class="text-center py-8">
-                    <i class="fas fa-wind text-gray-300 text-4xl mb-4"></i>
-                    <p class="text-gray-500">No breathing sessions logged yet.</p>
-                    <p class="text-sm text-gray-400 mt-2">Start your first session to see your progress here.</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
+  </div>
 </div>
+{% endblock %}
 
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/breathing_inline_1.js') }}"></script>
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/wellness-common.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/breathing-guide.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/breathing_inline_1.js') }}" defer></script>
 {% endblock %}

@@ -33,11 +33,12 @@ def test_other_user_cannot_edit_or_delete(app, make_user):
         assert db.session.get(BlogPost, pid).title == "Hello"
 
 
-def test_author_and_admin_can_edit(app, make_user):
-    author, admin = make_user("patient"), make_user("patient")  # the DB only allows patient/provider; admin is a session role
+def test_author_can_edit_and_delete_but_a_fake_admin_role_cannot(app, make_user):
+    author, admin = make_user("patient"), make_user("patient")  # the DB only allows patient/provider: no admin role exists
     pid = make_post(app, author)
     assert login_as(app, author).post(f"/blog/{pid}/edit", data={"title": "Mine", "content": "y", "category": "general"}).status_code == 302
-    assert login_as(app, admin, "admin").post(f"/blog/{pid}/delete").status_code == 302
+    assert login_as(app, admin, "admin").post(f"/blog/{pid}/delete").status_code == 403
+    assert login_as(app, author).post(f"/blog/{pid}/delete").status_code == 302
     with app.app_context():
         assert db.session.get(BlogPost, pid) is None
 

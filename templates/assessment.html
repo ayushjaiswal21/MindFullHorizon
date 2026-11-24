@@ -1,260 +1,166 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
+{% from 'patient_macros.html' import band_badge, helpline_list %}
 
-{% block title %}Mental Health Assessment - Mindful Horizon{% endblock %}
-{% block head %}
-<meta name="csrf-token" content="{{ csrf_token() }}">
+{% block title %}Screenings - MindFull Horizon{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
 {% endblock %}
 
 {% block content %}
-<!-- Assessment data will be passed via data attribute -->
-<div id="assessment-data" data-assessments='{{ assessments|tojson|safe if assessments else "[]" }}'></div>
+<div class="container section">
+    <header class="page-header">
+        <h1>Screenings</h1>
+        <p class="lead">The PHQ-9 asks about symptoms of depression and the GAD-7 about anxiety. Both ask how you have felt over the last two weeks.</p>
+    </header>
 
-
-
-<!-- Optional debug element (remove in production) -->
-<div id="assessment-debug-duplicate" style="position:fixed;right:8px;bottom:8px;color:#999;font-size:12px"></div>
-
-<div class="max-w-4xl mx-auto">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Mental Health Assessment</h1>
-        <p class="text-gray-600">Complete this assessment to track your mental well-being and get personalized insights</p>
+    <div class="alert alert-info mb-6" role="note">
+    <div>
+        <strong>This is a screening tool, not a diagnosis.</strong>
+        A score shows how many symptoms you reported. It cannot tell you whether you have a condition. If you are in crisis, call
+        {% for h in helplines or [] %}<a href="tel:{{ h.tel }}">{{ h.name.split(' (')[0] }} {{ h.number }}</a>{{ ', ' if not loop.last else '.' }}{% endfor %}
+        </div>
     </div>
 
-    <!-- Assessment Selection -->
-    <div class="grid md:grid-cols-2 gap-6 mb-8">
-        <div class="card cursor-pointer hover:shadow-xl transition-all duration-300 start-assessment-btn" data-assessment-type="GAD-7">
-            <div class="text-center">
-                <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-heartbeat text-blue-600 text-2xl"></i>
+    <div class="pt-stack">
+        <div id="crisis-slot"></div>
+        <div id="helplines-fallback" hidden>{{ helpline_list(helplines) }}</div>
+        <div id="assessment-picker" data-questions-url="{{ url_for('static', filename='questions.json') }}">
+            <div class="grid gap-6 md:grid-cols-2">
+                <section class="card">
+                    <div class="card-body">
+                        <h2 class="pt-title">Depression screening (PHQ-9)</h2>
+                        <p class="pt-sub">9 questions, about 3 minutes.</p>
+                        <button type="button" class="btn btn-primary mt-4 start-assessment-btn" data-assessment-type="PHQ-9">Start PHQ-9</button>
+                    </div>
+                </section>
+                <section class="card">
+                    <div class="card-body">
+                        <h2 class="pt-title">Anxiety screening (GAD-7)</h2>
+                        <p class="pt-sub">7 questions, about 2 minutes.</p>
+                        <button type="button" class="btn btn-primary mt-4 start-assessment-btn" data-assessment-type="GAD-7">Start GAD-7</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        {# The question panel. The id is kept from the old modal; it is an in-page section now. #}
+        <section id="assessmentModal" class="card" aria-labelledby="assessmentTitle" hidden>
+            <div class="card-body">
+                <h2 class="pt-title" id="assessmentTitle">Screening</h2>
+                <p id="assessment-loading" class="muted" role="status" hidden>Loading questions</p>
+                <form id="assessment-form" novalidate hidden>
+                    <p id="assessment-progress" class="pt-sub mt-2" aria-live="polite"></p>
+                    <div id="assessment-question-container" class="mt-4">
+                        <fieldset class="q-set">
+                            <legend class="q-legend" id="assessment-legend" tabindex="-1">
+                                <span id="assessment-stem" class="q-stem"></span>
+                                <span id="assessment-question"></span>
+                            </legend>
+                            <div id="assessment-options"></div>
+                        </fieldset>
+                        <div id="item9-note" class="alert alert-info mt-4" hidden>
+                            <p>If you are having thoughts of ending your life or hurting yourself, you can talk to someone right now. These services are free.</p>
+                            {{ helpline_list(helplines) }}
+                        </div>
+                        <p id="assessment-error" class="error-text mt-3" role="alert" hidden></p>
+                    </div>
+                    <div id="assessment-nav-area" class="nav-row">
+                        <div class="flex gap-2">
+                            <button type="button" id="prevBtn" class="btn btn-secondary">Back</button>
+                            <button type="button" id="cancelBtn" class="btn btn-ghost">Stop</button>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <button type="button" id="altBtn" class="btn btn-secondary" hidden></button>
+                            <button type="submit" id="nextBtn" class="btn btn-primary" data-action="next">Next</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="assessment-result" aria-labelledby="result-heading" hidden>
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="pt-title" id="result-heading" tabindex="-1">Your result</h2>
+                    <p class="pt-sub" id="result-title"></p>
+                    <p class="score-line mt-3"><span id="result-score"></span> <small id="result-max"></small></p>
+                    <p class="mt-2"><span id="result-band" class="badge badge-neutral">n/a</span></p>
+                    <p class="mt-3" id="result-explain"></p>
+                    <p class="muted mt-3">This is a screening result, not a diagnosis. Only a clinician can diagnose a condition.</p>
+                    <div class="flex gap-2 flex-wrap mt-4">
+                        <a class="btn btn-primary" href="{{ url_for('patient.schedule_appointment') }}">Book a session</a>
+                        <a class="btn btn-secondary" href="{{ url_for('patient.progress') }}">See your progress</a>
+                        <button type="button" id="again-btn" class="btn btn-ghost">Back to screenings</button>
+                    </div>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">Anxiety Screening (GAD-7)</h3>
-                <p class="text-gray-600 text-sm mb-4">7-question assessment for anxiety symptoms</p>
-                <div class="bg-blue-50 p-3 rounded-lg">
-                    <span class="text-sm text-blue-700">⏱️ Takes 2-3 minutes</span>
+            </div>
+        </section>
+
+        <section id="aiInsightsContent" class="card" aria-labelledby="insights-heading" {% if not (latest_insights and (latest_insights.summary or latest_insights.recommendations)) %}hidden{% endif %}>
+            <div class="card-body">
+                <h2 class="pt-title" id="insights-heading">Notes on your latest screening</h2>
+                <p class="pt-sub" id="aiInsightsNote">Written by an AI assistant from your score. It is general information, not clinical advice.</p>
+                <p id="aiSummary" class="mt-3">{{ latest_insights.summary if latest_insights and latest_insights.summary else '' }}</p>
+                <h3 class="pt-title mt-4">What may help</h3>
+                <ul id="aiRecommendations" class="mt-2 list-disc pl-5">
+                    {% for rec in (latest_insights.recommendations if latest_insights and latest_insights.recommendations else []) %}<li>{{ rec }}</li>{% endfor %}
+                </ul>
+                <h3 class="pt-title mt-4">Where to get support</h3>
+                <ul id="aiResources" class="mt-2 list-disc pl-5">
+                    {% for res in (latest_insights.resources if latest_insights and latest_insights.resources else []) %}<li>{{ res }}</li>{% endfor %}
+                </ul>
+            </div>
+        </section>
+
+        {% include 'patient_mood_entry.html' %}
+
+        <section class="card" aria-labelledby="history-heading">
+            <div class="card-body">
+                <h2 class="pt-title" id="history-heading">History</h2>
+                {% if assessments %}
+                <div class="table-wrap mt-3">
+                    <table class="table">
+                        <caption class="sr-only">Your most recent screenings and mood entries</caption>
+                        <thead>
+                            <tr><th scope="col">Date</th><th scope="col">Type</th><th scope="col">Score</th><th scope="col">Band</th></tr>
+                        </thead>
+                        <tbody id="assessmentHistory">
+                            {% for a in assessments[:15] %}
+                            <tr>
+                                <td>{{ a.created_at[:10] if a.created_at else 'n/a' }}</td>
+                                {% if a.assessment_type == 'Daily Mood' %}
+                                <td>Daily mood</td>
+                                <td>{{ a.score }} of 10</td>
+                                <td><span class="muted">n/a</span></td>
+                                {% else %}
+                                {% set sev = get_severity_info(a.assessment_type, a.score) %}
+                                <td>{{ a.assessment_type }}</td>
+                                <td>{{ a.score }}</td>
+                                <td>{{ band_badge(sev.severity|lower) }}</td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
                 </div>
-                <button id="start-assessment-btn" 
-                        class="mt-3 btn-primary w-full start-assessment-btn" 
-                        data-questions-url="{{ url_for('static', filename='questions.json') }}"
-                        data-assessment="GAD-7"
-                        aria-label="Start Anxiety Assessment">
-                    Start Assessment
-                </button>
-            </div>
-        </div>
-
-        <div class="card cursor-pointer hover:shadow-xl transition-all duration-300 start-assessment-btn" data-assessment-type="PHQ-9">
-            <div class="text-center">
-                <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                    <i class="fas fa-brain text-purple-600 text-2xl"></i>
+                <p class="help mt-3">Showing up to 15 entries. <a href="{{ url_for('patient.progress') }}">See trends on your progress page.</a></p>
+                {% else %}
+                <div class="empty-state">
+                    {{ icon('mood') }}
+                    <h3>No screenings yet</h3>
+                    <p>Your results will be listed here after you finish a screening.</p>
                 </div>
-                <h3 class="text-xl font-semibold text-gray-800 mb-2">Depression Screening (PHQ-9)</h3>
-                <p class="text-gray-600 text-sm mb-4">9-question assessment for depression symptoms</p>
-                <div class="bg-purple-50 p-3 rounded-lg">
-                    <span class="text-sm text-purple-700">⏱️ Takes 5-7 minutes</span>
-                </div>
-                <button class="mt-3 btn-primary w-full start-assessment-btn" 
-                        data-assessment-type="PHQ-9"
-                        aria-label="Start Depression Assessment">
-                    Start Assessment
-                </button>
+                {% endif %}
             </div>
-        </div>
-    </div>
-
-    <!-- Daily Mood Check -->
-    <div class="card mb-8">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">
-            <i class="fas fa-smile text-yellow-500 mr-2"></i>Daily Mood Check
-        </h3>
-        <p class="text-gray-600 mb-4">How are you feeling today? This helps track your mood patterns over time.</p>
-        
-        <div class="grid grid-cols-5 gap-4 mb-4">
-            <div class="text-center cursor-pointer mood-option" data-mood="1">
-                <div class="text-4xl mb-2">😢</div>
-                <span class="text-sm text-gray-600">Very Low</span>
-            </div>
-            <div class="text-center cursor-pointer mood-option" data-mood="2">
-                <div class="text-4xl mb-2">😟</div>
-                <span class="text-sm text-gray-600">Low</span>
-            </div>
-            <div class="text-center cursor-pointer mood-option" data-mood="3">
-                <div class="text-4xl mb-2">😐</div>
-                <span class="text-sm text-gray-600">Neutral</span>
-            </div>
-            <div class="text-center cursor-pointer mood-option" data-mood="4">
-                <div class="text-4xl mb-2">🙂</div>
-                <span class="text-sm text-gray-600">Good</span>
-            </div>
-            <div class="text-center cursor-pointer mood-option" data-mood="5">
-                <div class="text-4xl mb-2">😊</div>
-                <span class="text-sm text-gray-600">Excellent</span>
-            </div>
-        </div>
-        
-        <div class="flex flex-col items-center">
-            <div id="mood-notes-container" class="w-full mb-4 hidden">
-                <label for="mood-notes" class="block text-sm font-medium text-gray-700 mb-1">Add a note (optional):</label>
-                <textarea id="mood-notes" class="w-full p-2 border rounded-lg" rows="2" placeholder="How are you feeling today?"></textarea>
-            </div>
-            <button id="save-mood-btn" class="btn-primary" disabled aria-label="Save your daily mood assessment">
-                <i class="fas fa-save mr-2"></i>Save Today's Mood
-            </button>
-        </div>
-    </div>
-
-    <!-- Assessment History Table -->
-    <div class="card">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">
-            <i class="fas fa-history text-blue-500 mr-2"></i>Assessment History
-        </h3>
-        
-        <div class="overflow-x-auto">
-            <table class="w-full table-auto">
-                <thead>
-                    <tr class="bg-gray-50">
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Date</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Assessment Type</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Score</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Severity</th>
-                        <th class="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="assessmentHistory">
-                    {% if assessments %}
-                        {% for assessment in assessments[:15] %}
-                        <tr>
-                            <td class="px-4 py-3 text-sm text-gray-700">{{ assessment.created_at }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-700">{{ assessment.assessment_type }}</td>
-                            <td class="px-4 py-3 text-sm font-semibold text-blue-600">{{ assessment.score }}</td>
-                            <td class="px-4 py-3 text-sm">
-                                {% set severity_info = get_severity_info(assessment.assessment_type, assessment.score) %}
-                                <span class="px-2 py-1 rounded-full text-xs font-medium bg-{{ severity_info.color }}-100 text-{{ severity_info.color }}-800">{{ severity_info.severity }}</span>
-                            </td>
-                            <td class="px-4 py-3 text-sm">
-                                <button class="text-blue-600 hover:text-blue-800 mr-2 view-assessment-details-btn" data-assessment-id="{{ assessment.id }}">
-                                    <i class="fas fa-eye"></i> View
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                    <tr>
-                        <td colspan="5" class="px-4 py-3 text-sm text-gray-600 text-center">No assessments recorded yet.</td>
-                    </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="mt-4 text-center">
-            <p class="text-sm text-gray-600">
-                <i class="fas fa-info-circle mr-2"></i>
-                Showing recent 15 assessments. 
-                <a href="{{ url_for('patient.progress') }}" class="text-blue-600 hover:text-blue-800 font-medium">View complete history and trends</a>
-            </p>
-        </div>
-        
-        <!-- AI Insights Section -->
-        <div class="mt-6 pt-6 border-t border-gray-200">
-            <h4 class="font-semibold text-gray-800 mb-3 flex items-center">
-                <i class="fas fa-robot text-blue-500 mr-2"></i> AI-Powered Insights
-            </h4>
-
-            <!-- Loading State (hidden by default; shown when generating insights) -->
-            <div id="aiInsightsLoading" class="hidden text-center py-4">
-                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
-                <p class="text-gray-600">Analyzing your responses...</p>
-            </div>
-
-<!-- AI Insights Content -->
-<div id="aiInsightsContent" class="space-y-4 {% if not latest_insights %}hidden{% endif %}">
-    <div class="bg-white p-4 rounded-lg border border-gray-200">
-        <h5 class="font-medium text-gray-800 mb-2 flex items-center">
-            <i class="fas fa-comment-alt text-blue-500 mr-2"></i> Summary
-        </h5>
-        <p id="aiSummary" class="text-gray-700">
-            {% if latest_insights and latest_insights.summary %}
-                {{ latest_insights.summary }}
-            {% else %}
-                No summary available.
-            {% endif %}
-        </p>
-    </div>
-
-    <div class="bg-white p-4 rounded-lg border border-gray-200">
-        <h5 class="font-medium text-gray-800 mb-2 flex items-center">
-            <i class="fas fa-lightbulb text-yellow-500 mr-2"></i> Recommendations
-        </h5>
-        <ul id="aiRecommendations" class="space-y-2">
-            {% if latest_insights and latest_insights.recommendations %}
-                {% for rec in latest_insights.recommendations %}
-                    <li class="flex items-start">
-                        <i class="fas fa-check-circle text-green-500 mt-1 mr-2"></i>
-                        <span>{{ rec }}</span>
-                    </li>
-                {% endfor %}
-            {% else %}
-                <li class="flex items-start">
-                    <div class="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
-                </li>
-            {% endif %}
-        </ul>
-    </div>
-
-    <div class="bg-white p-4 rounded-lg border border-gray-200">
-        <h5 class="font-medium text-gray-800 mb-2 flex items-center">
-            <i class="fas fa-book-open text-green-500 mr-2"></i> Resources
-        </h5>
-        <ul id="aiResources" class="space-y-2">
-            {% if latest_insights and latest_insights.resources %}
-                {% for res in latest_insights.resources %}
-                    <li class="flex items-start">
-                        <i class="fas fa-external-link-alt text-blue-500 mt-1 mr-2"></i>
-                        <span>{{ res }}</span>
-                    </li>
-                {% endfor %}
-            {% else %}
-                <li class="flex items-start">
-                    <div class="animate-pulse bg-gray-200 h-4 w-1/2 rounded"></div>
-                </li>
-            {% endif %}
-        </ul>
+        </section>
     </div>
 </div>
-
-<!-- Assessment Modal - Fixed positioning and visibility -->
-<div id="assessmentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg p-6 max-w-2xl mx-4 max-h-screen overflow-y-auto">
-        <div class="flex justify-between items-center mb-4">
-            <h3 id="assessmentTitle" class="text-xl font-semibold text-gray-800">Assessment</h3>
-            <button class="text-gray-500 hover:text-gray-700 close-assessment-btn" aria-label="Close Assessment">
-                <i class="fas fa-times text-xl"></i>
-            </button>
-        </div>
-
-        <div id="assessment-loading" class="text-center py-8 hidden">
-            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p class="text-gray-600">Loading questions...</p>
-        </div>
-
-        <div id="assessment-error" class="text-center py-8 hidden">
-            <div class="text-6xl text-red-500 mb-4">✗</div>
-            <h2 class="text-xl font-bold text-gray-800 mb-2">Something went wrong</h2>
-            <p class="text-gray-600 mb-6">Could not load assessment questions. Please try again later.</p>
-            <button class="btn-primary close-assessment-btn">Close</button>
-        </div>
-
-        <div id="assessment-question-container" class="hidden">
-            <div id="assessment-progress" class="text-sm text-gray-600 mb-4 text-center"></div>
-            <h4 id="assessment-question" class="text-lg font-medium text-gray-800 mb-4"></h4>
-            <div id="assessment-options" class="space-y-3"></div>
-            <div id="assessment-nav-area" class="flex justify-between mt-6">
-                <!-- Navigation buttons will be inserted here by JavaScript -->
-            </div>
-        </div>
-    </div>
-</div>
-
-
 {% endblock %}
 
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/patient-common.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/mood.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/assessment-fixes.js') }}" defer></script>
+{% endblock %}

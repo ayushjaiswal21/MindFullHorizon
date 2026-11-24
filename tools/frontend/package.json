@@ -1,0 +1,11 @@
+{
+  "name": "mindfull-horizon-assets",
+  "private": true,
+  "description": "Build tooling only. The built CSS (static/css/tailwind.css) is committed; run `npm run build:css` in tools/frontend after adding layout classes to templates.",
+  "scripts": {
+    "build:css": "node build_css.mjs"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

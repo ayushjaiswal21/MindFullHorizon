@@ -1,23 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}Select Your Role - Mindful Horizon{% endblock %}
+{% block title %}Choose your role - Mindful Horizon{% endblock %}
+{% block head_extra %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex flex-col items-center justify-center px-4 py-16">
-    <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">What brings you here?</h1>
+<div class="container">
+  <div class="auth-wrap">
+    <div class="page-header">
+      <h1>How will you use Mindful Horizon?</h1>
+      <p class="lead">Your account needs a role before you continue.</p>
+    </div>
 
-    <form action="{{ url_for('save_role') }}" method="POST" class="flex flex-col items-center gap-6">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-        <button type="submit" name="role" value="patient" class="bg-white rounded-lg shadow-md p-8 text-center w-72 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <span class="block text-2xl font-bold text-gray-800">Student</span>
-            <span class="block text-gray-500 mt-2">I'm here to improve my mental wellness.</span>
-        </button>
-
-        <p class="text-sm text-gray-600 max-w-sm text-center">
-            Counselor accounts are created with an invite code from your institution. Use the
-            <a href="{{ url_for('auth.signup') }}" class="text-indigo-600 underline">sign-up page</a> if you have one.
-        </p>
+    <form action="{{ url_for('save_role') }}" method="post" class="role-choice auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" name="role" value="patient" class="btn btn-primary" data-loading-text="Saving">Continue as a student</button>
+      <p class="help">Counsellor accounts are created with an invite code from your institution. If you have one, use the <a href="{{ url_for('auth.signup') }}">sign-up page</a>.</p>
     </form>
+  </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script defer src="{{ url_for('static', filename='js/components.js') }}" nonce="{{ g.csp_nonce }}"></script>
 {% endblock %}

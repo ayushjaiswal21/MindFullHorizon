@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Page not found{% endblock %}
+{% block meta_description %}The page you asked for does not exist on MindFull Horizon.{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h1>Page not found</h1>
+        <p class="lead">The address may be mistyped, or the page may have moved. Nothing is wrong with your account.</p>
+      </div>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-primary" href="{{ nav_url('core.index', '/') }}">{{ icon('home', size=18) }}<span>Back to home</span></a>
+      <a class="btn btn-secondary" href="/contact">{{ icon('mail', size=18) }}<span>Contact us</span></a>
+      <a class="btn btn-secondary" href="{{ nav_url('blog.blog_list', '/blog/') }}">{{ icon('book', size=18) }}<span>Read the blog</span></a>
+    </div>
+  </div>
+</section>
+{% endblock %}

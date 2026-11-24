@@ -130,7 +130,7 @@ def test_book_appointment_creates_pending_for_session_user(patient_client, provi
 
 def _signup(client, role, **extra):
     data = dict(name="New", email="new@test.local", password=PASSWORD, confirm_password=PASSWORD,
-                role=role, institution="Test University", consent="yes")
+                role=role, institution="Test University", consent="yes", age_confirm="yes")
     data.update(extra)
     return client.post("/signup", data=data)
 
@@ -301,7 +301,7 @@ def test_duplicate_routes_gone(app):
     for dup in ("/api/digital-detox-data", "/api/log-digital-detox",
                 "/send_prescription/<int:patient_id>", "/wellness-report/<int:user_id>"):
         assert dup not in rules, dup
-    assert "/provider/send_prescription/<int:patient_id>" in rules
+    assert "/provider/send_prescription/<int:patient_id>" not in rules  # removed: prescribing moved behind a verified doctor
     assert "/patient/api/log-digital-detox" in rules
 
 
@@ -317,7 +317,7 @@ def _google(app, info):
 
 def test_google_new_user_has_unusable_password_and_patient_dashboard(app):
     out = _google(app, {"id": "g1", "email": "g@test.local", "name": "G", "verified_email": True})
-    assert out.status_code == 302 and "/patient/" in out.headers["Location"]
+    assert out.status_code == 302 and "/consent" in out.headers["Location"]  # new Google users accept the notice first (P-05)
     with app.app_context():
         u = User.query.filter_by(email="g@test.local").one()
         assert u.password_hash and not u.check_password("")

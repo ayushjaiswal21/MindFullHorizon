@@ -1,136 +1,135 @@
-let timerInterval;
-let sessionDuration = 0; // in seconds
-let timeElapsed = 0;
-let isPaused = false;
+/* Yoga session timer. Text and a native progress element only; no sound, no animation. */
+(function () {
+  'use strict';
+  var root = document.getElementById('yoga-root');
+  if (!root || window.__mfhYoga) return;
+  window.__mfhYoga = true;
 
-const timerDisplay = document.getElementById('timer-display');
-const progressBar = document.getElementById('progress-bar');
-const sessionStatus = document.getElementById('session-status');
+  var MIN_SAVE_SECONDS = 60;
+  var $ = function (id) { return document.getElementById(id); };
+  var display = $('timer-display'), bar = $('progress-bar'), status = $('session-status'),
+      startBtn = $('start-timer-btn'), pauseBtn = $('pause-timer-btn'), stopBtn = $('stop-timer-btn'),
+      savePrompt = $('save-prompt'), saveText = $('save-prompt-text'), saveBtn = $('save-session-btn'),
+      logForm = $('yoga-log-form');
 
-const startBtn = document.getElementById('start-timer-btn');
-const pauseBtn = document.getElementById('pause-timer-btn');
-const stopBtn = document.getElementById('stop-timer-btn');
+  var s = { total: 0, elapsed: 0, running: false, paused: false, timer: null, accum: 0, last: 0, logName: 'Custom Session' };
 
-function updateTimerDisplay() {
-    const minutes = Math.floor(timeElapsed / 60);
-    const seconds = timeElapsed % 60;
-    timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  function pad(n) { return ('0' + n).slice(-2); }
+  function render() {
+    var left = Math.max(s.total - s.elapsed, 0);
+    display.textContent = pad(Math.floor(left / 60)) + ':' + pad(left % 60);
+    bar.value = s.total ? Math.min(100, Math.round((s.elapsed / s.total) * 100)) : 0;
+  }
+  function buttons(mode) {
+    startBtn.hidden = mode !== 'ready' && mode !== 'idle';
+    startBtn.disabled = mode === 'idle';
+    pauseBtn.hidden = mode !== 'running';
+    stopBtn.hidden = mode !== 'running';
+  }
+  function stopTicking() { clearInterval(s.timer); s.timer = null; }
+  function startTicking() { s.last = Date.now(); clearInterval(s.timer); s.timer = setInterval(loop, 250); }
 
-    if (sessionDuration > 0) {
-        const progress = (timeElapsed / sessionDuration) * 100;
-        progressBar.style.width = `${progress}%`;
+  function loop() {
+    var now = Date.now();
+    s.accum += now - s.last;
+    s.last = now;
+    while (s.accum >= 1000 && s.running) {
+      s.accum -= 1000;
+      s.elapsed += 1;
+      if (s.elapsed >= s.total) { finish(true); break; }
     }
-}
+    render();
+  }
 
-function startTimer() {
-    if (sessionDuration === 0) {
-        alert('Please set a session duration first (e.g., 5 min, 10 min, or a guided session).');
-        return;
+  function finish(completed) {
+    stopTicking();
+    var longEnough = s.elapsed >= MIN_SAVE_SECONDS;
+    var minutes = Math.max(1, Math.round(s.elapsed / 60));
+    s.running = false;
+    s.paused = false;
+    status.textContent = completed ? 'Session complete.' : 'Session stopped.';
+    if (longEnough) {
+      s.savedMinutes = minutes;
+      s.savedName = s.logName;
+      saveText.textContent = 'You practised for about ' + minutes + (minutes === 1 ? ' minute.' : ' minutes.');
+      savePrompt.hidden = false;
     }
+    s.elapsed = 0;
+    render();
+    pauseBtn.textContent = 'Pause';
+    buttons('ready');
+  }
 
-    if (timerInterval) clearInterval(timerInterval);
+  function setLength(minutes, logName, label) {
+    stopTicking();
+    s.running = false;
+    s.paused = false;
+    s.total = minutes * 60;
+    s.elapsed = 0;
+    s.logName = logName || 'Custom Session';
+    savePrompt.hidden = true;
+    status.textContent = label || (minutes + ' minute session ready.');
+    pauseBtn.textContent = 'Pause';
+    render();
+    buttons('ready');
+  }
 
-    isPaused = false;
-    sessionStatus.textContent = 'Session in progress...';
-    startBtn.classList.add('hidden');
-    pauseBtn.classList.remove('hidden');
-    stopBtn.classList.remove('hidden');
+  function begin() {
+    if (!s.total) { status.textContent = 'Choose a length first.'; return; }
+    s.running = true;
+    s.paused = false;
+    s.accum = 0;
+    status.textContent = 'Session in progress.';
+    buttons('running');
+    startTicking();
+    pauseBtn.focus();
+  }
 
-    timerInterval = setInterval(() => {
-        if (!isPaused) {
-            timeElapsed++;
-            updateTimerDisplay();
-
-            if (timeElapsed >= sessionDuration) {
-                stopTimer();
-                sessionStatus.textContent = 'Session completed!';
-                playBeep();
-                // Optionally log session here or trigger a modal
-            }
-        }
-    }, 1000);
-}
-
-function playBeep() {
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-
-    oscillator.type = 'sine';
-    oscillator.frequency.setValueAtTime(440, audioCtx.currentTime); // A4
-    gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + 0.5); // Play for 0.5 seconds
-}
-
-function pauseTimer() {
-    isPaused = !isPaused;
-    if (isPaused) {
-        sessionStatus.textContent = 'Session paused.';
-        pauseBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Resume';
+  startBtn.addEventListener('click', begin);
+  pauseBtn.addEventListener('click', function () {
+    if (!s.running) return;
+    if (s.paused) {
+      s.paused = false;
+      pauseBtn.textContent = 'Pause';
+      status.textContent = 'Session in progress.';
+      startTicking();
     } else {
-        sessionStatus.textContent = 'Session in progress...';
-        pauseBtn.innerHTML = '<i class="fas fa-pause mr-2"></i>Pause';
+      s.paused = true;
+      pauseBtn.textContent = 'Resume';
+      status.textContent = 'Paused.';
+      stopTicking();
     }
-}
+  });
+  stopBtn.addEventListener('click', function () { if (s.running) finish(false); });
 
-function stopTimer() {
-    clearInterval(timerInterval);
-    timeElapsed = 0;
-    isPaused = false;
-    sessionDuration = 0; // Reset duration
-    updateTimerDisplay();
-    sessionStatus.textContent = 'Ready to begin your practice';
-    startBtn.classList.remove('hidden');
-    pauseBtn.classList.add('hidden');
-    stopBtn.classList.add('hidden');
-    progressBar.style.width = '0%';
-}
-
-function setQuickSession(durationMinutes) {
-    sessionDuration = durationMinutes * 60;
-    timeElapsed = 0;
-    updateTimerDisplay();
-    sessionStatus.textContent = `Quick session set for ${durationMinutes} minutes.`;
-    startBtn.classList.remove('hidden');
-    pauseBtn.classList.add('hidden');
-    stopBtn.classList.add('hidden');
-    progressBar.style.width = '0%';
-}
-
-function startGuidedSession(type, name, durationMinutes) {
-    setQuickSession(durationMinutes); // Use quick session setter
-    sessionStatus.textContent = `Starting guided ${type} session: ${name} (${durationMinutes} minutes)`;
-    startTimer(); // Automatically start the timer
-    // In a real app, you'd also load guided audio/video here
-    alert(`Starting guided ${type} session: ${name} for ${durationMinutes} minutes.`);
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-    // Attach event listeners to timer controls
-    startBtn?.addEventListener('click', startTimer);
-    pauseBtn?.addEventListener('click', pauseTimer);
-    stopBtn?.addEventListener('click', stopTimer);
-
-    // Attach event listeners to quick session buttons
-    document.querySelectorAll('.quick-session-btn').forEach(button => {
-        button.addEventListener('click', function () {
-            const duration = parseInt(this.dataset.duration);
-            setQuickSession(duration);
-        });
+  document.querySelectorAll('.quick-session-btn').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var m = parseInt(b.dataset.duration, 10);
+      if (m) setLength(m, 'Custom Session');
     });
-
-    // Attach event listeners to guided yoga session cards
-    document.querySelectorAll('.start-guided-session-card').forEach(card => {
-        card.addEventListener('click', function () {
-            const type = this.dataset.sessionType;
-            const name = this.dataset.sessionName;
-            const duration = parseInt(this.dataset.sessionDuration);
-            startGuidedSession(type, name, duration);
-        });
+  });
+  document.querySelectorAll('.start-guided-session-card').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var m = parseInt(b.dataset.sessionDuration, 10);
+      if (!m) return;
+      setLength(m, b.dataset.logName, b.querySelector('strong').textContent + ', ' + m + ' minutes ready.');
+      root.scrollIntoView({ block: 'start' });
+      startBtn.focus();
     });
-});
+  });
+
+  if (saveBtn && logForm) {
+    saveBtn.addEventListener('click', function () {
+      logForm.querySelector('[name="session_name"]').value = s.savedName;
+      logForm.querySelector('[name="duration_minutes"]').value = String(s.savedMinutes);
+      saveBtn.disabled = true;
+      saveBtn.setAttribute('aria-busy', 'true');
+      if (typeof logForm.requestSubmit === 'function') logForm.requestSubmit(); else logForm.submit();
+    });
+  }
+
+  if (window.WL) WL.guardRanges(logForm);
+  window.addEventListener('beforeunload', stopTicking);
+  render();
+  buttons('idle');
+})();

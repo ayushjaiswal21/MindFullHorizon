@@ -39,14 +39,16 @@ def test_check_constraints(app):
     with app.app_context():
         _user("patient", "p@t.local")
         db.session.commit()
-        db.session.add(m.User(email="x@t.local", name="x", role="admin", password_hash="h"))
+        db.session.add(m.User(email="x@t.local", name="x", role="superuser", password_hash="h"))
         with pytest.raises(IntegrityError):
             db.session.commit()
         db.session.rollback()
+        db.session.add(m.User(email="a@t.local", name="a", role="admin", password_hash="h"))
+        db.session.commit()  # 'admin' is a valid role since design C-01
         with pytest.raises(IntegrityError):  # NULL role (the column default only fills omitted values)
             db.session.execute(text("INSERT INTO users (email, name, role, password_hash) VALUES ('y@t.local','y',NULL,'h')"))
         db.session.rollback()
-        p = m.User.query.one()
+        p = m.User.query.filter_by(role="patient").one()
         db.session.add(m.Appointment(user_id=p.id, date=date.today(), time="10:00", appointment_type="x", status="bogus"))
         with pytest.raises(IntegrityError):
             db.session.commit()
@@ -75,7 +77,7 @@ def _fill_children(patient, provider):
         m.MusicTherapyLog(user_id=pid, mood="calm"),
         m.ProgressRecommendation(user_id=pid, recommendations={}),
         m.ClinicalNote(provider_id=vid, patient_id=pid, session_date=datetime.utcnow()),
-        m.Prescription(provider_id=vid, patient_id=pid, medication_name="m", dosage="1"),
+        m.Prescription(provider_id=vid, patient_id=pid, medication_name="m", dosage="1", status="legacy"),
         m.Appointment(user_id=pid, provider_id=vid, date=today, time="10:00", appointment_type="x"),
         m.Goal(user_id=pid, title="g", category="c", start_date=today),
         m.MoodLog(user_id=pid, mood_score=5),
@@ -110,6 +112,14 @@ def test_delete_user_leaves_no_orphans(app, victim):
     with app.app_context():
         patient, provider = _user("patient", "p@t.local"), _user("provider", "v@t.local")
         _fill_children(patient, provider)
+        if victim == "provider":  # a doctor with prescriptions cannot be hard-deleted (ON DELETE RESTRICT, design 3.9)
+            db.session.delete(provider)
+            with pytest.raises(IntegrityError):
+                db.session.commit()
+            db.session.rollback()
+            m.Prescription.query.delete()
+            db.session.commit()
+            provider = db.session.get(m.User, provider.id)
         db.session.delete(patient if victim == "patient" else provider)
         db.session.commit()
         assert _orphans() == {}

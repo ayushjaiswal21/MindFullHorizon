@@ -1,103 +1,116 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
 
-{% block title %}Mindful Horizon - A Better Way to Care for Your Mind{% endblock %}
-
-{% block extra_head %}
-<style nonce="{{ g.csp_nonce }}">
-    .lp-hero { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0ea5a4 100%); }
-    .lp-btn { display: inline-block; padding: .75rem 2rem; border-radius: .5rem; font-weight: 600; background: #fff; color: #1e3a8a; transition: transform .15s, box-shadow .15s; }
-    .lp-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,.2); }
-    .lp-btn-ghost { background: transparent; color: #fff; border: 2px solid rgba(255,255,255,.8); }
-    .lp-card { background: #fff; border-radius: .75rem; box-shadow: 0 2px 12px rgba(15,23,42,.08); padding: 1.5rem; }
-    .lp-card:hover { box-shadow: 0 6px 20px rgba(15,23,42,.12); }
-    .lp-icon { width: 4rem; height: 4rem; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0 auto 1rem; }
-    .lp-faq summary { cursor: pointer; font-weight: 600; padding: 1rem 0; }
-    .lp-faq details { border-bottom: 1px solid #e5e7eb; }
-    @media (prefers-reduced-motion: no-preference) { .lp-hero h1 { animation: lp-fade .6s ease-out both; } }
-    @keyframes lp-fade { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-</style>
-{% endblock %}
+{% block title %}Mood tracking and PHQ-9 and GAD-7 screening for college students{% endblock %}
+{% block meta_description %}Log your mood, take PHQ-9 and GAD-7 screenings, talk to a clearly labelled AI companion, and book a session with your college counsellor. For students aged 18 and over.{% endblock %}
+{% block canonical %}{{ (site_url or request.url_root.rstrip('/')) }}/{% endblock %}
+{% block robots %}index, follow{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">{% endblock %}
 
 {% block content %}
-<header class="lp-hero text-white text-center px-6 py-24">
-    <div class="container mx-auto max-w-3xl">
-        <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4">Campus calm for India’s students</h1>
-        <p class="text-lg md:text-2xl mb-8 opacity-90">Short check-ins, mindful breaks and AI support, made for college life.</p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{{ url_for('auth.signup') }}" class="lp-btn">Start free</a>
-            <a href="{{ url_for('auth.login') }}" class="lp-btn lp-btn-ghost">Log in</a>
-        </div>
+<div class="container">
+  <section class="home-hero" aria-labelledby="hero-title">
+    <div>
+      <h1 id="hero-title">Check in on your mental health and book your college counsellor</h1>
+      <p class="lead">Track your mood, take PHQ-9 and GAD-7 screenings, and book a session with the counsellor at your college.</p>
+      <div class="home-actions">
+        <a class="btn btn-primary" href="{{ url_for('auth.signup') }}">Create an account</a>
+        <a class="btn btn-secondary" href="{{ url_for('auth.login') }}">Log in</a>
+      </div>
+      <p class="home-note">For students and counsellors aged 18 and over. Screening is not a diagnosis.</p>
     </div>
-</header>
 
-<section id="features" class="py-16 bg-white">
-    <div class="container mx-auto px-6">
-        <h2 class="text-3xl font-bold text-center text-gray-800 mb-10">What you get</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
-            <div class="lp-card"><div class="lp-icon bg-blue-100" aria-hidden="true">🧠</div>
-                <h3 class="text-lg font-semibold mb-1">Self-assessments</h3><p class="text-gray-600">PHQ-9 and GAD-7 check-ins to see how you are doing.</p></div>
-            <div class="lp-card"><div class="lp-icon bg-green-100" aria-hidden="true">📊</div>
-                <h3 class="text-lg font-semibold mb-1">Progress tracking</h3><p class="text-gray-600">Mood, habits and streaks in one place.</p></div>
-            <div class="lp-card"><div class="lp-icon bg-red-100" aria-hidden="true">🧘</div>
-                <h3 class="text-lg font-semibold mb-1">Calming tools</h3><p class="text-gray-600">Breathing, yoga, music and digital-detox routines.</p></div>
-            <div class="lp-card"><div class="lp-icon bg-purple-100" aria-hidden="true">🤝</div>
-                <h3 class="text-lg font-semibold mb-1">Counselor connect</h3><p class="text-gray-600">Book sessions and share highlights if you choose to.</p></div>
-        </div>
-    </div>
+    <aside class="card home-help home-help-compact" aria-labelledby="help-title">
+      <div class="card-body">
+        <h2 id="help-title">Need to talk to someone now?</h2>
+        <ul>
+          {% for h in helplines %}
+          <li>
+            <a href="tel:{{ h.tel }}" aria-label="Call {{ h.name }} on {{ h.number }}">
+              <span class="num">{{ h.number }}</span>
+              <span class="name">{{ h.name }}, {{ h.hours }}</span>
+            </a>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </aside>
+  </section>
+</div>
+
+<section class="home-section home-band" id="features" aria-labelledby="features-title">
+  <div class="container">
+    <h2 id="features-title">What you can do</h2>
+    <p class="intro">Everything below is in the app today. You need an account to use it.</p>
+    <ul class="home-features">
+      <li class="home-feature">{{ icon('mood') }}<h3>Log your mood</h3><p>Rate how you feel from 1 to 10, add a short note, and see your history over time.</p></li>
+      <li class="home-feature">{{ icon('chart') }}<h3>Take PHQ-9 and GAD-7 screenings</h3><p>Two standard questionnaires for low mood and anxiety. The score is calculated on the server and shown with what it means.</p></li>
+      <li class="home-feature">{{ icon('chat') }}<h3>Talk to the AI companion</h3><p>Anya is an AI assistant, not a therapist. It listens, suggests coping steps, and points you to a counsellor when it matters.</p></li>
+      <li class="home-feature">{{ icon('journal') }}<h3>Keep a journal</h3><p>Write entries in private and look back at them when you want to.</p></li>
+      <li class="home-feature">{{ icon('wind') }}<h3>Breathing, yoga and music</h3><p>Guided breathing exercises, yoga sessions and calming audio for study breaks.</p></li>
+      <li class="home-feature">{{ icon('target') }}<h3>Set goals</h3><p>Track small, measurable goals such as screen time or exercise.</p></li>
+      <li class="home-feature">{{ icon('calendar') }}<h3>Book a counsellor</h3><p>Request an appointment with a counsellor at your institution and see its status.</p></li>
+      <li class="home-feature">{{ icon('users') }}<h3>Counsellor dashboard</h3><p>Counsellors see their own patients, appointment requests and screening results in one place.</p></li>
+    </ul>
+  </div>
 </section>
 
-<section id="how-it-works" class="py-16 bg-gray-50">
-    <div class="container mx-auto px-6 max-w-4xl">
-        <h2 class="text-3xl font-bold text-center text-gray-800 mb-10">How it works</h2>
-        <ol class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <li class="lp-card"><div class="text-3xl mb-2" aria-hidden="true">1️⃣</div><h3 class="font-semibold">Check in</h3><p class="text-gray-600 mt-1">Log your mood or take a short assessment.</p></li>
-            <li class="lp-card"><div class="text-3xl mb-2" aria-hidden="true">2️⃣</div><h3 class="font-semibold">Get support</h3><p class="text-gray-600 mt-1">Chat with the AI companion and try a guided exercise.</p></li>
-            <li class="lp-card"><div class="text-3xl mb-2" aria-hidden="true">3️⃣</div><h3 class="font-semibold">See progress</h3><p class="text-gray-600 mt-1">Watch trends over time and talk to a counselor when needed.</p></li>
-        </ol>
-    </div>
+<section class="home-section" id="how-it-works" aria-labelledby="how-title">
+  <div class="container">
+    <h2 id="how-title">How it works</h2>
+    <p class="intro">Three steps. You decide how often.</p>
+    <ol class="home-steps">
+      <li><h3>Create an account</h3><p>Sign up with your email and your college name. You confirm that you are 18 or over.</p></li>
+      <li><h3>Check in</h3><p>Log your mood, take a screening, or write in your journal. Use the breathing and yoga tools when you need a break.</p></li>
+      <li><h3>Get support</h3><p>Chat with the AI companion any time, or book your college counsellor for a real conversation.</p></li>
+    </ol>
+  </div>
 </section>
 
-{% if posts %}
-<section id="blogs" class="py-16 bg-white">
-    <div class="container mx-auto px-6">
-        <div class="flex items-end justify-between mb-8">
-            <h2 class="text-3xl font-bold text-gray-800">Latest from the blog</h2>
-            <a href="{{ url_for('blog.blog_list') }}" class="text-blue-700 font-semibold hover:underline">View all</a>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {% for post in posts %}
-            <article class="lp-card">
-                <h3 class="text-lg font-semibold text-gray-900">
-                    <a href="{{ url_for('blog.blog_detail', post_id=post.id) }}" class="hover:text-blue-700">{{ post.title }}</a>
-                </h3>
-                <p class="mt-2 text-gray-600">{{ post.content | striptags | truncate(140) }}</p>
-                <a href="{{ url_for('blog.blog_detail', post_id=post.id) }}" class="inline-block mt-3 text-blue-700 font-medium hover:underline">Read more</a>
-            </article>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-{% endif %}
+{% include 'partials/compare_section.html' %}
+{% include 'partials/compare_limits.html' %}
 
-<section class="py-16 bg-gray-50">
-    <div class="container mx-auto px-6 max-w-3xl lp-faq">
-        <h2 class="text-3xl font-bold text-center text-gray-800 mb-6">Questions</h2>
-        <details><summary>Is my data private?</summary>
-            <p class="pb-4 text-gray-600">Your data lives in your account and is sent over HTTPS. You choose whether to share anything with a counselor.</p></details>
-        <details><summary>How much time does it take?</summary>
-            <p class="pb-4 text-gray-600">A check-in takes 1–3 minutes. Longer sessions are optional.</p></details>
-        <details><summary>Is this a replacement for therapy?</summary>
-            <p class="pb-4 text-gray-600">No. Mindful Horizon supports everyday wellbeing and does not diagnose or treat any condition.</p></details>
-    </div>
+<section class="home-section" id="safety" aria-labelledby="safety-title">
+  <div class="container">
+    <h2 id="safety-title">Safety and privacy</h2>
+    <p class="intro">What this service does and does not do.</p>
+    <ul class="home-facts">
+      <li>{{ icon('info') }}<div><strong>Screening is not diagnosis.</strong><span>PHQ-9 and GAD-7 describe how you have felt over the last two weeks. Only a qualified clinician can diagnose.</span></div></li>
+      <li>{{ icon('shield') }}<div><strong>A fixed crisis check runs on every chat message.</strong><span>If it finds language about harming yourself, you see helplines and a fixed reply, whatever the AI says. <a href="{{ url_for('core.how_ai_works') }}">How the AI companion works</a>.</span></div></li>
+      <li>{{ icon('phone') }}<div><strong>If you are in danger, call now.</strong><span>{% for h in helplines %}{{ h.name }}: <a href="tel:{{ h.tel }}">{{ h.number }}</a>{% if not loop.last %}. {% endif %}{% endfor %}.</span></div></li>
+      <li>{{ icon('user') }}<div><strong>For people aged 18 and over.</strong><span>You confirm this when you sign up. Minors should use a service built for them.</span></div></li>
+      <li>{{ icon('lock') }}<div><strong>Read the policies.</strong><span>The <a href="/privacy">Privacy policy</a> and <a href="/terms">Terms</a> describe what we store and who can see it.</span></div></li>
+    </ul>
+  </div>
 </section>
 
-<section class="py-12 bg-white text-center">
-    <div class="container mx-auto px-6">
-        <h2 class="text-2xl font-extrabold text-gray-900 mb-3">Ready to start?</h2>
-        <a href="{{ url_for('auth.signup') }}" class="lp-btn" style="background:#2563eb;color:#fff;">Create free account</a>
-        <p class="mt-8 text-sm text-gray-600" role="note">
-            In crisis or need to talk now? Call <strong>Tele-MANAS 14416</strong> (India, free, 24x7) or your local emergency number.
-        </p>
+<section class="home-section home-band" id="counsellors" aria-labelledby="counsellors-title">
+  <div class="container home-split">
+    <div>
+      <h2 id="counsellors-title">For counsellors</h2>
+      <p class="muted">Your dashboard is built around the patients who have booked with you. Counsellor accounts are created with an invite code from your institution.</p>
     </div>
+    <ul class="home-facts">
+      <li>{{ icon('users') }}<div><strong>Assigned patients only.</strong><span>You see an individual patient's mood, screening results and notes only when they are linked to you, for example by booking an appointment.</span></div></li>
+      <li>{{ icon('calendar') }}<div><strong>Appointment requests in one list.</strong><span>Accept or decline requests and see today's sessions.</span></div></li>
+      <li>{{ icon('chart') }}<div><strong>Aggregate data for the institution.</strong><span>Institution-level views show combined figures, not individual students.</span></div></li>
+    </ul>
+  </div>
+</section>
+
+<section class="home-section home-cta" aria-labelledby="cta-title">
+  <div class="container">
+    <h2 id="cta-title">Start with one check-in</h2>
+    <p>It takes a minute to create an account. You can log your first mood straight away.</p>
+    <div class="home-actions">
+      <a class="btn btn-primary" href="{{ url_for('auth.signup') }}">Create an account</a>
+      <a class="btn btn-secondary" href="{{ url_for('auth.login') }}">Log in</a>
+    </div>
+    <div class="home-links">
+      <a href="/privacy">Privacy policy</a>
+      <a href="/terms">Terms</a>
+      <a href="{{ url_for('blog.blog_list') }}">Blog</a>
+    </div>
+  </div>
 </section>
 {% endblock %}

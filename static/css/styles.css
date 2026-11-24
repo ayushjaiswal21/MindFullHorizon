@@ -21,7 +21,7 @@ body.modal-open {
 .advanced-nav .nav-link-item:focus-visible {
   background-color: transparent !important; /* stop focus / active from turning white */
   color: inherit !important;
-  outline: 2px solid rgba(99,102,241,0.12) !important; /* tasteful focus ring for accessibility */
+  outline: 2px solid var(--focus) !important; /* visible focus ring, 3:1 in both themes */
   box-shadow: none !important;
 }
 
@@ -58,27 +58,27 @@ body.modal-open {
 
 #breathing-circle.active {
   transform: scale(1.5);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary);
 }
 
 #breathing-circle.inhale {
   transform: scale(1.8);
-  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  background: var(--primary);
 }
 
 #breathing-circle.hold {
   transform: scale(1.6);
-  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  background: var(--info);
 }
 
 #breathing-circle.exhale {
   transform: scale(1.2);
-  background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+  background: var(--primary-hover);
 }
 
 #breathing-circle.rest {
   transform: scale(1.0);
-  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  background: var(--surface-2);
 }
 
 #breathing-visualizer {
@@ -86,7 +86,7 @@ body.modal-open {
 }
 
 #breathing-visualizer.active {
-  box-shadow: 0 0 30px rgba(99, 102, 241, 0.3);
+  box-shadow: none;
 }
 
 /* Optional: reduce translate element container margin and pin to right side on small screens */

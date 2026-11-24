@@ -1,0 +1,57 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_rx/_ui.html' import ts %}
+{% macro stat(label, value, note='') %}<div class="stat"><div class="stat-label">{{ label }}</div><div class="stat-value">{{ 'n/a' if value is none else value }}</div>{% if note %}<div class="stat-note">{{ note }}</div>{% endif %}</div>{% endmacro %}
+{% block title %}Admin overview{% endblock %}
+{% block rx_body %}
+{% set s = d.summary or {} %}
+{% set hidden = s.aggregates_hidden or s.total_patients is none %}
+<div class="page-header"><div><h1>Overview</h1><p class="lead">Signed in as {{ admin_name }}. Figures are totals for {{ institution or 'your institution' }}. No student is named here.</p></div></div>
+
+{% if d.crisis_overdue and d.crisis_overdue.any %}
+<div class="alert alert-danger" role="alert">{{ icon('alert') }}<div><p><strong>A crisis alert needs a counsellor. Check that counsellors are available.</strong></p>{% if d.crisis_overdue.count is not none %}<p>{{ d.crisis_overdue.count }} alert{{ '' if d.crisis_overdue.count == 1 else 's' }} waiting for longer than the escalation time.</p>{% endif %}</div></div>
+{% endif %}
+
+<section class="cl-block" aria-labelledby="h-people"><h2 id="h-people" class="text-lg mb-3">People</h2>
+<div class="cl-grid">
+  <div class="stat"><div class="stat-label">Doctors waiting for verification</div><div class="stat-value">{{ d.pending_verifications if d.pending_verifications is not none else 'n/a' }}</div><div class="stat-note"><a class="cl-link" href="{{ nav_url('admin.verification', '/admin/verification') }}">Open the queue</a></div></div>
+  {{ stat('Counsellors', (d.staff or {}).counsellors) }}
+  {{ stat('Verified doctors', (d.staff or {}).doctors_verified) }}
+  {{ stat('Doctors not yet verified', (d.staff or {}).doctors_pending) }}
+  {% if (d.patients or {}).total is none %}{{ stat('Students', 'fewer than 5', 'Small groups are hidden') }}{% else %}{{ stat('Students', (d.patients or {}).total, 'Registered at your institution') }}{% endif %}
+  {{ stat('Unread messages', d.unread_messages) }}
+</div></section>
+
+<section class="cl-block" aria-labelledby="h-eng"><h2 id="h-eng" class="text-lg mb-3">Engagement and wellness</h2>
+{% if hidden %}<div class="alert alert-info" role="status">{{ icon('info') }}<p>Too few students to show these figures. They appear once at least 5 students at your institution have joined.</p></div>{% endif %}
+<div class="cl-grid">
+  {{ stat('Active in 7 days', none if hidden or s.patient_engagement is none else s.patient_engagement ~ '%', 'Logged any activity') }}
+  {{ stat('Session completion', none if hidden or s.completion_rate is none else s.completion_rate ~ '%', 'Completed of completed plus cancelled') }}
+  {{ stat('Average screen time', none if hidden or s.avg_screen_time is none else s.avg_screen_time ~ ' h/day', 'Last 7 days') }}
+</div></section>
+
+{% if prescriptions_enabled %}
+<section class="cl-block" aria-labelledby="h-med"><h2 id="h-med" class="text-lg mb-3">Medicines and prescriptions</h2>
+<div class="cl-grid">
+  {% set st = d.stock or {} %}
+  {{ stat('Medicines low on stock', st.low) }}
+  {{ stat('Medicines out of stock', st.out) }}
+  {{ stat('Batches expiring soon', st.near_expiry, 'Within 60 days') }}
+  {{ stat('Expired, awaiting write-off', st.awaiting_writeoff) }}
+  {{ stat('Doctors due for re-check', d.review_due, 'Within 30 days') }}
+  {{ stat('Prescriptions this month', 'fewer than 5 patients' if d.rx_month is none else d.rx_month) }}
+  {% if desk %}{{ stat('Dispensed today', d.dispensed_today) }}{% endif %}
+</div></section>
+{% endif %}
+
+<section class="card" aria-labelledby="h-recent"><div class="card-header"><h2 id="h-recent" class="text-lg">Your recent actions</h2></div>
+<div class="card-body">
+{% if d.recent_audit %}
+<div class="table-wrap"><table class="table"><caption class="sr-only">Your last administrator actions</caption>
+<thead><tr><th scope="col">Time</th><th scope="col">Action</th><th scope="col">Target</th></tr></thead>
+<tbody>{% for r in d.recent_audit %}<tr><td>{{ ts(r.created_at) }}</td><td>{{ r.action }}</td><td>{{ r.target_type }}{% if r.target_id %} {{ r.target_id }}{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% else %}
+<div class="empty-state">{{ icon('clock') }}<h3 class="empty-state-title">No actions yet</h3><p class="empty-state-text">Your administrator actions appear here.</p></div>
+{% endif %}
+</div></section>
+{% endblock %}

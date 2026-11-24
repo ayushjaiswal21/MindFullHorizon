@@ -1,0 +1,30 @@
+{% extends 'admin/_base.html' %}
+{% from '_macros.html' import empty_state %}
+{% from 'provider_rx/_ui.html' import ts, status_badge, pager, notice %}
+{% block title %}Doctor verification{% endblock %}
+{% block rx_body %}
+{% set base = nav_url('admin.verification', '/admin/verification') %}
+{% set cur = tab or 'pending' %}
+{% set c = counts or {} %}
+<div class="page-header"><div><h1>Doctor verification</h1><p class="lead">A doctor can prescribe only after an administrator of your institution has checked the registration by hand.</p></div></div>
+{{ notice() }}
+<nav class="tabs" aria-label="Verification status">
+  {% for key, label in [('pending', 'Pending'), ('verified', 'Verified'), ('suspended', 'Suspended'), ('rejected', 'Rejected')] %}
+  <a href="{{ base }}?tab={{ key }}"{% if cur == key %} aria-current="page"{% endif %}>{{ label }} <span class="badge badge-neutral">{{ c.get(key, 0) }}</span></a>
+  {% endfor %}
+</nav>
+{% if rows %}
+<div class="table-wrap"><table class="table"><caption class="sr-only">{{ cur|capitalize }} doctor registrations</caption>
+<thead><tr><th scope="col">Doctor</th><th scope="col">Registration number</th><th scope="col">Council</th><th scope="col">Year</th><th scope="col">Specialisation</th><th scope="col">Status</th><th scope="col">Submitted</th><th scope="col">Review due</th><th scope="col">Action</th></tr></thead>
+<tbody>{% for r in rows %}
+<tr><th scope="row">{{ r.user_name }}<div class="muted cl-wrap">{{ r.email }}</div></th><td class="cl-mono">{{ r.registration_number }}</td><td>{{ r.council }}</td><td>{{ r.registered_since }}</td><td>{{ r.specialisation or 'n/a' }}</td>
+<td>{{ status_badge(r.status) }}</td><td>{{ ts(r.submitted_at, 'date') }}</td><td>{{ ts(r.review_due_at, 'date') }}</td>
+<td><a class="btn btn-secondary btn-sm" href="{{ base }}/{{ r.id }}" aria-label="Review {{ r.user_name }}">Review</a></td></tr>
+{% endfor %}</tbody></table></div>
+{{ pager(meta) }}
+{% elif cur == 'pending' %}
+{{ empty_state('No registrations waiting', 'No registrations waiting.', 'check') }}
+{% else %}
+{{ empty_state('Nothing here', 'No doctor registrations have this status.', 'users') }}
+{% endif %}
+{% endblock %}

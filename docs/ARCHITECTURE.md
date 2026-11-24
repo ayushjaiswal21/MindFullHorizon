@@ -130,7 +130,7 @@ flowchart LR
 1. gunicorn eventlet worker receives the request; `Flask-Compress` wraps responses.
 2. `before_request`: generates a CSP nonce in `g.csp_nonce`. Flask-Limiter applies the default limit (2000/day, 300/hour, 60/minute per IP, in memory) and any route limit. No request id.
 3. `CSRFProtect` checks POST/PUT/DELETE tokens (the token comes from `<meta name="csrf-token">`; `/api/log-error` is exempt).
-4. Flask-Session loads the filesystem session by cookie `mindfullhorizon_session`.
+4. Flask loads the signed cookie session `mindfullhorizon_session`; `utils/session_stamp.py` drops it if the user's password, role or account changed since login.
 5. Route decorators check `user_email` in session, then role. A browser request without a session is redirected to `/login`; an XHR (`X-Requested-With`) or `api_login_required` route gets JSON 401/403.
 6. The handler queries SQLAlchemy and renders a template or returns JSON. Handlers call `db.session.commit()` themselves; there is no unit-of-work wrapper.
 7. `after_request` adds `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, `Content-Security-Policy-Report-Only` (not enforcing), and HSTS in production.
@@ -301,7 +301,7 @@ Gaps: the two HTTP telehealth pages disagree with the socket rule. `/provider/te
 
 Authentication: email and password (Werkzeug hash, strength rules) or Google OAuth (Flask-Dance). Login needs the matching role. Providers can only be created with `PROVIDER_INVITE_CODE`; Google sign-up always yields `patient`; a Google email is linked to an existing account only if Google reports it verified. The login form distinguishes "no account" from "wrong password", which allows account enumeration (debt).
 
-Session: server-side files in `flask_session/` (ephemeral on Render), cookie `mindfullhorizon_session`, HttpOnly, SameSite Lax (Strict would drop it on the OAuth redirect), Secure in production, 7-day lifetime refreshed on activity. Role, name and institution are copied into the session at login, so a role change needs a re-login. `SECRET_KEY` is required in production (startup raises); in development a random key is generated per process.
+Session: Flask signed cookie `mindfullhorizon_session` (no server-side storage; see docs/SECURITY.md, Sessions), HttpOnly, SameSite Lax (Strict would drop it on the OAuth redirect), Secure in production, `SESSION_LIFETIME_HOURS` (24) lifetime refreshed on activity. Role, name and institution are copied into the session at login; a role or password change invalidates old cookies through the session stamp. `SECRET_KEY` is required in production (startup raises); in development a random key is generated per process.
 
 Authorisation matrix (as built):
 
@@ -318,7 +318,7 @@ Known authorisation gaps: `/api/message` lets any logged-in user create a notifi
 
 CSRF: `CSRFProtect` is global with a 7-day token lifetime; only `/api/log-error` is exempt. Headers: see section 5; CSP is Report-Only with `'unsafe-inline'` and a CDN allow-list, so it does not yet stop injected scripts. Rate limits: Flask-Limiter, key = client IP, storage in memory (lost on restart, per process, and a campus NAT shares one IP); `login` and `signup` 10 per minute on POST, voice upload 5 per hour, mood-selection log 30 per hour, error log 10 per minute. Secrets: environment only; `.env` is git-ignored but a real Gemini key was once in it (rotate, STATUS item 5).
 
-PHI handling: stored in plaintext in the database (assessments, journals, voice logs, notes). Logs: patient text must not be logged; `CrisisEvent.reason` is a code. Some paths still log emails (`handle_chat_message`, login). Uploaded voice files sit on local disk under `static/uploads`, which the static route serves to anyone who knows the filename (user id plus UUID), and which is ephemeral on Render. Target: field encryption for free text, retention rules, consent records, audit log (DESIGN section 9).
+PHI handling: stored in plaintext in the database (assessments, journals, voice logs, notes). Logs: patient text must not be logged; `CrisisEvent.reason` is a code. Some paths still log emails (`handle_chat_message`, login). Voice audio is analysed and discarded (only measurements are stored); profile pictures are not supported; nothing persistent is written to local disk. Target: field encryption for free text, retention rules, consent records, audit log (DESIGN section 9).
 
 ## 11. Deployment
 
@@ -326,7 +326,7 @@ PHI handling: stored in plaintext in the database (assessments, journals, voice 
 |---|---|---|
 | Web | `Dockerfile` (Python 3.11-slim, non-root, gunicorn eventlet, 1 worker, port 5000); Render web service or local `python app.py` | Same, plus `/health` (liveness) and `/ready` |
 | Database | SQLite `instance/mindful_horizon.db` (dev) or `DATABASE_URL` PostgreSQL; pool size 10, overflow 20, `pool_pre_ping` | Paid Postgres with backups; Alembic `upgrade` as a release step |
-| Sessions | Files in `flask_session/` | Same until a second process; then a DB table or Redis |
+| Sessions | Signed cookies plus a stamp check | Same (stateless, any number of processes) |
 | Jobs | none | `jobs` table, worker as a thread in the web process; at the first trigger a separate Render background worker |
 | Redis | none | Paid Key Value with persistence only when a second SocketIO process, shared rate limits or fan-out is needed |
 | Static | Tailwind 2.2.19 from CDN plus Bootstrap, Font Awesome, Chart.js, socket.io and Google Fonts from CDNs; Flask-Assets pack in `static/gen` | One built CSS file with hashed name, self-hosted fonts (DESIGN section 6) |

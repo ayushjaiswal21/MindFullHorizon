@@ -1,128 +1,102 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
 
-{% block title %}Digital Detox - Mindful Horizon{% endblock %}
+{% block title %}Screen time | MindFull Horizon{% endblock %}
 
-{% block content %}
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="mb-8">
-        <h1 class="text-4xl font-extrabold text-gray-800 mb-2">Digital Detox</h1>
-        <p class="text-lg text-gray-600">Take control of your digital habits for a healthier mind.</p>
-    </div>
-
-    <div class="card p-6 mb-8">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-            <i class="fas fa-chart-line text-blue-500 mr-3"></i>Screen Time Trends
-        </h3>
-        <div class="chart-container">
-            <canvas id="screen-time-chart"></canvas>
-        </div>
-        <div class="text-sm text-gray-600">
-            <i class="fas fa-info-circle mr-2"></i>
-            Average screen time for the last {{ screen_time_log|length }} days: <span class="font-semibold text-blue-600">{{ avg_screen_time }} hours</span>
-        </div>
-    </div>
-    
-    <div class="card p-6 mb-8">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
-            <i class="fas fa-chart-scatter text-purple-500 mr-3"></i>Screen Time vs Academic Performance
-        </h3>
-        <div class="chart-container">
-            <canvas id="correlation-chart"></canvas>
-        </div>
-        <div class="text-sm text-gray-600">
-            <i class="fas fa-info-circle mr-2"></i>
-            This chart shows the correlation between your screen time and academic performance.
-        </div>
-    </div>
-    
-    <div class="grid lg:grid-cols-2 gap-8">
-        <!-- Data Entry Form -->
-        <div class="card p-6">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                <i class="fas fa-plus-circle text-blue-500 mr-3"></i>Log Today's Data
-            </h3>
-            
-            <form id="digital-detox-form" class="space-y-4">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <div>
-                    <label for="screen_time" class="block text-sm font-medium text-gray-700 mb-1">Screen Time (hours)</label>
-                    <input type="number" id="screen_time" name="screen_time" step="0.5" min="0" max="24" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                           placeholder="e.g., 6.5" required>
-                </div>
-                
-                <div>
-                    <label for="academic_score" class="block text-sm font-medium text-gray-700 mb-1">Academic Performance Score (0-100)</label>
-                    <input type="number" id="academic_score" name="academic_score" min="0" max="100" 
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                           placeholder="e.g., 85" required>
-                </div>
-                
-                <div>
-                    <label for="social_interactions" class="block text-sm font-medium text-gray-700 mb-1">Social Interactions Level</label>
-                    <select id="social_interactions" name="social_interactions" 
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                        <option value="">Select level</option>
-                        <option value="low">Low (0-2 interactions)</option>
-                        <option value="medium">Medium (3-5 interactions)</option>
-                        <option value="high">High (6+ interactions)</option>
-                    </select>
-                </div>
-                
-                <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
-                    <i class="fas fa-save mr-2"></i>Save Today's Data
-                </button>
-            </form>
-            
-            <div id="form-message" class="mt-4 hidden"></div>
-        </div>
-
-        <div class="card p-6">
-            <h3 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                <i class="fas fa-robot text-green-500 mr-3"></i>AI Analysis
-                <span class="status-indicator status-online ml-2" title="AI Online"></span>
-            </h3>
-            
-            <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-6 rounded-lg shadow-lg text-white mb-4">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="font-medium">Current Wellness Score:</span>
-                    <span id="ai-score" class="inline-block bg-white text-blue-800 text-sm font-bold px-3 py-1 rounded-full">{{ score or 'N/A' }}</span>
-                </div>
-                <div class="text-sm">
-                    <i class="fas fa-lightbulb text-yellow-300 mr-2"></i>
-                    <strong>AI Suggestion:</strong> <span id="ai-suggestion">{{ suggestion or "Submit today's data for a suggestion." }}</span>
-                </div>
-                <div class="mt-3 text-xs text-blue-200">
-                    <i class="fas fa-clock mr-1"></i>Last analysis: <span id="last-analysis-time">--:--:--</span>
-                </div>
-            </div>
-            
-            <div class="bg-purple-50 p-4 rounded-xl mt-4">
-                <h4 class="font-semibold text-gray-800 mb-2">Academic & Social Analysis</h4>
-                <ul class="text-sm text-gray-700 space-y-2">
-                    <li><i class="fas fa-book-reader text-purple-500 mr-2"></i>Last Academic Score: <span id="current-academic-score" class="font-bold">{{ screen_time_log[-1].academic_score if screen_time_log and screen_time_log|length > 0 else 'N/A' }}</span></li>
-                    <li><i class="fas fa-user-friends text-purple-500 mr-2"></i>Last Social Interaction Level: <span id="current-social-level" class="font-bold">{{ screen_time_log[-1].social_interactions.capitalize() if screen_time_log and screen_time_log|length > 0 else 'N/A' }}</span></li>
-                </ul>
-                <p class="text-sm text-gray-600 mt-2">
-                    <i>Note: The full AI analysis of these metrics will be implemented in a future version.</i>
-                </p>
-            </div>
-            
-            {% if not screen_time_log %}
-                <div class="bg-gray-100 p-8 rounded-lg text-center">
-                    <i class="fas fa-star text-gray-400 text-4xl mb-4"></i>
-                    <p class="text-gray-600">Enter your daily data to see insights and suggestions here.</p>
-                </div>
-            {% endif %}
-        </div>
-    </div>
-</div>
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
 {% endblock %}
 
-{% block extra_scripts %}
-<script nonce="{{ g.csp_nonce }}">
-    // Provide screen time log data to the external JavaScript
-    window.screen_time_log = {{ screen_time_log|tojson }};
-</script>
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/digital_detox_inline_1.js') }}"></script>
+{% block content %}
+<div class="container section" id="detox-root">
+  <header class="page-header">
+    <h1>Screen time</h1>
+    <p class="lead">Log your daily screen time, a self-rated academic score and how social your day was. See how they move over the last 30 entries.</p>
+    <div class="page-actions">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('patient.patient_dashboard') }}">{{ icon('arrow-left') }} Back to dashboard</a>
+    </div>
+  </header>
+
+  <div class="wl-grid wl-grid-2">
+    <section class="card" aria-labelledby="log-heading">
+      <div class="card-header"><h2 id="log-heading" class="text-lg">Log today</h2></div>
+      <div class="card-body">
+        <form id="digital-detox-form" data-validate novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="field">
+            <label for="screen_time" class="label">Screen time today (hours)</label>
+            <input type="number" id="screen_time" name="screen_time" class="input" step="0.5" min="0" max="24" inputmode="decimal" required aria-describedby="screen_time-help screen_time-error">
+            <p id="screen_time-help" class="help">0 to 24, in steps of half an hour.</p>
+            <p id="screen_time-error" class="error-text" hidden></p>
+          </div>
+          <div class="field">
+            <label for="academic_score" class="label">Academic score today (0 to 100)</label>
+            <input type="number" id="academic_score" name="academic_score" class="input" step="1" min="0" max="100" inputmode="numeric" required aria-describedby="academic_score-help academic_score-error">
+            <p id="academic_score-help" class="help">Your own rating of how your studies went.</p>
+            <p id="academic_score-error" class="error-text" hidden></p>
+          </div>
+          <div class="field">
+            <label for="social_interactions" class="label">Time with other people</label>
+            <select id="social_interactions" name="social_interactions" class="select" required>
+              <option value="">Select</option>
+              <option value="low">Low (0 to 2 conversations)</option>
+              <option value="medium">Medium (3 to 5 conversations)</option>
+              <option value="high">High (6 or more)</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" id="detox-submit">Save today</button>
+          <p class="help mt-2">Saving again today replaces today's entry.</p>
+        </form>
+        <div id="form-message" role="status" class="mt-2"></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="latest-heading">
+      <div class="card-header"><h2 id="latest-heading" class="text-lg">Latest entry</h2></div>
+      <div class="card-body">
+        <dl class="wl-kv">
+          <div><dt>Wellness score</dt><dd id="ai-score">{{ score or 'n/a' }}</dd></div>
+          <div><dt>Academic score</dt><dd id="current-academic-score">{{ screen_time_log[0].academic_score if screen_time_log and screen_time_log[0].academic_score is not none else 'n/a' }}</dd></div>
+          <div><dt>Time with other people</dt><dd id="current-social-level">{{ screen_time_log[0].social_interactions|capitalize if screen_time_log and screen_time_log[0].social_interactions else 'n/a' }}</dd></div>
+        </dl>
+        <div class="wl-ai">
+          <h3>AI-generated suggestion, not advice</h3>
+          <p id="ai-suggestion">{{ suggestion or "Save today's entry to get a suggestion." }}</p>
+        </div>
+        <p id="last-analysis" class="wl-meta mt-2" hidden>Updated at <span id="last-analysis-time"></span></p>
+        <p class="wl-note mt-2">The score and suggestion are generated by software from the three numbers you enter. They are not a clinical assessment. If screen time is affecting your sleep, studies or mood, talk to a counsellor.</p>
+      </div>
+    </section>
+  </div>
+
+  <section class="card mt-4" aria-labelledby="trend-heading">
+    <div class="card-header"><h2 id="trend-heading" class="text-lg">Screen time, last entries</h2></div>
+    <div class="card-body">
+      <div id="screen-time-chart" data-empty-text="No entries yet."></div>
+      <p id="detox-average" class="wl-note mt-2">{% if screen_time_log %}Average of your last {{ screen_time_log|length }} {{ 'entry' if screen_time_log|length == 1 else 'entries' }}: {{ avg_screen_time }} hours a day.{% endif %}</p>
+      <div id="detox-empty" class="empty-state" {% if screen_time_log %}hidden{% endif %}>
+        {{ icon('chart', size=32) }}
+        <h3>No entries yet</h3>
+        <p>Log today's screen time to start your chart.</p>
+      </div>
+      <div class="table-wrap mt-2" id="detox-table-wrap" {% if not screen_time_log %}hidden{% endif %}>
+        <table class="table">
+          <caption class="mfh-visually-hidden">Your logged days, newest first</caption>
+          <thead><tr><th scope="col">Date</th><th scope="col">Screen time (h)</th><th scope="col">Academic score</th><th scope="col">Time with others</th></tr></thead>
+          <tbody id="detox-rows">
+            {% for log in screen_time_log %}
+            <tr><td>{{ log.date }}</td><td>{{ log.hours }}</td><td>{{ log.academic_score if log.academic_score is not none else 'n/a' }}</td><td>{{ log.social_interactions|capitalize if log.social_interactions else 'n/a' }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+<script type="application/json" id="screen-time-data">{{ screen_time_log|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/wellness-common.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/digital_detox_inline_1.js') }}" defer></script>
 {% endblock %}

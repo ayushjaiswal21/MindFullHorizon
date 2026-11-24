@@ -1,75 +1,121 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
+{% from '_macros.html' import form_field, empty_state %}
+{% from 'patient_macros.html' import status_badge, helpline_list %}
 
-{% block title %}Schedule Appointment - Mindful Horizon{% endblock %}
+{% block title %}Appointments - MindFull Horizon{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rx_patient.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="p-6 bg-gradient-to-r from-purple-600 to-indigo-700 text-white">
-            <h2 class="text-2xl font-bold flex items-center"><i class="fas fa-calendar-alt mr-3"></i>Schedule Your Appointment</h2>
-            <p class="text-purple-200">Book a session with one of our qualified professionals.</p>
-        </div>
-        
-        <form method="POST" class="p-8 space-y-6">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                    <label for="date" class="block text-gray-700 font-medium mb-2">Select Date</label>
-                    <input type="date" id="date" name="date" class="input-field" required>
-                </div>
-                
-                <div>
-                    <label for="time" class="block text-gray-700 font-medium mb-2">Select Time</label>
-                    <select id="time" name="time" class="input-field" required>
-                        <option value="" disabled selected>Choose a time slot</option>
-                        <option value="09:00">9:00 AM</option>
-                        <option value="10:00">10:00 AM</option>
-                        <option value="11:00">11:00 AM</option>
-                        <option value="14:00">2:00 PM</option>
-                        <option value="15:00">3:00 PM</option>
-                        <option value="16:00">4:00 PM</option>
-                    </select>
-                </div>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                    <label for="appointment-type" class="block text-gray-700 font-medium mb-2">Appointment Type</label>
-                    <select id="appointment-type" name="appointment_type" class="input-field" required>
-                        <option value="" disabled selected>Select appointment type</option>
-                        <option value="therapy">Therapy Session</option>
-                        <option value="consultation">Initial Consultation</option>
-                        <option value="follow-up">Follow-up Session</option>
-                        <option value="crisis">Crisis Intervention</option>
-                    </select>
-                </div>
-                
-                <div>
-                    <label for="provider" class="block text-gray-700 font-medium mb-2">Select Provider (Optional)</label>
-                    <select id="provider" name="provider_id" class="input-field">
-                        <option value="">Any available provider</option>
-                        {% for provider in providers %}
-                        <option value="{{ provider.id }}">{{ provider.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-            
-            <div>
-                <label for="notes" class="block text-gray-700 font-medium mb-2">Additional Notes (Optional)</label>
-                <textarea id="notes" name="notes" rows="4" class="input-field" 
-                         placeholder="Please share any specific concerns or topics you'd like to discuss..."></textarea>
-            </div>
+{% set err = (error or '')|lower %}
+{% set f = form or {} %}
+{% set date_err = error if ('date' in err or 'past' in err) else None %}
+{% set time_err = error if ('slot' in err or 'time' in err) and not date_err else None %}
+{% set provider_err = error if 'provider' in err else None %}
+{% set type_err = error if ('type' in err and not (date_err or time_err or provider_err)) else None %}
+<div class="container section">
+    <header class="page-header">
+        <h1>Appointments</h1>
+        <p class="lead">Book a session with a counsellor or a doctor at your college. They confirm or decline each request.</p>
+    </header>
 
-            <div class="pt-4 flex items-center justify-between">
-                <a href="{{ url_for('patient.patient_dashboard') }}" class="text-gray-600 hover:text-gray-800 font-medium">Back to Dashboard</a>
-                <button type="submit" class="btn-primary bg-purple-600 hover:bg-purple-700">
-                    <i class="fas fa-check-circle mr-2"></i>Book Appointment
-                </button>
-            </div>
-        </form>
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="lg:col-span-2 pt-stack">
+            <section class="card" aria-labelledby="book-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="book-heading">Book a session</h2>
+                    {% if error %}
+                    <div class="alert alert-danger mt-3" role="alert" id="schedule-error"><div><strong>The appointment was not booked.</strong> <span>{{ error }}</span></div></div>
+                    {% endif %}
+                    <form method="post" action="{{ url_for('patient.schedule_appointment') }}" class="mt-4" data-validate
+                          data-doctor-ids="{{ providers|selectattr('provider_type', 'equalto', 'doctor')|map(attribute='id')|join(',') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="client_request_id" id="client-request-id" value="">
+                        <div class="grid gap-4 md:grid-cols-2">
+                            {{ form_field('date', 'Date', type='date', value=f.get('date', ''), required=True, error=date_err) }}
+                            {{ form_field('time', 'Time', type='select', value=f.get('time', ''), required=True, error=time_err,
+                                          data_msg_required='Choose a time.',
+                                          options=[('', 'Choose a time'), ('09:00', '9:00 am'), ('10:00', '10:00 am'), ('11:00', '11:00 am'), ('14:00', '2:00 pm'), ('15:00', '3:00 pm'), ('16:00', '4:00 pm')]) }}
+                        </div>
+                        <div class="grid gap-4 md:grid-cols-2">
+                            {{ form_field('appointment_type', 'Type of session', type='select', id='appointment-type', value=f.get('appointment_type', ''), required=True, error=type_err,
+                                          data_msg_required='Choose a type of session.',
+                                          options=[('', 'Choose a type'), ('therapy', 'Counselling session'), ('consultation', 'First consultation'), ('follow-up', 'Follow-up session')]) }}
+                            {% set provider_options = [('', 'Any available counsellor')] %}
+                            {% for p in providers %}{% set _ = provider_options.append((p.id|string, p.name ~ (' (Doctor)' if p.provider_type == 'doctor' else ' (Counsellor)'))) %}{% endfor %}
+                            {{ form_field('provider_id', 'Counsellor or doctor', type='select', id='provider', value=f.get('provider_id', ''), optional=True, error=provider_err,
+                                          help=('Each name shows whether the person is a counsellor or a doctor. Only doctors whose registration an administrator has checked are listed.' if providers else 'No counsellors or doctors are listed for your institution yet. Your request is saved without one.'),
+                                          options=provider_options) }}
+                        </div>
+                        {% include 'partials/schedule_rx_fields.html' %}
+                        {{ form_field('notes', 'Notes for the counsellor or doctor', type='textarea', value=f.get('notes', ''), optional=True, rows=4, maxlength=1000,
+                                      help='Anything you would like them to know before the session.') }}
+                        <div class="nav-row">
+                            <a class="btn btn-ghost" href="{{ url_for('patient.patient_dashboard') }}">Back to dashboard</a>
+                            <button type="submit" class="btn btn-primary" data-loading-text="Booking">Request appointment</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <section class="card" aria-labelledby="mine-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="mine-heading">Your appointments</h2>
+                    {% if appointments %}
+                    <div class="table-wrap mt-3">
+                        <table class="table">
+                            <caption class="sr-only">Your appointments, newest first</caption>
+                            <thead>
+                                <tr><th scope="col">Date</th><th scope="col">Time</th><th scope="col">With</th><th scope="col">Type</th><th scope="col">Status</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
+                            </thead>
+                            <tbody>
+                                {% for a in appointments %}
+                                <tr>
+                                    <td>{{ a.date.strftime('%a %d %b %Y') }}</td>
+                                    <td>{{ a.time }}</td>
+                                    <td>{{ a.provider.name if a.provider else 'Not assigned' }}</td>
+                                    <td>{{ a.appointment_type|replace('-', ' ')|capitalize }}{% if a.modality %} <span class="badge badge-neutral">{{ 'Video' if a.modality == 'video' else 'In person' }}</span>{% endif %}</td>
+                                    <td>{{ status_badge(a.status) }}{% if a.status == 'rejected' and a.rejection_reason %}<div class="muted">{{ a.rejection_reason }}</div>{% endif %}</td>
+                                    <td>
+                                        {% if a.status in ('pending', 'accepted', 'booked') %}
+                                        <form method="post" action="{{ url_for('patient.cancel_appointment', appointment_id=a.id) }}"
+                                              data-confirm="Your counsellor will no longer expect you on {{ a.date.strftime('%d %b %Y') }} at {{ a.time }}."
+                                              data-confirm-title="Cancel this appointment?" data-confirm-text="Cancel appointment" data-confirm-danger>
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-secondary btn-sm" data-loading-text="Cancelling">Cancel</button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    {{ empty_state('No appointments yet', 'Use the form above to request your first session.', 'calendar') }}
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+
+        <aside class="pt-stack">
+            <section class="card" aria-labelledby="sooner-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="sooner-heading">Need to talk sooner?</h2>
+                    <p class="pt-sub">An appointment request is not an emergency service. If you are in crisis, call now. These services are free.</p>
+                    {{ helpline_list(helplines) }}
+                </div>
+            </section>
+        </aside>
     </div>
 </div>
+{% endblock %}
 
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/schedule_inline_1.js') }}"></script>
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/schedule_inline_1.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/schedule_rx.js') }}" defer></script>
 {% endblock %}

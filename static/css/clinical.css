@@ -1,0 +1,100 @@
+/* Clinical screens: admin pages and provider prescribing pages. Flat tokens from site.css only, no hard-coded theme colours. */
+
+[hidden] { display: none !important; }
+
+/* Layout helpers (tailwind.css ships a small utility subset, so the rest lives here) */
+.cl-grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); margin-bottom: 1.5rem; }
+.cl-grid-2, .cl-split { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
+@media (min-width: 1024px) { .cl-grid-2 { grid-template-columns: 1fr 1fr; } .cl-split { grid-template-columns: 2fr 1fr; } }
+.cl-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; }
+.cl-row-end { justify-content: flex-end; }
+.cl-between { justify-content: space-between; }
+.cl-stack > * + * { margin-top: 1rem; }
+.cl-block { margin-bottom: 1.5rem; }
+.cl-nums, .stat-value { font-variant-numeric: tabular-nums; }
+.cl-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; letter-spacing: .02em; overflow-wrap: anywhere; }
+.cl-right { text-align: right; }
+.cl-wrap { overflow-wrap: anywhere; }
+.cl-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; margin-bottom: 1rem; }
+.cl-filters .field { margin-bottom: 0; min-width: 11rem; }
+.cl-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.cl-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; margin-top: 1rem; }
+.cl-link { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
+.cl-link:hover { color: var(--primary-hover); }
+.cl-link-btn { display: inline-flex; align-items: center; min-height: 44px; padding: 0 .25rem; background: none; border: 0; color: var(--primary); text-decoration: underline; cursor: pointer; }
+.cl-list { list-style: none; margin: 0; padding: 0; }
+.cl-list > li { padding: .625rem 0; border-top: 1px solid var(--border); display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; }
+.cl-list > li:first-child { border-top: 0; }
+.cl-notice { font-size: .875rem; }
+.cl-notice p { margin: 0; }
+.cl-notice p + p { margin-top: .25rem; }
+.cl-banner-note { margin: 0 0 1rem; }
+.cl-dl { display: grid; grid-template-columns: max-content 1fr; gap: .375rem 1rem; margin: 0; }
+.cl-dl dt { color: var(--text-muted); }
+.cl-dl dd { margin: 0; overflow-wrap: anywhere; }
+
+/* Dialogs (native dialog, same look as the provider dashboard) */
+.cl-dialog { background: var(--surface-raised); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; width: min(30rem, calc(100% - 2rem)); }
+.cl-dialog::backdrop { background: var(--scrim); }
+.cl-dialog h2 { font-size: 1.125rem; margin: 0 0 .5rem; }
+
+/* Step indicator on the prescribe page */
+.cl-steps { display: flex; flex-wrap: wrap; gap: .25rem; list-style: none; margin: 0 0 1.5rem; padding: 0; border-bottom: 1px solid var(--border); }
+.cl-steps li { padding: .5rem .875rem; color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; }
+.cl-steps li[aria-current="step"] { color: var(--primary); border-bottom-color: var(--primary); }
+.cl-steps li.is-done { color: var(--text); }
+.cl-steps li.is-done::after { content: " (done)"; color: var(--text-muted); font-weight: 400; }
+.cl-step { margin-bottom: 1.5rem; }
+.cl-step-nav { display: flex; flex-wrap: wrap; gap: .75rem; justify-content: space-between; margin-top: 1rem; }
+.cl-radios { display: flex; flex-wrap: wrap; gap: .25rem 1.25rem; }
+.cl-radios .check { min-height: 44px; align-items: center; }
+.cl-fieldset { border: 0; padding: 0; margin: 0 0 1rem; min-width: 0; }
+.cl-fieldset legend { font-weight: 500; padding: 0; margin-bottom: .375rem; }
+
+/* Medicine search results and item editors */
+.cl-results { list-style: none; margin: .5rem 0 0; padding: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); }
+.cl-results > li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; padding: .75rem 1rem; border-top: 1px solid var(--border); }
+.cl-results > li:first-child { border-top: 0; }
+.cl-results .cl-blocked { flex-basis: 100%; margin: 0; font-size: .875rem; color: var(--text-muted); }
+.cl-result-main { min-width: 0; flex: 1 1 16rem; }
+.cl-result-meta { display: flex; flex-wrap: wrap; gap: .375rem; margin-top: .25rem; }
+.cl-item { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); padding: 1rem; margin-bottom: 1rem; }
+.cl-item[data-invalid="true"] { border-color: var(--danger); border-width: 2px; }
+.cl-item-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .75rem; }
+.cl-item-head h3 { margin: 0; font-size: 1rem; }
+.cl-item-grid { display: grid; gap: 0 1rem; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .cl-item-grid { grid-template-columns: 1fr 1fr; } }
+.cl-errors { margin: 0 0 1rem; padding-left: 1.25rem; }
+.cl-warn { padding: .75rem 1rem; border: 1px solid var(--warning); border-left-width: 4px; border-radius: var(--radius); background: var(--warning-soft); margin-bottom: .75rem; }
+
+/* Checklist and timeline */
+.cl-checks { list-style: none; margin: 0 0 1rem; padding: 0; }
+.cl-checks li { padding: .25rem 0; }
+.cl-timeline { list-style: none; margin: 0; padding: 0 0 0 1rem; border-left: 2px solid var(--border); }
+.cl-timeline li { padding: .25rem 0 .75rem .75rem; }
+
+/* Admin tables: numeric columns, row states */
+.table td.cl-right, .table th.cl-right { text-align: right; font-variant-numeric: tabular-nums; }
+.table tr.is-flagged td:first-child, .table tr.is-flagged th:first-child { border-left: 3px solid var(--warning); }
+.cl-inline-form { display: inline-flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.cl-inline-form .input { width: 6rem; }
+.cl-panel-quiet { background: var(--surface-2); border-radius: var(--radius); padding: 1rem; }
+.cl-message { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Printable prescription. Screen shows the same sheet inside a bordered frame. */
+.rx-sheet { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.5rem; max-width: 52rem; margin: 0 auto 2rem; position: relative; }
+.rx-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; border-bottom: 2px solid var(--text); padding-bottom: .75rem; margin-bottom: 1rem; }
+.rx-head h1 { font-size: 1.25rem; margin: 0; }
+.rx-head p { margin: .125rem 0 0; }
+.rx-banner { border: 3px solid var(--danger); color: var(--danger); font-size: 2rem; font-weight: 700; text-align: center; padding: .5rem; margin-bottom: 1rem; }
+.rx-number { font-size: 1.125rem; font-weight: 600; }
+.rx-foot { border-top: 1px solid var(--border); margin-top: 1.5rem; padding-top: .75rem; font-size: .875rem; }
+.rx-sheet .table { margin: 0; }
+
+@media print {
+  .no-print { display: none !important; }
+  .rx-sheet { border: 0; padding: 0; max-width: none; margin: 0; }
+  .rx-banner { border-color: #000; color: #000; }
+  .cl-pager, .cl-dialog { display: none !important; }
+}
+@media (prefers-reduced-motion: reduce) { .cl-link, .cl-steps li { transition: none; } }

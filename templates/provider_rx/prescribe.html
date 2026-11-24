@@ -1,0 +1,135 @@
+{% extends 'provider_rx/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_rx/_ui.html' import notice, config_block %}
+{% block title %}New prescription{% endblock %}
+
+{% macro nav(back_to, next_to=None, next_id=None, next_label='Continue') %}
+<div class="cl-step-nav">
+  {% if back_to %}<button type="button" class="btn btn-secondary" data-nav="back" data-to="{{ back_to }}">Back</button>{% else %}<span></span>{% endif %}
+  {% if next_to %}<button type="button" class="btn btn-primary" data-nav="next" data-to="{{ next_to }}">{{ next_label }}</button>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro radios(name, label) %}
+<fieldset class="cl-fieldset" aria-describedby="err-{{ name }}_status">
+  <legend>{{ label }}</legend>
+  <div class="cl-radios">
+    <div class="check"><input type="radio" id="{{ name }}-none" name="{{ name }}_status" value="none_reported"><label for="{{ name }}-none">None reported</label></div>
+    <div class="check"><input type="radio" id="{{ name }}-listed" name="{{ name }}_status" value="listed"><label for="{{ name }}-listed">Listed</label></div>
+    <div class="check"><input type="radio" id="{{ name }}-unknown" name="{{ name }}_status" value="unknown"><label for="{{ name }}-unknown">Not known</label></div>
+  </div>
+  <p class="error-text" id="err-{{ name }}_status" hidden></p>
+  <div class="field" id="wrap-{{ name }}" hidden>
+    <label class="label" for="f-{{ name }}">{{ label }}, in words</label>
+    <input class="input" type="text" id="f-{{ name }}" maxlength="300" autocomplete="off" aria-describedby="err-{{ name }}">
+    <p class="error-text" id="err-{{ name }}" hidden></p>
+  </div>
+</fieldset>
+{% endmacro %}
+
+{% block rx_body %}
+{% set urls = {
+  'patients': nav_url('provider.rx_api_patients', '/provider/api/rx/patients'),
+  'eligibility': nav_url('provider.rx_api_eligibility', '/provider/api/rx/eligibility'),
+  'medicines': nav_url('provider.rx_api_medicines', '/provider/api/rx/medicines'),
+  'drafts': nav_url('provider.rx_api_list', '/provider/api/rx/prescriptions'),
+  'detail_template': nav_url('provider.rx_list', '/provider/prescriptions') ~ '/0',
+  'appointments': nav_url('provider.provider_appointments', '/provider/appointments'),
+  'profile': nav_url('provider.rx_profile', '/provider/prescribing-profile')
+} %}
+{#- `config` is also a Flask global (app.config): copy only the known URL keys, never the whole object. -#}
+{% for k in urls.keys()|list %}{% if config and config.get(k) %}{% set _ = urls.update({k: config.get(k)}) %}{% endif %}{% endfor %}
+<div class="page-header">
+  <div>
+    <h1>New prescription</h1>
+    <p class="lead">Choose a patient, add the clinical details and the medicines, review, then issue. Your draft is saved as you go.</p>
+  </div>
+  <div class="page-actions"><a class="btn btn-secondary" href="{{ nav_url('provider.rx_list', '/provider/prescriptions') }}">{{ icon('file') }} My prescriptions</a></div>
+</div>
+{{ notice() }}
+
+<ol class="cl-steps" id="rx-steps" aria-label="Prescription steps">
+  <li>Patient</li><li>Clinical details</li><li>Medicines</li><li>Review</li><li>Confirm</li>
+</ol>
+<p id="rx-live" class="sr-only" role="status" aria-live="polite"></p>
+<div class="alert alert-danger" id="rx-alert" role="alert" hidden>
+  {{ icon('alert') }}<div><p id="rx-alert-text"></p><div id="rx-alert-action"></div></div>
+</div>
+
+<section class="card cl-step" data-step="1" aria-labelledby="s1-h">
+  <div class="card-header"><h2 id="s1-h">Patient</h2></div>
+  <div class="card-body">
+    <div id="pt-search">
+      <div class="field">
+        <label class="label" for="pt-q">Search your patients by name</label>
+        <input class="input" type="search" id="pt-q" maxlength="100" autocomplete="off" data-nodirty aria-describedby="pt-help" aria-controls="pt-results">
+        <p class="help" id="pt-help">Only patients assigned to you are listed.</p>
+      </div>
+      <div id="pt-results" aria-live="polite"></div>
+    </div>
+    <div class="panel-muted cl-block" id="pt-panel" aria-live="polite" hidden></div>
+    <div class="check" id="attest-wrap" hidden>
+      <input type="checkbox" id="attest" data-nodirty><label for="attest">Same condition as the previous in-person consult</label>
+    </div>
+    <div class="cl-step-nav"><span></span><button type="button" class="btn btn-primary" id="s1-next" disabled>Continue</button></div>
+  </div>
+</section>
+
+<section class="card cl-step" data-step="2" aria-labelledby="s2-h" hidden>
+  <div class="card-header"><h2 id="s2-h">Clinical details</h2></div>
+  <div class="card-body">
+    <div class="field">
+      <label class="label" for="f-diagnosis">Diagnosis</label>
+      <input class="input" type="text" id="f-diagnosis" maxlength="120" autocomplete="off" required aria-describedby="h-diagnosis err-diagnosis">
+      <p class="help" id="h-diagnosis">In words or as an ICD-10 code. The patient and the pharmacy desk can see it on the prescription.</p>
+      <p class="error-text" id="err-diagnosis" hidden></p>
+    </div>
+    {{ radios('allergies', 'Allergies') }}
+    {{ radios('current_meds', 'Current medicines') }}
+    <div class="field">
+      <label class="label" for="f-expiry_days">Valid for</label>
+      <select class="select" id="f-expiry_days" aria-describedby="h-expiry"></select>
+      <p class="help" id="h-expiry">You can shorten the validity, not extend it. The prescription expires at the end of the last day.</p>
+    </div>
+    {{ nav(1, 3) }}
+  </div>
+</section>
+
+<section class="card cl-step" data-step="3" aria-labelledby="s3-h" hidden>
+  <div class="card-header"><h2 id="s3-h">Medicines</h2></div>
+  <div class="card-body">
+    <p class="help" id="limits-text"></p>
+    <div class="field">
+      <label class="label" for="med-q">Search the catalogue (at least 2 characters)</label>
+      <input class="input" type="search" id="med-q" maxlength="100" autocomplete="off" data-nodirty aria-controls="med-results" aria-describedby="med-msg">
+    </div>
+    <p id="med-msg" class="help" role="status" aria-live="polite"></p>
+    <div id="med-results"></div>
+    <h3 id="items-count" class="mt-6">Medicines in this prescription</h3>
+    <div id="rx-items"></div>
+    {{ nav(2, 4) }}
+  </div>
+</section>
+
+<section class="card cl-step" data-step="4" aria-labelledby="s4-h" hidden>
+  <div class="card-header"><h2 id="s4-h">Review</h2></div>
+  <div class="card-body">
+    <div id="rv-summary"></div>
+    <div id="rv-errors" role="alert"></div>
+    <div id="rv-warnings"></div>
+    <p class="help">This check finds the same medicine or the same class only. It is not a drug interaction check. Check interactions yourself before issuing.</p>
+    <div class="cl-step-nav">
+      <button type="button" class="btn btn-secondary" data-nav="back" data-to="3">Back</button>
+      <button type="button" class="btn btn-primary" id="rv-issue" disabled>{{ icon('check') }} Issue prescription</button>
+    </div>
+  </div>
+</section>
+
+{{ config_block({'urls': urls, 'patient': patient, 'draft': draft, 'limits': limits or {}}) }}
+{% endblock %}
+
+{% block page_scripts %}
+{% for f in ['rx_prescribe', 'rx_prescribe_patient', 'rx_prescribe_meds', 'rx_prescribe_review'] %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/' ~ f ~ '.js') }}?v={{ asset_version }}" defer></script>
+{% endfor %}
+{% endblock %}

@@ -1,0 +1,7 @@
+{#- Icon macro. Sprite: static/img/icons.svg (24px grid, 1.75 stroke, currentColor).
+    icon('heart')                          decorative, aria-hidden
+    icon('alert', label='Warning')         meaningful, role="img" with an accessible name
+    icon('check', size=16, cls='mr-2')     size in px and extra classes -#}
+{% macro icon(name, label=None, size=20, cls='') -%}
+<svg class="icon{{ ' ' ~ cls if cls }}" width="{{ size }}" height="{{ size }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" focusable="false"{% if label %} role="img" aria-label="{{ label }}"{% else %} aria-hidden="true"{% endif %}><use href="{{ url_for('static', filename='img/icons.svg') }}#icon-{{ name }}"></use></svg>
+{%- endmacro %}

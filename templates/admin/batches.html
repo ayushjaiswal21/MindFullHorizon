@@ -1,0 +1,42 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from '_macros.html' import empty_state %}
+{% from 'provider_rx/_ui.html' import status_badge, pager, notice %}
+{% block title %}Batches{% endblock %}
+{% block page_scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_actions.js') }}?v={{ asset_version }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_inventory.js') }}?v={{ asset_version }}" defer></script>
+{% endblock %}
+{% block rx_body %}
+{% set base = nav_url('admin.inventory', '/admin/inventory') %}
+<div class="page-header"><div><h1>Batches</h1><p class="lead">Each batch has its own expiry date. The pharmacy desk uses the batch that expires first. <a class="cl-link" href="{{ base }}">Back to stock levels</a></p></div></div>
+{{ notice() }}
+{% if rows %}
+<div class="table-wrap"><table class="table"><caption class="sr-only">Stock batches</caption>
+<thead><tr><th scope="col">Medicine</th><th scope="col">Batch</th><th scope="col">Expiry</th><th scope="col" class="cl-right">Quantity</th><th scope="col">Supplier</th><th scope="col">Status</th>{% if desk %}<th scope="col">Actions</th>{% endif %}</tr></thead>
+<tbody>{% for r in rows %}
+{% set dl = r.days_left %}
+<tr{% if dl is not none and dl <= 60 %} class="is-flagged"{% endif %}><th scope="row">{{ r.label }}</th><td class="cl-mono">{{ r.batch_no }}</td>
+<td>{{ r.expiry_date }} {% if dl is not none and dl <= 0 %}<span class="badge badge-danger">{{ icon('x', size=14) }}Expired</span>{% elif dl is not none and dl <= 60 %}<span class="badge badge-warning">{{ icon('alert', size=14) }}Expires in {{ dl }} day{{ '' if dl == 1 else 's' }}</span>{% endif %}</td>
+<td class="cl-right">{{ r.quantity_on_hand }}</td><td>{{ r.supplier or 'n/a' }}</td><td>{{ status_badge(r.status) }}</td>
+{% if desk %}<td><div class="cl-actions">
+<button type="button" class="btn btn-secondary btn-sm" data-adjust data-url="/admin/api/inventory/batches/{{ r.id }}/adjust" data-label="{{ r.label }}, batch {{ r.batch_no }}">Adjust</button>
+{% if dl is not none and dl <= 0 and r.quantity_on_hand > 0 %}<button type="button" class="btn btn-danger btn-sm" data-api-post="/admin/api/inventory/batches/{{ r.id }}/write-off" data-idem data-ask="All {{ r.quantity_on_hand }} units of this expired batch will be removed from stock. This is recorded in the stock history." data-ask-title="Write off batch {{ r.batch_no }}?" data-ask-text="Write off" data-ask-danger data-done="Batch written off" aria-label="Write off batch {{ r.batch_no }} of {{ r.label }}">Write off</button>{% endif %}
+{% if r.status == 'quarantined' %}<button type="button" class="btn btn-ghost btn-sm" data-api-post="/admin/api/inventory/batches/{{ r.id }}/quarantine" data-body='{"on": false}' data-done="Batch released" aria-label="Release batch {{ r.batch_no }}">Release</button>
+{% elif r.status == 'active' %}<button type="button" class="btn btn-ghost btn-sm" data-api-post="/admin/api/inventory/batches/{{ r.id }}/quarantine" data-body='{"on": true}' data-ask="Quarantined stock is not given out until you release it. Use this for a recall." data-ask-title="Quarantine batch {{ r.batch_no }}?" data-ask-text="Quarantine" data-done="Batch quarantined" aria-label="Quarantine batch {{ r.batch_no }}">Quarantine</button>{% endif %}
+</div></td>{% endif %}</tr>
+{% endfor %}</tbody></table></div>
+{{ pager(meta) }}
+{% else %}
+{{ empty_state('No batches recorded', 'No batches recorded.', 'pill') }}
+{% endif %}
+{% if desk %}
+<dialog id="adjust-dialog" class="cl-dialog" aria-labelledby="adjust-title">
+  <h2 id="adjust-title">Adjust stock</h2>
+  <p class="help" id="adjust-for"></p>
+  <div class="field"><label class="label" for="adjust-reason">Reason</label><select class="select" id="adjust-reason">{% for code, label in (reasons.items() if reasons is mapping else reasons or []) %}<option value="{{ code }}">{{ label }}</option>{% endfor %}</select></div>
+  <div class="field"><label class="label" for="adjust-delta">Change in units</label><input class="input" id="adjust-delta" type="number" step="1" required aria-describedby="adjust-help adjust-error"><p class="help" id="adjust-help">Use a negative number to remove stock. Stock cannot go below zero.</p><p class="error-text" id="adjust-error" role="alert" hidden></p></div>
+  <div class="cl-row cl-row-end"><button type="button" class="btn btn-ghost" id="adjust-cancel">Cancel</button><button type="button" class="btn btn-primary" id="adjust-save">Save adjustment</button></div>
+</dialog>
+{% endif %}
+{% endblock %}

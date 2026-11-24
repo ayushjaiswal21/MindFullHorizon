@@ -1,0 +1,15 @@
+/* Patient prescription pages and care-team card. Colours come from the tokens in site.css only. */
+.rx-number { font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: 0.95em; letter-spacing: 0.02em; }
+
+.rx-steps { list-style: none; margin: 0; padding: 0; }
+.rx-steps li { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0 0.5rem 1.25rem; border-left: 2px solid var(--border); color: var(--text-muted); }
+.rx-steps li.done { border-left-color: var(--primary); color: var(--text); }
+.rx-steps li svg { width: 1rem; height: 1rem; color: var(--success); flex: none; }
+
+.care-team { list-style: none; margin: 0.75rem 0 0; padding: 0; }
+.care-team li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+.care-team li:last-child { border-bottom: 0; }
+
+[data-rx-send][aria-busy="true"], [data-rx-consent][aria-busy="true"] { opacity: 0.7; cursor: progress; }
+
+.rx-doctor-only[hidden] { display: none; }

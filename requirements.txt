@@ -1,5 +1,5 @@
 # MindFull Horizon: runtime dependencies (direct imports only; pip resolves the rest).
-# Python 3.11 (see Dockerfile). Optional voice analysis: requirements-voice.txt. Tests: requirements-dev.txt.
+# Python 3.11 (see Dockerfile). Optional voice analysis: requirements/voice.txt. Tests: requirements/dev.txt.
 # Rule: add a package here only when code imports it; run `python scripts/scan_imports.py` before releases.
 
 # Web framework and extensions
@@ -8,7 +8,6 @@ Werkzeug>=2.3.0,<3.0.0
 Flask-WTF>=1.1.0,<2.0.0
 Flask-SQLAlchemy>=3.0.0,<4.0.0
 Flask-Migrate>=4.0.0,<5.0.0
-Flask-Session>=0.5.0,<1.0.0
 Flask-Compress>=1.13,<2.0.0
 Flask-SocketIO>=5.3.0,<6.0.0
 Flask-Dance>=7.0.0,<8.0.0
@@ -38,3 +37,8 @@ textblob>=0.17.0,<1.0.0              # journal sentiment (pulls in nltk)
 # Misc
 python-dotenv>=1.0.0,<2.0.0
 requests>=2.28.0,<3.0.0              # also used by the Docker healthcheck
+
+# Security floors (transitive; supersedes the stale Snyk branch snyk-fix-5411f8bd, which pinned jinja2 3.1.6 / python-multipart 0.0.18; python-multipart is not used)
+Jinja2>=3.1.6,<4.0.0
+urllib3>=2.5.0,<3.0.0
+tzdata>=2024.1                       # IANA tz data for zoneinfo (Asia/Kolkata); Windows has none

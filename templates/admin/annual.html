@@ -1,0 +1,23 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_rx/_ui.html' import ts %}
+{% block title %}Annual report {{ report.year }}{% endblock %}
+{% block rx_body %}
+{% set base = nav_url('admin.annual', '/admin/annual-report') %}
+<div class="page-header"><div><h1>Annual report {{ report.year }}</h1><p class="lead">{{ report.institution }}. Generated {{ ts(report.generated_at) }}.</p></div>
+  <div class="page-actions cl-actions no-print"><button type="button" class="btn btn-secondary" data-action="print">{{ icon('file') }} Print</button>
+  <a class="btn btn-secondary" href="{{ base }}.csv?year={{ report.year }}">{{ icon('download') }} Export CSV</a></div></div>
+<form class="cl-filters no-print" method="get" action="{{ base }}">
+  <div class="field"><label class="label" for="y-year">Year</label><select class="select" id="y-year" name="year">{% for y in years or [] %}<option value="{{ y }}"{{ ' selected' if y == report.year }}>{{ y }}</option>{% endfor %}</select></div>
+  <button type="submit" class="btn btn-primary">Show year</button>
+</form>
+{% for sec in report.sections or [] %}
+<section class="cl-block" aria-labelledby="sec-{{ loop.index }}"><h2 id="sec-{{ loop.index }}" class="text-lg mb-3">{{ sec.title }}</h2>
+<div class="table-wrap"><table class="table"><caption class="sr-only">{{ sec.title }}</caption>
+<thead><tr><th scope="col">Measure</th><th scope="col" class="cl-right">Value</th><th scope="col">Note</th></tr></thead>
+<tbody>{% for m in sec.metrics %}<tr><th scope="row">{{ m.name }}</th><td class="cl-right">{% if m.value is none %}Hidden{% else %}{{ m.value }}{% endif %}</td><td>{{ m.note or ('Fewer than 5 people' if m.value is none else '') }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% else %}
+<div class="empty-state">{{ icon('file') }}<h3 class="empty-state-title">No figures for this year</h3><p class="empty-state-text">Choose another year.</p></div>
+{% endfor %}
+<p class="help">Figures drawn from fewer than 5 people are hidden. Counts from this service only; not a prevalence estimate.</p>
+{% endblock %}

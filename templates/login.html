@@ -1,109 +1,48 @@
 {% extends "base.html" %}
+{% from '_macros.html' import form_field, alert %}
 
-{% block title %}Sign In - Mindful Horizon{% endblock %}
+{% block title %}Sign in - Mindful Horizon{% endblock %}
+{% block meta_description %}Sign in to Mindful Horizon as a student or a counsellor.{% endblock %}
+{% block head_extra %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
-        <div>
-            <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100">
-                <i class="fas fa-sign-in-alt text-indigo-600 text-xl" aria-hidden="true"></i>
-            </div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Welcome Back
-            </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
-                Sign in to your Mindful Horizon account
-            </p>
-            <p class="mt-2 text-center text-sm">
-                Don't have an account?
-                <a href="{{ url_for('auth.signup') }}" class="font-medium text-indigo-600 hover:text-indigo-500">
-                    Create one here
-                </a>
-            </p>
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    <div class="mb-4" role="alert">
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'success' if category == 'success' else 'error' }} p-3 rounded-lg text-center text-sm {{ 'bg-green-100 text-green-800' if category == 'success' else 'bg-red-100 text-red-800' }}">
-                                {{ message }}
-                            </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            {% endwith %}
-        </div>
-        
-        <a href="{{ url_for('google.login') }}" class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-lg shadow-sm text-md font-medium text-gray-700 bg-white hover:bg-gray-50 mb-4">
-            <img class="h-6 w-6 mr-3" src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google logo">
-            Continue with Google
-        </a>
-
-        <div class="relative my-6">
-            <div class="absolute inset-0 flex items-center">
-                <div class="w-full border-t border-gray-300"></div>
-            </div>
-            <div class="relative flex justify-center text-sm">
-                <span class="px-2 bg-gray-50 text-gray-500">Or continue with email</span>
-            </div>
-        </div>
-
-        <form class="mt-8 space-y-6" method="POST">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <div class="space-y-4">
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-                    <input id="email" name="email" type="email" required autocomplete="email" 
-                           class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
-                           placeholder="Enter your email address">
-                </div>
-                
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input id="password" name="password" type="password" required autocomplete="current-password" 
-                           class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm" 
-                           placeholder="Enter your password">
-                </div>
-                
-                <div>
-                    <label for="role" class="block text-sm font-medium text-gray-700">Sign in as</label>
-                    <select id="role" name="role" required 
-                            class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                        <option value="">Select your role</option>
-                        <option value="patient">Student (Patient)</option>
-                        <option value="provider">Counselor / Mental Health Provider</option>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <button type="submit" 
-                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
-                    <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-                        <i class="fas fa-sign-in-alt text-indigo-500 group-hover:text-indigo-400" aria-hidden="true"></i>
-                    </span>
-                    Sign In
-                </button>
-            </div>
-        </form>
-        
-        <!-- Features Info -->
-        <div class="mt-4 text-center">
-            <div class="flex justify-center space-x-6 text-xs text-gray-500">
-                <div class="flex items-center">
-                    <i class="fas fa-shield-alt mr-1" aria-hidden="true"></i>
-                    <span>Secure</span>
-                </div>
-                <div class="flex items-center">
-                    <i class="fas fa-brain mr-1" aria-hidden="true"></i>
-                    <span>AI companion</span>
-                </div>
-                <div class="flex items-center">
-                    <i class="fas fa-mobile-alt mr-1" aria-hidden="true"></i>
-                    <span>Digital Wellness</span>
-                </div>
-            </div>
-        </div>
+<div class="container">
+  <div class="auth-wrap">
+    <div class="page-header">
+      <h1>Sign in</h1>
+      <p class="lead">Use the email, password and role you registered with.</p>
     </div>
+
+    <div id="auth-alert" role="alert">
+      {% for category, message in get_flashed_messages(with_categories=true) %}
+        {{ alert('success' if category == 'success' else 'danger', message=message) }}
+      {% endfor %}
+    </div>
+
+    <a href="{{ url_for('google.login') }}" class="btn btn-secondary btn-block">Continue with Google</a>
+
+    <div class="auth-divider" aria-hidden="true">or use email</div>
+
+    <form method="post" class="auth-form" data-validate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      {{ form_field('email', 'Email address', type='email', required=True, value=request.form.get('email', ''), autocomplete='email', data_msg_required='Enter your email address.') }}
+      {{ form_field('password', 'Password', type='password', required=True, autocomplete='current-password', data_msg_required='Enter your password.') }}
+      {{ form_field('role', 'Sign in as', type='select', required=True, value=request.form.get('role', ''),
+                    options=[('', 'Select your role'), ('patient', 'Student'), ('provider', 'Counsellor or doctor')],
+                    data_msg_required='Select whether you are a student or a counsellor or doctor.') }}
+      <button type="submit" class="btn btn-primary btn-block" data-loading-text="Signing in">Sign in</button>
+    </form>
+
+    <p class="auth-alt">Institution administrator or pharmacy desk? <a href="/admin/login">Admin sign in</a></p>
+    <p class="auth-alt">No account yet? <a href="{{ url_for('auth.signup') }}">Create an account</a></p>
+  </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script defer src="{{ url_for('static', filename='js/components.js') }}" nonce="{{ g.csp_nonce }}"></script>
 {% endblock %}

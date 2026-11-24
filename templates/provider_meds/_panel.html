@@ -1,0 +1,44 @@
+{# Read-only medications panel (docs/CLINICAL_DESIGN.md 5.3). Context: meds {self_logged, prescriptions}, rx_text.
+   Item lines only: no diagnosis, no allergies, no prescription number. #}
+{% from 'partials/icons.html' import icon %}
+{% set own = meds.get('self_logged') or [] %}
+{% set rx_lines = meds.get('prescriptions') or [] %}
+<section class="card section" aria-labelledby="meds-heading" id="meds-panel">
+    <div class="card-header"><h2 id="meds-heading">Medications</h2></div>
+    <div class="card-body">
+        {% if own or rx_lines %}
+        <div class="table-wrap">
+            <table class="table">
+                <caption class="sr-only">Medicines recorded for this patient</caption>
+                <thead><tr><th scope="col">Medicine</th><th scope="col">Dose</th><th scope="col">How often</th><th scope="col">Duration</th><th scope="col">Source</th></tr></thead>
+                <tbody>
+                {% for m in rx_lines %}
+                    <tr>
+                        <td>{{ m.medicine }}</td>
+                        <td>{{ m.dose }}</td>
+                        <td>{{ m.frequency }}</td>
+                        <td>{{ m.duration_days }} days</td>
+                        <td><span class="badge badge-info">Prescribed</span> {{ m.prescribed_by or '' }} <span class="muted">({{ 'partly collected' if m.status == 'partially_dispensed' else 'not collected' }})</span></td>
+                    </tr>
+                {% endfor %}
+                {% for m in own %}
+                    <tr>
+                        <td>{{ m.name }}</td>
+                        <td>{{ m.dosage or 'n/a' }}</td>
+                        <td>{{ m.frequency or 'n/a' }}</td>
+                        <td class="muted">n/a</td>
+                        <td><span class="badge badge-neutral">Logged by patient</span></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            {{ icon('pill') }}
+            <h3 class="empty-state-title">{{ rx_text.SAFETY_LINES.meds_panel_empty }}</h3>
+        </div>
+        {% endif %}
+        <p class="help mt-3">{{ rx_text.SAFETY_LINES.meds_panel_help }}</p>
+    </div>
+</section>

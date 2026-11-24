@@ -1,551 +1,315 @@
-// URLs come from data-* attributes on #provider-config (static files are not rendered by Jinja).
-const cfg = (document.getElementById('provider-config') || {}).dataset || {};
-const urlWithId = (tpl, id) => (tpl || '').replace(/0$/, encodeURIComponent(id));
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+// Provider dashboard. URLs come from data-* attributes on #provider-config (static files are not rendered by Jinja).
+(function () {
+    'use strict';
 
-// base.html opens the shared socket (window.socket) before this script runs.
-document.addEventListener('DOMContentLoaded', function() {
-    if (!window.socket) return;
-    window.socket.on('new_appointment', function(data) {
-        showInPageNotification(data);
-        window.loadAppointments();
-    });
-});
+    const cfg = (document.getElementById('provider-config') || {}).dataset || {};
+    const urlWithId = (tpl, id) => (tpl || '').replace(/0$/, encodeURIComponent(id));
+    const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const $ = id => document.getElementById(id);
 
-function showInPageNotification(appointmentData) {
-    const notification = document.createElement('div');
-    notification.className = 'fixed top-4 right-4 bg-blue-500 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm';
-    notification.innerHTML = `
-        <div class="flex items-start">
-            <i class="fas fa-calendar-plus text-xl mr-3 mt-1" aria-hidden="true"></i>
-            <div class="flex-1">
-                <h4 class="font-bold">New Appointment Request!</h4>
-                <p class="text-sm mt-1">${esc(appointmentData.patient_name)} - ${esc(appointmentData.type)}</p>
-                <p class="text-xs mt-1">${esc(appointmentData.date)} at ${esc(appointmentData.time)}</p>
-                ${appointmentData.notes ? `<p class="text-xs mt-1 italic">"${esc(appointmentData.notes)}"</p>` : ''}
-            </div>
-            <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
-                <i class="fas fa-times" aria-hidden="true"></i>
-            </button>
-        </div>
-        <div class="mt-3 flex space-x-2">
-            <button onclick="filterAppointments('pending'); this.parentElement.parentElement.remove();" class="bg-white text-blue-500 px-3 py-1 rounded text-xs font-medium hover:bg-gray-100">
-                View Pending
-            </button>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
-    }, 10000);
-}
+    const STATUS_LABEL = { pending: 'Pending', accepted: 'Accepted', rejected: 'Rejected', completed: 'Completed', cancelled: 'Cancelled' };
+    const STATUS_BADGE = { pending: 'badge-warning', accepted: 'badge-info', rejected: 'badge-danger', completed: 'badge-success', cancelled: 'badge-neutral' };
 
-let currentAppointmentId = null;
+    let currentAppointmentId = null;
+    let currentMessagePatientId = null;
+    let currentStatus = 'all';
 
-// All other functions from provider_dashboard_inline_2.js (which seem more complete)
-window.loadAppointments = function(status = 'all') {
-    console.log('🔄 Loading appointments with status:', status);
-    
-    const tbody = document.getElementById('appointmentsBody');
-    if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-3 text-center text-gray-500"><i class="fas fa-spinner fa-spin mr-2" aria-hidden="true"></i>Loading appointments...</td></tr>';
-    }
-    
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    console.log('🔐 CSRF Token found:', !!csrfToken);
-    
-    const headers = {
-        'Content-Type': 'application/json'
+    const debounce = (fn, ms) => {
+        if (window.MFH && typeof MFH.debounce === 'function') return MFH.debounce(fn, ms);
+        let t;
+        return function () { const a = arguments; clearTimeout(t); t = setTimeout(() => fn.apply(null, a), ms); };
     };
-    
-    if (csrfToken) {
-        headers['X-CSRFToken'] = csrfToken;
+
+    function say(message, type) {
+        if (window.MFH && typeof MFH.toast === 'function') {
+            MFH.toast(message, type || 'info');
+        } else {
+            const live = $('appointmentsStatus');
+            if (live) live.textContent = message;
+        }
     }
-    
-    fetch(`${cfg.appointmentsUrl}?status=${encodeURIComponent(status)}`, {
-        method: 'GET',
-        headers: headers,
-        credentials: 'same-origin'
-    })
-        .then(response => {
-            console.log('📡 Response status:', response.status);
-            console.log('📡 Response ok:', response.ok);
-            console.log('📡 Response headers:', Object.fromEntries(response.headers.entries()));
-            
-            if (!response.ok) {
-                return response.text().then(text => {
-                    console.error('❌ Response text:', text);
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                });
-            }
-            return response.json();
+
+    function csrf() {
+        const m = document.querySelector('meta[name="csrf-token"]');
+        return m ? m.getAttribute('content') : '';
+    }
+
+    function postJson(url, body) {
+        return fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
+            body: JSON.stringify(body || {})
+        }).then(r => r.json().catch(() => ({})).then(data => ({ ok: r.ok, data: data })));
+    }
+
+    function openDialog(d) { if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', ''); }
+    function closeDialog(d) { if (typeof d.close === 'function') d.close(); else d.removeAttribute('open'); }
+
+    function colSpanRow(html) { return '<tr><td colspan="5">' + html + '</td></tr>'; }
+
+    // ---------- appointments ----------
+
+    function healthSummary(appointment) {
+        const h = appointment.patient_health_data;
+        if (!h) return '';
+        const items = [];
+        if (h.latest_assessment) {
+            const a = h.latest_assessment;
+            items.push(esc(a.type) + ': ' + esc(a.severity || 'n/a') + ' (' + esc(a.score) + ')');
+        }
+        if (h.vital_signs && h.vital_signs.mood_score) items.push('Mood: ' + esc(h.vital_signs.mood_score) + '/10');
+        if (h.digital_wellness && h.digital_wellness.screen_time != null) items.push('Screen time: ' + esc(h.digital_wellness.screen_time) + ' h/day');
+        return '<div class="help">' + (items.length ? items.join('; ') : 'No recent health data') + '</div>';
+    }
+
+    function actionsFor(a) {
+        const id = esc(a.id);
+        if (a.status === 'pending') {
+            return '<div class="flex flex-wrap gap-2">' +
+                '<button type="button" class="btn btn-primary btn-sm accept-appointment-btn" data-appointment-id="' + id + '">Accept</button>' +
+                '<button type="button" class="btn btn-secondary btn-sm show-reject-modal-btn" data-appointment-id="' + id + '">Reject</button>' +
+                '</div>';
+        }
+        if (a.status === 'accepted') {
+            return '<div class="flex flex-wrap gap-2">' +
+                '<button type="button" class="btn btn-primary btn-sm complete-appointment-btn" data-appointment-id="' + id + '">Mark completed</button>' +
+                '<button type="button" class="btn btn-secondary btn-sm cancel-appointment-btn" data-appointment-id="' + id + '">Cancel</button>' +
+                '</div>';
+        }
+        return '<span class="muted">No actions</span>';
+    }
+
+    function rowFor(a) {
+        const status = STATUS_LABEL[a.status] ? a.status : 'pending';
+        const notes = a.notes ? '<div class="help">Note: ' + esc(a.notes.length > 80 ? a.notes.slice(0, 80) + '...' : a.notes) + '</div>' : '';
+        const reason = a.status === 'rejected' && a.rejection_reason ? '<div class="help">Reason: ' + esc(a.rejection_reason) + '</div>' : '';
+        const unassigned = a.provider_id ? '' : ' <span class="badge badge-info">Unassigned</span>';
+        const urgent = a.urgency_level === 'high' ? ' <span class="badge badge-danger">High priority</span>' : '';
+        const report = a.patient_id ? '<a href="' + esc(urlWithId(cfg.reportUrl, a.patient_id)) + '" class="help">View wellness report</a>' : '';
+        return '<tr>' +
+            '<th scope="row"><div>' + esc(a.patient_name) + unassigned + urgent + '</div>' + healthSummary(a) + report + '</th>' +
+            '<td><div>' + esc(a.date) + '</div><div class="help">' + esc(a.time) + '</div></td>' +
+            '<td><div>' + esc(a.type) + (a.modality ? ' <span class="badge badge-neutral">' + (a.modality === 'video' ? 'Video' : 'In person') + '</span>' : '') + '</div>' + notes + '</td>' +
+            '<td><span class="badge ' + STATUS_BADGE[status] + '">' + STATUS_LABEL[status] + '</span>' + reason + '</td>' +
+            '<td>' + actionsFor(a) + '</td>' +
+            '</tr>';
+    }
+
+    function updateCounts(list) {
+        const n = s => list.filter(a => a.status === s).length;
+        $('allCount').textContent = list.length;
+        $('pendingBadge').textContent = n('pending');
+        $('acceptedCount').textContent = n('accepted');
+        $('completedCount').textContent = n('completed');
+        $('rejectedCount').textContent = n('rejected');
+        $('cancelledCount').textContent = n('cancelled');
+        const pending = n('pending');
+        $('pendingCount').textContent = pending;
+        $('pendingNotification').hidden = pending === 0;
+    }
+
+    window.displayAppointments = function (appointments) {
+        const tbody = $('appointmentsBody');
+        if (!tbody) return;
+        const list = appointments || [];
+        // Counts reflect the current filter's result set; "All" is the only unfiltered view.
+        if (currentStatus === 'all') updateCounts(list);
+        if (!list.length) {
+            tbody.innerHTML = colSpanRow('<div class="empty-state"><h3>No appointments' + (currentStatus === 'all' ? '' : ' with this status') + '</h3><p>Appointment requests from your students appear here.</p></div>');
+            return;
+        }
+        tbody.innerHTML = list.map(rowFor).join('');
+    };
+
+    window.loadAppointments = function (status) {
+        currentStatus = status || currentStatus || 'all';
+        const tbody = $('appointmentsBody');
+        const live = $('appointmentsStatus');
+        if (live) live.textContent = 'Loading appointments';
+        fetch(cfg.appointmentsUrl + '?status=' + encodeURIComponent(currentStatus), {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
         })
-        .then(data => {
-            console.log('✅ Appointments data received:', data);
-            if (data && data.success) {
-                console.log('📊 Number of appointments:', data.appointments?.length || 0);
-                console.log('📋 Appointments array:', data.appointments);
-                displayAppointments(data.appointments || []);
+            .then(r => r.json().catch(() => ({})).then(data => ({ ok: r.ok, data: data })))
+            .then(res => {
+                if (live) live.textContent = '';
+                if (res.ok && res.data && res.data.success) {
+                    window.displayAppointments(res.data.appointments);
+                } else {
+                    tbody.innerHTML = colSpanRow('<span class="text-danger">Appointments could not be loaded. Use Refresh to try again.</span>');
+                }
+            })
+            .catch(() => {
+                if (live) live.textContent = '';
+                tbody.innerHTML = colSpanRow('<span class="text-danger">Appointments could not be loaded. Check your connection and use Refresh to try again.</span>');
+            });
+    };
+
+    window.filterAppointments = function (status) {
+        document.querySelectorAll('.filter-appointments-btn').forEach(btn => {
+            const on = btn.dataset.status === status;
+            btn.classList.toggle('active', on);
+            btn.setAttribute('aria-pressed', String(on));
+        });
+        window.loadAppointments(status);
+    };
+
+    window.refreshAppointments = function () { window.loadAppointments(); };
+
+    // After any change reload the full list so the counts stay right.
+    function reloadAll() { window.filterAppointments('all'); }
+
+    function act(url, body, okMessage, failMessage, button) {
+        if (button) button.disabled = true;
+        postJson(url, body).then(res => {
+            if (res.ok && res.data && res.data.success) {
+                say(okMessage, 'success');
+                reloadAll();
             } else {
-                console.error('❌ API returned error:', data);
-                const errorMsg = data?.message || 'Unknown error occurred';
-                document.getElementById('appointmentsBody').innerHTML = `<tr><td colspan="5" class="px-4 py-3 text-center text-red-500"><i class="fas fa-exclamation-triangle mr-2"></i>Failed to load appointments: ${esc(errorMsg)}</td></tr>`;
+                say((res.data && res.data.message) || failMessage, 'error');
+                if (button) button.disabled = false;
             }
-        })
-        .catch(error => {
-            console.error('💥 Error loading appointments:', error);
-            const errorMsg = error.message || 'Network error occurred';
-            document.getElementById('appointmentsBody').innerHTML = `<tr><td colspan="5" class="px-4 py-3 text-center text-red-500"><i class="fas fa-exclamation-triangle mr-2"></i>Error loading appointments: ${esc(errorMsg)}<br><small class="text-gray-400 mt-1 block">Check browser console for details</small></td></tr>`;
+        }).catch(() => {
+            say(failMessage, 'error');
+            if (button) button.disabled = false;
         });
-}
-
-window.displayAppointments = function(appointments) {
-    console.log('🎨 Displaying appointments:', appointments);
-    const tbody = document.getElementById('appointmentsBody');
-    if (!tbody) {
-        console.error('❌ appointmentsBody element not found!');
-        return;
     }
-    
-    console.log('🧹 Clearing existing appointments...');
-    tbody.innerHTML = '';
 
-    updateAppointmentCounts(appointments);
-
-    if (!appointments || appointments.length === 0) {
-        console.log('📭 No appointments to display');
-        tbody.innerHTML = '<tr><td colspan="5" class="px-4 py-3 text-center text-gray-500"><i class="fas fa-calendar-times mr-2" aria-hidden="true"></i>No appointments found<br><small class="text-gray-400 mt-1 block">New appointment requests will appear here</small></td></tr>';
-        return;
-    }
-    
-    console.log(`📅 Rendering ${appointments.length} appointments...`);
-
-    appointments.forEach((appointment, index) => {
-        console.log(`🏗️ Rendering appointment ${index + 1}:`, appointment);
-        const row = document.createElement('tr');
-        row.className = 'hover:bg-gray-50';
-        
-        const statusClass = {
-            'pending': 'bg-yellow-100 text-yellow-800',
-            'accepted': 'bg-green-100 text-green-800',
-            'rejected': 'bg-red-100 text-red-800'
-        }[appointment.status] || 'bg-gray-100 text-gray-800';
-
-        const assignmentInfo = appointment.provider_id ? '' : ' <span class="text-xs text-blue-600">(Unassigned)</span>';
-        const urgencyBadge = appointment.urgency_level === 'high' ? '<span class="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">High Priority</span>' : '';
-        
-        let healthSummary = '';
-        if (appointment.patient_health_data) {
-            const health = appointment.patient_health_data;
-            const healthItems = [];
-            
-            if (health.latest_assessment) {
-                // severity and risk are computed server-side from PHQ-9 / GAD-7 bands
-                const a = health.latest_assessment;
-                const riskColor = a.risk === 'High' ? 'text-red-600' : a.risk === 'Medium' ? 'text-yellow-600' : 'text-green-600';
-                healthItems.push(`<span class="${riskColor}">${esc(a.type)}: ${esc(a.severity || 'n/a')} (${esc(a.score)})</span>`);
-            }
-            
-            if (health.vital_signs && health.vital_signs.mood_score) {
-                const moodColor = health.vital_signs.mood_score < 4 ? 'text-red-600' : health.vital_signs.mood_score < 7 ? 'text-yellow-600' : 'text-green-600';
-                healthItems.push(`<span class="${moodColor}">Mood: ${health.vital_signs.mood_score}/10</span>`);
-            }
-            
-            if (health.digital_wellness && health.digital_wellness.screen_time) {
-                const screenTime = health.digital_wellness.screen_time;
-                const screenColor = screenTime > 8 ? 'text-red-600' : screenTime > 6 ? 'text-yellow-600' : 'text-green-600';
-                healthItems.push(`<span class="${screenColor}">Screen: ${screenTime}h/day</span>`);
-            }
-            
-            healthSummary = healthItems.length > 0 ? `<div class="text-xs mt-1">${healthItems.join(' • ')}</div>` : '<div class="text-xs mt-1 text-gray-500">No recent health data</div>';
-        }
-        
-        const notesPreview = appointment.notes ? `<div class="text-xs text-gray-600 mt-1 italic">"${esc(appointment.notes.substring(0, 50))}${appointment.notes.length > 50 ? '...' : ''}"</div>` : '';
-        
-        row.innerHTML = `
-            <td class="px-4 py-3 text-sm">
-                <div class="font-medium text-gray-900">${esc(appointment.patient_name)}${assignmentInfo}${urgencyBadge}</div>
-                ${healthSummary}
-                <button class="text-xs text-blue-600 hover:text-blue-800 mt-1 view-full-report-btn" data-patient-id="${esc(appointment.patient_id)}" data-patient-name="${esc(appointment.patient_name)}">
-                    <i class="fas fa-user-md mr-1"></i>View Full Report
-                </button>
-            </td>
-            <td class="px-4 py-3 text-sm text-gray-700">
-                <div class="font-medium">${esc(appointment.date)}</div>
-                <div class="text-xs text-gray-500">${esc(appointment.time)}</div>
-            </td>
-            <td class="px-4 py-3 text-sm">
-                <div class="font-medium text-gray-700">${esc(appointment.type)}</div>
-                ${notesPreview}
-            </td>
-            <td class="px-4 py-3 text-sm">
-                <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">
-                    ${esc(appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1))}
-                </span>
-            </td>
-            <td class="px-4 py-3 text-sm">
-                ${appointment.status === 'pending' ? `
-                    <div class="flex flex-col space-y-2">
-                        <button class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors w-full accept-appointment-btn" data-appointment-id="${esc(appointment.id)}" title="Accept${appointment.provider_id ? '' : ' & Assign to Me'}">
-                            <i class="fas fa-check mr-1" aria-hidden="true"></i>Accept
-                        </button>
-                        <button class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-medium transition-colors w-full show-reject-modal-btn" data-appointment-id="${esc(appointment.id)}" title="Reject">
-                            <i class="fas fa-times mr-1" aria-hidden="true"></i>Reject
-                        </button>
-                    </div>
-                ` : appointment.status === 'rejected' && appointment.rejection_reason ? `
-                    <span class="text-xs text-gray-500 cursor-pointer view-rejection-reason-btn" data-rejection-reason="${esc(appointment.rejection_reason)}">
-                        <i class="fas fa-info-circle mr-1"></i>View reason
-                    </span>
-                ` : appointment.status === 'accepted' ? `
-                    <span class="text-xs text-green-600 font-medium">
-                        <i class="fas fa-check-circle mr-1"></i>Accepted
-                    </span>
-                ` : ''}
-            </td>
-        `;
-        tbody.appendChild(row);
-        console.log(`✅ Appointment ${index + 1} rendered successfully`);
-    });
-    
-    console.log('🎉 All appointments rendered successfully!');
-}
-
-function updateAppointmentCounts(appointments) {
-    const counts = {
-        all: appointments.length,
-        pending: appointments.filter(a => a.status === 'pending').length,
-        accepted: appointments.filter(a => a.status === 'accepted').length,
-        rejected: appointments.filter(a => a.status === 'rejected').length
+    window.acceptAppointment = function (id, button) {
+        act(urlWithId(cfg.acceptUrl, id), {}, 'Appointment accepted. The student has been notified.', 'Could not accept the appointment. Try again.', button);
     };
 
-    document.getElementById('allCount').textContent = counts.all;
-    document.getElementById('pendingBadge').textContent = counts.pending;
-    document.getElementById('acceptedCount').textContent = counts.accepted;
-    document.getElementById('rejectedCount').textContent = counts.rejected;
+    window.showRejectModal = function (id) {
+        currentAppointmentId = id;
+        $('rejectionReason').value = '';
+        $('rejectionReason').removeAttribute('aria-invalid');
+        $('rejectionError').hidden = true;
+        openDialog($('rejectionModal'));
+        $('rejectionReason').focus();
+    };
 
-    const pendingNotification = document.getElementById('pendingNotification');
-    const pendingCount = document.getElementById('pendingCount');
-    
-    if (counts.pending > 0) {
-        pendingNotification.classList.remove('hidden');
-        pendingCount.textContent = counts.pending;
-    } else {
-        pendingNotification.classList.add('hidden');
-    }
-}
-
-window.filterAppointments = function(status) {
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.querySelector(`[data-status="${status}"]`).classList.add('active');
-    
-    window.loadAppointments(status);
-}
-
-window.refreshAppointments = function() {
-    window.loadAppointments();
-};
-
-window.acceptAppointment = function(appointmentId) {
-    const acceptBtn = document.querySelector(`button[data-appointment-id="${appointmentId}"].accept-appointment-btn`);
-    if (acceptBtn) {
-        acceptBtn.disabled = true;
-        acceptBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1" aria-hidden="true"></i>Accepting...';
+    function completeAppointment(id, button) {
+        act(urlWithId(cfg.completeUrl, id), {}, 'Appointment marked as completed.', 'Could not mark the appointment as completed. Try again.', button);
     }
 
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
-    fetch(urlWithId(cfg.acceptUrl, appointmentId), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrfToken
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Success', '✅ Appointment accepted successfully! Patient has been notified.', 'success');
-            window.loadAppointments();
+    function cancelAppointment(id, button) {
+        const run = () => act(urlWithId(cfg.cancelUrl, id), {}, 'Appointment cancelled. The student has been notified.', 'Could not cancel the appointment. Try again.', button);
+        if (window.MFH && typeof MFH.confirm === 'function') {
+            MFH.confirm({ title: 'Cancel this appointment?', message: 'The student will be told the appointment is cancelled.', confirmText: 'Cancel appointment', danger: true })
+                .then(ok => { if (ok) run(); });
         } else {
-            console.error('❌ Failed to accept appointment:', data);
-            showNotification('Error', data.message || 'Failed to accept appointment', 'error');
-            if (acceptBtn) {
-                acceptBtn.disabled = false;
-                acceptBtn.innerHTML = '<i class="fas fa-check mr-1"></i>Accept';
+            run();
+        }
+    }
+
+    // ---------- messages ----------
+
+    function openMessage(patientId, name) {
+        currentMessagePatientId = patientId;
+        $('messageTo').textContent = 'To: ' + (name || 'student');
+        $('messageText').value = '';
+        $('messageText').removeAttribute('aria-invalid');
+        $('messageError').hidden = true;
+        openDialog($('messageDialog'));
+        $('messageText').focus();
+    }
+
+    function sendMessage() {
+        const text = $('messageText').value.trim();
+        if (!text) {
+            $('messageError').hidden = false;
+            $('messageText').setAttribute('aria-invalid', 'true');
+            $('messageText').focus();
+            return;
+        }
+        const btn = $('sendMessage');
+        btn.disabled = true;
+        postJson(cfg.messageUrl, { recipient_id: currentMessagePatientId, message: text }).then(res => {
+            btn.disabled = false;
+            if (res.ok && res.data && res.data.success) {
+                closeDialog($('messageDialog'));
+                say('Message sent.', 'success');
+            } else {
+                say('The message was not sent. Try again.', 'error');
             }
-        }
-    })
-    .catch(error => {
-        console.error('💥 Error accepting appointment:', error);
-        showNotification('Error', 'Failed to accept appointment', 'error');
-        if (acceptBtn) {
-            acceptBtn.disabled = false;
-            acceptBtn.innerHTML = '<i class="fas fa-check mr-1" aria-hidden="true"></i>Accept';
-        }
-    });
-}
-
-window.showRejectModal = function(appointmentId) {
-    currentAppointmentId = appointmentId;
-    document.getElementById('rejectionModal').classList.remove('hidden');
-    document.getElementById('rejectionReason').value = '';
-}
-
-function hideRejectModal() {
-    document.getElementById('rejectionModal').classList.add('hidden');
-    currentAppointmentId = null;
-}
-
-document.getElementById('confirmReject').addEventListener('click', function() {
-    const reason = document.getElementById('rejectionReason')?.value?.trim() || '';
-    if (!reason) {
-        alert('Please provide a reason for rejection');
-        return;
-    }
-    
-    rejectAppointment(currentAppointmentId, reason);
-    hideRejectModal();
-});
-
-document.getElementById('cancelReject').addEventListener('click', hideRejectModal);
-
-function rejectAppointment(appointmentId, reason) {
-    const confirmBtn = document.getElementById('confirmReject');
-    confirmBtn.disabled = true;
-    confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1" aria-hidden="true"></i>Rejecting...';
-
-    fetch(urlWithId(cfg.rejectUrl, appointmentId), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ reason: reason })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showNotification('Success', '❌ Appointment rejected. Patient has been notified with the reason.', 'success');
-            window.loadAppointments();
-        } else {
-            console.error('❌ Failed to reject appointment:', data);
-            showNotification('Error', data.message || 'Failed to reject appointment', 'error');
-        }
-        confirmBtn.disabled = false;
-        confirmBtn.innerHTML = 'Reject';
-    })
-    .catch(error => {
-            console.error('Error rejecting appointment:', error);
-            showNotification('Error', 'Failed to reject appointment', 'error');
-            confirmBtn.disabled = false;
-            confirmBtn.innerHTML = 'Reject';
-        });
-}
-
-function showNotification(title, message, type) {
-    if (window.Notification && Notification.permission === 'granted') {
-        new Notification(title, {
-            body: message,
-            icon: '/static/favicon.ico'
+        }).catch(() => {
+            btn.disabled = false;
+            say('The message was not sent. Check your connection and try again.', 'error');
         });
     }
-    window.showTemporaryNotification(`${title}: ${message}`, type === 'error' ? 'error' : type === 'success' ? 'success' : 'info');
-}
 
-function showPatientDetails(patientId, patientName) {
-    if (!patientId) {
-        alert('Patient information not available');
-        return;
-    }
-    
-    document.getElementById('patientDetailsModal').classList.remove('hidden');
-    document.getElementById('patientDetailsContent').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin text-2xl text-blue-500" aria-hidden="true"></i><p class="mt-2">Loading patient data...</p></div>';
-    
-    fetch(urlWithId(cfg.reportUrl, patientId))
-        .then(response => response.text())
-        .then(html => {
-            const parser = new DOMParser();
-            const doc = parser.parseFromString(html, 'text/html');
-            const mainContent = doc.querySelector('.max-w-7xl') || doc.querySelector('main') || doc.body;
-            
-            document.getElementById('patientDetailsContent').innerHTML = `
-                <div class="mb-4">
-                    <h4 class="text-xl font-semibold text-gray-800 mb-2">
-                        <i class="fas fa-user-md mr-2 text-blue-500" aria-hidden="true"></i>${esc(patientName)}'s Health Report
-                    </h4>
-                    <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
-                        <p class="text-sm text-blue-700">
-                            <i class="fas fa-info-circle mr-1" aria-hidden="true"></i>
-                            Review this patient's health data to make an informed decision about the appointment request.
-                        </p>
-                    </div>
-                </div>
-                <div class="wellness-report-content max-h-96 overflow-y-auto">
-                    ${mainContent ? mainContent.innerHTML : '<p class="text-gray-500">No detailed health data available for this patient.</p>'}
-                </div>
-                <div class="mt-6 pt-4 border-t border-gray-200 text-center">
-                    <button class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded font-medium close-patient-details-btn">
-                        Close Report
-                    </button>
-                </div>
-            `;
-        })
-        .catch(error => {
-            console.error('Error loading patient details:', error);
-            document.getElementById('patientDetailsContent').innerHTML = `
-                <div class="text-center py-8">
-                    <i class="fas fa-exclamation-triangle text-red-500 text-3xl mb-4" aria-hidden="true"></i>
-                    <p class="text-gray-600 mb-4">Unable to load patient health data.</p>
-                    <button class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded close-patient-details-btn">
-                        Close
-                    </button>
-                </div>
-            `;
+    // ---------- caseload filter (client side, on top of the server-side form) ----------
+
+    function filterCaseload() {
+        const rows = document.querySelectorAll('#caseloadTable tbody tr');
+        if (!rows.length) return;
+        const q = ($('caseloadSearch').value || '').trim().toLowerCase();
+        const risk = $('caseloadRisk').value;
+        let shown = 0;
+        rows.forEach(row => {
+            const hay = ((row.dataset.riskName || '') + ' ' + (row.dataset.email || '')).toLowerCase();
+            const match = (!q || hay.indexOf(q) !== -1) && (!risk || row.dataset.risk === risk);
+            row.hidden = !match;
+            if (match) shown++;
         });
-}
+        const none = $('caseloadNoMatch');
+        if (none) none.hidden = shown !== 0;
+    }
 
-function hidePatientDetails() {
-    document.getElementById('patientDetailsModal').classList.add('hidden');
-}
+    // ---------- wiring ----------
 
-function openMessage(patientId) {
-    const text = prompt('Send a quick message to patient:');
-    if (!text || !text.trim()) return;
+    document.addEventListener('DOMContentLoaded', function () {
+        window.loadAppointments('all');
 
-    fetch(cfg.messageUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ recipient_id: patientId, message: text.trim() })
-    }).then(r => r.json()).then(data => {
-        if (data && data.success) {
-            alert('Message sent successfully.');
-        } else {
-            alert('Failed to send message: ' + (data.error || 'Unknown error'));
+        // base.html opens the shared socket (window.socket) before this script runs.
+        if (window.socket) {
+            window.socket.on('new_appointment', function (data) {
+                say('New appointment request from ' + ((data && data.patient_name) || 'a student') + '.', 'info');
+                window.loadAppointments();
+            });
         }
-    }).catch(err => {
-        console.error('Message send failed', err);
-        alert('Failed to send message.');
-    });
-}
 
-window.testAPI = function() {
-    console.log('🧪 Testing API endpoint...');
-    
-    const testUrl = cfg.appointmentsUrl;
-    console.log('🎯 Testing URL:', testUrl);
-    
-    console.log('🔍 Current page URL:', window.location.href);
-    console.log('🔍 User agent:', navigator.userAgent);
-    
-    fetch(testUrl)
-        .then(response => {
-            console.log('✅ API Response Status:', response.status);
-            console.log('✅ API Response Headers:', Object.fromEntries(response.headers.entries()));
-            return response.text();
-        })
-        .then(text => {
-            console.log('📄 Raw API Response:', text);
-            try {
-                const data = JSON.parse(text);
-                console.log('📊 Parsed API Response:', data);
-                alert(`API Test Results:\nStatus: Success\nAppointments: ${data.appointments?.length || 0}\nCheck console for details`);
-            } catch (e) {
-                console.error('❌ Failed to parse JSON:', e);
-                alert(`API Test Results:\nStatus: Error\nResponse is not valid JSON\nCheck console for details`);
+        $('refresh-appointments-btn').addEventListener('click', window.refreshAppointments);
+        document.querySelectorAll('.filter-appointments-btn').forEach(btn => {
+            btn.addEventListener('click', () => window.filterAppointments(btn.dataset.status));
+        });
+
+        $('appointmentsBody').addEventListener('click', function (event) {
+            const btn = event.target.closest('button');
+            if (!btn) return;
+            const id = btn.dataset.appointmentId;
+            if (btn.classList.contains('accept-appointment-btn')) window.acceptAppointment(id, btn);
+            else if (btn.classList.contains('show-reject-modal-btn')) window.showRejectModal(id);
+            else if (btn.classList.contains('complete-appointment-btn')) completeAppointment(id, btn);
+            else if (btn.classList.contains('cancel-appointment-btn')) cancelAppointment(id, btn);
+        });
+
+        $('cancelReject').addEventListener('click', () => { closeDialog($('rejectionModal')); currentAppointmentId = null; });
+        $('confirmReject').addEventListener('click', function () {
+            const field = $('rejectionReason');
+            const reason = field.value.trim();
+            if (!reason) {
+                $('rejectionError').hidden = false;
+                field.setAttribute('aria-invalid', 'true');
+                field.focus();
+                return;
             }
-        })
-        .catch(error => {
-            console.error('💥 API Test Failed:', error);
-            alert(`API Test Results:\nStatus: Failed\nError: ${error.message}\nCheck console for details`);
+            closeDialog($('rejectionModal'));
+            act(urlWithId(cfg.rejectUrl, currentAppointmentId), { reason: reason }, 'Appointment rejected. The student has been notified with your reason.', 'Could not reject the appointment. Try again.', null);
+            currentAppointmentId = null;
         });
-}
 
-window.showTemporaryNotification = function(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `fixed top-20 right-4 p-4 rounded-lg shadow-lg z-50 max-w-sm ${ 
-        type === 'success' ? 'bg-green-500 text-white' : 
-        type === 'error' ? 'bg-red-500 text-white' : 
-        'bg-blue-500 text-white'
-    }`;
-    notification.innerHTML = `
-        <div class="flex items-center">
-            <span>${esc(message)}</span>
-            <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-    `;
-    
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
-    }, 5000);
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Provider Dashboard loaded, initializing appointments...');
-    console.log('👤 Current user session check...');
-    
-    window.loadAppointments();
-
-    // Event listeners for provider dashboard
-    document.getElementById('refresh-appointments-btn')?.addEventListener('click', window.refreshAppointments);
-
-    document.querySelectorAll('.filter-appointments-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            const status = this.dataset.status;
-            window.filterAppointments(status);
+        document.body.addEventListener('click', function (event) {
+            const btn = event.target.closest('.open-message-btn');
+            if (btn) openMessage(btn.dataset.patientId, btn.dataset.patientName);
         });
+        $('cancelMessage').addEventListener('click', () => closeDialog($('messageDialog')));
+        $('sendMessage').addEventListener('click', sendMessage);
+
+        const filterDebounced = debounce(filterCaseload, 200);
+        $('caseloadSearch').addEventListener('input', filterDebounced);
+        $('caseloadRisk').addEventListener('change', filterCaseload);
+        filterCaseload();
     });
-
-    document.body.addEventListener('click', function(event) {
-        const target = event.target.closest('a.open-message-btn');
-        if (target) {
-            const patientId = target.dataset.patientId;
-            openMessage(patientId);
-            event.preventDefault();
-        }
-    });
-
-    document.getElementById('hide-patient-details-btn')?.addEventListener('click', hidePatientDetails);
-
-    document.getElementById('appointmentsBody')?.addEventListener('click', function(event) {
-        const target = event.target.closest('button');
-        if (!target) return;
-
-        if (target.classList.contains('view-full-report-btn')) {
-            const patientId = target.dataset.patientId;
-            const patientName = target.dataset.patientName;
-            showPatientDetails(patientId, patientName);
-        } else if (target.classList.contains('accept-appointment-btn')) {
-            const appointmentId = target.dataset.appointmentId;
-            window.acceptAppointment(appointmentId);
-        } else if (target.classList.contains('show-reject-modal-btn')) {
-            const appointmentId = target.dataset.appointmentId;
-            window.showRejectModal(appointmentId);
-        } else if (target.classList.contains('view-rejection-reason-btn')) {
-            const reason = target.dataset.rejectionReason;
-            alert(`Rejection Reason: ${reason}`);
-        }
-    });
-
-    document.getElementById('patientDetailsModal')?.addEventListener('click', function(event) {
-        const target = event.target.closest('.close-patient-details-btn');
-        if (target) {
-            hidePatientDetails();
-        }
-    });
-});
+})();

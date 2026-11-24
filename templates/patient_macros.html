@@ -1,0 +1,20 @@
+{# Small macros shared by the patient pages. Import with: {% from 'patient_macros.html' import band_badge, status_badge, helpline_list %} #}
+
+{% macro band_badge(band) -%}
+{%- set cls = {'minimal': 'success', 'mild': 'info', 'moderate': 'warning', 'moderately severe': 'danger', 'severe': 'danger'}.get(band, 'neutral') -%}
+<span class="badge badge-{{ cls }}">{{ band|capitalize if band else 'n/a' }}</span>
+{%- endmacro %}
+
+{% macro status_badge(status) -%}
+{%- set cls = {'pending': 'warning', 'accepted': 'success', 'booked': 'success', 'rejected': 'danger', 'completed': 'neutral', 'cancelled': 'neutral', 'active': 'info', 'paused': 'neutral'}.get(status, 'neutral') -%}
+<span class="badge badge-{{ cls }}">{{ status|capitalize }}</span>
+{%- endmacro %}
+
+{# Helplines come from the `helplines` context variable (utils/helplines.py); numbers are never typed in templates. #}
+{% macro helpline_list(helplines) -%}
+<ul class="helpline-list">
+    {% for h in helplines or [] %}
+    <li><a href="tel:{{ h.tel }}">{{ h.name }}: {{ h.number }}</a> <span class="muted">({{ h.hours }})</span>{% if h.note %}<br><span class="muted">{{ h.note }}</span>{% endif %}</li>
+    {% endfor %}
+</ul>
+{%- endmacro %}

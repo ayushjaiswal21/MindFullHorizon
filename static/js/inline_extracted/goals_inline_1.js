@@ -1,265 +1,174 @@
+// Goals page. Talks to /patient/api/goals (GET, POST) and /patient/api/goals/<id> (PUT, DELETE).
+// The server filters by the session user. Goal text is untrusted: nodes are built with textContent.
+document.addEventListener('DOMContentLoaded', function () {
+  if (!window.PT) return;
+  var $ = function (id) { return document.getElementById(id); };
+  var list = $('goals-container');
+  var emptyBox = $('empty-state');
 
-let currentGoalId = null;
+  var PRIORITY = { high: 'danger', medium: 'warning', low: 'neutral' };
+  var STATUS = { active: 'info', completed: 'success', paused: 'neutral' };
 
-// Load goals on page load
-document.addEventListener('DOMContentLoaded', function() {
-    loadGoals();
-    
-    // Add event listeners
-    document.getElementById('add-goal-btn').addEventListener('click', showAddGoalModal);
-    document.getElementById('goal-form').addEventListener('submit', handleGoalSubmit);
-    document.getElementById('progress-form').addEventListener('submit', handleProgressSubmit);
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+  function badge(kind, text) { return el('span', 'badge badge-' + kind, text); }
+  function nice(s) { return String(s || '').replace(/_/g, ' ').replace(/^./, function (c) { return c.toUpperCase(); }); }
+  function day(iso) {
+    var d = new Date(iso + 'T12:00:00');
+    return isNaN(d) ? iso : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+  function fieldError(id, msg) {
+    var e = $(id);
+    e.textContent = msg || '';
+    e.hidden = !msg;
+  }
+  function open(dlg) { if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', ''); }
+  function close(dlg) { if (typeof dlg.close === 'function') dlg.close(); else dlg.removeAttribute('open'); }
+
+  function card(goal) {
+    var c = el('article', 'card');
+    var body = el('div', 'card-body');
+    body.appendChild(el('h2', 'pt-title', goal.title));
+    if (goal.description) body.appendChild(el('p', 'pt-sub', goal.description));
+    var tags = el('p', 'mt-3 flex gap-2 flex-wrap');
+    tags.append(badge('neutral', nice(goal.category)), badge(PRIORITY[goal.priority] || 'neutral', nice(goal.priority) + ' priority'), badge(STATUS[goal.status] || 'neutral', nice(goal.status)));
+    body.appendChild(tags);
+
+    if (goal.target_value) {
+      var unit = goal.unit ? ' ' + goal.unit : '';
+      var pct = Math.max(0, Math.min(100, Math.round(goal.progress_percentage || 0)));
+      var wrap = el('div', 'mt-3');
+      wrap.appendChild(el('p', 'muted', (goal.current_value || 0) + unit + ' of ' + goal.target_value + unit + ' (' + pct + '%)'));
+      var meter = el('progress', 'meter');
+      meter.max = 100; meter.value = pct;
+      meter.setAttribute('aria-label', 'Progress on ' + goal.title);
+      wrap.appendChild(meter);
+      body.appendChild(wrap);
+    }
+    body.appendChild(el('p', 'pt-sub', (goal.target_date ? 'Target: ' + day(goal.target_date) : 'No target date') + (goal.created_at ? '. Added ' + day(goal.created_at) + '.' : '')));
+
+    var actions = el('div', 'flex gap-2 mt-4 flex-wrap');
+    var upd = el('button', 'btn btn-secondary btn-sm', 'Update progress');
+    upd.type = 'button';
+    upd.setAttribute('aria-label', 'Update progress on ' + goal.title);
+    upd.addEventListener('click', function () {
+      $('progress-goal-id').value = goal.id;
+      $('current-value').value = goal.current_value || 0;
+      $('goal-status').value = goal.status;
+      fieldError('current-value-error', '');
+      fieldError('progress-form-error', '');
+      open($('progress-modal'));
+    });
+    var del = el('button', 'btn btn-danger btn-sm', 'Delete');
+    del.type = 'button';
+    del.setAttribute('aria-label', 'Delete goal ' + goal.title);
+    del.addEventListener('click', function () { remove(goal); });
+    actions.append(upd, del);
+    body.appendChild(actions);
+    c.appendChild(body);
+    return c;
+  }
+
+  function show(goals) {
+    list.textContent = '';
+    list.removeAttribute('aria-busy');
+    emptyBox.hidden = goals.length > 0;
+    goals.forEach(function (g) { list.appendChild(card(g)); });
+  }
+
+  function load() {
+    PT.api('/patient/api/goals').then(function (r) {
+      if (!(r.ok && r.data && r.data.success)) throw new Error('bad response');
+      $('goals-error').hidden = true;
+      show(r.data.goals || []);
+    }).catch(function () {
+      list.textContent = '';
+      list.removeAttribute('aria-busy');
+      var e = $('goals-error');
+      e.textContent = 'Could not load your goals. Reload the page to try again. If you were signed out, sign in again.';
+      e.hidden = false;
+    });
+  }
+
+  function remove(goal) {
+    PT.ask({ title: 'Delete this goal?', message: goal.title + ' will be removed. This cannot be undone.', confirmText: 'Delete goal', danger: true }).then(function (ok) {
+      if (!ok) return;
+      PT.api('/patient/api/goals/' + encodeURIComponent(goal.id), { method: 'DELETE' }).then(function (r) {
+        if (r.ok && r.data && r.data.success) { PT.toast('Goal deleted.', 'success'); load(); }
+        else PT.toast((r.data && r.data.message) || 'Could not delete the goal.', 'error');
+      }).catch(function () { PT.toast('Could not reach the server. Try again.', 'error'); });
+    });
+  }
+
+  function busy(btn, on) {
+    if (on) { btn.dataset.label = btn.textContent; btn.disabled = true; btn.setAttribute('aria-busy', 'true'); btn.textContent = btn.getAttribute('data-loading-text') || 'Saving'; }
+    else { btn.disabled = false; btn.removeAttribute('aria-busy'); btn.textContent = btn.dataset.label || btn.textContent; }
+  }
+
+  function openAdd() {
+    $('goal-form').reset();
+    fieldError('goal-title-error', '');
+    fieldError('goal-form-error', '');
+    open($('goal-modal'));
+    $('goal-title').focus();
+  }
+
+  $('add-goal-btn').addEventListener('click', openAdd);
+  $('empty-add-btn').addEventListener('click', openAdd);
+  document.querySelectorAll('[data-close]').forEach(function (b) {
+    b.addEventListener('click', function () { close($(b.getAttribute('data-close'))); });
+  });
+
+  $('goal-title').addEventListener('input', PT.debounce(function () {
+    if ($('goal-title').value.trim()) fieldError('goal-title-error', '');
+  }, 150));
+
+  $('goal-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var form = e.target;
+    var title = $('goal-title');
+    if (!title.value.trim()) {
+      title.setAttribute('aria-invalid', 'true');
+      fieldError('goal-title-error', 'Enter a title for the goal.');
+      title.focus();
+      return;
+    }
+    title.removeAttribute('aria-invalid');
+    var btn = form.querySelector('button[type="submit"]');
+    busy(btn, true);
+    PT.api('/patient/api/goals', { method: 'POST', json: Object.fromEntries(new FormData(form).entries()) }).then(function (r) {
+      if (r.ok && r.data && r.data.success) { close($('goal-modal')); PT.toast('Goal added.', 'success'); load(); }
+      else fieldError('goal-form-error', (r.data && r.data.message) || 'Could not save the goal. Try again.');
+    }).catch(function () {
+      fieldError('goal-form-error', 'Could not reach the server. Check your connection and try again.');
+    }).then(function () { busy(btn, false); });
+  });
+
+  $('progress-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var form = e.target;
+    var cur = $('current-value');
+    if (cur.value === '' || isNaN(Number(cur.value))) {
+      cur.setAttribute('aria-invalid', 'true');
+      fieldError('current-value-error', 'Enter a number.');
+      cur.focus();
+      return;
+    }
+    cur.removeAttribute('aria-invalid');
+    var btn = form.querySelector('button[type="submit"]');
+    busy(btn, true);
+    var id = $('progress-goal-id').value;
+    PT.api('/patient/api/goals/' + encodeURIComponent(id), { method: 'PUT', json: Object.fromEntries(new FormData(form).entries()) }).then(function (r) {
+      if (r.ok && r.data && r.data.success) { close($('progress-modal')); PT.toast('Progress saved.', 'success'); load(); }
+      else fieldError('progress-form-error', (r.data && r.data.message) || 'Could not save progress. Try again.');
+    }).catch(function () {
+      fieldError('progress-form-error', 'Could not reach the server. Check your connection and try again.');
+    }).then(function () { busy(btn, false); });
+  });
+
+  load();
 });
-
-function loadGoals() {
-    fetch('/patient/api/goals', {
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        }
-    })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            // Check if response is actually JSON
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Server returned non-JSON response. You may need to log in again.');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                displayGoals(data.goals);
-            } else {
-                showMessage('Error loading goals', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showMessage('Error loading goals', 'error');
-        });
-}
-
-function displayGoals(goals) {
-    const container = document.getElementById('goals-container');
-    const emptyState = document.getElementById('empty-state');
-    
-    if (goals.length === 0) {
-        container.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        return;
-    }
-    
-    emptyState.classList.add('hidden');
-    
-    container.innerHTML = goals.map(goal => `
-        <div class="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-            <div class="flex justify-between items-start mb-4">
-                <div class="flex-1">
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">${goal.title}</h3>
-                    <p class="text-gray-600 text-sm mb-2">${goal.description || 'No description'}</p>
-                    <div class="flex items-center space-x-2 mb-2">
-                        <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">${goal.category.replace('_', ' ')}</span>
-                        <span class="px-2 py-1 ${getPriorityColor(goal.priority)} text-xs rounded-full">${goal.priority}</span>
-                        <span class="px-2 py-1 ${getStatusColor(goal.status)} text-xs rounded-full">${goal.status}</span>
-                    </div>
-                </div>
-                <div class="flex space-x-2">
-                    <button onclick="showProgressModal(${goal.id}, ${goal.current_value}, '${goal.status}')" 
-                            class="text-green-600 hover:text-green-800" title="Update Progress">
-                        <i class="fas fa-chart-line"></i>
-                    </button>
-                    <button onclick="deleteGoal(${goal.id})" 
-                            class="text-red-600 hover:text-red-800" title="Delete Goal">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-            
-            ${goal.target_value ? `
-                <div class="mb-4">
-                    <div class="flex justify-between text-sm text-gray-600 mb-1">
-                        <span>Progress</span>
-                        <span>${goal.current_value}${goal.unit ? ' ' + goal.unit : ''} / ${goal.target_value}${goal.unit ? ' ' + goal.unit : ''}</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: ${Math.min(goal.progress_percentage, 100)}%"></div>
-                    </div>
-                    <div class="text-right text-xs text-gray-500 mt-1">${Math.round(goal.progress_percentage)}% complete</div>
-                </div>
-            ` : ''}
-            
-            <div class="text-xs text-gray-500">
-                ${goal.target_date ? `Target: ${formatDate(goal.target_date)}` : 'No target date'} • 
-                Created: ${goal.created_at}
-            </div>
-        </div>
-    `).join('');
-}
-
-function showAddGoalModal() {
-    document.getElementById('modal-title').textContent = 'Add New Goal';
-    document.getElementById('goal-form').reset();
-    currentGoalId = null;
-    document.getElementById('goal-modal').classList.remove('hidden');
-}
-
-function hideGoalModal() {
-    document.getElementById('goal-modal').classList.add('hidden');
-}
-
-function showProgressModal(goalId, currentValue, status) {
-    document.getElementById('progress-goal-id').value = goalId;
-    document.getElementById('current-value').value = currentValue;
-    document.getElementById('goal-status').value = status;
-    document.getElementById('progress-modal').classList.remove('hidden');
-}
-
-function hideProgressModal() {
-    document.getElementById('progress-modal').classList.add('hidden');
-}
-
-function handleGoalSubmit(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const goalData = Object.fromEntries(formData.entries());
-    
-        fetch('/patient/api/goals', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify(goalData)
-    })
-    .then(response => {
-        // Check if response is actually JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server returned non-JSON response. You may need to log in again.');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            showMessage(data.message, 'success');
-            hideGoalModal();
-            loadGoals();
-        } else {
-            showMessage(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showMessage(error.message || 'Error creating goal', 'error');
-    });
-}
-
-function handleProgressSubmit(e) {
-    e.preventDefault();
-    
-    const goalId = document.getElementById('progress-goal-id').value;
-    const formData = new FormData(e.target);
-    const updateData = Object.fromEntries(formData.entries());
-    
-    fetch(`/patient/api/goals/${goalId}`, {
-        method: 'PUT',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify(updateData)
-    })
-    .then(response => {
-        // Check if response is actually JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server returned non-JSON response. You may need to log in again.');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            showMessage(data.message, 'success');
-            hideProgressModal();
-            loadGoals();
-        } else {
-            showMessage(data.message, 'error');
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        showMessage('Error updating goal', 'error');
-    });
-}
-
-function deleteGoal(goalId) {
-    if (confirm('Are you sure you want to delete this goal?')) {
-        fetch(`/patient/api/goals/${goalId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => {
-        // Check if response is actually JSON
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            throw new Error('Server returned non-JSON response. You may need to log in again.');
-        }
-        return response.json();
-    })
-        .then(data => {
-            if (data.success) {
-                showMessage(data.message, 'success');
-                loadGoals();
-            } else {
-                showMessage(data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showMessage('Error deleting goal', 'error');
-        });
-    }
-}
-
-function showMessage(message, type) {
-    const container = document.getElementById('message-container');
-    const messageDiv = document.getElementById('message');
-    
-    messageDiv.textContent = message;
-    messageDiv.className = `p-4 rounded-lg ${type === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`;
-    container.classList.remove('hidden');
-    
-    setTimeout(() => {
-        container.classList.add('hidden');
-    }, 5000);
-}
-
-function getPriorityColor(priority) {
-    switch(priority) {
-        case 'high': return 'bg-red-100 text-red-800';
-        case 'medium': return 'bg-yellow-100 text-yellow-800';
-        case 'low': return 'bg-green-100 text-green-800';
-        default: return 'bg-gray-100 text-gray-800';
-    }
-}
-
-function getStatusColor(status) {
-    switch(status) {
-        case 'completed': return 'bg-green-100 text-green-800';
-        case 'active': return 'bg-blue-100 text-blue-800';
-        case 'paused': return 'bg-gray-100 text-gray-800';
-        default: return 'bg-gray-100 text-gray-800';
-    }
-}
-
-function formatDate(dateString) {
-    return new Date(dateString).toLocaleDateString();
-}

@@ -1,158 +1,139 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
 
-{% block title %}Advanced Analytics - Mindful Horizon{% endblock %}
+{% block title %}Analytics - Mindful Horizon{% endblock %}
+
+{% macro stat(label, value, note='') %}
+<div class="stat">
+    <div class="stat-label">{{ label }}</div>
+    <div class="stat-value">{{ value }}</div>
+    {% if note %}<div class="stat-note">{{ note }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% block legacy_head %}{% endblock %}
+{% block legacy_scripts %}{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Advanced Analytics</h1>
-        <p class="text-gray-600">Comprehensive insights and trends for {{ analytics_data.institution }}</p>
-    </div>
-
-    <!-- Key Metrics Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Total Patients</p>
-                    <p class="text-3xl font-bold text-blue-600">{{ analytics_data.total_patients }}</p>
-                </div>
-                <div class="p-3 bg-blue-100 rounded-full">
-                    <i class="fas fa-users text-blue-600"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Active Patients</p>
-                    <p class="text-3xl font-bold text-green-600">{{ analytics_data.active_patients }}</p>
-                    <p class="text-sm text-gray-500">{{ analytics_data.engagement_rate }}% engagement</p>
-                </div>
-                <div class="p-3 bg-green-100 rounded-full">
-                    <i class="fas fa-user-check text-green-600"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Assessments (30d)</p>
-                    <p class="text-3xl font-bold text-purple-600">{{ analytics_data.assessments_30_days }}</p>
-                </div>
-                <div class="p-3 bg-purple-100 rounded-full">
-                    <i class="fas fa-clipboard-list text-purple-600"></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600">Avg Gamification Points</p>
-                    <p class="text-3xl font-bold text-yellow-600">{{ analytics_data.avg_gamification_points }}</p>
-                    <p class="text-sm text-gray-500">{{ analytics_data.avg_streak }} day avg streak</p>
-                </div>
-                <div class="p-3 bg-yellow-100 rounded-full">
-                    <i class="fas fa-trophy text-yellow-600"></i>
-                </div>
-            </div>
+{% set a = analytics_data %}
+{# Groups under 5 students are never shown, even if the server sent numbers. #}
+{% set hidden = a.aggregates_hidden or a.total_patients is none or a.total_patients < 5 %}
+{% set inst = a.institutional_data or {} %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/provider.css') }}">
+<div class="container">
+    <div class="page-header">
+        <h1>Analytics</h1>
+        <p class="lead">Aggregate figures for students at {{ a.institution or 'your institution' }}. These numbers do not identify individual students.</p>
+        <div class="page-actions">
+            <a href="{{ url_for('provider.provider_dashboard') }}" class="btn btn-secondary">{{ icon('arrow-left') }} Back to dashboard</a>
         </div>
     </div>
 
-    <!-- Charts Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Screen Time Trends -->
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                <i class="fas fa-chart-line text-blue-500 mr-2"></i>Screen Time Trends (30 days)
-            </h3>
-            <canvas id="screenTimeChart" width="400" height="200"></canvas>
-        </div>
+    {% if hidden %}
+    <div class="alert alert-info" role="status">{{ icon('info') }}<p>Too few students to show. Figures appear once at least 5 students at your institution have joined, so that no one can be picked out.</p></div>
+    {% endif %}
 
-        <!-- Wellness Score Trends -->
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                <i class="fas fa-heart text-red-500 mr-2"></i>Wellness Score Trends (30 days)
-            </h3>
-            <canvas id="wellnessChart" width="400" height="200"></canvas>
+    <section aria-labelledby="overview-heading" class="section">
+        <h2 id="overview-heading" class="sr-only">Overview</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {{ stat('Students', 'n/a' if hidden else a.total_patients, 'Registered at your institution') }}
+            {{ stat('Active in 30 days', 'n/a' if hidden else a.active_patients, ((a.engagement_rate ~ '% of students') if not hidden and a.engagement_rate is not none else '')) }}
+            {{ stat('Assessments in 30 days', 'n/a' if hidden else a.assessments_30_days, 'PHQ-9, GAD-7 and mood check-ins') }}
+            {{ stat('Average screen time', 'n/a' if hidden or inst.avg_screen_time is none else ('%.1f'|format(inst.avg_screen_time) ~ ' h/day'), 'Last 7 days, students who logged it') }}
         </div>
-    </div>
+        {% if not hidden and inst.high_risk_users is not none %}
+        <p class="help">{{ inst.high_risk_users }} student{{ '' if inst.high_risk_users == 1 else 's' }} averaged more than 8 hours of screen time per day in the last 7 days. Screen time is context, not a risk score.</p>
+        {% endif %}
+    </section>
 
-    <!-- Detailed Analytics Tables -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <!-- Blog Insights -->
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                <i class="fas fa-blog text-green-500 mr-2"></i>Recent Blog Activity
-            </h3>
-            {% if analytics_data.blog_insights %}
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Posts</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Views</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Engagement</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        {% for insight in analytics_data.blog_insights %}
-                        <tr>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ insight.date.strftime('%Y-%m-%d') }}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ insight.total_posts }}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ insight.total_views }}</td>
-                            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{{ ("%.1f"|format(insight.engagement_rate) ~ "%") if insight.engagement_rate is not none else "n/a" }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <p class="text-gray-500 text-sm">No blog insights available.</p>
-            {% endif %}
+    <section aria-labelledby="trends-heading" class="section">
+        <h2 id="trends-heading">Trends, last 30 days</h2>
+        {% set labels = a.chart_labels or [] %}
+        {% if hidden or not labels %}
+        <div class="empty-state">
+            {{ icon('chart') }}
+            <h3>No trend data to show</h3>
+            <p>{% if hidden %}Too few students to show.{% else %}No screen time or wellness logs in the last 30 days. Trends appear after students log their digital wellness.{% endif %}</p>
         </div>
-
-        <!-- Institutional Metrics -->
-        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">
-                <i class="fas fa-building text-blue-500 mr-2"></i>Institutional Overview
-            </h3>
-            {% if analytics_data.institutional_data %}
-            <div class="space-y-4">
-                <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-600">High Risk Patients:</span>
-                    <span class="font-semibold text-red-600">{{ analytics_data.institutional_data.high_risk_users }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-600">Average Screen Time:</span>
-                    <span class="font-semibold">{{ ("%.1f"|format(analytics_data.institutional_data.avg_screen_time) ~ " hrs/day") if analytics_data.institutional_data.avg_screen_time is not none else "n/a" }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-600">Active Users:</span>
-                    <span class="font-semibold text-green-600">{{ analytics_data.institutional_data.active_users }}</span>
+        {% else %}
+        {% set st = a.screen_time_data %}
+        {% set ws = a.wellness_score_data|select|list %}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="card">
+                <div class="card-header"><h3>Average daily screen time</h3></div>
+                <div class="card-body">
+                    <p class="help">Average screen time ranged from {{ st|min }} to {{ st|max }} hours per day across {{ labels|length }} day{{ '' if labels|length == 1 else 's' }} with logs.</p>
+                    <div class="pv-chart"><canvas id="screenTimeChart" role="img" aria-label="Line chart of average daily screen time in hours. The table below has the same values."></canvas></div>
                 </div>
             </div>
-            {% else %}
-            <p class="text-gray-500 text-sm">No institutional data available.</p>
-            {% endif %}
+            <div class="card">
+                <div class="card-header"><h3>Average wellness score</h3></div>
+                <div class="card-body">
+                    {% if ws %}
+                    <p class="help">Scores run from 1 (Poor) to 5 (Excellent) and ranged from {{ ws|min }} to {{ ws|max }}. Days without a score are left blank.</p>
+                    {% else %}
+                    <p class="help">No wellness scores were recorded in this period.</p>
+                    {% endif %}
+                    <div class="pv-chart"><canvas id="wellnessChart" role="img" aria-label="Line chart of average wellness score from 1 to 5. The table below has the same values."></canvas></div>
+                </div>
+            </div>
         </div>
-    </div>
+        <details class="card mt-4">
+            <summary class="card-header">Show the data as a table</summary>
+            <div class="card-body">
+                <div class="table-wrap">
+                    <table class="table">
+                        <caption class="sr-only">Daily averages for the last 30 days</caption>
+                        <thead><tr><th scope="col">Date</th><th scope="col">Screen time (hours)</th><th scope="col">Wellness score (1 to 5)</th></tr></thead>
+                        <tbody>
+                            {% for d in labels %}
+                            <tr>
+                                <th scope="row">{{ d }}</th>
+                                <td>{{ a.screen_time_data[loop.index0] }}</td>
+                                <td>{{ a.wellness_score_data[loop.index0] or 'n/a' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </details>
+        {% endif %}
+    </section>
 
-    <!-- Navigation -->
-    <div class="flex justify-between items-center">
-        <a href="{{ url_for('provider.provider_dashboard') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
-        </a>
-        <div class="text-sm text-gray-500">
-            Last updated: {{ datetime.now().strftime('%B %d %Y, %I:%M:%S %p') }}
+    <section aria-labelledby="blog-heading" class="section">
+        <h2 id="blog-heading">Blog activity</h2>
+        <p class="help">Across the whole platform, not limited to your institution.</p>
+        {% if a.blog_insights %}
+        <div class="table-wrap">
+            <table class="table">
+                <caption class="sr-only">Recent blog activity by day</caption>
+                <thead><tr><th scope="col">Date</th><th scope="col">Posts</th><th scope="col">Views</th><th scope="col">Engagement</th></tr></thead>
+                <tbody>
+                    {% for insight in a.blog_insights %}
+                    <tr>
+                        <th scope="row">{{ insight.date.strftime('%Y-%m-%d') }}</th>
+                        <td>{{ insight.total_posts }}</td>
+                        <td>{{ insight.total_views }}</td>
+                        <td>{{ ('%.1f'|format(insight.engagement_rate) ~ '%') if insight.engagement_rate is not none else 'n/a' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-    </div>
+        {% else %}
+        <div class="empty-state">
+            {{ icon('book') }}
+            <h3>No blog activity yet</h3>
+            <p>Daily post and view counts appear here once blog posts are published and read.</p>
+        </div>
+        {% endif %}
+    </section>
+
+    <p class="help">Last updated {{ datetime.now().strftime('%d %b %Y, %H:%M') }}.</p>
 </div>
 
-<script type="application/json" id="analytics-data" nonce="{{ g.csp_nonce }}">{{ {'labels': analytics_data.chart_labels, 'screen_time': analytics_data.screen_time_data, 'wellness': analytics_data.wellness_score_data}|tojson }}</script>
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/analytics_inline_1.js') }}"></script>
+<script type="application/json" id="analytics-data" nonce="{{ g.csp_nonce }}">{{ {'labels': a.chart_labels, 'screen_time': a.screen_time_data, 'wellness': a.wellness_score_data}|tojson }}</script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/provider-charts.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/analytics_inline_1.js') }}" defer></script>
 {% endblock %}

@@ -1,68 +1,68 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
 
-{% block title %}Telehealth Session - Mindful Horizon{% endblock %}
+{% block title %}Video session - Mindful Horizon{% endblock %}
+
+{% block legacy_head %}{% endblock %}
+{% block legacy_scripts %}
+<script nonce="{{ g.csp_nonce }}" src="https://cdn.socket.io/4.7.4/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_2.js') }}"></script>
+{% endblock %}
 
 {% block content %}
 {% set room_patient_id = patient_id if patient_id is defined else session.get('user_id') %}
-<div class="max-w-4xl mx-auto" id="telehealth-config"
+<link rel="stylesheet" href="{{ url_for('static', filename='css/provider.css') }}">
+<div class="container" id="telehealth-config"
      data-room="telehealth_room_{{ room_patient_id }}"
      data-home-url="{{ url_for('patient.patient_dashboard') if session.user_role == 'patient' else url_for('provider.provider_dashboard') }}">
-    <div class="card">
-        <h2 class="text-2xl font-bold text-gray-800 mb-6">
-            <i class="fas fa-video text-green-500 mr-2" aria-hidden="true"></i>Telehealth Session{% if patient_name is defined %} with {{ patient_name }}{% endif %}
-        </h2>
-        <p id="telehealth-error" class="hidden mb-4 p-3 rounded bg-red-50 text-red-700 text-sm" role="alert"></p>
-        
-        <div class="bg-gray-900 rounded-lg p-4 md:p-8 text-center mb-6 relative">
-            <!-- Remote Video Stream -->
-            <video id="remote-video" autoplay playsinline class="w-full h-96 bg-black rounded-lg object-cover mb-2"></video>
-            <!-- Local Video Stream -->
-            <video id="local-video" autoplay playsinline muted class="absolute bottom-6 right-6 w-32 h-24 md:w-48 md:h-36 bg-black rounded-lg object-cover border-2 border-white"></video>
-            
-            <p id="telehealth-status" class="text-white text-lg mt-2" aria-live="polite">Connecting{% if patient_name is defined %} to {{ patient_name }}{% endif %}...</p>
-            <p class="text-gray-400 text-sm">Browser-based video call. Allow camera and microphone when asked.</p>
-            
-            <div class="flex justify-center space-x-4 mt-4">
-                <button id="mute-audio" aria-label="Toggle microphone" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition duration-200">
-                    <i class="fas fa-microphone-slash"></i>
-                </button>
-                <button id="mute-video" aria-label="Toggle camera" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-full transition duration-200">
-                    <i class="fas fa-video-slash"></i>
-                </button>
-                <button id="end-call" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-full transition duration-200">
-                    <i class="fas fa-phone-slash"></i> End Call
-                </button>
-            </div>
-        </div>
-        
-        <div class="grid md:grid-cols-2 gap-6">
-            <div class="bg-blue-50 p-4 rounded-lg">
-                <h3 class="font-semibold text-gray-800 mb-2">
-                    <i class="fas fa-shield-alt text-blue-500 mr-2" aria-hidden="true"></i>Privacy
-                </h3>
-                <ul class="text-sm text-gray-600 space-y-1">
-                    <li>&bull; Video goes directly between the two browsers (WebRTC)</li>
-                    <li>&bull; Sessions are not recorded by this app</li>
-                    <li>&bull; Only the patient and their counselor can join this room</li>
+    <div class="page-header">
+        <h1>Video session{% if patient_name is defined %} with {{ patient_name }}{% endif %}</h1>
+        <p class="lead">Allow camera and microphone when your browser asks. The call starts when the other person joins this page.</p>
+    </div>
+
+    <div id="telehealth-error" class="alert alert-danger" role="alert" hidden></div>
+
+    <div class="pv-stage">
+        <video id="remote-video" class="pv-remote" autoplay playsinline aria-label="Video of the other person"></video>
+        <video id="local-video" class="pv-local" autoplay playsinline muted aria-label="Your camera preview"></video>
+    </div>
+
+    <p id="telehealth-status" class="mt-3" role="status" aria-live="polite">Connecting</p>
+
+    <div class="flex flex-wrap gap-2 mt-3">
+        <button type="button" id="mute-audio" class="btn btn-secondary pv-ctl" aria-label="Mute microphone" aria-pressed="false">
+            {{ icon('mic') }} <span data-state>Microphone on</span>
+        </button>
+        <button type="button" id="mute-video" class="btn btn-secondary pv-ctl" aria-label="Turn off camera" aria-pressed="false">
+            {{ icon('video') }} <span data-state>Camera on</span>
+        </button>
+        <button type="button" id="end-call" class="btn btn-danger" data-confirm="Leave this call? The other person will see that you have left.">
+            {{ icon('logout') }} Leave call
+        </button>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 mt-6">
+        <section class="card" aria-labelledby="tele-privacy">
+            <div class="card-body">
+                <h2 id="tele-privacy" class="text-lg">Privacy</h2>
+                <ul class="muted">
+                    <li>Video goes directly between the two browsers (WebRTC). This app does not record sessions.</li>
+                    <li>Only the patient and their counsellor can join this room.</li>
                 </ul>
             </div>
-            
-            <div class="bg-green-50 p-4 rounded-lg">
-                <h3 class="font-semibold text-gray-800 mb-2">
-                    <i class="fas fa-headset text-green-500 mr-2" aria-hidden="true"></i>If the call does not connect
-                </h3>
-                <ul class="text-sm text-gray-600 space-y-1">
-                    <li>&bull; Check that camera and microphone are allowed in the browser</li>
-                    <li>&bull; Reload the page and try again</li>
-                    <li>&bull; In an emergency call 112, or Tele-MANAS 14416</li>
+        </section>
+        <section class="card" aria-labelledby="tele-help">
+            <div class="card-body">
+                <h2 id="tele-help" class="text-lg">If the call does not connect</h2>
+                <ul class="muted">
+                    <li>Check that camera and microphone are allowed in your browser, then reload this page.</li>
+                    <li>Video may fail on some networks, such as college Wi-Fi with strict firewalls. Try mobile data, or agree to speak by phone instead.</li>
+                    <li>In an emergency {% if helplines %}call {% for h in helplines %}<a href="tel:{{ h.tel }}">{{ h.name }} {{ h.number }}</a>{{ ', ' if not loop.last else '' }}{% endfor %}{% else %}call your local emergency number{% endif %}.</li>
                 </ul>
             </div>
-        </div>
+        </section>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_scripts %}
-{{ super() }}
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/telehealth_inline_1.js') }}"></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/telehealth_inline_1.js') }}" defer></script>
 {% endblock %}

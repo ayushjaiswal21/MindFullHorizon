@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
+{% from 'rx_patient/_macros.html' import status_badge, collection_label, send_control %}
+
+{% block title %}Prescription {{ rx.number or '' }} - MindFull Horizon{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rx_patient.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set eff = rx.get('effective_status') or rx.status %}
+{% set items = rx.get('items') or [] %}
+{% set sent = rx.get('dispense_requested_at') %}
+{% set coll = rx.get('collection') %}
+<div class="container section" id="rx-page">
+    <header class="page-header">
+        <h1>Prescription <span class="rx-number">{{ rx.number }}</span></h1>
+        <p class="lead">{{ status_badge(rx) }} Issued {{ rx.issued_at|rx_date }} by {{ rx.doctor_name or 'n/a' }}{% if rx.get('doctor_reg_no') %}, Reg. No. {{ rx.doctor_reg_no }}{% endif %}{% if rx.get('institution') %}, {{ rx.institution }}{% endif %}.</p>
+        <div class="page-actions">
+            <a class="btn btn-secondary" href="{{ url_for('rx_patient.print', rx_id=rx.id) }}">{{ icon('file') }} Print</a>
+            {{ send_control(rx) }}
+        </div>
+    </header>
+
+    {% if eff == 'cancelled' %}<div class="alert alert-danger mb-6" role="note">This prescription was cancelled by your doctor. Do not use it. Ask your doctor if you need a new one.</div>{% endif %}
+    {% if eff == 'expired' %}<div class="alert alert-warning mb-6" role="note">This prescription expired on {{ rx.valid_until|rx_date }}. It can no longer be collected.</div>{% endif %}
+    {% if eff in ('issued', 'partially_dispensed') and not rx.get('dispensable') %}<div class="alert alert-warning mb-6" role="note">{{ rx_text.SAFETY_LINES.not_dispensable }}</div>{% endif %}
+
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="lg:col-span-2 pt-stack">
+            <section class="card" aria-labelledby="items-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="items-heading">Medicines</h2>
+                    <div class="table-wrap mt-3">
+                        <table class="table">
+                            <caption class="sr-only">Medicines on this prescription</caption>
+                            <thead><tr><th scope="col">Medicine</th><th scope="col">Dose</th><th scope="col">How often</th><th scope="col">Days</th><th scope="col">Quantity</th><th scope="col">Collected</th></tr></thead>
+                            <tbody>
+                            {% for it in items %}
+                                <tr>
+                                    <td>{{ it.medicine_label }}{% if it.get('instructions') %}<div class="muted">{{ it.instructions }}</div>{% endif %}</td>
+                                    <td>{{ it.dose_text }}</td>
+                                    <td>{{ it.frequency }}</td>
+                                    <td>{{ it.duration_days }}</td>
+                                    <td>{{ it.quantity }}</td>
+                                    <td>{{ it.get('quantity_dispensed', 0) }} of {{ it.quantity }}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" aria-labelledby="clin-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="clin-heading">Details your doctor entered</h2>
+                    <dl class="kv mt-3">
+                        <div><dt>Diagnosis</dt><dd>{{ rx.get('diagnosis') or 'Not recorded' }}</dd></div>
+                        <div><dt>Allergies</dt><dd>{{ rx.get('allergies') or ('None reported' if rx.get('allergies_status') == 'none_reported' else 'Not recorded') }}</dd></div>
+                        <div><dt>Current medicines</dt><dd>{{ rx.get('current_meds') or ('None reported' if rx.get('current_meds_status') == 'none_reported' else 'Not recorded') }}</dd></div>
+                        <div><dt>Valid until</dt><dd>{{ rx.valid_until|rx_date }}</dd></div>
+                    </dl>
+                </div>
+            </section>
+        </div>
+
+        <aside class="pt-stack">
+            <section class="card" aria-labelledby="steps-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="steps-heading">Progress</h2>
+                    <ol class="rx-steps mt-3">
+                        <li class="done">{{ icon('check') }} Issued {{ rx.issued_at|rx_date }}</li>
+                        <li class="{{ 'done' if sent else '' }}" data-rx-step="sent">{% if sent %}{{ icon('check') }} Sent to desk {{ sent|rx_date }}{% else %}Not sent to the pharmacy desk{% endif %}</li>
+                        <li class="{{ 'done' if coll in ('partial', 'complete') else '' }}">{% if coll in ('partial', 'complete') %}{{ icon('check') }} {% endif %}Partly collected</li>
+                        <li class="{{ 'done' if coll == 'complete' else '' }}">{% if coll == 'complete' %}{{ icon('check') }} {% endif %}Collected</li>
+                    </ol>
+                    <p class="pt-sub">{{ collection_label(rx) }}.</p>
+                </div>
+            </section>
+            <section class="card" aria-labelledby="note-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="note-heading">About this prescription</h2>
+                    <p class="pt-sub">{{ rx_text.PATIENT_EXPLAINER }}</p>
+                    <p class="pt-sub">{{ rx_text.PATIENT_PRIVACY_NOTE }}</p>
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <p class="mt-6"><a class="btn btn-secondary" href="{{ url_for('patient.my_prescriptions') }}">{{ icon('arrow-left') }} All prescriptions</a></p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/patient-common.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/rx_patient.js') }}" defer></script>
+{% endblock %}

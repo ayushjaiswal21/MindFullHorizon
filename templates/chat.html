@@ -1,37 +1,78 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
 
-{% block title %}Chat Support - Mindful Horizon{% endblock %}
+{% block title %}Chat with Anya | MindFull Horizon{% endblock %}
 
-{% block extra_head %}
-    <script nonce="{ g.csp_nonce }" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.2/socket.io.js"></script>
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
 {% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
-        <div class="p-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center">
-            <img src="https://placehold.co/40x40/ffffff/3B82F6?text=DA" alt="Anya" class="w-10 h-10 rounded-full mr-3">
-            <div>
-                <h2 class="text-lg font-bold">Anya</h2>
-                <p class="text-sm text-blue-200">AI wellness companion</p>
-            </div>
-        </div>
-        
-        <div class="p-6 h-96 overflow-y-auto" id="chat-messages">
-            <!-- Chat messages will be dynamically inserted here -->
-        </div>
-        
-        <form id="chat-form" class="p-4 bg-gray-100 border-t border-gray-200 flex items-center">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <input type="text" name="message" id="chat-input" placeholder="Type your message..." 
-                   class="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-200" required>
-            <button type="submit" class="ml-3 bg-blue-600 hover:bg-blue-700 text-white w-10 h-10 rounded-full flex items-center justify-center transition duration-200 shadow-lg">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </form>
-        <p class="px-4 pb-3 bg-gray-100 text-xs text-gray-600">I am an AI, not a therapist, and I can make mistakes. If you are in danger, call 112 or Tele-MANAS 14416.</p>
-    </div>
-</div>
+<div class="container section chat-page">
+  <div class="max-w-3xl mx-auto">
+    <header class="page-header">
+      <h1>Chat with Anya</h1>
+      <p class="lead">Anya is an AI assistant, not a therapist. Use it to talk through how you feel and to find a coping step to try. It cannot diagnose you or replace your counsellor.</p>
+      <div class="page-actions">
+        <a class="btn btn-ghost btn-sm" href="{{ url_for('patient.patient_dashboard') }}">{{ icon('arrow-left') }} Back to dashboard</a>
+      </div>
+    </header>
 
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/chat_inline_1.js') }}"></script>
+    <div id="chat-banner" class="crisis-banner mb-4 no-print" role="alert" hidden></div>
+    <div id="chat-notice" class="alert alert-info mb-4 no-print" hidden></div>
+
+    <section class="card" aria-labelledby="chat-heading">
+      <div class="card-header flex items-center justify-between gap-2">
+        <h2 id="chat-heading" class="text-lg">Conversation</h2>
+        <button type="button" id="chat-print-all" class="btn btn-secondary btn-sm no-print">{{ icon('file') }} Print conversation</button>
+      </div>
+      <div id="chat-print-head" class="chat-print-head" hidden>
+        <p class="chat-print-title">MindFull Horizon: conversation with Anya</p>
+        <p id="chat-print-date"></p>
+        <p>AI-generated, not advice. Anya is an AI assistant, not a therapist.</p>
+      </div>
+      <div id="chat-messages" class="chat-log" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation with Anya" tabindex="0" data-chat-id="{{ session.user_id }}">
+        <div id="chat-history" class="chat-history" aria-label="Earlier messages"></div>
+        <div id="chat-skeleton" aria-hidden="true">
+          <div class="skeleton skel-line"></div>
+          <div class="skeleton skel-line"></div>
+        </div>
+        <div class="msg msg-bot">
+          <p class="msg-who">Anya</p>
+          <p class="msg-text">Hello, I'm Anya. I am an AI, not a therapist, and I can make mistakes. How are you feeling today?</p>
+        </div>
+        <div id="chat-starters" class="cheerful-prompt no-print">
+          <p class="help">Not sure where to start? Pick a question and Anya will answer it. Or type your own message below.</p>
+          <div class="starter-prompts">
+            {% for t in starters or [] %}
+            <button type="button" class="btn btn-secondary btn-sm" data-template-id="{{ t.id }}" data-template-text="{{ t.text }}">{{ t.text }}</button>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <p id="chat-status" class="chat-status no-print" role="status"></p>
+      <form id="chat-form" class="chat-composer no-print" novalidate data-validate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <label for="chat-input" class="label">Message to Anya</label>
+        <textarea id="chat-input" name="message" class="textarea" rows="2" maxlength="2000" required aria-describedby="chat-hint chat-count" placeholder="Type your message"></textarea>
+        <div class="chat-composer-row">
+          <span id="chat-hint" class="help grow">Enter sends. Shift+Enter adds a new line.</span>
+          <span id="chat-count" class="help" aria-live="off"></span>
+          <button type="submit" id="chat-send" class="btn btn-primary">Send</button>
+        </div>
+      </form>
+    </section>
+
+    <p class="help mt-4 no-print">Chats are not shown again after you leave this page.
+      {% if helplines %}If you are in danger or thinking of hurting yourself, call
+      {% for h in helplines %}<a href="tel:{{ h.tel }}">{{ h.name }} {{ h.number }}</a>{% if not loop.last %}, {% endif %}{% endfor %}.{% endif %}
+    </p>
+  </div>
+</div>
+<script type="application/json" id="helplines-data">{{ (helplines or [])|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/chat_inline_1.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/chat_actions.js') }}" defer></script>
 {% endblock %}

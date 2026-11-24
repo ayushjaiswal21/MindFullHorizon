@@ -1,0 +1,48 @@
+{% extends 'provider_rx/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_rx/_ui.html' import notice, config_block %}
+{% block title %}My prescriptions{% endblock %}
+
+{% block rx_body %}
+{% set tab = tab if tab in ['draft', 'issued', 'closed'] else 'issued' %}
+{% set base = nav_url('provider.rx_list', '/provider/prescriptions') %}
+{% set urls = {
+  'list': nav_url('provider.rx_api_list', '/provider/api/rx/prescriptions'),
+  'detail_template': base ~ '/0',
+  'prescribe': nav_url('provider.rx_prescribe', '/provider/prescribe')
+} %}
+{% for k in urls.keys()|list %}{% if config and config.get(k) %}{% set _ = urls.update({k: config.get(k)}) %}{% endif %}{% endfor %}
+<div class="page-header">
+  <div>
+    <h1>My prescriptions</h1>
+    <p class="lead">Drafts, issued prescriptions and closed ones. Open one to see what was collected or to cancel it.</p>
+  </div>
+  <div class="page-actions"><a class="btn btn-primary" href="{{ urls.prescribe }}">{{ icon('plus') }} New prescription</a></div>
+</div>
+{{ notice() }}
+
+<nav class="tabs" aria-label="Prescription lists">
+  {% for key, label in [('draft', 'Drafts'), ('issued', 'Issued'), ('closed', 'Closed')] %}
+  <a href="{{ base }}?tab={{ key }}"{% if key == tab %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
+
+<div id="rl-app" data-tab="{{ tab }}">
+  {% if tab != 'draft' %}
+  <div class="cl-filters">
+    <div class="field">
+      <label class="label" for="rl-q">Prescription number</label>
+      <input class="input cl-mono" type="search" id="rl-q" maxlength="24" autocomplete="off" aria-controls="rl-list" placeholder="RX2611-...">
+    </div>
+  </div>
+  {% endif %}
+  <p id="rl-status" class="help" role="status" aria-live="polite"></p>
+  <div id="rl-list"><div class="skeleton" aria-hidden="true"></div></div>
+  <div id="rl-pager"></div>
+</div>
+{{ config_block(urls) }}
+{% endblock %}
+
+{% block page_scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/rx_list.js') }}?v={{ asset_version }}" defer></script>
+{% endblock %}

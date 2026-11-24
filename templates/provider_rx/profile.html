@@ -1,0 +1,61 @@
+{% extends 'provider_rx/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from '_macros.html' import form_field %}
+{% from 'provider_rx/_ui.html' import notice, ts, status_badge %}
+{% block title %}Prescribing profile{% endblock %}
+
+{% block rx_body %}
+{% set f = form or {} %}
+{% set e = errors or {} %}
+{% set p = profile or {} %}
+{% set state_text = {
+  'pending': 'Your registration is waiting for an administrator to check it. You cannot prescribe yet.',
+  'rejected': 'Your registration was not accepted. Check the details and send them again.',
+  'suspended': 'Prescribing is switched off for your account. Contact your administrator.',
+  'lapsed': 'Your registration check has expired. An administrator needs to check it again.',
+  'verified': 'Your registration is verified. You can prescribe.'
+} %}
+<div class="page-header">
+  <div>
+    <h1>Prescribing profile</h1>
+    <p class="lead">Your medical registration, as an administrator of your institution checks it before you can prescribe.</p>
+  </div>
+  <div class="page-actions"><a class="btn btn-secondary" href="{{ nav_url('provider.provider_dashboard', '/provider/dashboard') }}">{{ icon('arrow-left') }} Dashboard</a></div>
+</div>
+{{ notice() }}
+
+<div class="cl-split cl-block">
+  <section class="card" aria-labelledby="pf-h1">
+    <div class="card-header"><h2 id="pf-h1">Status</h2>{{ status_badge('pending' if state == 'lapsed' else state) }}</div>
+    <div class="card-body">
+      <p>{{ state_text.get(state, 'Your registration has not been submitted yet.') }}</p>
+      {% if state == 'verified' %}<p class="help">Verified until {{ ts(p.review_due_at, 'date') }}.</p>{% endif %}
+      <dl class="cl-dl">
+        <dt>Registration number</dt><dd class="cl-mono">{{ p.registration_number or 'n/a' }}</dd>
+        <dt>Council</dt><dd>{{ p.council or 'n/a' }}</dd>
+        <dt>Registered since</dt><dd>{{ p.registered_since or 'n/a' }}</dd>
+        <dt>Specialisation</dt><dd>{{ p.specialisation or 'n/a' }}</dd>
+        <dt>Sent for checking on</dt><dd>{{ ts(p.submitted_at, 'date') }}</dd>
+      </dl>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="pf-h2">
+    <div class="card-header"><h2 id="pf-h2">Edit details</h2></div>
+    <div class="card-body">
+      <div class="alert alert-warning" role="note">{{ icon('alert') }}<p>Changing the registration number, council or year sends your account back for checking and switches prescribing off until it is checked.</p></div>
+      <form method="post" action="{{ nav_url('provider.rx_profile_save', '/provider/prescribing-profile') }}" data-validate novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {{ form_field('registration_number', 'Registration number', value=f.registration_number or p.registration_number or '', required=True, minlength=4, maxlength=20, autocomplete='off',
+                      help='4 to 20 characters: letters, digits, / and -.', error=e.registration_number) }}
+        {{ form_field('council', 'Medical council', value=f.council or p.council or '', required=True, minlength=3, maxlength=100, autocomplete='off',
+                      help='The council as the register shows it, for example a State Medical Council or the National Medical Commission.', error=e.council) }}
+        {{ form_field('registered_since', 'Year of registration', type='text', value=f.registered_since or p.registered_since or '', required=True, maxlength=4, autocomplete='off',
+                      help='A year from 1950 to this year.', error=e.registered_since) }}
+        {{ form_field('specialisation', 'Specialisation', value=f.specialisation or p.specialisation or '', optional=True, maxlength=100, autocomplete='off', error=e.specialisation) }}
+        <button type="submit" class="btn btn-primary" data-loading-text="Saving">Save and send for checking</button>
+      </form>
+    </div>
+  </section>
+</div>
+{% endblock %}

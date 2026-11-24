@@ -1,0 +1,38 @@
+{# Dashboard: prescriptions widget (only when the feature is on) and the care-team card.
+   Context: rx_widget {count, next_expiry} or None, care_team [{name, type}], rx_text. #}
+{% from 'partials/icons.html' import icon %}
+{% if prescriptions_enabled and rx_widget is not none %}
+<section class="card" aria-labelledby="rxw-heading">
+    <div class="card-body">
+        <h2 class="pt-title" id="rxw-heading">Prescriptions</h2>
+        {% if rx_widget.count %}
+        <div class="stat mt-3">
+            <div class="stat-label">Active prescriptions</div>
+            <div class="stat-value">{{ rx_widget.count }}</div>
+            {% if rx_widget.next_expiry %}<div class="stat-note">Next expires {{ rx_widget.next_expiry|rx_date }}</div>{% endif %}
+        </div>
+        <p class="mt-3"><a class="btn btn-secondary btn-sm" href="{{ url_for('patient.my_prescriptions') }}">View prescriptions</a></p>
+        {% else %}
+        <div class="empty-state">
+            {{ icon('pill') }}
+            <h3 class="empty-state-title">No prescriptions yet</h3>
+            <p class="empty-state-text">A doctor you have seen through MindFull Horizon can send one here.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+<section class="card" aria-labelledby="team-heading">
+    <div class="card-body">
+        <h2 class="pt-title" id="team-heading">Your care team</h2>
+        {% if care_team %}
+        <ul class="care-team">
+            {% for m in care_team %}<li><span>{{ m.name }}</span><span class="muted">{{ m.type }}</span></li>{% endfor %}
+        </ul>
+        <p class="pt-sub">{{ rx_text.CARE_TEAM_NOTE }}</p>
+        {% else %}
+        <p class="pt-sub">{{ rx_text.CARE_TEAM_EMPTY }}</p>
+        {% endif %}
+    </div>
+</section>

@@ -1,0 +1,20 @@
+{#- "What we do not do" box. Keep in step with docs/research/competitive-2026.md section 6 ("Claims we must NOT make"). -#}
+<section class="home-section home-band" id="limits" aria-labelledby="limits-title">
+  <div class="container">
+    <div class="card home-limits">
+      <div class="card-body">
+        <h2 id="limits-title">What we do not do</h2>
+        <ul>
+          <li>This is not therapy and it is not a medical device.</li>
+          <li>It does not diagnose. PHQ-9 and GAD-7 are screening questionnaires.</li>
+          <li>No person watches the service around the clock. Out-of-hours alerts depend on your institution. If you need help at night, use {% for h in helplines if h.name.startswith(('Tele-MANAS', 'Emergency')) %}{{ h.name.split(' (')[0] }} {{ h.number }}{{ ' and ' if not loop.last else '' }}{% endfor %}.</li>
+          <li>The chat companion is instructed not to give medicine advice, and it does not name medicines or doses.</li>
+          <li>There has been no clinical trial of this product yet.</li>
+          <li>It is an early-stage project, so expect rough edges.</li>
+          <li>It is for people aged 18 and over only.</li>
+        </ul>
+        <p class="home-note">Not sure this is for you? <a href="{{ url_for('core.how_ai_works') }}">Read how the AI works</a>. See also the <a href="/privacy">Privacy policy</a> and <a href="/terms">Terms</a>.</p>
+      </div>
+    </div>
+  </div>
+</section>

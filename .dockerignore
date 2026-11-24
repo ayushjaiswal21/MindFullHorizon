@@ -1,16 +1,37 @@
+# Secrets and local state
 .env
+.env.*
 .git
-__pycache__/
-*.pyc
-.pytest_cache/
+.gitignore
+.claude/
+graphify-out/
 instance/
 flask_session/
-*.db
-*.log
-data/**/*.mp3
+**/*.db
+**/*.db-*
+**/*.log
+
+# Python and tooling caches
+**/__pycache__
+**/*.pyc
+.pytest_cache/
+venv/
+.venv/
+venv*/
+
+# Not needed at runtime (verified: no module imports tests/ or docs/; scripts/ is kept for predeploy_check.py)
+tests/
+docs/
+node_modules/
+
+# User-generated files (ephemeral on Render anyway) and rebuilt-at-build-time output
 static/uploads/*
 static/gen/
 static/.webassets-cache/
-tests/
-docs/
-venv/
+
+# Audio is served from AUDIO_BASE_URL in production; tracks.csv and data.json stay (the app reads them)
+data/**/*.mp3
+
+# Frontend build tooling (CSS is committed; not needed at runtime)
+tools/
+requirements/

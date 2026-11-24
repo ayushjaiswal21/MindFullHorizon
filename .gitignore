@@ -8,6 +8,7 @@ flask_session/
 instance/
 *.db
 *.log
+logs/
 static/gen/
 static/.webassets-cache/
 static/uploads/*
@@ -30,3 +31,6 @@ env/
 .mypy_cache/
 htmlcov/
 .coverage
+
+# node tooling (built CSS is committed)
+node_modules/

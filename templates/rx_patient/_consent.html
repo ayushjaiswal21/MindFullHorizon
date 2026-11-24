@@ -1,0 +1,20 @@
+{# E-prescription consent banner. Both states are rendered; rx_patient.js flips the hidden attribute after a successful call. #}
+<section aria-labelledby="erx-heading" class="mb-6">
+    <div class="alert alert-info" data-rx-consent-off{% if consent.active %} hidden{% endif %}>
+        <div>
+            <strong id="erx-heading">Allow e-prescriptions so a doctor can send you a prescription here</strong>
+            <p class="mt-1">If you press the button, you agree to this:</p>
+            <p class="mt-1"><em>{{ rx_text.ERX_CONSENT_TEXT }}</em></p>
+            <p class="mt-2"><button type="button" class="btn btn-primary btn-sm" data-rx-consent="on">Allow e-prescriptions</button></p>
+        </div>
+    </div>
+    <div class="panel-muted" data-rx-consent-on{% if not consent.active %} hidden{% endif %}>
+        <p class="flex items-center justify-between gap-3 flex-wrap">
+            <span>{{ icon('check') }} You have allowed e-prescriptions</span>
+            <button type="button" class="btn btn-ghost btn-sm" data-rx-consent="off"
+                    data-confirm-title="Withdraw e-prescription consent?"
+                    data-confirm-text="Withdraw"
+                    data-confirm="A doctor will not be able to issue you a new prescription. Prescriptions already issued stay available.">Withdraw</button>
+        </p>
+    </div>
+</section>

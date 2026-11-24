@@ -60,11 +60,12 @@ def make_user(app):
     """make_user(role='patient', email=None, institution='Test University') -> user id."""
     counter = {"n": 0}
 
-    def _make(role="patient", email=None, institution="Test University", name=None):
+    def _make(role="patient", email=None, institution="Test University", name=None, **extra):
+        """`extra` goes to the User row, for example provider_type='doctor' or is_pharmacy_desk=True."""
         counter["n"] += 1
         email = email or f"{role}{counter['n']}@test.local"
         with app.app_context():
-            user = User(email=email, name=name or f"{role.title()} {counter['n']}", role=role, institution=institution)
+            user = User(email=email, name=name or f"{role.title()} {counter['n']}", role=role, institution=institution, **extra)
             user.set_password(PASSWORD)
             db.session.add(user)
             db.session.commit()
@@ -104,5 +105,68 @@ def patient_client(app, make_user):
 def provider_client(app, make_user):
     c = app.test_client()
     uid = make_user("provider")
+    _login_as(c, app, uid)
+    return c, uid
+
+
+@pytest.fixture(autouse=True)
+def reset_llm_state():
+    """Fresh AI budgets and a closed circuit breaker for every test."""
+    from ai import gemini_impl
+    from utils import llm_guard
+    llm_guard.reset_state()
+    gemini_impl.BREAKER.reset()
+    yield
+
+
+# ---- clinical fixtures (docs/CLINICAL_DESIGN.md 12) ----
+
+@pytest.fixture
+def make_doctor(app, make_user):
+    """make_doctor(status='verified', institution='Test University') -> user id of a doctor with a PrescriberProfile."""
+    from datetime import timedelta
+    from models import PrescriberProfile
+    from utils.timeutil import utcnow
+    counter = {"n": 0}
+
+    def _make(status="verified", institution="Test University", **extra):
+        counter["n"] += 1
+        uid = make_user("provider", institution=institution, provider_type="doctor", **extra)
+        with app.app_context():
+            now = utcnow()
+            db.session.add(PrescriberProfile(
+                user_id=uid, registration_number=f"REG{1000 + counter['n']}", council="State Medical Council",
+                council_key="state medical council", registered_since=2011, status=status, submitted_at=now,
+                status_changed_at=now, verified_at=now if status == "verified" else None,
+                review_due_at=now + timedelta(days=365) if status == "verified" else None))
+            db.session.commit()
+        return uid
+
+    return _make
+
+
+@pytest.fixture
+def doctor_client(app, make_doctor):
+    """(client, user_id): a verified doctor, logged in."""
+    c = app.test_client()
+    uid = make_doctor()
+    _login_as(c, app, uid)
+    return c, uid
+
+
+@pytest.fixture
+def admin_client(app, make_user):
+    """(client, user_id): an administrator without the pharmacy desk flag."""
+    c = app.test_client()
+    uid = make_user("admin", institution="Test University")
+    _login_as(c, app, uid)
+    return c, uid
+
+
+@pytest.fixture
+def desk_client(app, make_user):
+    """(client, user_id): an administrator with is_pharmacy_desk."""
+    c = app.test_client()
+    uid = make_user("admin", institution="Test University", is_pharmacy_desk=True)
     _login_as(c, app, uid)
     return c, uid

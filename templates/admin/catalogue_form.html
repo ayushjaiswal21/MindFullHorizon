@@ -1,0 +1,50 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_rx/_ui.html' import notice, config_block %}
+{% block title %}{{ 'Edit medicine' if medicine else 'Add medicine' }}{% endblock %}
+{% block page_scripts %}<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_catalogue.js') }}?v={{ asset_version }}" defer></script>{% endblock %}
+{% macro text_field(name, label, maxlength, required=False, help=None) %}
+{% set err = (errors or {}).get(name) %}
+<div class="field"><label class="label" for="m-{{ name }}">{{ label }}{% if not required %} <span class="mfh-optional">(optional)</span>{% endif %}</label>
+  <input class="input" id="m-{{ name }}" name="{{ name }}" type="text" maxlength="{{ maxlength }}" value="{{ (medicine or {}).get(name) or ('oral' if name == 'route' else '') }}"{% if required %} required{% endif %}{% if err %} aria-invalid="true"{% endif %} aria-describedby="m-{{ name }}-err{% if help %} m-{{ name }}-help{% endif %}">
+  {% if help %}<p class="help" id="m-{{ name }}-help">{{ help }}</p>{% endif %}
+  <p class="error-text" id="m-{{ name }}-err" role="alert"{% if not err %} hidden{% endif %}>{{ err }}</p></div>
+{% endmacro %}
+{% block rx_body %}
+{% set base = nav_url('admin.catalogue', '/admin/catalogue') %}
+{% set m = medicine or {} %}
+<div class="page-header"><div><h1>{{ 'Edit medicine' if medicine else 'Add medicine' }}</h1><p class="lead"><a class="cl-link" href="{{ base }}">Back to the catalogue</a></p></div></div>
+{{ notice() }}
+{% if medicine %}<div class="alert alert-info" role="note">{{ icon('info') }}<p>Changing the list, the schedule or the controlled flag sends this medicine back for a second check. It cannot be prescribed until a different administrator confirms it.</p></div>{% endif %}
+<form id="catalogue-form" class="card" data-id="{{ m.id or '' }}" data-api="/admin/api/catalogue" data-list-url="{{ base }}" novalidate>
+  <div class="card-body">
+    <div class="cl-grid-2">
+      <div>
+        {{ text_field('generic_name', 'Generic name', 120, True) }}
+        {{ text_field('brand_name', 'Brand name', 120) }}
+        {{ text_field('strength', 'Strength', 40, True, 'For example 10 mg.') }}
+        {{ text_field('form', 'Form', 30, True, 'For example tablet, capsule or syrup.') }}
+      </div>
+      <div>
+        {{ text_field('route', 'Route', 20, True) }}
+        <div class="field"><label class="label" for="m-tpg_list">Telemedicine list</label>
+          <select class="select" id="m-tpg_list" name="tpg_list" aria-describedby="m-tpg_list-help m-tpg_list-err">
+            {% for l in lists or [] %}{% set code = l.code if l is mapping else l[0] %}{% set text = l.text if l is mapping else l[1] %}<option value="{{ code }}"{{ ' selected' if (m.tpg_list or 'C') == code }}>List {{ code }}: {{ text }}</option>{% endfor %}
+          </select>
+          <p class="help" id="m-tpg_list-help">Choose the list from the current Telemedicine Practice Guidelines notification. If unsure, choose List C: the medicine will be blocked.</p>
+          <p class="error-text" id="m-tpg_list-err" role="alert" hidden></p></div>
+        <div class="field"><label class="label" for="m-schedule">Schedule</label>
+          <select class="select" id="m-schedule" name="schedule" aria-describedby="m-schedule-err">
+            {% for s in schedules or [] %}{% set code = s.code if s is mapping else (s[0] if s is not string else s) %}{% set text = s.text if s is mapping else (s[1] if s is not string else s) %}<option value="{{ code }}"{{ ' selected' if (m.schedule or 'none') == code }}>{{ text }}</option>{% endfor %}
+          </select>
+          <p class="error-text" id="m-schedule-err" role="alert" hidden></p></div>
+        {{ text_field('therapeutic_class', 'Therapeutic class', 60, False, 'Used only to warn when two medicines of the same class are prescribed together.') }}
+        <div class="field"><div class="check"><input type="checkbox" id="m-active" name="active"{{ ' checked' if medicine is none or m.active }}><label for="m-active">Active (doctors can search for it)</label></div></div>
+      </div>
+    </div>
+    <p class="error-text" id="form-error" role="alert" hidden></p>
+    <div class="cl-actions"><button type="submit" class="btn btn-primary">{{ 'Save changes' if medicine else 'Add medicine' }}</button><a class="btn btn-ghost" href="{{ base }}">Cancel</a></div>
+    <p class="help" id="form-status" role="status" aria-live="polite"></p>
+  </div>
+</form>
+{% endblock %}

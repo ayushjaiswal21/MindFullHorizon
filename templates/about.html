@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% from 'partials/breadcrumbs.html' import breadcrumb %}
+{% from '_macros.html' import jsonld_scripts, helpline_list %}
+
+{% block title %}About Mindful Horizon{% endblock %}
+{% block meta_description %}{{ page_description }}{% endblock %}
+{% block canonical %}{{ canonical_url }}{% endblock %}
+{% block robots %}index, follow{% endblock %}
+{% block breadcrumbs %}{{ breadcrumb([('Home', '/'), ('About', None)]) }}{% endblock %}
+{% block head_extra %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+{{ jsonld_scripts(jsonld) }}
+{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <div class="page-header page-narrow">
+    <h1>About Mindful Horizon</h1>
+    <p class="lead">Mindful Horizon is a web app where college students in India can check in on their mental health and reach a campus counsellor. It is an early-stage project, not an established clinic.</p>
+  </div>
+
+  <div class="prose page-narrow">
+    <h2>What it is</h2>
+    <p>For students, the app gives you:</p>
+    <ul>
+      <li>A daily mood log and a journal.</li>
+      <li>The PHQ-9 (low mood) and GAD-7 (anxiety) screening questionnaires, with a score and a plain explanation of what it means.</li>
+      <li>Breathing, yoga, music and digital-detox tools, plus goals you set yourself.</li>
+      <li>A chat companion called Anya, which is an AI assistant.</li>
+      <li>Appointment booking with a counsellor at your institution.</li>
+    </ul>
+    <p>For counsellors, it gives a list of the students assigned to them, appointments, crisis alerts for their institution, and group-level totals.</p>
+
+    <h2>What it is not</h2>
+    <ul>
+      <li>It is not therapy, and a screening score is not a diagnosis.</li>
+      <li>It is not an emergency service. If you or someone else is in danger, call {{ emergency_number }}.</li>
+      <li>The chat companion is not a person and not a therapist.</li>
+      <li>It is not a medical device.</li>
+    </ul>
+
+    <h2>Who it is for</h2>
+    <p>Students aged 18 or older at colleges in India. Counsellor accounts are created only with an invite code from the institution. If you are under 18, please do not create an account. You can call Tele-MANAS on {{ tele_manas }} at any age.</p>
+
+    <h2>How your data flows</h2>
+    <ol class="flow-list">
+      <li>You type something in, such as a mood, a journal entry, a questionnaire answer or a chat message.</li>
+      <li>The server stores it in the service database, tied to your account.</li>
+      <li>Scores for PHQ-9 and GAD-7 are calculated on the server, not in your browser.</li>
+      <li>When you use an AI feature, the text for that feature is sent to the Google Gemini API to get a reply. Nothing is sent for features that do not use AI.</li>
+      <li>Your assigned counsellor can see your records. Other counsellors at your institution see only group totals and crisis alerts.</li>
+      <li>You can download or delete your data from <a href="{{ account_data_url }}">your data page</a>.</li>
+    </ol>
+    <p>The <a href="{{ url_for('pages.privacy') }}">privacy policy</a> lists every category of data and every service that receives it.</p>
+
+    <h2>How safety is built in</h2>
+    <ul>
+      <li>Every chat message goes through a fixed rule-based check. It does not depend on the AI, so it still works if the AI service is down. A match shows the helplines below and records a crisis event without your message text.</li>
+      <li>A PHQ-9 answer above zero on the question about thoughts of self-harm shows the same help, whatever the total score is.</li>
+      <li>PHQ-9 and GAD-7 are scored on the server using the standard bands.</li>
+      <li>Points, streaks and badges are never attached to assessment or mood scores.</li>
+      <li>Helpline numbers come from one list that is re-checked on a schedule (last checked {{ helplines[0].last_verified }}).</li>
+    </ul>
+
+    <div class="panel-muted" role="note">
+      <p><strong>If you are in crisis, talk to a person now.</strong></p>
+      {{ helpline_list(helplines) }}
+    </div>
+
+    <h2>Who is behind it</h2>
+    <p>Mindful Horizon is an early-stage open project. There is no company team page because we have not formed one, and we do not list people who are not involved. The source code is public on <a href="{{ repo_url }}" rel="noopener">GitHub</a>. The crisis phrases and screening content have not yet been reviewed by a licensed clinician; that review is needed before a wider launch.</p>
+    <p>Questions or problems: use the <a href="{{ url_for('pages.contact') }}">contact page</a>.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script defer src="{{ url_for('static', filename='js/components.js') }}" nonce="{{ g.csp_nonce }}"></script>
+{% endblock %}

@@ -1,0 +1,33 @@
+{# One compact card. Points and streaks never depend on mood or screening scores. Uses gam_card() from routes/patient_gamification.py #}
+{% from 'partials/icons.html' import icon %}
+{% set gc = gam_card() if gam_card is defined else None %}
+{% if gc %}
+<section class="card gam-card" aria-labelledby="gam-heading">
+    <div class="card-body">
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+            <h2 class="pt-title" id="gam-heading">Your routine</h2>
+            <span class="badge badge-neutral">Level {{ gc.level }}: {{ gc.level_name }}</span>
+        </div>
+        <dl class="gam-stats mt-3">
+            <div><dt>Points</dt><dd>{{ gc.points }}</dd></div>
+            <div><dt>Day streak</dt><dd>{{ gc.streak }}</dd></div>
+        </dl>
+        {% if gc.points_to_next_level is not none %}<p class="pt-sub">{{ gc.points_to_next_level }} more points to the next level.</p>{% endif %}
+        <ol class="gam-week mt-3" aria-label="This week">
+            {% for d in gc.dots %}
+            <li class="{{ 'on' if d.active else '' }}{{ ' today' if d.today else '' }}" aria-label="{{ d.label }}: {{ 'visited' if d.active else ('not yet' if d.future or d.today else 'not visited') }}"><span class="dot" aria-hidden="true"></span><span class="lbl" aria-hidden="true">{{ d.label[:2] }}</span></li>
+            {% endfor %}
+        </ol>
+        <p class="pt-sub mt-2">
+            {% if gc.restarted and gc.streak <= 1 %}Welcome back. A new streak starts today.{% elif gc.streak == 0 %}Your streak starts with your next visit.{% else %}One missed day a week is forgiven.{% endif %}
+        </p>
+        {% if gc.earned %}
+        <ul class="gam-badges mt-3" aria-label="Badges earned">
+            {% for b in gc.earned %}<li>{{ icon('check') }} <span>{{ b.label }}</span> <span class="muted">{{ b.date.strftime('%d %b %Y') }}</span></li>{% endfor %}
+        </ul>
+        {% endif %}
+        {% if gc.next_badge %}<p class="pt-sub mt-3">Next badge: {{ gc.next_badge.label }}. {{ gc.next_badge.hint }}</p>{% endif %}
+        <p class="pt-sub mt-3">Points never depend on your mood or screening scores. A daily visit and wellbeing activities earn points. Screenings and mood entries never earn points.</p>
+    </div>
+</section>
+{% endif %}

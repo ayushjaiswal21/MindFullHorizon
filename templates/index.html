@@ -1,354 +1,169 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
+
+{% block title %}Home{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">{% endblock %}
 
 {% block content %}
-<!-- Hero Dashboard Section - Student Focused & Professional -->
-<section class="hero-dashboard" style="position: relative; padding: 40px 0; max-width: 1400px; margin: 32px auto; background: linear-gradient(135deg, #6b7280 0%, #9ca3af 30%, #3b82f6 70%, #60a5fa 100%); border-radius: 32px; box-shadow: 0 2px 16px rgba(102,126,234,0.08); overflow: hidden; min-height: 500px; height: 75vh;">
-    <!-- Watermark background logo -->
-    <div class="hero-content" style="text-align: center; position: relative; z-index: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100%;">
-        <h1 class="hero-main-headline" style="font-size: 3.2rem; margin-bottom: 16px; color: #fff; text-shadow: 0 2px 8px rgba(38,99,235,0.18); transition: color 0.2s, text-shadow 0.2s; cursor: pointer; line-height: 1.2;">Your Mental Health Companion for College Life</h1>
-        <p class="hero-sub-headline" style="font-size: 1.6rem; margin-bottom: 24px; color: #e3f0ff; text-shadow: 0 1px 4px rgba(38,99,235,0.12); transition: color 0.2s, text-shadow 0.2s; cursor: pointer; max-width: 800px; line-height: 1.4;">AI-powered support, progress tracking, and professional counseling - all designed for busy students like you.</p>
-        <div class="hero-actions" style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 16px;">
-            <a href="{{ url_for('auth.signup') }}" class="hero-cta-button primary" style="padding: 12px 32px; font-size: 1.1rem; background: #2563eb; color: #fff; border-radius: 12px; box-shadow: 0 4px 16px rgba(38,99,235,0.18); transition: background 0.2s, color 0.2s, box-shadow 0.2s; cursor: pointer; text-decoration: none; font-weight: 600;">Get Started Free</a>
-            <a href="#features" class="hero-cta-button secondary" style="padding: 12px 32px; font-size: 1.1rem; background: transparent; color: #fff; border: 2px solid #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(255,255,255,0.2); transition: background 0.2s, color 0.2s, box-shadow 0.2s; cursor: pointer; text-decoration: none; font-weight: 600;">Learn More</a>
+{% set first_name = (session.get('user_name') or '').split(' ')[0] %}
+<div class="container section">
+  <header class="page-header">
+    <h1>Hello{% if first_name %}, {{ first_name }}{% endif %}</h1>
+    {% if role == 'patient' %}
+    <p class="lead">Your actions for today and what you did recently.</p>
+    {% elif role == 'provider' %}
+    <p class="lead">Your sessions for today and your counsellor tools.</p>
+    {% else %}
+    <p class="lead">Pick up where you left off.</p>
+    {% endif %}
+  </header>
+
+  {% if role == 'patient' %}
+  {% set next_type = home.get('next_assessment') or 'PHQ-9' %}
+  <section aria-labelledby="today-title" class="home-block">
+    <div class="home-heading"><h2 id="today-title">Today</h2></div>
+    <div class="home-today">
+
+      <div class="card"><div class="card-body">
+        <h3>{{ icon('mood') }}Log your mood</h3>
+        {% if home.mood_today %}
+        <p>Logged today: {{ home.last_mood.mood_score }} of 10. You can log again.</p>
+        {% elif home.last_mood %}
+        <p>Last logged on {{ home.last_mood.created_at.strftime('%d %b') }}: {{ home.last_mood.mood_score }} of 10.</p>
+        {% else %}
+        <p>No mood entries yet. Log how you feel today to start your history.</p>
+        {% endif %}
+        <form id="home-mood-form" data-url="{{ url_for('patient.save_mood') }}" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <fieldset class="mood-scale">
+            <legend>How are you feeling? (1 low, 10 good)</legend>
+            <div class="scale">
+              {% for n in range(1, 11) %}
+              <label><input type="radio" name="mood" value="{{ n }}"><span>{{ n }}</span></label>
+              {% endfor %}
+            </div>
+          </fieldset>
+          <div class="field">
+            <label class="label" for="home-mood-note">Note (optional)</label>
+            <input class="input" id="home-mood-note" name="notes" type="text" maxlength="500" autocomplete="off">
+          </div>
+          <button class="btn btn-primary" id="home-mood-save" type="submit">Save mood</button>
+          <p class="help" id="home-mood-status" role="status" aria-live="polite"></p>
+        </form>
+      </div></div>
+
+      <div class="card"><div class="card-body">
+        <h3>{{ icon('chart') }}{{ next_type }} screening</h3>
+        {% if home.next_assessment_last %}
+        <p>Last taken on {{ home.next_assessment_last.strftime('%d %b %Y') }}. Retaking it shows how things have changed.</p>
+        {% else %}
+        <p>You have not taken this one yet. It takes about two minutes. It is a screening, not a diagnosis.</p>
+        {% endif %}
+        <a class="btn btn-primary" href="{{ url_for('patient.assessment') }}">Take the {{ next_type }}</a>
+      </div></div>
+
+      <div class="card"><div class="card-body">
+        <h3>{{ icon('calendar') }}Next appointment</h3>
+        {% if home.appointment %}
+        <p>{{ home.appointment.date.strftime('%a %d %b %Y') }}, {% if home.appointment.time == 'TBD' %}time to be confirmed{% else %}{{ home.appointment.time }}{% endif %}</p>
+        <p><span class="badge {{ 'badge-success' if home.appointment.status == 'accepted' else 'badge-warning' }}">{{ 'Confirmed' if home.appointment.status == 'accepted' else 'Waiting for counsellor' }}</span></p>
+        <a class="btn btn-secondary" href="{{ url_for('patient.patient_dashboard') }}">View appointments</a>
+        {% else %}
+        <div class="empty-state">
+          <p>No upcoming appointments. Request a session with a counsellor at your college.</p>
+          <a class="btn btn-secondary" href="{{ url_for('patient.schedule_appointment') }}">Book a counsellor</a>
         </div>
+        {% endif %}
+      </div></div>
+
     </div>
-    <div class="hero-company-name" style="font-size: 1.2rem; margin-top: 16px; color: #e3f0ff; position: relative; z-index: 1; text-shadow: 0 1px 4px rgba(38,99,235,0.12); align-self: flex-end;">MindFullHorizon</div>
-</section>
+  </section>
 
-<!-- Student Dashboard Section -->
-
-<!-- Redesigned Student Wellness Dashboard Section -->
-<section class="student-dashboard" id="features" style="background: #fff; border-radius: 0px; margin: 32px auto; max-width: 1400px; box-shadow: 0 2px 16px rgba(102,126,234,0.08); padding: 40px 0;">
-    <div class="dashboard-container" style="max-width: 1200px; margin: 0 auto;">
-        <div class="dashboard-header" style="text-align: center; margin-bottom: 48px;">
-            <h2 class="dashboard-title" style="font-size: 2.8rem; color: #222; font-weight: 700; margin-bottom: 16px; text-shadow: none;">
-                <span class="title-emoji" style="font-size:2.8rem;">🎓</span>
-                <span class="title-text">Student Wellness Dashboard</span>
-            </h2>
-            <p class="dashboard-subtitle" style="font-size: 1.3rem; color: #444; margin-bottom: 0; text-shadow: none; line-height: 1.4; max-width: 600px; margin-left: auto; margin-right: auto;">Everything you need for mental wellness, designed specifically for college life. From quick stress relief to professional counseling - all in one place.</p>
+  <div class="home-two home-block">
+    <section aria-labelledby="recent-title">
+      <div class="home-heading"><h2 id="recent-title">Recent activity</h2></div>
+      <div class="card"><div class="card-body">
+        {% if home.activity %}
+        <ul class="home-activity">
+          {% for a in home.activity %}
+          <li>
+            <a href="{{ url_for(a.href) }}">{{ a.text }}</a>
+            <time datetime="{{ a.when.strftime('%Y-%m-%d') }}">{{ a.when.strftime('%d %b %Y') }}</time>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state">
+          <p>Nothing yet. Log your mood, take a screening or write a journal entry and it will show here.</p>
         </div>
+        {% endif %}
+      </div></div>
+    </section>
 
-        <!-- Quick Actions Row - Enhanced for Students -->
-        <div class="quick-actions-row" style="display: flex; flex-wrap: wrap; gap: 32px; justify-content: center; margin-bottom: 48px;">
-            <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
-                <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🧘‍♂️</div>
-                <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">1-Min Breathing</h3>
-                <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Quick stress relief between classes and study sessions</p>
-                <a href="{{ url_for('patient.breathing') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Start Now</a>
-            </div>
-            <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
-                <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">📊</div>
-                <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">Mood Check-in</h3>
-                <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Track how you're feeling today with our quick assessment</p>
-                <a href="{{ url_for('patient.assessment') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Check In</a>
-            </div>
-            <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
-                <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🧎</div>
-                <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">Yoga Timer</h3>
-                <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Guided sessions designed for busy student schedules</p>
-                <a href="{{ url_for('patient.yoga') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Begin</a>
-            </div>
-            <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
-                <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">💬</div>
-                <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">AI Chat</h3>
-                <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Talk to your wellness companion 24/7</p>
-                <a href="{{ url_for('chat') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Chat</a>
-            </div>
-            <div class="quick-action-card" style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 32px 28px; min-width: 240px; max-width: 280px; flex: 1 1 240px; text-align: center; transition: box-shadow 0.3s, transform 0.3s, background 0.3s; cursor: pointer; border: 1px solid #e2e8f0;">
-                <div class="action-icon" style="font-size:2.8rem; margin-bottom:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🎵</div>
-                <h3 style="font-size:1.3rem; color:#2563eb; font-weight:700; margin-bottom:8px;">Mood Music</h3>
-                <p style="color:#475569; font-size:1rem; margin-bottom:16px; line-height: 1.4;">Binaural beats to support calm, focus, and mood regulation</p>
-                <a href="{{ url_for('music') }}" class="action-btn" style="padding:10px 28px; background: linear-gradient(90deg, #2563eb, #3b82f6); color:#fff; border-radius:12px; font-weight:600; text-decoration:none; transition: all 0.2s; box-shadow: 0 2px 12px rgba(37,99,235,0.2);">Listen</a>
-            </div>
-        </div>
-        
-        <!-- Mood Music Recommendation (Binaural beats) -->
+    <section aria-labelledby="tools-title">
+      <div class="home-heading"><h2 id="tools-title">Tools</h2></div>
+      <ul class="home-tools">
+        <li><a href="{{ url_for('chat') }}">{{ icon('chat') }}AI companion</a></li>
+        <li><a href="{{ url_for('patient.patient_journal') }}">{{ icon('journal') }}Journal</a></li>
+        <li><a href="{{ url_for('patient.breathing') }}">{{ icon('wind') }}Breathing</a></li>
+        <li><a href="{{ url_for('patient.yoga') }}">{{ icon('leaf') }}Yoga</a></li>
+        <li><a href="{{ url_for('music') }}">{{ icon('music') }}Music</a></li>
+        <li><a href="{{ url_for('patient.goals') }}">{{ icon('target') }}Goals</a></li>
+        <li><a href="{{ url_for('patient.progress') }}">{{ icon('activity') }}Progress</a></li>
+        <li><a href="{{ url_for('patient.patient_dashboard') }}">{{ icon('home') }}Dashboard</a></li>
+      </ul>
+    </section>
+  </div>
 
-        <!-- Main Features Grid - Enhanced for Students -->
-        <div class="features-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 36px; justify-content: center; margin-bottom: 48px;">
-            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
-                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
-                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🤖</div>
-                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">AI Wellness Companion</h3>
-                </div>
-                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">24/7 support for exam stress, relationship issues, and academic pressure. Get instant, personalized advice tailored to your student life.</p>
-                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">⚡ Instant responses</span>
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🎯 Student-focused</span>
-                </div>
-            </div>
-            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
-                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
-                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">📈</div>
-                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">Progress Tracking</h3>
-                </div>
-                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">Visual charts showing your mental wellness journey. See patterns, celebrate wins, and stay motivated throughout your academic year.</p>
-                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">📊 Weekly insights</span>
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🎯 Goal tracking</span>
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🏆 Achievement badges</span>
-                </div>
-            </div>
-            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
-                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
-                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">👨‍⚕️</div>
-                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">Campus Counseling</h3>
-                </div>
-                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">Connect with your college's mental health professionals. Schedule sessions that fit your class schedule perfectly.</p>
-                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🏫 Campus integration</span>
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">⏰ Flexible scheduling</span>
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">💻 Online sessions</span>
-                </div>
-            </div>
-            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
-                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
-                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">📱</div>
-                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">Study Break Sessions</h3>
-                </div>
-                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">Guided meditations and breathing exercises designed for busy student schedules. Perfect for exam prep and study breaks.</p>
-                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">⏱️ 1-5 min sessions</span>
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">📚 Study-friendly</span>
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🎧 Audio guided</span>
-                </div>
-            </div>
-            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
-                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
-                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">🔒</div>
-                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">Privacy First</h3>
-                </div>
-                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">Your data stays private and secure. Share only what you want with counselors. You have complete control over your information.</p>
-                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">👤 Anonymous options</span>
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🎛️ Full control</span>
-                </div>
-            </div>
-            <div class="feature-card student-focused" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border-radius: 24px; box-shadow: 0 4px 24px rgba(102,126,234,0.12); padding: 40px 32px; text-align: left; transition: box-shadow 0.3s, transform 0.3s; cursor: pointer; border: 1px solid #e2e8f0; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6, #60a5fa);"></div>
-                <div class="feature-header" style="display:flex; align-items:center; margin-bottom:16px;">
-                    <div class="feature-icon" style="font-size:2.4rem; margin-right:16px; filter: drop-shadow(0 2px 8px rgba(37,99,235,0.2));">👥</div>
-                    <h3 style="font-size:1.4rem; color:#2563eb; font-weight:700; margin:0;">Student Community</h3>
-                </div>
-                <p style="color:#475569; font-size:1.1rem; margin-bottom:16px; line-height: 1.5;">Connect with peers facing similar challenges. Share experiences, tips, and support each other's mental health journey.</p>
-                <div class="feature-stats" style="display:flex; flex-wrap:wrap; gap:12px;">
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🎓 Student-only groups</span>
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">💬 Safe discussions</span>
-                    <span class="stat" style="background: linear-gradient(90deg, #dbeafe, #bfdbfe); color:#1e40af; border-radius:16px; padding:6px 16px; font-size:0.9rem; font-weight:600; box-shadow: 0 2px 8px rgba(37,99,235,0.1);">🤝 Peer support</span>
-                </div>
-            </div>
-        </div>
+  {% elif role == 'provider' %}
+  <section aria-labelledby="sessions-title" class="home-block">
+    <div class="home-heading">
+      <h2 id="sessions-title">Today's sessions</h2>
+      <a href="{{ url_for('provider.provider_appointments') }}">All appointments</a>
     </div>
-</section>
-
-
-<!-- FAQ Section (Accordion Dropdown) - Student Focused -->
-<section class="faq-section">
-    <div class="container">
-        <div style="text-align: center; margin-bottom: 32px;">
-            <h2 style="color: #2563eb; font-size: 2.4rem; margin-bottom: 12px; font-weight: 700;">Student FAQ</h2>
-            <p style="color: #444; font-size: 1.1rem; line-height: 1.4;">Common questions students ask about mental wellness support</p>
-        </div>
-        <div class="faq-accordion">
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>🎓 How does MindFullHorizon help with exam stress?</span>
-                    <span class="faq-arrow">&#9662;</span>
-                </button>
-                <div class="faq-answer">Our AI companion provides instant coping strategies, breathing exercises, and study break reminders. Many students use our 1-minute breathing exercises between study sessions to stay calm and focused.</div>
-            </div>
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>⏰ Is this available during late-night study sessions?</span>
-                    <span class="faq-arrow">&#9662;</span>
-                </button>
-                <div class="faq-answer">Absolutely! Our AI support is available 24/7, perfect for late-night study sessions, exam anxiety, or when you need someone to talk to at 2 AM. No appointments needed.</div>
-            </div>
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>📚 Can I connect with my campus counselor?</span>
-                    <span class="faq-arrow">&#9662;</span>
-                </button>
-                <div class="faq-answer">Yes! You can easily connect with your college's mental health professionals through our platform. Schedule sessions that fit your class timetable, and share progress reports with your counselor.</div>
-            </div>
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>🔒 How private is my information?</span>
-                    <span class="faq-arrow">&#9662;</span>
-                </button>
-            <div class="faq-answer">You control what information you share, and counselors only see what you choose to share with them. Please do not share passwords or other sensitive credentials in chat.</div>
-            </div>
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>💰 Is this covered by student insurance?</span>
-                    <span class="faq-arrow">&#9662;</span>
-                </button>
-            <div class="faq-answer">Some universities include mental health services in student health plans. Check with your campus health center to see what is covered.</div>
-            </div>
-            <div class="faq-item">
-                <button class="faq-question" onclick="toggleFaq(this)">
-                    <span>👥 Can I connect with other students?</span>
-                    <span class="faq-arrow">&#9662;</span>
-                </button>
-                <div class="faq-answer">Yes! Our student community feature lets you connect with peers facing similar challenges. Share study tips, stress management techniques, and support each other's mental health journey.</div>
-            </div>
-        </div>
+    <div class="home-two">
+      <div class="card"><div class="card-body">
+        {% if home.today %}
+        <ul class="home-activity">
+          {% for s in home.today %}
+          <li><span>{{ s.name }}</span><span class="muted">{{ s.time }}, {{ s.type|replace('_', ' ') }}</span></li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state"><p>No accepted sessions today.</p></div>
+        {% endif %}
+      </div></div>
+      <div class="stat">
+        <span class="stat-label">Appointment requests waiting</span>
+        <span class="stat-value">{{ home.get('pending_count', 'n/a') }}</span>
+        <span class="stat-note"><a href="{{ url_for('provider.provider_appointments') }}">Review requests</a></span>
+      </div>
     </div>
-</section>
+  </section>
 
+  <section aria-labelledby="ptools-title" class="home-block">
+    <div class="home-heading"><h2 id="ptools-title">Counsellor tools</h2></div>
+    <ul class="home-tools">
+      <li><a href="{{ url_for('provider.provider_dashboard') }}">{{ icon('users') }}Dashboard and crisis alerts</a></li>
+      <li><a href="{{ url_for('provider.provider_appointments') }}">{{ icon('calendar') }}Appointments</a></li>
+      <li><a href="{{ url_for('provider.analytics') }}">{{ icon('chart') }}Analytics</a></li>
+      <li><a href="{{ url_for('provider.ai_documentation') }}">{{ icon('file') }}Draft a session note</a></li>
+      <li><a href="{{ url_for('blog.blog_list') }}">{{ icon('book') }}Blog</a></li>
+    </ul>
+  </section>
 
-<!-- Inline Styles for Static Homepage (Simple FAQ/Testimonials), Hero Hover Effects, Enhanced Stats, and FAQ Accordion -->
-<style>
-/* Enhanced Student-Focused Hover Effects */
-.quick-action-card:hover {
-    box-shadow: 0 8px 32px rgba(37,99,235,0.2);
-    transform: translateY(-4px) scale(1.02);
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-}
+  {% else %}
+  <section class="home-block" aria-labelledby="other-title">
+    <div class="home-heading"><h2 id="other-title">Shortcuts</h2></div>
+    <ul class="home-tools">
+      <li><a href="{{ url_for('blog.blog_list') }}">{{ icon('book') }}Blog</a></li>
+      <li><a href="{{ url_for('core.how_ai_works') }}">{{ icon('help') }}How the AI works</a></li>
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
 
-.feature-card.student-focused:hover {
-    box-shadow: 0 8px 32px rgba(37,99,235,0.2);
-    transform: translateY(-4px);
-}
-
-.testimonial-card:hover {
-    box-shadow: 0 8px 32px rgba(37,99,235,0.15);
-    transform: translateY(-2px);
-}
-
-.action-btn:hover {
-    background: linear-gradient(90deg, #1d4ed8, #2563eb);
-    box-shadow: 0 4px 16px rgba(37,99,235,0.3);
-}
-.hero-sub-headline:hover {
-    color: #2563eb;
-    text-shadow: 0 2px 8px rgba(38,99,235,0.18);
-}
-.hero-cta-button:hover {
-    background: #60a5fa;
-    color: #2563eb;
-    box-shadow: 0 4px 16px rgba(38,99,235,0.18);
-}
-.stats-grid-horizontal {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 32px;
-    justify-content: center;
-    align-items: stretch;
-    margin: 32px 0;
-}
-.stat-card.enhanced {
-    background: #fff;
-    border-radius: 18px;
-    box-shadow: 0 2px 16px rgba(102,126,234,0.10);
-    padding: 32px 36px 28px 36px;
-    min-width: 220px;
-    max-width: 320px;
-    flex: 1 1 220px;
-    text-align: center;
-    transition: box-shadow 0.2s, transform 0.2s;
-    cursor: pointer;
-}
-.stat-card.enhanced:hover {
-    box-shadow: 0 8px 32px rgba(38,99,235,0.18);
-    transform: translateY(-6px) scale(1.04);
-}
-.stat-card .stat-icon {
-    font-size: 2.2rem;
-    color: #2563eb;
-    margin-bottom: 10px;
-    transition: color 0.2s;
-}
-.stat-card.enhanced:hover .stat-icon {
-    color: #60a5fa;
-}
-.stat-label {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #222;
-    margin-top: 8px;
-    margin-bottom: 4px;
-}
-.stat-description {
-    font-size: 0.98rem;
-    color: #444;
-    margin-top: 2px;
-}
-.faq-section {
-    background: #f8fafc;
-    padding: 40px 0;
-}
-.faq-accordion {
-    max-width: 700px;
-    margin: 0 auto;
-}
-.faq-item {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(102,126,234,0.08);
-    margin-bottom: 16px;
-    overflow: hidden;
-}
-.faq-question {
-    width: 100%;
-    background: none;
-    border: none;
-    outline: none;
-    font-size: 1.08rem;
-    font-weight: 600;
-    color: #2563eb;
-    padding: 18px 24px;
-    text-align: left;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.faq-question:hover {
-    background: #e3f0ff;
-}
-.faq-arrow {
-    font-size: 1.2rem;
-    transition: transform 0.2s;
-}
-.faq-item.active .faq-arrow {
-    transform: rotate(180deg);
-}
-.faq-answer {
-    display: none;
-    padding: 0 24px 18px 24px;
-    font-size: 1rem;
-    color: #444;
-    background: #f8fafc;
-    border-top: 1px solid #e3e8ee;
-}
-.faq-item.active .faq-answer {
-    display: block;
-}
-.testimonials-section {
-    background: #f1f5f9;
-    padding: 40px 0;
-}
-.testimonials-section h2 {
-    color: #2563eb;
-    font-size: 2rem;
-    margin-bottom: 20px;
-    text-align: center;
-}
-.testimonial {
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(102,126,234,0.08);
-    margin-bottom: 16px;
-    padding: 18px 24px;
-    font-size: 1rem;
-}
-</style>
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/index_inline_1.js') }}"></script>
+{% block scripts %}
+{% if role == 'patient' %}<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/home.js') }}" defer></script>{% endif %}
 {% endblock %}

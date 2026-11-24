@@ -1,0 +1,56 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_rx/_ui.html' import ts, status_badge, notice, config_block %}
+{% block title %}Verify {{ p.user_name }}{% endblock %}
+{% block page_scripts %}<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_verification.js') }}?v={{ asset_version }}" defer></script>{% endblock %}
+{% block rx_body %}
+{% set base = nav_url('admin.verification', '/admin/verification') %}
+{% set acts = actions or [] %}
+<div class="page-header"><div><h1>{{ p.user_name }}</h1><p class="lead">{{ status_badge(p.status) }} <a class="cl-link" href="{{ base }}">Back to the queue</a></p></div></div>
+{{ notice() }}
+<div class="alert alert-info" role="note">{{ icon('info') }}<p>This check is done by a person. MindFull Horizon does not query the NMC register automatically. A verified badge means an administrator of your institution checked the entry on the date shown, not that the NMC confirmed it to us.</p></div>
+
+<div class="cl-split">
+<div class="cl-stack">
+  <section class="card" aria-labelledby="h-sub"><div class="card-header"><h2 id="h-sub" class="text-lg">Submitted details</h2></div>
+  <div class="card-body"><dl class="cl-dl">
+    <dt>Email</dt><dd>{{ p.email }}</dd>
+    <dt>Registration number</dt><dd class="cl-mono">{{ p.registration_number }}</dd>
+    <dt>Council</dt><dd>{{ p.council }}</dd>
+    <dt>Registered since</dt><dd>{{ p.registered_since }}</dd>
+    <dt>Specialisation</dt><dd>{{ p.specialisation or 'n/a' }}</dd>
+    <dt>Submitted</dt><dd>{{ ts(p.submitted_at) }}</dd>
+    <dt>Review due</dt><dd>{{ ts(p.review_due_at, 'date') }}</dd>
+    {% if p.verified_at %}<dt>Last decision</dt><dd>{{ p.verified_by_name or 'An administrator' }}, {{ ts(p.verified_at) }}</dd>{% endif %}
+    {% if p.notes %}<dt>Evidence note</dt><dd>{{ p.notes }}</dd>{% endif %}
+  </dl></div></section>
+  <section class="card" aria-labelledby="h-look"><div class="card-header"><h2 id="h-look" class="text-lg">Look the doctor up</h2></div>
+  <div class="card-body cl-actions">
+    <a class="btn btn-secondary" href="{{ register_url }}" target="_blank" rel="noopener noreferrer">{{ icon('external') }} Open the Indian Medical Register</a>
+    <a class="btn btn-ghost" href="{{ blacklist_url }}" target="_blank" rel="noopener noreferrer">{{ icon('external') }} NMC removed-doctors list</a>
+  </div></section>
+</div>
+
+<form id="verify-form" class="card" data-base-url="/admin/api/verification/{{ p.id }}" novalidate>
+  <div class="card-header"><h2 class="text-lg">Your check</h2></div>
+  <div class="card-body">
+    {% if acts %}
+    <fieldset class="cl-fieldset"><legend>Every box is required to verify or reinstate</legend>
+    <ul class="cl-checks">{% for item in checklist %}<li><div class="check"><input type="checkbox" id="chk-{{ item.key }}" data-check="{{ item.key }}"><label for="chk-{{ item.key }}">{{ item.text }}</label></div></li>{% endfor %}</ul></fieldset>
+    <div class="field"><label class="label" for="v-note">Evidence note or reason (10 to 500 characters)</label>
+      <textarea class="textarea" id="v-note" rows="3" minlength="10" maxlength="500" aria-describedby="v-note-help v-error"></textarea>
+      <p class="help" id="v-note-help">For example: NMR search 2026-11-24, found, name and year match. A "not found" result is not proof of fraud: older registrants may be only in a State register.</p></div>
+    <p class="error-text" id="v-error" role="alert" hidden></p>
+    <div class="cl-actions">
+      {% if 'verify' in acts %}<button type="button" class="btn btn-primary" data-vact="verify">Verify</button>{% endif %}
+      {% if 'reinstate' in acts %}<button type="button" class="btn btn-primary" data-vact="reinstate">Reinstate</button>{% endif %}
+      {% if 'reject' in acts %}<button type="button" class="btn btn-danger" data-vact="reject">Reject</button>{% endif %}
+      {% if 'suspend' in acts %}<button type="button" class="btn btn-danger" data-vact="suspend">Suspend</button>{% endif %}
+    </div>
+    {% else %}<p class="muted">No action is available for this registration.</p>{% endif %}
+    <p class="help" id="v-live" role="status" aria-live="polite"></p>
+  </div>
+</form>
+</div>
+{{ config_block({'status': p.status}) }}
+{% endblock %}

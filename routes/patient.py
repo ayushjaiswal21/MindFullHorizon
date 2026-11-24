@@ -3,24 +3,31 @@ from models import (User, Gamification, DigitalDetoxLog, Assessment, Goal, Medic
                 MedicationLog, BreathingExerciseLog, YogaLog, ProgressRecommendation,
                 Prescription, MoodLog, RPMData, Appointment, JournalEntry, VoiceLog, db)
 import os
-from decorators import patient_required, login_required
-from sqlalchemy.orm import joinedload
+from decorators import patient_required, login_required, prescriptions_required
+from utils.assignments import link_provider_patient
+from routes.rx_patient import dashboard_context, list_page
+from utils.booking import staff_options, booking_extras, record_erx_consent, schedule_context
+from sqlalchemy.orm import joinedload, load_only
+from utils.pagination import paginate, set_page_headers
 from datetime import datetime, date, timedelta, timezone
 import json
 import ai.service as ai_service
-from ai.scoring import canonical_type
+from ai.scoring import canonical_type, band_for
 from utils.gamification import award_points
+from utils.ai_cap import run_capped
+from utils import idempotency as idem
+from utils.state import TransitionError, transition, CONFLICT_MESSAGE
+from utils.timeutil import ist_now, ist_today, ist_day_bounds, to_ist_date, utcnow
+from utils.validation import parse_duration, MIN_DURATION_MINUTES, MAX_DURATION_MINUTES
+from sqlalchemy.exc import IntegrityError
 import logging
 
 
-# TextBlob for sentiment analysis
-try:
-    from textblob import TextBlob
-    TEXTBLOB_AVAILABLE = True
-except ImportError:
-    TEXTBLOB_AVAILABLE = False
+# TextBlob for sentiment analysis (imported lazily, see utils/sentiment.py)
+from utils.sentiment import TextBlob, TEXTBLOB_AVAILABLE
 
 logger = logging.getLogger(__name__)
+AI_REQUEST_CAP = 8.0  # seconds a save request may wait for the model, then it uses the plain fallback
 
 def get_ai_journal_suggestions(title, content):
     """Get AI-powered suggestions for journal entries with optimized prompts."""
@@ -35,7 +42,9 @@ def get_ai_journal_suggestions(title, content):
              except: pass
 
         # Use the dedicated AI service function
-        suggestions = ai_service.generate_journal_insights(title, content, sentiment)
+        ok, suggestions = run_capped(ai_service.generate_journal_insights, title, content, sentiment, seconds=AI_REQUEST_CAP)
+        if not ok or not isinstance(suggestions, str):
+            raise RuntimeError('ai unavailable')
 
         # Clean up and format the response for better readability
         suggestions = suggestions.strip()[:800]  # Limit length
@@ -51,9 +60,9 @@ def get_ai_journal_suggestions(title, content):
         return "Thank you for sharing your thoughts. Consider discussing these feelings with a trusted friend or mental health professional."
 
 def _day_streak(timestamps):
-    """Consecutive UTC days ending today (or yesterday), counting each day once."""
-    days = {t.date() for t in timestamps}
-    day = datetime.now(timezone.utc).date()
+    """Consecutive IST days ending today (or yesterday), counting each day once. Timestamps are naive UTC."""
+    days = {to_ist_date(t) for t in timestamps}
+    day = ist_today()
     if day not in days:
         day -= timedelta(days=1)
     streak = 0
@@ -64,6 +73,7 @@ def _day_streak(timestamps):
 
 # Create the patient blueprint with the name 'patient' and URL prefix
 patient_bp = Blueprint('patient', __name__, url_prefix='/patient')
+patient_bp.register_error_handler(idem.InvalidKey, idem.handle_invalid_key)
 
 @patient_bp.route('/dashboard')
 @login_required
@@ -73,8 +83,14 @@ def patient_dashboard():
     
     gamification = Gamification.query.filter_by(user_id=user_id).first()
     rpm_data = RPMData.query.filter_by(user_id=user_id).order_by(RPMData.date.desc()).first()
-    all_appointments = Appointment.query.filter_by(user_id=user_id).order_by(Appointment.date.asc(), Appointment.time.asc()).all()
+    all_appointments = Appointment.query.filter_by(user_id=user_id).order_by(Appointment.date.asc(), Appointment.time.asc()).limit(500).all()
     latest_mood = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.created_at.desc()).first()
+    latest_screening = None  # newest PHQ-9 / GAD-7 for the dashboard card (band from ai.scoring)
+    for a in Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).limit(20):
+        kind = canonical_type(a.assessment_type)
+        if kind:
+            latest_screening = {'type': kind, 'score': a.score, 'band': band_for(kind, a.score), 'date': a.created_at}
+            break
 
     upcoming_appointments = []
     past_appointments = []
@@ -83,7 +99,7 @@ def patient_dashboard():
         try:
             appt_datetime_str = f"{appt.date} {appt.time}"
             appt_datetime = datetime.strptime(appt_datetime_str, '%Y-%m-%d %H:%M')
-            if appt_datetime >= datetime.now():
+            if appt_datetime >= ist_now():  # appointment date/time are IST wall-clock
                 upcoming_appointments.append(appt)
             else:
                 past_appointments.append(appt)
@@ -116,7 +132,9 @@ def patient_dashboard():
                          alerts=alerts,
                          upcoming_appointments=upcoming_appointments,
                          past_appointments=past_appointments,
-                         latest_mood=latest_mood)
+                         latest_mood=latest_mood,
+                         latest_screening=latest_screening,
+                         **dashboard_context(user_id))
 
 @patient_bp.route('/schedule', methods=['GET', 'POST'], endpoint='schedule_appointment')
 @login_required
@@ -130,10 +148,14 @@ def schedule_appointment():
         provider_id = request.form.get('provider_id')  # Optional provider selection
         user_id = session['user_id']
 
-        def bad(msg):
+        key = idem.get_key()
+        if idem.existing(Appointment, user_id, key):  # replay of a request that already succeeded
+            return redirect(url_for('patient.patient_dashboard'))
+
+        def bad(msg, status=400):
             flash(msg, 'error')
-            providers = User.query.filter_by(role='provider', institution=session.get('user_institution')).all()
-            return render_template('schedule.html', user_name=session['user_name'], providers=providers), 400
+            return render_template('schedule.html', user_name=session['user_name'], appointments=_my_appointments(user_id),
+                                   error=msg, form=request.form, **schedule_context(user_id, session.get('user_institution'))), status
 
         if not (date_str and time_str and appointment_type):
             return bad('Please choose a date, a time and an appointment type.')
@@ -142,17 +164,20 @@ def schedule_appointment():
             time_str = datetime.strptime(time_str, '%H:%M').strftime('%H:%M')
         except ValueError:
             return bad('Please enter a valid date (YYYY-MM-DD) and time (HH:MM).')
-        if appointment_date < datetime.now(timezone.utc).date():
+        if appointment_date < ist_today():
             return bad('That date is in the past. Please pick a future date.')
-        provider = None
+        provider, modality = None, None
         if provider_id:
             provider = db.session.get(User, int(provider_id)) if provider_id.isdigit() else None
-            if not provider or provider.role != 'provider':
+            if not provider or provider.id not in {u.id for u in staff_options(session.get('user_institution'))}:
                 return bad('Please choose a valid provider.')
+            modality, extras_error = booking_extras(provider, request.form, user_id)
+            if extras_error:
+                return bad(extras_error)
             taken = Appointment.query.filter(Appointment.provider_id == provider.id, Appointment.date == appointment_date,
-                                             Appointment.time == time_str, Appointment.status.in_(['pending', 'accepted'])).first()
+                                             Appointment.time == time_str, Appointment.status.in_(['pending', 'accepted', 'booked'])).first()
             if taken:
-                return bad('That time slot is already booked. Please pick another.')
+                return bad('That time slot is already booked. Please pick another.', 409)
 
         try:
             new_appointment = Appointment(
@@ -162,23 +187,56 @@ def schedule_appointment():
                 time=time_str,
                 appointment_type=appointment_type,
                 notes=notes,
-                status='pending'  # Changed to pending for provider approval
+                status='pending',  # Changed to pending for provider approval
+                client_request_id=key,
+                **({'modality': modality} if modality else {})
             )
             db.session.add(new_appointment)
+            if provider:
+                link_provider_patient(provider.id, user_id)  # P-02: booking is what lets this provider see the patient
             db.session.commit()
-            
+            record_erx_consent(provider, request.form, user_id)
+
             flash(f'Appointment successfully booked for {date_str} at {time_str}!', 'success')
             return redirect(url_for('patient.patient_dashboard'))
+        except IntegrityError:  # double submit (same key) or the slot was taken a moment ago
+            db.session.rollback()
+            if idem.existing(Appointment, user_id, key):
+                return redirect(url_for('patient.patient_dashboard'))
+            return bad('That time slot is already booked. Please pick another.', 409)
         except Exception as e:
             db.session.rollback()
             logger.exception('appointment booking failed')
             flash('Could not book the appointment. Please try again.', 'error')
             return redirect(url_for('patient.schedule_appointment'))
     
-    user_institution = session.get('user_institution', 'Sample University')
-    providers = User.query.filter_by(role='provider', institution=user_institution).all()
-    
-    return render_template('schedule.html', user_name=session['user_name'], providers=providers)
+    return render_template('schedule.html', user_name=session['user_name'], appointments=_my_appointments(session['user_id']),
+                           error=None, form={}, **schedule_context(session['user_id'], session.get('user_institution', 'Sample University')))
+
+
+def _my_appointments(user_id):
+    return (Appointment.query.options(joinedload(Appointment.provider)).filter_by(user_id=user_id)
+            .order_by(Appointment.date.desc(), Appointment.time.desc()).limit(50).all())
+
+
+@patient_bp.route('/appointments/<int:appointment_id>/cancel', methods=['POST'])
+@login_required
+@patient_required
+def cancel_appointment(appointment_id):
+    appt = Appointment.query.filter_by(id=appointment_id, user_id=session['user_id']).first()
+    if not appt:
+        flash('Appointment not found.', 'error')
+    else:
+        try:
+            transition(appt, 'cancelled', 'patient')
+            db.session.commit()
+            flash('Appointment cancelled.', 'success')
+        except TransitionError:
+            db.session.rollback()
+            flash('This appointment can no longer be cancelled.', 'error')
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.is_json:
+                return jsonify(success=False, message=CONFLICT_MESSAGE), 409
+    return redirect(url_for('patient.schedule_appointment'))
 
 @patient_bp.route('/medication', methods=['GET', 'POST'])
 @login_required
@@ -209,15 +267,14 @@ def medication():
 
     medications = Medication.query.filter_by(user_id=user_id, is_active=True).all()
     
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
+    today = ist_today()
     todays_logs = MedicationLog.query.filter(
         MedicationLog.user_id == user_id,
-        MedicationLog.taken_at >= today_start
+        MedicationLog.log_date == today
     ).all()
-    
+
     logged_med_ids = {log.medication_id for log in todays_logs}
-    
-    today = date.today()
+
     return render_template('medication.html', 
                          user_name=session['user_name'], 
                          medications=medications,
@@ -235,15 +292,61 @@ def log_medication():
     if not medication:
         return jsonify({'success': False, 'message': 'Medication not found.'}), 404
 
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0, tzinfo=None)  # taken_at is naive UTC
-    if MedicationLog.query.filter(MedicationLog.medication_id == medication.id, MedicationLog.user_id == user_id,
-                                  MedicationLog.taken_at >= today_start).first():
-        return jsonify({'success': False, 'message': 'You already logged this medication today.'})
-
-    db.session.add(MedicationLog(user_id=user_id, medication_id=medication.id, taken_at=datetime.utcnow()))
-    db.session.commit()
-    award_points(user_id, 10, 'log_medication')
+    # One log per medication per IST day (DB unique uq_medlog_med_day): a repeat or a race is "already logged", never a second row.
+    today = ist_today()
+    already = jsonify({'success': False, 'already_logged': True, 'message': 'You already logged this medication today.'})
+    if MedicationLog.query.filter_by(medication_id=medication.id, log_date=today).first():
+        return already
+    log = MedicationLog(user_id=user_id, medication_id=medication.id, taken_at=utcnow(), log_date=today)
+    db.session.add(log)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return already
+    award_points(user_id, 10, 'log_medication', ref=f'medlog:{log.id}')
     return jsonify({'success': True, 'message': 'Medication logged. Nice work looking after yourself.'})
+
+def _wants_json():
+    return request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+
+
+def _post_duration_log(model, name_field, name_label, award_type, noun, endpoint):
+    """Create a breathing/yoga log. Duration must be a whole number of minutes in [MIN_DURATION_MINUTES, MAX_DURATION_MINUTES].
+
+    JSON/XHR callers get JSON (400 with a message on bad input; 200 with the existing row on a replayed
+    client_request_id); plain form posts get a flash and a redirect.
+    """
+    user_id = session['user_id']
+    data = request.get_json(silent=True) if request.is_json else request.form
+    data = data if hasattr(data, 'get') else {}
+    key = idem.get_key()
+    name = str(data.get(name_field) or '').strip()
+    minutes = parse_duration(data.get('duration_minutes'))
+    error = (f'{name_label} is required (100 characters at most).' if not name or len(name) > 100 else
+             f'Duration must be a whole number of minutes from {MIN_DURATION_MINUTES} to {MAX_DURATION_MINUTES}.' if minutes is None else None)
+
+    def done(row, created):
+        msg = f'Your {name} session has been logged!' if created else 'This session was already logged.'
+        if _wants_json():
+            return jsonify(success=True, id=row.id, message=msg)
+        flash(msg, 'success')
+        return redirect(url_for(endpoint))
+
+    row = idem.existing(model, user_id, key)
+    if row:
+        return done(row, False)
+    if error:
+        if _wants_json():
+            return jsonify(success=False, message=error), 400
+        flash(error, 'error')
+        return redirect(url_for(endpoint))
+    row, created = idem.add_once(model, model(user_id=user_id, duration_minutes=minutes, client_request_id=key,
+                                              created_at=utcnow(), **{name_field: name}), key)
+    if created:
+        award_points(user_id, 20, award_type, ref=f'{noun}:{row.id}')
+    return done(row, created)
+
 
 @patient_bp.route('/breathing', methods=['GET', 'POST'])
 @login_required
@@ -252,30 +355,13 @@ def breathing():
     user_id = session['user_id']
 
     if request.method == 'POST':
-        exercise_name = request.form.get('exercise_name')
-        duration_minutes = request.form.get('duration_minutes')
-
-        if not exercise_name or not duration_minutes:
-            flash('Exercise name and duration are required.', 'error')
-        else:
-            try:
-                new_log = BreathingExerciseLog(
-                    user_id=user_id,
-                    exercise_name=exercise_name,
-                    duration_minutes=int(duration_minutes),
-                    created_at=datetime.now(timezone.utc)
-                )
-                db.session.add(new_log)
-                db.session.commit()
-                award_points(user_id, 20, 'breathing_exercise')
-                flash(f'Your {exercise_name} session has been logged!', 'success')
-            except ValueError:
-                flash('Invalid duration. Please enter a number.', 'error')
-        return redirect(url_for('patient.breathing'))
+        return _post_duration_log(BreathingExerciseLog, 'exercise_name', 'Exercise name', 'breathing_exercise',
+                                  'breathing', 'patient.breathing')
 
     recent_logs = BreathingExerciseLog.query.filter_by(user_id=user_id).order_by(BreathingExerciseLog.created_at.desc()).limit(10).all()
     
-    all_logs = BreathingExerciseLog.query.filter_by(user_id=user_id).all()
+    all_logs = (BreathingExerciseLog.query.filter_by(user_id=user_id)
+                .options(load_only(BreathingExerciseLog.created_at, BreathingExerciseLog.duration_minutes)).all())
     total_sessions = len(all_logs)
     total_minutes = sum(log.duration_minutes for log in all_logs)
     
@@ -317,30 +403,12 @@ def yoga():
     user_id = session['user_id']
 
     if request.method == 'POST':
-        session_name = request.form.get('session_name')
-        duration_minutes = request.form.get('duration_minutes')
-
-        if not session_name or not duration_minutes:
-            flash('Session name and duration are required.', 'error')
-        else:
-            try:
-                new_log = YogaLog(
-                    user_id=user_id,
-                    session_name=session_name,
-                    duration_minutes=int(duration_minutes),
-                    created_at=datetime.now(timezone.utc)
-                )
-                db.session.add(new_log)
-                db.session.commit()
-                award_points(user_id, 20, 'yoga_session')
-                flash(f'Your {session_name} session has been logged!', 'success')
-            except ValueError:
-                flash('Invalid duration. Please enter a number.', 'error')
-        return redirect(url_for('patient.yoga'))
+        return _post_duration_log(YogaLog, 'session_name', 'Session name', 'yoga_session', 'yoga', 'patient.yoga')
 
     recent_logs = YogaLog.query.filter_by(user_id=user_id).order_by(YogaLog.created_at.desc()).limit(10).all()
     
-    all_logs = YogaLog.query.filter_by(user_id=user_id).all()
+    all_logs = (YogaLog.query.filter_by(user_id=user_id)
+                .options(load_only(YogaLog.created_at, YogaLog.duration_minutes)).all())
     total_sessions = len(all_logs)
     total_minutes = sum(log.duration_minutes for log in all_logs)
     avg_duration = round(total_minutes / total_sessions, 1) if total_sessions > 0 else 0
@@ -396,111 +464,6 @@ def digital_detox():
                          score=score,
                          suggestion=suggestion)
 
-@patient_bp.route('/progress')
-@login_required
-@patient_required
-def progress():
-    try:
-        logger.info("Entering progress route")
-        user_id = session['user_id']
-        logger.info(f"User ID: {user_id}")
-        
-        # Get user's goals and assessments with error handling
-        try:
-            goals = Goal.query.filter_by(user_id=user_id).all()
-            logger.info(f"Found {len(goals)} goals")
-            
-            assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
-            logger.info(f"Found {len(assessments)} assessments")
-            
-            achievements = [goal.title for goal in goals if goal.status == 'completed']
-            logger.info(f"Found {len(achievements)} completed goals")
-            
-        except Exception as e:
-            logger.error(f"Error fetching goals or assessments: {str(e)}", exc_info=True)
-            return "An error occurred while fetching your data. Please try again later.", 500
-        
-        latest_gad7 = next((a for a in assessments if canonical_type(a.assessment_type) == 'GAD-7'), None)
-        latest_phq9 = next((a for a in assessments if canonical_type(a.assessment_type) == 'PHQ-9'), None)
-        latest_mood = next((a for a in assessments if a.assessment_type == 'Daily Mood'), None)
-
-        mood_assessments = sorted([a for a in assessments if a.assessment_type == 'Daily Mood'], key=lambda x: x.created_at)[-30:]
-        mood_data = [{'date': m.created_at.strftime('%Y-%m-%d'), 'score': m.score} for m in mood_assessments]
-        
-        gad7_assessments = sorted([a for a in assessments if canonical_type(a.assessment_type) == 'GAD-7'], key=lambda x: x.created_at)
-        phq9_assessments = sorted([a for a in assessments if canonical_type(a.assessment_type) == 'PHQ-9'], key=lambda x: x.created_at)
-
-        assessment_chart_labels = sorted(list(set([a.created_at.strftime('%Y-%m-%d') for a in gad7_assessments + phq9_assessments])))
-        assessment_chart_gad7_data = [next((a.score for a in gad7_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
-        assessment_chart_phq9_data = [next((a.score for a in phq9_assessments if a.created_at.strftime('%Y-%m-%d') == date), None) for date in assessment_chart_labels]
-
-        days_since_assessment = (datetime.now(assessments[0].created_at.tzinfo) - assessments[0].created_at).days if assessments and assessments[0].created_at else 'N/A'
-        
-        user_data_for_ai = {
-            'gad7_score': latest_gad7.score if latest_gad7 else 0,  # Default to 0 instead of 'N/A' for calculations
-            'phq9_score': latest_phq9.score if latest_phq9 else 0,  # Default to 0 instead of 'N/A' for calculations
-            'wellness_score': 'calculating...',
-            'completed_goals': len(achievements),
-            'total_goals': len(goals),
-            'days_since_assessment': days_since_assessment if days_since_assessment != 'N/A' else 0  # Default to 0 for calculations
-        }
-        
-        user = db.session.get(User, user_id)
-        if not user:
-            flash('User not found. Please log in again.', 'error')
-            return redirect(url_for('auth.login'))
-
-        last_assessment_at = user.last_assessment_at
-
-        latest_recommendation = ProgressRecommendation.query.filter_by(user_id=user_id).order_by(ProgressRecommendation.created_at.desc()).first()
-
-        ai_recommendations = None
-        if latest_recommendation and last_assessment_at and latest_recommendation.created_at > last_assessment_at:
-            ai_recommendations = latest_recommendation.recommendations
-        
-        if not ai_recommendations:
-            try:
-                ai_recommendations = ai_service.generate_progress_recommendations(user_data_for_ai)
-                new_recommendation = ProgressRecommendation(
-                    user_id=user_id,
-                    recommendations=ai_recommendations
-                )
-                db.session.add(new_recommendation)
-                db.session.commit()
-            except Exception as ai_error:
-                ai_recommendations = {
-                    'summary': 'Your progress data has been recorded.',
-                    'recommendations': ['Continue with your current mental health routine.'],
-                    'priority_actions': []
-                }
-
-        scores_to_average = []
-        if latest_gad7 and latest_gad7.score is not None:
-            scores_to_average.append(10 - (latest_gad7.score / 21 * 9))
-        if latest_phq9 and latest_phq9.score is not None:
-            scores_to_average.append(10 - (latest_phq9.score / 27 * 9))
-        if latest_mood and latest_mood.score is not None:
-            scores_to_average.append(latest_mood.score)
-
-        overall_wellness_score = round(sum(scores_to_average) / len(scores_to_average), 1) if scores_to_average else 0
-        user_data_for_ai['wellness_score'] = overall_wellness_score
-
-        return render_template('progress.html', 
-                             user_name=session['user_name'], 
-                             goals=goals, 
-                             achievements=achievements,
-                             latest_gad7=latest_gad7,
-                             latest_phq9=latest_phq9,
-                             overall_wellness_score=overall_wellness_score,
-                             mood_data=mood_data,
-                             assessment_chart_labels=assessment_chart_labels,
-                             assessment_chart_gad7_data=assessment_chart_gad7_data,
-                             assessment_chart_phq9_data=assessment_chart_phq9_data,
-                             ai_recommendations=ai_recommendations)
-    except Exception as e:
-        logger.error(f"Error in progress route: {str(e)}", exc_info=True)
-        return "An internal error occurred. Please try again later.", 500
-
 @patient_bp.route('/goals', methods=['GET', 'POST'])
 @login_required
 @patient_required
@@ -509,15 +472,19 @@ def goals():
     user_id = session['user_id']
     
     if request.method == 'POST':
+        key = idem.get_key()
         title = request.form.get('title')
         description = request.form.get('description', '')
         category = request.form.get('category', 'mental_health')
         priority = request.form.get('priority', 'medium')
+        priority = priority if priority in ('low', 'medium', 'high') else 'medium'
         target_value = request.form.get('target_value')
         unit = request.form.get('unit', '')
         target_date = request.form.get('target_date')
 
-        if not title:
+        if idem.existing(Goal, user_id, key):  # replay: already created
+            flash('Goal created successfully!', 'success')
+        elif not title:
             flash('Goal title is required.', 'error')
         else:
             try:
@@ -536,8 +503,11 @@ def goals():
                     current_value=0.0,
                     unit=unit,
                     target_date=parsed_target_date,
-                    start_date=datetime.utcnow().date()
+                    start_date=ist_today(),
+                    client_request_id=key
                 )
+                if new_goal.target_value is not None and not new_goal.target_value >= 0:
+                    raise ValueError('negative target')
                 db.session.add(new_goal)
                 db.session.commit()
                 flash('Goal created successfully!', 'success')
@@ -546,7 +516,10 @@ def goals():
                 flash('Target value must be a number and the date must be valid.', 'error')
             except Exception as e:
                 db.session.rollback()
-                flash('Failed to create goal.', 'error')
+                if isinstance(e, IntegrityError) and idem.existing(Goal, user_id, key):  # concurrent double submit
+                    flash('Goal created successfully!', 'success')
+                else:
+                    flash('Failed to create goal.', 'error')
         return redirect(url_for('patient.goals'))
 
     goals = Goal.query.filter_by(user_id=user_id).all()
@@ -581,7 +554,7 @@ def get_assessment_questions(assessment_type):
 def assessment():
     try:
         user_id = session['user_id']
-        assessment_objects = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).all()
+        assessment_objects = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).limit(500).all()
         
         assessments = []
         for assessment in assessment_objects:
@@ -621,6 +594,21 @@ def assessment():
                                assessments=[],
                                latest_insights=None)
 
+def _assessment_replay(a):
+    """The save-assessment response rebuilt from the stored row (score and band are deterministic)."""
+    from ai.scoring import score_assessment
+    from utils.helplines import get_helplines
+    result = score_assessment(a.assessment_type, a.responses)
+    insights = json.loads(a.ai_insights) if a.ai_insights else {}
+    crisis = bool(result.get('item9_positive') or result['severe'])
+    return jsonify({
+        'success': True, 'message': 'Assessment saved successfully', 'assessment_id': a.id, 'score': a.score,
+        'band': result['band'], 'ai_insights': insights,
+        'ai_insights_generated': not crisis and not str(insights.get('summary', '')).startswith('AI insights are currently unavailable'),
+        'crisis': crisis, 'helplines': get_helplines() if crisis else [],
+    })
+
+
 @patient_bp.route('/api/save-assessment', methods=['POST'])
 @login_required
 @patient_required
@@ -633,6 +621,10 @@ def api_save_assessment():
 
     user_id = session['user_id']
     data = request.get_json(silent=True) or {}
+    key = idem.get_key()
+    first = idem.existing(Assessment, user_id, key)
+    if first:  # replay: same body as the first answer, no second row, no second AI call
+        return _assessment_replay(first)
     assessment_type = canonical_type(data.get('assessment_type'))
     responses = data.get('responses')
     try:  # the score is always recomputed here; any client-sent score is ignored
@@ -656,8 +648,10 @@ def api_save_assessment():
         ai_ok = False
     else:
         try:
-            ai_insights = ai_service.generate_assessment_insights(assessment_type=assessment_type, score=score,
-                                                                  responses=responses)
+            ok, ai_insights = run_capped(ai_service.generate_assessment_insights, assessment_type=assessment_type,
+                                         score=score, responses=responses, seconds=AI_REQUEST_CAP)
+            if not ok or not isinstance(ai_insights, dict):
+                raise RuntimeError('ai unavailable')
             ai_ok = True
         except Exception:
             ai_ok = False
@@ -670,17 +664,23 @@ def api_save_assessment():
             return jsonify({'success': False, 'message': 'User not found. Please log in again.'}), 400
         assessment = Assessment(user_id=user_id, assessment_type=assessment_type, score=score,
                                 responses=responses, contextual_responses=contextual,
-                                ai_insights=json.dumps(ai_insights))
+                                ai_insights=json.dumps(ai_insights), client_request_id=key)
         db.session.add(assessment)
-        user.last_assessment_at = datetime.now(timezone.utc)
+        user.last_assessment_at = utcnow()
+        if crisis_reason:  # O-01: the crisis event and its alert job commit WITH the assessment (all or nothing)
+            record_crisis(user_id, 'phq9', 9 if result.get('item9_positive') else 7, crisis_reason)
         db.session.commit()
-    except Exception:
+    except Exception as exc:
         db.session.rollback()
-        logger.exception("Failed to save assessment")
-        return jsonify({'success': False, 'message': 'Failed to save assessment.'}), 500
+        first = idem.existing(Assessment, user_id, key) if isinstance(exc, IntegrityError) else None
+        if first:  # concurrent double submit: the other request won; answer with its row
+            return _assessment_replay(first)
+        logger.error("Failed to save assessment user=%s crisis=%s err=%s", user_id, bool(crisis_reason), type(exc).__name__)
+        fail = {'success': False, 'message': 'Failed to save assessment.'}
+        if crisis_reason:  # the emergency text and helplines never depend on the DB write
+            fail.update(crisis=True, ai_insights=ai_insights, helplines=get_helplines())
+        return jsonify(fail), 500
 
-    if crisis_reason:
-        record_crisis(user_id, 'phq9', 9 if result.get('item9_positive') else 7, crisis_reason)
     # no points or streaks for assessments (policy: never reward scores)
     return jsonify({
         'success': True,
@@ -695,14 +695,11 @@ def api_save_assessment():
     })
 
 @patient_bp.route('/my-prescriptions')
+@prescriptions_required
 @login_required
 @patient_required
 def my_prescriptions():
-    user_id = session['user_id']
-    prescriptions = Prescription.query.options(joinedload(Prescription.provider)).filter_by(patient_id=user_id).order_by(Prescription.issue_date.desc()).all()
-    return render_template('my_prescriptions.html', 
-                           user_name=session['user_name'],
-                           prescriptions=prescriptions)
+    return list_page()  # logic lives in routes/rx_patient.py; the endpoint name stays
 
 @patient_bp.route('/api/progress', methods=['GET'])
 @login_required
@@ -711,8 +708,11 @@ def get_progress():
     try:
         # Import models at function-time to avoid circular imports in some setups
         user_id = session['user_id']
-        assessments = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.asc()).limit(500).all()
-        moods = MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.created_at.asc()).limit(500).all()
+        # newest page first per series (?page=, ?per_page=, default 100 because these feed history charts), returned chronologically
+        assessments, a_meta = paginate(Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc(), Assessment.id.desc()), default=100)
+        moods, m_meta = paginate(MoodLog.query.filter_by(user_id=user_id).order_by(MoodLog.created_at.desc(), MoodLog.id.desc()), default=100)
+        assessments.reverse()
+        moods.reverse()
 
         a_out = []
         for a in assessments:
@@ -731,7 +731,7 @@ def get_progress():
                 "created_at": m.created_at.isoformat() if hasattr(m, 'created_at') else None
             })
 
-        return jsonify({"ok": True, "assessments": a_out, "moods": m_out}), 200
+        return jsonify({"ok": True, "assessments": a_out, "moods": m_out, "meta": {"assessments": a_meta, "moods": m_meta}}), 200
     except Exception as e:
         current_app.logger.exception("progress fetch failed")
         return jsonify({"ok": False, "error": "Could not load progress."}), 500
@@ -742,7 +742,8 @@ def get_progress():
 def digital_detox_data():
     user_id = session['user_id']
     
-    screen_time_logs = DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc()).limit(30).all()
+    # default 30 rows (a month chart); the body is a bare array, so paging info goes in X-* headers
+    screen_time_logs, detox_meta = paginate(DigitalDetoxLog.query.filter_by(user_id=user_id).order_by(DigitalDetoxLog.date.desc(), DigitalDetoxLog.id.desc()), default=30)
     
     data = []
     for log in screen_time_logs:
@@ -754,7 +755,7 @@ def digital_detox_data():
             'ai_score': log.ai_score
         })
     
-    return jsonify(data)
+    return set_page_headers(jsonify(data), detox_meta)
 
 @patient_bp.route('/api/log-digital-detox', methods=['POST'])
 @login_required
@@ -782,23 +783,36 @@ def log_digital_detox():
             'academic_score': academic_score,
             'social_interactions': social_interactions
         }
-        ai_analysis = ai_service.generate_digital_detox_insights(detox_data)
+        ok, ai_analysis = run_capped(ai_service.generate_digital_detox_insights, detox_data, seconds=AI_REQUEST_CAP)
+        ai_analysis = ai_analysis if ok and isinstance(ai_analysis, dict) else {}
 
         # One log per day: a second submission today updates it (and earns no extra points).
-        new_log = DigitalDetoxLog.query.filter_by(user_id=user_id, date=datetime.now(timezone.utc).date()).first()
+        today = ist_today()  # the log date is the patient's IST day; DB unique (user_id, date) backs this up
+
+        def fill(log):
+            log.screen_time_hours = screen_time
+            log.academic_score = academic_score
+            log.social_interactions = social_interactions
+            log.ai_score = ai_analysis.get('ai_score', 'N/A')
+            log.ai_suggestion = ai_analysis.get('ai_suggestion', 'No suggestion available')
+
+        new_log = DigitalDetoxLog.query.filter_by(user_id=user_id, date=today).first()
         is_new = new_log is None
         if is_new:
-            new_log = DigitalDetoxLog(user_id=user_id, date=datetime.now(timezone.utc).date())
+            new_log = DigitalDetoxLog(user_id=user_id, date=today)
             db.session.add(new_log)
-        new_log.screen_time_hours = screen_time
-        new_log.academic_score = academic_score
-        new_log.social_interactions = social_interactions
-        new_log.ai_score = ai_analysis.get('ai_score', 'N/A')
-        new_log.ai_suggestion = ai_analysis.get('ai_suggestion', 'No suggestion available')
-        db.session.commit()
+        fill(new_log)
+        try:
+            db.session.commit()
+        except IntegrityError:  # two first submissions raced: the other one created today's row, update it instead
+            db.session.rollback()
+            is_new = False
+            new_log = DigitalDetoxLog.query.filter_by(user_id=user_id, date=today).first()
+            fill(new_log)
+            db.session.commit()
 
         if is_new:
-            award_points(user_id, 15, 'digital_detox_log')
+            award_points(user_id, 15, 'digital_detox_log', ref=f'detox:{new_log.id}')
 
         return jsonify({
             'success': True,
@@ -833,6 +847,10 @@ def patient_journal():
     user_id = session['user_id']
 
     if request.method == 'POST':
+        key = idem.get_key()
+        if idem.existing(JournalEntry, user_id, key):  # replay: already saved
+            flash('Journal entry saved successfully!', 'success')
+            return redirect(url_for('patient.patient_journal'))
         title = request.form.get('title', '').strip()
         content = request.form.get('content', '').strip()
 
@@ -867,22 +885,48 @@ def patient_journal():
         # Get AI suggestions for the journal entry
         ai_suggestions = get_ai_journal_suggestions(title, content)
 
-        db.session.add(JournalEntry(user_id=user_id, title=title, content=content,
-                                    sentiment=sentiment_result, ai_suggestions=ai_suggestions))
-        db.session.commit()
+        # O-02: rule-based check on the text; the event holds a code only, never the text. Same transaction as the entry.
+        from utils.crisis import record_crisis, text_is_crisis
+        from utils.helplines import helplines_text
+        crisis = text_is_crisis(f"{title}\n{content}")
+        try:
+            entry = JournalEntry(user_id=user_id, title=title, content=content, sentiment=sentiment_result,
+                                 ai_suggestions=ai_suggestions, client_request_id=key)
+            db.session.add(entry)
+            if crisis:
+                record_crisis(user_id, 'journal', 9, 'journal_self_harm')
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            if isinstance(exc, IntegrityError) and idem.existing(JournalEntry, user_id, key):  # concurrent double submit
+                flash('Journal entry saved successfully!', 'success')
+                return redirect(url_for('patient.patient_journal'))
+            logger.error("Journal save FAILED user=%s crisis=%s err=%s", user_id, crisis, type(exc).__name__)
+            flash('Could not save your journal entry. Please try again.', 'error')
+            if crisis:
+                flash('You are not alone. If you are in danger call 112. Free support: ' + helplines_text(), 'warning')
+            return redirect(url_for('patient.patient_journal'))
 
         # Award points for journaling
-        award_points(user_id, 15, 'journal_entry')
+        if not crisis:  # no cheerful rewards right after a crisis flag
+            award_points(user_id, 15, 'journal_entry', ref=f'journal:{entry.id}')
 
         flash('Journal entry saved successfully!', 'success')
+        if crisis:
+            flash('We noticed your words sound painful. You do not have to carry this alone. '
+                  'If you are in danger call 112. Free support: ' + helplines_text(), 'warning')
         return redirect(url_for('patient.patient_journal'))
 
     # GET request - display journal entries
-    user_entries = JournalEntry.query.filter_by(user_id=user_id).order_by(JournalEntry.created_at.asc(), JournalEntry.id.asc()).all()  # template reverses
+    # newest page first (?page=, ?per_page=, default 50, max 100), handed over oldest-to-newest (the template reverses)
+    user_entries, journal_pagination = paginate(JournalEntry.query.filter_by(user_id=user_id)
+                                                .order_by(JournalEntry.created_at.desc(), JournalEntry.id.desc()), default=50)
+    user_entries.reverse()
 
     return render_template('patient_journal.html',
                          user_name=session['user_name'],
-                         journal_entries=user_entries)
+                         journal_entries=user_entries,
+                         pagination=journal_pagination)
 
 @patient_bp.route('/api/save-mood', methods=['POST'])
 @patient_required
@@ -900,16 +944,26 @@ def save_mood():
     notes = str(data.get('notes') or '').strip()[:500] or None
 
     user_id = session['user_id']
+    key = idem.get_key()
+    saved = jsonify({'success': True, 'message': 'Mood saved. Thanks for checking in.'})
+    if idem.existing(MoodLog, user_id, key):  # replay: same 200 body, no second row
+        return saved
     try:
-        db.session.add(MoodLog(user_id=user_id, mood_score=mood, notes=notes))
+        db.session.add(MoodLog(user_id=user_id, mood_score=mood, notes=notes, client_request_id=key))
         # Same entry as a 'Daily Mood' assessment: the trend/progress code reads that type.
         db.session.add(Assessment(user_id=user_id, assessment_type='Daily Mood', score=mood,
-                                  responses={'mood': mood, 'notes': notes or ''}))
+                                  responses={'mood': mood, 'notes': notes or ''}, client_request_id=key))
         user = db.session.get(User, user_id)
         if user:
-            user.last_assessment_at = datetime.utcnow()
+            user.last_assessment_at = utcnow()
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Mood saved. Thanks for checking in.'})
+        return saved
+    except IntegrityError:
+        db.session.rollback()
+        if idem.existing(MoodLog, user_id, key):  # concurrent double submit
+            return saved
+        logger.exception('Error saving mood')
+        return jsonify({'success': False, 'message': 'Could not save your mood. Please try again.'}), 500
     except Exception:
         db.session.rollback()
         logger.exception('Error saving mood')
@@ -922,11 +976,12 @@ def patient_voice_logs():
     """Voice logs page for patients."""
     try:
         user_id = session['user_id']
-        user_logs = VoiceLog.query.filter_by(user_id=user_id).order_by(VoiceLog.created_at.desc()).all()
+        user_logs, voice_pagination = paginate(VoiceLog.query.filter_by(user_id=user_id).order_by(VoiceLog.created_at.desc(), VoiceLog.id.desc()), default=50)
         
         return render_template('patient_voice_logs.html',
                              user_name=session.get('user_name', 'User'),
-                             voice_logs=user_logs)
+                             voice_logs=user_logs,
+                             pagination=voice_pagination)
     except Exception as e:
         logger.error(f"Error in patient_voice_logs: {str(e)}")
         flash('An error occurred while loading the voice logs.', 'error')
@@ -940,6 +995,7 @@ def handle_goals():
     user_id = session['user_id']
 
     if request.method == 'POST':
+        key = None
         try:
             data = request.get_json(silent=True) or {}
             title = data.get('title')
@@ -948,7 +1004,13 @@ def handle_goals():
             target_value = data.get('target_value')
             unit = data.get('unit')
             priority = data.get('priority') or 'medium'
+            priority = priority if priority in ('low', 'medium', 'high') else 'medium'
             target_date = data.get('target_date')
+            key = idem.get_key()
+            first = idem.existing(Goal, user_id, key)
+            if first:  # replay: the goal already exists
+                return jsonify({'success': True, 'message': 'Goal created successfully!',
+                                'goal': {'id': first.id, 'title': first.title, 'description': first.description}})
 
             if not title:
                 return jsonify({'success': False, 'message': 'Title is required.'}), 400
@@ -956,10 +1018,13 @@ def handle_goals():
             try:
                 target_value = float(target_value) if target_value not in (None, '') else None
                 parsed_target_date = datetime.strptime(target_date, '%Y-%m-%d').date() if target_date else None
+                if target_value is not None and not target_value >= 0:
+                    raise ValueError('negative target')
             except (TypeError, ValueError):
                 return jsonify({'success': False, 'message': 'Target value must be a number and the date YYYY-MM-DD.'}), 400
 
             new_goal = Goal(
+                client_request_id=key,
                 user_id=user_id,
                 title=title,
                 description=description,
@@ -968,7 +1033,7 @@ def handle_goals():
                 target_value=target_value,
                 unit=unit,
                 target_date=parsed_target_date,
-                start_date=datetime.utcnow().date()
+                start_date=ist_today()
             )
             db.session.add(new_goal)
             db.session.commit()
@@ -982,13 +1047,20 @@ def handle_goals():
                     'description': new_goal.description
                 }
             }), 201
+        except idem.InvalidKey:
+            raise
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Error adding goal for user {user_id}: {e}")
+            first = idem.existing(Goal, user_id, key) if isinstance(e, IntegrityError) else None
+            if first:  # concurrent double submit: the other request created it
+                return jsonify({'success': True, 'message': 'Goal created successfully!',
+                                'goal': {'id': first.id, 'title': first.title, 'description': first.description}})
+            logger.error("Error adding goal for user %s: %s", user_id, type(e).__name__)
             return jsonify({'success': False, 'message': 'Failed to create goal.'}), 500
 
     # GET request logic
-    goals = Goal.query.filter_by(user_id=user_id).all()
+    # default page 100: the goals page has no paging UI yet; `meta` says when there are more
+    goals, goals_meta = paginate(Goal.query.filter_by(user_id=user_id).order_by(Goal.created_at.desc(), Goal.id.desc()), default=100)
     goals_data = []
     for goal in goals:
         goals_data.append({
@@ -1005,7 +1077,7 @@ def handle_goals():
             'progress_percentage': goal.progress_percentage,
             'created_at': goal.created_at.strftime('%Y-%m-%d') if goal.created_at else None
         })
-    return jsonify({'success': True, 'goals': goals_data})
+    return jsonify({'success': True, 'goals': goals_data, 'meta': goals_meta})
 
 @patient_bp.route('/api/goals/<int:goal_id>', methods=['PUT', 'DELETE'])
 @patient_required
@@ -1053,11 +1125,13 @@ def handle_goal(goal_id):
         try:
             if new_status is not None and new_status != goal.status:
                 goal.status = new_status
-                goal.completed_date = datetime.utcnow().date() if new_status == 'completed' else None
+                goal.completed_date = ist_today() if new_status == 'completed' else None
 
             goal.updated_at = datetime.utcnow()
             db.session.commit()
-            
+            if 'current_value' in data or new_status == 'completed':  # progress or completion, not a title edit
+                award_points(user_id, 10, 'goal_progress', ref=f'goal:{goal.id}:{ist_today().isoformat()}')  # once per goal per day
+
             return jsonify({
                 'success': True,
                 'message': 'Goal updated successfully!',

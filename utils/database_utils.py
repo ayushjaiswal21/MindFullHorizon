@@ -1,20 +1,86 @@
 import os
+import time
+from urllib.parse import urlsplit
+
 from flask import current_app
-from extensions import db
+from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
+
+from extensions import db
+
+
+def normalize_db_url(url):
+    """Render and Heroku hand out `postgres://`, which SQLAlchemy 1.4+ rejects."""
+    if url and url.startswith('postgres://'):
+        return 'postgresql://' + url[len('postgres://'):]
+    return url
+
+
+def _int_env(env, name, default):
+    try:
+        return int(env.get(name, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def engine_options(url, env=os.environ):
+    """SQLAlchemy engine options for the dialect in `url` (pool sizes are env-tunable).
+
+    SQLite: no pool arguments (file databases use the default pool); `check_same_thread=False`
+    because SocketIO and worker threads share connections. PostgreSQL: a small bounded pool
+    (default 5 + 5 overflow stays under small managed plans), pre-ping, a 5 minute recycle (Neon suspends idle
+    compute after 5 minutes), a connect timeout, and a server-side statement timeout sent as a startup option.
+    Neon pooled hosts (`-pooler`) reject startup options, so they get no statement timeout here: set it on the role
+    (`ALTER ROLE ... SET statement_timeout`), see docs/DEPLOY.md.
+    """
+    url = (url or '').lower()
+    if url.startswith('sqlite'):
+        return {'connect_args': {'check_same_thread': False}}
+    opts = {'pool_pre_ping': True}
+    if url.startswith('postgresql'):
+        opts.update(
+            pool_size=_int_env(env, 'DB_POOL_SIZE', 5),
+            max_overflow=_int_env(env, 'DB_MAX_OVERFLOW', 5),
+            pool_timeout=_int_env(env, 'DB_POOL_TIMEOUT', 10),
+            pool_recycle=_int_env(env, 'DB_POOL_RECYCLE', 300),
+        )
+        if url.startswith(('postgresql:', 'postgresql+psycopg2:')):
+            args = {'connect_timeout': _int_env(env, 'DB_CONNECT_TIMEOUT', 15)}
+            if '-pooler' not in (urlsplit(url).hostname or ''):
+                args['options'] = f"-c statement_timeout={_int_env(env, 'DB_STATEMENT_TIMEOUT_MS', 10000)}"
+            opts['connect_args'] = args
+    return opts
+
+
+def wait_for_database(attempts=3, base_delay=1.0, probe=None):
+    """`SELECT 1` with a short bounded retry (1 s, then 2 s): the first connection after a Neon scale-to-zero wake can
+    fail or time out once. Only SQLAlchemy errors are retried. Returns True when the database answers (`probe` is
+    a callable doing the query, default `SELECT 1`). Call inside an app context."""
+    probe = probe or (lambda: db.session.execute(text('SELECT 1')))
+    for attempt in range(attempts):
+        try:
+            probe()
+            return True
+        except SQLAlchemyError as exc:
+            db.session.remove()
+            current_app.logger.warning("Database not reachable (try %s of %s): %s", attempt + 1, attempts, type(exc).__name__)
+            if attempt < attempts - 1:
+                time.sleep(base_delay * (2 ** attempt))
+    return False
+
 
 def check_database():
     """Check if the database is properly initialized and accessible."""
     try:
-        # Test database connection
         with current_app.app_context():
-            # Check if users table exists
+            if not wait_for_database():
+                return False
             from models import User
-            User.query.first()
+            User.query.first()  # a missing users table raises here: the schema is not initialised
             current_app.logger.info("Database connection successful")
             return True
     except Exception as e:
-        current_app.logger.error(f"Database connection error: {str(e)}", exc_info=True)
+        current_app.logger.error("Database connection error: %s", type(e).__name__, exc_info=True)
         return False
 
 def init_db():

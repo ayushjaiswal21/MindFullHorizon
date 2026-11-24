@@ -1,0 +1,27 @@
+{# Daily mood entry. Included by the dashboard and the screenings page. Script: js/mood.js (needs this markup). #}
+<section class="card" aria-labelledby="mood-heading">
+    <div class="card-body">
+        <h2 class="pt-title" id="mood-heading">How are you feeling today?</h2>
+        <p class="pt-sub">Pick a number from 1 (very low) to 10 (very good). Each entry is added to your mood history.</p>
+        <form id="mood-form" class="mt-4" novalidate>
+            <fieldset class="mood-scale" aria-describedby="mood-error">
+                <legend class="sr-only">Mood from 1 to 10</legend>
+                {% for n in range(1, 11) %}
+                <label class="mood-option" data-mood="{{ n }}">
+                    <input type="radio" name="mood" value="{{ n }}" id="mood-{{ n }}">
+                    <span class="mood-num">{{ n }}</span>
+                </label>
+                {% endfor %}
+            </fieldset>
+            <div class="mood-ends" aria-hidden="true"><span>1 very low</span><span>10 very good</span></div>
+            <div class="field mt-4">
+                <label class="label" for="mood-notes">Note (optional)</label>
+                <textarea class="textarea" id="mood-notes" name="notes" rows="2" maxlength="500" autocomplete="off"></textarea>
+                <p class="help">Up to 500 characters.</p>
+            </div>
+            <p class="error-text" id="mood-error" role="alert" hidden></p>
+            <p class="success-text" id="mood-saved" role="status" hidden></p>
+            <button type="submit" id="save-mood-btn" class="btn btn-primary mt-2" data-loading-text="Saving">Save mood</button>
+        </form>
+    </div>
+</section>

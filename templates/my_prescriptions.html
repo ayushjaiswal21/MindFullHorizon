@@ -1,62 +1,66 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
+{% from '_macros.html' import empty_state %}
 
-{% block title %}My Prescriptions - Mindful Horizon{% endblock %}
+{% block title %}{{ 'My prescriptions' if prescriptions_enabled else 'Not available' }} - MindFull Horizon{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rx_patient.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">My Prescriptions</h1>
-
-    {% if prescriptions %}
-    <div class="space-y-6">
-        {% for prescription in prescriptions %}
-        <div class="card p-6 border border-blue-200 shadow-lg rounded-lg">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-semibold text-blue-700">{{ prescription.medication_name }}</h2>
-                <span class="text-sm text-gray-500">Issued: {{ prescription.issue_date.strftime('%B %d, %Y') }}</span>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <p class="text-gray-600 font-medium">Dosage:</p>
-                    <p class="text-gray-800">{{ prescription.dosage }}</p>
-                </div>
-                <div>
-                    <p class="text-gray-600 font-medium">Prescribed by:</p>
-                    <p class="text-gray-800">{{ prescription.provider.name }} ({{ prescription.provider.institution }})</p>
-                </div>
-            </div>
-
-            {% if prescription.instructions %}
-            <div class="mb-4">
-                <p class="text-gray-600 font-medium">Instructions:</p>
-                <p class="text-gray-800">{{ prescription.instructions }}</p>
-            </div>
-            {% endif %}
-
-            {% if prescription.expiry_date %}
-            <div class="text-sm text-red-600">
-                Expires on: {{ prescription.expiry_date.strftime('%B %d, %Y') }}
-            </div>
-            {% else %}
-            <div class="text-sm text-gray-500">
-                No expiry date specified.
-            </div>
-            {% endif %}
+<div class="container section">
+{% if not prescriptions_enabled %}
+    <header class="page-header">
+        <h1>This feature is not available</h1>
+        <p class="lead">Prescriptions are not turned on for this service.</p>
+        <div class="page-actions">
+            <a class="btn btn-secondary" href="{{ url_for('patient.patient_dashboard') }}">Back to dashboard</a>
         </div>
-        {% endfor %}
+    </header>
+{% else %}
+    <header class="page-header">
+        <h1>My prescriptions</h1>
+        <p class="lead">{{ rx_text.PATIENT_EXPLAINER }}</p>
+    </header>
+
+    <div id="rx-page" data-consent-url="{{ url_for('rx_patient.consent') }}">
+    {% include 'rx_patient/_consent.html' %}
+
+    <nav class="tabs" aria-label="Prescription lists">
+        <a href="{{ url_for('patient.my_prescriptions', tab='active') }}"{% if tab == 'active' %} aria-current="page"{% endif %}>Active</a>
+        <a href="{{ url_for('patient.my_prescriptions', tab='past') }}"{% if tab == 'past' %} aria-current="page"{% endif %}>Past</a>
+    </nav>
+
+    <div class="pt-stack" aria-live="polite">
+        {% for rx in rows %}{% include 'rx_patient/_card.html' %}{% endfor %}
     </div>
-    {% else %}
-    <div class="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
-        <i class="fas fa-prescription-bottle-alt text-gray-400 text-5xl mb-4"></i>
-        <p class="text-xl text-gray-600 font-semibold">No Prescriptions Found</p>
-        <p class="text-gray-500 mt-2">Your provider has not sent you any prescriptions yet.</p>
-    </div>
+    {% if not rows %}
+        {% if not meta.total and tab == 'active' and not has_any %}
+        {{ empty_state('No prescriptions yet', rx_text.EMPTY_ALL, 'pill') }}
+        {% else %}
+        {{ empty_state(rx_text.EMPTY_ACTIVE if tab == 'active' else rx_text.EMPTY_PAST, None, 'pill') }}
+        {% endif %}
     {% endif %}
 
-    <div class="mt-8 text-center">
-        <a href="{{ url_for('patient.patient_dashboard') }}" class="btn-secondary">
-            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
-        </a>
+    {% if meta.has_next or meta.page > 1 %}
+    <nav class="nav-row" aria-label="Pages">
+        {% if meta.page > 1 %}<a class="btn btn-secondary btn-sm" href="{{ url_for('patient.my_prescriptions', tab=tab, page=meta.page - 1) }}">Newer</a>{% else %}<span></span>{% endif %}
+        {% if meta.has_next %}<a class="btn btn-secondary btn-sm" href="{{ url_for('patient.my_prescriptions', tab=tab, page=meta.page + 1) }}">Older</a>{% endif %}
+    </nav>
+    {% endif %}
     </div>
+
+    <p class="pt-sub mt-6">{{ rx_text.PATIENT_PRIVACY_NOTE }}</p>
+    <p class="mt-4"><a class="btn btn-secondary" href="{{ url_for('patient.patient_dashboard') }}">Back to dashboard</a></p>
+{% endif %}
 </div>
+{% endblock %}
+
+{% block scripts %}
+{% if prescriptions_enabled %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/patient-common.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/rx_patient.js') }}" defer></script>
+{% endif %}
 {% endblock %}

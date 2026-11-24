@@ -1,0 +1,19 @@
+{#- breadcrumb([('Home', '/'), ('Blog', '/blog/'), ('Post title', None)])
+    The last item is the current page (pass None as its URL). Renders the nav and BreadcrumbList JSON-LD.
+    abs_url() is a Jinja global registered by utils/site_context.py, so this works when imported without context. -#}
+{% macro breadcrumb(items) -%}
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    {%- for label, url in items %}
+    <li>{% if url and not loop.last %}<a href="{{ url }}">{{ label }}</a>{% else %}<span{% if loop.last %} aria-current="page"{% endif %}>{{ label }}</span>{% endif %}</li>
+    {%- endfor %}
+  </ol>
+</nav>
+{%- set ns = namespace(list=[]) %}
+{%- for label, url in items %}
+{%- set entry = {"@type": "ListItem", "position": loop.index, "name": label} %}
+{%- if url %}{% set _ = entry.update({"item": abs_url(url)}) %}{% endif %}
+{%- set _ = ns.list.append(entry) %}
+{%- endfor %}
+<script type="application/ld+json">{{ {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": ns.list} | tojson }}</script>
+{%- endmacro %}

@@ -1,384 +1,145 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
+{% from 'patient_macros.html' import band_badge, status_badge, helpline_list %}
 
-{% block title %}Patient Dashboard - Mindful Horizon{% endblock %}
+{% block title %}Dashboard - MindFull Horizon{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rx_patient.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="patient-dashboard-container">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div class="mb-8">
-            <h1 class="text-5xl font-extrabold dashboard-welcome animate-fade-in">Welcome back, {{ user_name }}!</h1>
-            <p class="text-xl text-gray-600 dashboard-subtitle animate-fade-in-delay">Here's your mental health journey overview.</p>
+{% set open_appts = upcoming_appointments|selectattr('status', 'in', ['pending', 'accepted', 'booked'])|list %}
+<div class="container section">
+    <header class="page-header">
+        <h1>Hello, {{ user_name }}</h1>
+        <p class="lead">Log your mood, see your latest screening result and manage your sessions.</p>
+        <div class="page-actions">
+            <a class="btn btn-primary" href="{{ url_for('patient.assessment') }}">Take a screening</a>
+            <a class="btn btn-secondary" href="{{ url_for('patient.schedule_appointment') }}">Book a session</a>
         </div>
+    </header>
 
-        <!-- Enhanced Alerts Section -->
-        {% if alerts %}
-        <div class="health-alert mb-8 flex items-center">
-            <i class="fas fa-exclamation-triangle text-2xl mr-4 text-red-500" aria-hidden="true"></i>
-            <div>
-                <h4 class="font-bold text-lg mb-2 text-red-800">Health Alerts</h4>
-                <ul class="list-disc list-inside space-y-1 text-red-700">
-                    {% for alert in alerts %}
-                    <li>{{ alert }}</li>
-                    {% endfor %}
+    {% if alerts %}
+    <div class="alert alert-warning mb-6" role="alert">
+        <strong>Readings to be aware of</strong>
+        <ul>
+            {% for alert in alerts %}<li>{{ alert }}</li>{% endfor %}
+        </ul>
+        <p class="mt-2">These come from recorded readings and are not a diagnosis. Talk to your counsellor or doctor if they worry you.</p>
+    </div>
+    {% endif %}
+
+    <div class="grid gap-6 lg:grid-cols-3">
+        <div class="lg:col-span-2 pt-stack">
+            {% include 'patient_mood_entry.html' %}
+
+            <section class="card" aria-labelledby="trend-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="trend-heading">Mood, recent entries</h2>
+                    <p class="pt-sub">Your last 14 mood entries. Higher is better.</p>
+                    <div id="mood-trend" class="mt-4" data-src="/api/mood" aria-live="polite">
+                        <div class="skeleton chart-skel" aria-hidden="true"></div>
+                        <noscript>
+                            <p class="muted">{% if latest_mood %}Latest mood: {{ latest_mood.mood_score }} of 10.{% else %}No mood entries yet.{% endif %} Turn on JavaScript to see the chart.</p>
+                        </noscript>
+                    </div>
+                </div>
+            </section>
+
+            <section aria-labelledby="tools-heading">
+                <h2 class="pt-title mb-3" id="tools-heading">Tools</h2>
+                <ul class="link-list">
+                    <li><a href="{{ url_for('patient.progress') }}">{{ icon('chart') }}<div><strong>Progress</strong><span>Mood and screening scores over time.</span></div></a></li>
+                    <li><a href="{{ url_for('patient.goals') }}">{{ icon('target') }}<div><strong>Goals</strong><span>Set a goal and update it as you go.</span></div></a></li>
+                    <li><a href="{{ url_for('patient.medication') }}">{{ icon('pill') }}<div><strong>Medication log</strong><span>Mark each dose as taken.</span></div></a></li>
+                    <li><a href="{{ url_for('patient.patient_journal') }}">{{ icon('journal') }}<div><strong>Journal</strong><span>Write entries about your day.</span></div></a></li>
+                    <li><a href="{{ url_for('patient.patient_voice_logs') }}">{{ icon('mic') }}<div><strong>Voice logs</strong><span>Record and keep voice notes.</span></div></a></li>
+                    <li><a href="{{ url_for('patient.breathing') }}">{{ icon('wind') }}<div><strong>Breathing exercises</strong><span>Guided breathing with a timer.</span></div></a></li>
+                    <li><a href="{{ url_for('patient.yoga') }}">{{ icon('activity') }}<div><strong>Yoga</strong><span>Log sessions and open guided videos.</span></div></a></li>
+                    <li><a href="{{ url_for('music') }}">{{ icon('music') }}<div><strong>Music</strong><span>Calming audio tracks.</span></div></a></li>
+                    <li><a href="{{ url_for('patient.digital_detox') }}">{{ icon('clock') }}<div><strong>Screen time</strong><span>Log daily screen time.</span></div></a></li>
+                    <li><a href="{{ url_for('chat') }}">{{ icon('chat') }}<div><strong>Chat with Anya</strong><span>An AI assistant, not a therapist.</span></div></a></li>
+                    <li><a href="{{ url_for('telehealth') }}">{{ icon('video') }}<div><strong>Video session</strong><span>Join a session with your counsellor.</span></div></a></li>
+                    {% if prescriptions_enabled %}
+                    <li><a href="{{ url_for('patient.my_prescriptions') }}">{{ icon('file') }}<div><strong>My prescriptions</strong><span>Prescriptions from your college doctor.</span></div></a></li>
+                    {% endif %}
                 </ul>
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- Enhanced Overview Grid -->
-        <div class="grid grid-cols-3 gap-8 mb-8">
-            <!-- Enhanced Gamification Card -->
-            <div class="patient-card p-6 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-2xl font-bold dashboard-title">Your Progress</h3>
-                        <i class="fas fa-trophy text-yellow-500 text-3xl card-icon-glow" aria-hidden="true"></i>
-                    </div>
-                    <div class="space-y-4">
-                        <div class="progress-metric">
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-600 font-medium">Total Points</span>
-                                <span class="metric-value text-4xl">{{ data.points or 0 }}</span>
-                            </div>
-                        </div>
-                        <div class="progress-metric">
-                            <div class="flex justify-between items-center">
-                                <span class="text-gray-600 font-medium">Current Streak</span>
-                                <span class="metric-value text-4xl">{{ data.streak or 0 }} days</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-6 pt-4 border-t border-gray-100">
-                    <h4 class="font-bold text-gray-700 mb-3 section-title">Badges Earned</h4>
-                    <div class="flex flex-wrap gap-2">
-                        {% for badge in data.badges or [] %}
-                        <span class="wellness-badge">
-                            <i class="fas fa-medal mr-1" aria-hidden="true"></i>{{ badge }}
-                        </span>
-                        {% endfor %}
-                        {% if not data.badges or not data.badges %}
-                        <span class="wellness-badge opacity-50">
-                            <i class="fas fa-plus mr-1" aria-hidden="true"></i>Start earning badges!
-                        </span>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-
-            <!-- Enhanced Health Snapshot Card -->
-            <div class="patient-card p-6">
-                <div class="flex items-center justify-between mb-6">
-                    <h3 class="text-2xl font-bold dashboard-title">Health Snapshot</h3>
-                    <div class="flex items-center">
-                        <span class="status-indicator status-online mr-3"></span>
-                        <i class="fas fa-heartbeat text-red-500 text-3xl metric-icon" aria-hidden="true"></i>
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <div class="health-metric">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600 font-medium">Heart Rate</span>
-                            <span class="metric-value text-2xl">{% if data.rpm_data.heart_rate %}{{ data.rpm_data.heart_rate }} bpm{% else %}<span class="text-gray-400 text-base">No data yet</span>{% endif %}</span>
-                        </div>
-                    </div>
-                    <div class="health-metric">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600 font-medium">Sleep Duration</span>
-                            <span class="metric-value text-2xl">{% if data.rpm_data.sleep_duration %}{{ data.rpm_data.sleep_duration }}h{% else %}<span class="text-gray-400 text-base">No data yet</span>{% endif %}</span>
-                        </div>
-                    </div>
-                    <div class="health-metric">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600 font-medium">Daily Steps</span>
-                            <span class="metric-value text-2xl">{% if data.rpm_data.steps %}{{ data.rpm_data.steps }}{% else %}<span class="text-gray-400 text-base">No data yet</span>{% endif %}</span>
-                        </div>
-                    </div>
-                    <div class="health-metric">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-600 font-medium">Mood Score</span>
-                            <span class="metric-value text-2xl">{% if data.rpm_data.mood_score %}{{ data.rpm_data.mood_score }}/10{% else %}<span class="text-gray-400 text-base">No data yet</span>{% endif %}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4 pt-4 border-t border-gray-100">
-                    <p class="text-xs text-gray-500 text-center">
-                        <i class="fas fa-sync-alt mr-1" aria-hidden="true"></i>Updates when readings or mood check-ins are recorded
-                    </p>
-                </div>
-            </div>
-
-            <!-- Enhanced Quick Actions Card -->
-            <div class="patient-card p-6 flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-6">
-                        <h3 class="text-2xl font-bold dashboard-title">Quick Actions</h3>
-                        <i class="fas fa-bolt text-blue-500 text-3xl card-icon-glow" aria-hidden="true"></i>
-                    </div>
-                    <div class="space-y-3">
-                        <a href="{{ url_for('patient.goals') }}" class="action-button w-full bg-gradient-to-r from-indigo-600 to-indigo-700">
-                            <i class="fas fa-bullseye" aria-hidden="true"></i>Manage Goals
-                        </a>
-                        <a href="{{ url_for('patient.patient_journal') }}" class="action-button w-full bg-gradient-to-r from-pink-600 to-pink-700">
-                            <i class="fas fa-book" aria-hidden="true"></i>Journal Entries
-                        </a>
-                        <a href="{{ url_for('patient.patient_voice_logs') }}" class="action-button w-full bg-gradient-to-r from-emerald-600 to-emerald-700">
-                            <i class="fas fa-microphone" aria-hidden="true"></i>Voice Logs
-                        </a>
-                        <a href="{{ url_for('chat') }}" class="action-button w-full bg-gradient-to-r from-blue-600 to-blue-700">
-                            <i class="fas fa-comment-dots" aria-hidden="true"></i>Chat with Support
-                        </a>
-                        <a href="{{ url_for('telehealth') }}" class="action-button w-full bg-gradient-to-r from-green-600 to-green-700">
-                            <i class="fas fa-video" aria-hidden="true"></i>Start Telehealth Session
-                        </a>
-                        <a href="{{ url_for('patient.schedule_appointment') }}" class="action-button w-full bg-gradient-to-r from-purple-600 to-purple-700">
-                            <i class="fas fa-plus" aria-hidden="true"></i>Schedule Appointment
-                        </a>
-                    </div>
-                </div>
-                <div class="mt-6 pt-4 border-t border-gray-100">
-                    <a href="{{ url_for('patient.digital_detox') }}" class="w-full text-center text-sm font-medium text-red-600 hover:text-red-800 transition duration-200 block">
-                        <i class="fas fa-mobile-alt mr-1" aria-hidden="true"></i>Digital Wellness Check-in
-                    </a>
-                </div>
-            </div>
+            </section>
         </div>
 
-        <!-- Enhanced Wellness Toolkit Section -->
-        <div class="patient-card toolkit-section p-8 mb-8">
-            <h3 class="text-3xl font-bold mb-4 section-title">
-                <i class="fas fa-heart-pulse text-teal-500 mr-3" aria-hidden="true"></i>Wellness Toolkit
-            </h3>
-            <p class="text-gray-600 mb-6 text-lg">Engage with tools designed to support your daily well-being and mindfulness practices.</p>
-
-            <!-- Enhanced Progress Overview -->
-            <div class="progress-overview mb-8">
-                <h4 class="font-bold text-gray-800 mb-4 text-xl">This Week's Progress</h4>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="progress-stat">
-                        <div class="progress-value text-3xl">{{ data.streak or 0 }}</div>
-                        <div class="text-sm text-gray-600 font-medium">Day Streak</div>
-                    </div>
-                    <div class="progress-stat">
-                        <div class="progress-value text-3xl">{{ data.points or 0 }}</div>
-                        <div class="text-sm text-gray-600 font-medium">Total Points</div>
-                    </div>
-                    <div class="progress-stat">
-                        <div class="progress-value text-3xl">{{ (data.badges or [])|length }}</div>
-                        <div class="text-sm text-gray-600 font-medium">Badges Earned</div>
-                    </div>
-                    <div class="progress-stat">
-                        <div class="progress-value text-3xl">{% if data.rpm_data.mood_score %}{{ data.rpm_data.mood_score }}/10{% else %}<span class="text-gray-400 text-base">No data yet</span>{% endif %}</div>
-                        <div class="text-sm text-gray-600 font-medium">Latest Mood</div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 gap-6">
-                <!-- First row: 4 cards -->
-                <div class="grid grid-cols-4 gap-6">
-                    <!-- Enhanced Medication Card -->
-                    <a href="{{ url_for('patient.medication') }}" class="toolkit-card">
-                        <div class="flex items-center">
-                            <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-pills text-blue-600 text-2xl" aria-hidden="true"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-lg">Medication Tracker</h4>
-                                <p class="text-gray-600">Log and manage your medications.</p>
-                            </div>
-                        </div>
-                    </a>
-                    <!-- Enhanced My Prescriptions Card -->
-                    <a href="{{ url_for('patient.my_prescriptions') }}" class="toolkit-card">
-                        <div class="flex items-center">
-                            <div class="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-file-prescription text-red-600 text-2xl" aria-hidden="true"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-lg">My Prescriptions</h4>
-                                <p class="text-gray-600">View your active prescriptions.</p>
-                            </div>
-                        </div>
-                    </a>
-                    <!-- Enhanced Breathing Card -->
-                    <a href="{{ url_for('patient.breathing') }}" class="toolkit-card">
-                        <div class="flex items-center">
-                            <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-wind text-green-600 text-2xl" aria-hidden="true"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-lg">Breathing Exercises</h4>
-                                <p class="text-gray-600">Practice guided breathing.</p>
-                            </div>
-                        </div>
-                    </a>
-                    <!-- Enhanced Yoga Card -->
-                    <a href="{{ url_for('patient.yoga') }}" class="toolkit-card">
-                        <div class="flex items-center">
-                            <div class="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-person-praying text-yellow-600 text-2xl" aria-hidden="true"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-lg">Yoga Sessions</h4>
-                                <p class="text-gray-600">Follow guided yoga practices.</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-
-                <!-- Second row: 3 cards -->
-                <div class="grid grid-cols-3 gap-6">
-                    <!-- Enhanced Music Therapy Card -->
-                    <a href="{{ url_for('music') }}" class="toolkit-card">
-                        <div class="flex items-center">
-                            <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-music text-purple-600 text-2xl" aria-hidden="true"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-lg">Mood Music</h4>
-                                <p class="text-gray-600">Binaural beats for wellness.</p>
-                            </div>
-                        </div>
-                    </a>
-                    <!-- Journal Entries Card -->
-                    <a href="{{ url_for('patient.patient_journal') }}" class="toolkit-card">
-                        <div class="flex items-center">
-                            <div class="bg-pink-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-book text-pink-600 text-2xl" aria-hidden="true"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-lg">Journal Entries</h4>
-                                <p class="text-gray-600">Write and track your thoughts with sentiment analysis.</p>
-                            </div>
-                        </div>
-                    </a>
-                    <!-- Voice Logs Card -->
-                    <a href="{{ url_for('patient.patient_voice_logs') }}" class="toolkit-card">
-                        <div class="flex items-center">
-                            <div class="bg-emerald-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                                <i class="fas fa-microphone text-emerald-600 text-2xl" aria-hidden="true"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-gray-800 text-lg">Voice Logs</h4>
-                                <p class="text-gray-600">Record and analyze your voice for emotional insights.</p>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Enhanced Appointment History Section -->
-        <div class="patient-card p-8 mb-8">
-            <h3 class="text-3xl font-bold mb-6 section-title">
-                <i class="fas fa-calendar-alt text-purple-500 mr-3" aria-hidden="true"></i>Your Appointments
-            </h3>
-
-            {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                <div class="alert alert-{{ category }} mb-4 p-4 rounded-lg text-sm {% if category == 'success' %}bg-green-100 text-green-800 border border-green-200{% elif category == 'error' %}bg-red-100 text-red-800 border border-red-200{% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
-                    {{ message }}
-                </div>
-                {% endfor %}
-            {% endif %}
-            {% endwith %}
-
-            <div class="grid md:grid-cols-2 gap-8">
-                <div>
-                    <h4 class="font-bold text-gray-700 mb-4 text-lg">Upcoming Appointments</h4>
-                    {% if upcoming_appointments %}
-                    <div class="space-y-4">
-                        {% for appt in upcoming_appointments %}
-                        <div class="appointment-card upcoming">
-                            <div>
-                                <p class="font-semibold text-gray-800 text-lg">{{ appt.date.strftime('%B %d, %Y') }} at {{ appt.time }}</p>
-                                <p class="text-gray-600">{{ appt.appointment_type | capitalize }} - Status: <span class="text-green-600 font-semibold">{{ appt.status | capitalize }}</span></p>
-                            </div>
-                            <i class="fas fa-chevron-right text-green-500 text-lg" aria-hidden="true"></i>
-                        </div>
-                        {% endfor %}
-                    </div>
+        <div class="pt-stack">
+            {% include 'partials/gamification_card.html' %}
+            <section class="card" aria-labelledby="screening-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="screening-heading">Latest screening</h2>
+                    {% if latest_screening %}
+                    <p class="score-line mt-3">{{ latest_screening.score }} <small>of {{ 27 if latest_screening.type == 'PHQ-9' else 21 }} on the {{ latest_screening.type }}</small></p>
+                    <p class="mt-2">{{ band_badge(latest_screening.band) }}
+                        <span class="muted">{{ latest_screening.date.strftime('%d %b %Y') if latest_screening.date else 'n/a' }}</span></p>
+                    <p class="pt-sub">A screening, not a diagnosis.</p>
+                    <p class="mt-3"><a class="btn btn-secondary btn-sm" href="{{ url_for('patient.assessment') }}">Take another</a></p>
                     {% else %}
-                    <p class="text-gray-600 italic">No upcoming appointments.</p>
+                    <div class="empty-state">
+                        {{ icon('mood') }}
+                        <h3>No screenings yet</h3>
+                        <p>The PHQ-9 and GAD-7 take a few minutes. They are screening tools, not a diagnosis.</p>
+                        <a class="btn btn-primary btn-sm" href="{{ url_for('patient.assessment') }}">Start a screening</a>
+                    </div>
                     {% endif %}
                 </div>
+            </section>
 
-                <div>
-                    <h4 class="font-bold text-gray-700 mb-4 text-lg">Past Appointments</h4>
-                    {% if past_appointments %}
-                    <div class="space-y-4">
-                        {% for appt in past_appointments %}
-                        <div class="appointment-card past">
-                            <div>
-                                <p class="font-semibold text-gray-800 text-lg">{{ appt.date.strftime('%B %d, %Y') }} at {{ appt.time }}</p>
-                                <p class="text-gray-600">{{ appt.appointment_type | capitalize }} - Status: <span class="text-gray-500 font-semibold">{{ appt.status | capitalize }}</span></p>
-                            </div>
-                            <i class="fas fa-history text-gray-400 text-lg" aria-hidden="true"></i>
-                        </div>
-                        {% endfor %}
-                    </div>
+            <section class="card" aria-labelledby="appt-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="appt-heading">Next appointment</h2>
+                    {% if open_appts %}
+                    {% set appt = open_appts[0] %}
+                    <p class="mt-3"><strong>{{ appt.date.strftime('%a %d %b %Y') }} at {{ appt.time }}</strong></p>
+                    <p class="muted">{{ appt.appointment_type|replace('-', ' ')|capitalize }}{% if appt.provider %} with {{ appt.provider.name }}{% endif %}</p>
+                    <p class="mt-2">{{ status_badge(appt.status) }}</p>
+                    <p class="mt-3"><a class="btn btn-secondary btn-sm" href="{{ url_for('patient.schedule_appointment') }}">Manage appointments</a></p>
                     {% else %}
-                    <p class="text-gray-600 italic">No past appointments.</p>
+                    <div class="empty-state">
+                        {{ icon('calendar') }}
+                        <h3>No upcoming appointments</h3>
+                        <p>Book a session with a counsellor at your college.</p>
+                        <a class="btn btn-primary btn-sm" href="{{ url_for('patient.schedule_appointment') }}">Book a session</a>
+                    </div>
                     {% endif %}
                 </div>
-            </div>
-        </div>
+            </section>
 
-        <!-- Enhanced Mental Health Assessment Section -->
-        <div class="patient-card p-8 mb-8">
-            <h3 class="text-3xl font-bold mb-6 section-title">
-                <i class="fas fa-clipboard-check text-indigo-500 mr-3" aria-hidden="true"></i>Mental Health Assessment
-            </h3>
-            <p class="text-gray-600 mb-6 text-lg">Take standardized assessments to track your mental health progress and get personalized insights.</p>
-            <div class="grid md:grid-cols-3 gap-6">
-                <a href="{{ url_for('patient.assessment') }}" class="assessment-card">
-                    <div class="flex items-center">
-                        <div class="bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-brain text-indigo-600 text-2xl" aria-hidden="true"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Take Assessment</h4>
-                            <p class="text-gray-600">GAD-7, PHQ-9 & Daily Mood</p>
-                        </div>
-                    </div>
-                </a>
-                <a href="{{ url_for('patient.progress') }}" class="assessment-card">
-                    <div class="flex items-center">
-                        <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-chart-line text-green-600 text-2xl" aria-hidden="true"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">View Progress</h4>
-                            <p class="text-gray-600">Trends & AI Insights</p>
-                        </div>
-                    </div>
-                </a>
-                <a href="{{ url_for('patient.digital_detox') }}" class="assessment-card">
-                    <div class="flex items-center">
-                        <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mr-4">
-                            <i class="fas fa-mobile-alt text-purple-600 text-2xl" aria-hidden="true"></i>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-gray-800 text-lg">Digital Detox</h4>
-                            <p class="text-gray-600">Screen Time & Wellness</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
+            {% include 'rx_patient/_dashboard_cards.html' %}
+
+            <section class="card" aria-labelledby="readings-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="readings-heading">Recorded readings</h2>
+                    <dl class="kv mt-3">
+                        <div><dt>Heart rate</dt><dd>{% if data.rpm_data.heart_rate %}{{ data.rpm_data.heart_rate }} bpm{% else %}<span class="muted">No data yet</span>{% endif %}</dd></div>
+                        <div><dt>Sleep</dt><dd>{% if data.rpm_data.sleep_duration %}{{ data.rpm_data.sleep_duration }} h{% else %}<span class="muted">No data yet</span>{% endif %}</dd></div>
+                        <div><dt>Steps</dt><dd>{% if data.rpm_data.steps %}{{ data.rpm_data.steps }}{% else %}<span class="muted">No data yet</span>{% endif %}</dd></div>
+                        <div><dt>Latest mood</dt><dd>{% if data.rpm_data.mood_score %}{{ data.rpm_data.mood_score }} of 10{% else %}<span class="muted">No data yet</span>{% endif %}</dd></div>
+                    </dl>
+                    <p class="pt-sub">Heart rate, sleep and steps appear when readings are recorded for your account.</p>
+                </div>
+            </section>
+
+            <section class="card" aria-labelledby="help-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="help-heading">If you need to talk to someone now</h2>
+                    <p class="pt-sub">These services are free and answer at any hour.</p>
+                    {{ helpline_list(helplines) }}
+                </div>
+            </section>
         </div>
     </div>
 </div>
-
-<!-- Toast Notification Container -->
-<div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
-
 {% endblock %}
 
 {% block scripts %}
-<script nonce="{ g.csp_nonce }" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/patient_dashboard_inline_1.js') }}"></script>
-    </div>
-</div>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/patient-common.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/mood.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/patient_dashboard_inline_1.js') }}" defer></script>
 {% endblock %}

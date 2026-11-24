@@ -1,291 +1,202 @@
+/* Calming audio page. Tracks come from POST /api/mood-audio; files are played from the /audio routes
+   (which redirect to AUDIO_BASE_URL when it is set). Nothing plays until the person presses Play. */
+(function () {
+  'use strict';
+  var root = document.getElementById('music-root');
+  if (!root || window.__mfhMusic) return;
+  window.__mfhMusic = true;
 
-async function fetchMoodMap() {
-  try {
-    const res = await fetch('/api/mood-music');
-    const data = await res.json();
-    return data.moods || {};
-  } catch (e) {
-    console.error('Failed to fetch mood map', e);
-    return {};
-  }
-}
+  var $ = function (id) { return document.getElementById(id); };
+  var audio = $('mood-audio'), playerBox = $('player-container'), listBox = $('playlist-container'),
+      listDiv = $('playlist'), nowWrap = $('now-playing'), nowLabel = $('now-playing-label'),
+      note = $('music-note'), emptyBox = $('music-empty'), emptyText = $('music-empty-text'),
+      typeSel = $('filter-type'), bwSel = $('filter-brainwave'), sortSel = $('sort-by'),
+      minIn = $('min-freq'), maxIn = $('max-freq'), searchIn = $('search-text'), resetBtn = $('reset-filters'),
+      playAll = $('play-all'), nextBtn = $('next-track'), clearBtn = $('clear-playlist'), filtersForm = $('filters');
 
-async function init() {
-  const audio = document.getElementById('mood-audio');
-  const playlistContainer = document.getElementById('playlist-container');
-  const playlistDiv = document.getElementById('playlist');
-  const nowPlayingWrap = document.getElementById('now-playing');
-  const nowPlayingLabel = document.getElementById('now-playing-label');
-  const playAllBtn = document.getElementById('play-all');
-  const nextBtn = document.getElementById('next-track');
-  const clearBtn = document.getElementById('clear-playlist');
-  const controls = document.getElementById('player-controls');
+  var STORE = 'moodMusicFilters';
+  var allFiles = [], queue = [], current = -1, currentUrl = '';
+  var toast = function (m, t) { if (window.WL) WL.toast(m, t); };
+  var debounce = function (fn, ms) { return window.WL ? WL.debounce(fn, ms) : fn; };
 
-  // Filters
-  const typeSel = document.getElementById('filter-type');
-  const brainwaveSel = document.getElementById('filter-brainwave');
-  const sortSel = document.getElementById('sort-by');
-  const minFreqInput = document.getElementById('min-freq');
-  const maxFreqInput = document.getElementById('max-freq');
-  const searchInput = document.getElementById('search-text');
-  const resetBtn = document.getElementById('reset-filters');
+  function td(text) { var c = document.createElement('td'); c.textContent = text; return c; }
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : ''; }
 
-  // State
-  let allFiles = [];
-  let queue = [];
-  let currentIndex = -1;
-
-  function setVisible(el, show) { el.style.display = show ? 'block' : 'none'; }
-
-  // Load filter preferences from localStorage
-  function loadFilterPreferences() {
+  function readPrefs() {
     try {
-      const saved = localStorage.getItem('moodMusicFilters');
-      if (saved) {
-        const prefs = JSON.parse(saved);
-        if (prefs.type) typeSel.value = prefs.type;
-        if (prefs.brainwave) brainwaveSel.value = prefs.brainwave;
-        if (prefs.sortBy) sortSel.value = prefs.sortBy;
-        if (prefs.minFreq !== undefined) minFreqInput.value = prefs.minFreq;
-        if (prefs.maxFreq !== undefined) maxFreqInput.value = prefs.maxFreq;
-        if (prefs.search) searchInput.value = prefs.search;
-      }
-    } catch (e) {
-      console.debug('Failed to load filter preferences', e);
-    }
+      var p = JSON.parse(localStorage.getItem(STORE) || 'null');
+      if (!p) return;
+      if (p.type) typeSel.value = p.type;
+      if (p.brainwave) bwSel.value = p.brainwave;
+      if (p.sortBy) sortSel.value = p.sortBy;
+      if (p.minFreq) minIn.value = p.minFreq;
+      if (p.maxFreq) maxIn.value = p.maxFreq;
+      if (p.search) searchIn.value = p.search;
+    } catch (e) { /* storage unavailable: filters just start empty */ }
   }
-
-  // Save filter preferences to localStorage
-  function saveFilterPreferences() {
+  function savePrefs() {
     try {
-      const prefs = {
-        type: typeSel.value,
-        brainwave: brainwaveSel.value,
-        sortBy: sortSel.value,
-        minFreq: minFreqInput.value,
-        maxFreq: maxFreqInput.value,
-        search: searchInput.value
-      };
-      localStorage.setItem('moodMusicFilters', JSON.stringify(prefs));
-    } catch (e) {
-      console.debug('Failed to save filter preferences', e);
-    }
-  }
-
-  // Reset all filters to default
-  function resetFilters() {
-    typeSel.value = 'all';
-    brainwaveSel.value = 'all';
-    sortSel.value = 'default';
-    minFreqInput.value = '';
-    maxFreqInput.value = '';
-    searchInput.value = '';
-    localStorage.removeItem('moodMusicFilters');
-    if (allFiles && allFiles.length > 0) {
-      const filtered = applyFilters();
-      renderPlaylist(filtered);
-    }
+      localStorage.setItem(STORE, JSON.stringify({ type: typeSel.value, brainwave: bwSel.value, sortBy: sortSel.value,
+        minFreq: minIn.value, maxFreq: maxIn.value, search: searchIn.value }));
+    } catch (e) { /* ignore */ }
   }
 
   function applyFilters() {
-    const typeVal = (typeSel.value || 'all').toLowerCase();
-    const bwVal = (brainwaveSel.value || 'all').toLowerCase();
-    const sortVal = sortSel.value || 'default';
-    const minFreq = parseFloat(minFreqInput.value) || null;
-    const maxFreq = parseFloat(maxFreqInput.value) || null;
-    const q = (searchInput.value || '').trim().toLowerCase();
-    
-    let filtered = (allFiles || []).filter(f => {
-      if (typeVal !== 'all' && (f.type || '').toLowerCase() !== typeVal) return false;
-      if (bwVal !== 'all' && (f.brainwave || '').toLowerCase() !== bwVal) return false;
-      if (minFreq !== null && f.frequency && f.frequency < minFreq) return false;
-      if (maxFreq !== null && f.frequency && f.frequency > maxFreq) return false;
-      if (q) {
-        const hay = ((f.label || '') + ' ' + (f.filename || '')).toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
+    var t = (typeSel.value || 'all').toLowerCase(), b = (bwSel.value || 'all').toLowerCase(), sort = sortSel.value || 'default';
+    var min = parseFloat(minIn.value), max = parseFloat(maxIn.value);
+    var q = (searchIn.value || '').trim().toLowerCase();
+    var out = allFiles.filter(function (f) {
+      if (t !== 'all' && (f.type || '').toLowerCase() !== t) return false;
+      if (b !== 'all' && (f.brainwave || '').toLowerCase() !== b) return false;
+      if (!isNaN(min) && f.frequency && f.frequency < min) return false;
+      if (!isNaN(max) && f.frequency && f.frequency > max) return false;
+      if (q && ((f.label || '') + ' ' + (f.filename || '')).toLowerCase().indexOf(q) < 0) return false;
       return true;
     });
-    
-    // Apply sorting
-    if (sortVal === 'relevance') {
-      filtered.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0));
-    } else if (sortVal === 'frequency_asc') {
-      filtered.sort((a, b) => (a.frequency || 1000) - (b.frequency || 1000));
-    } else if (sortVal === 'frequency_desc') {
-      filtered.sort((a, b) => (b.frequency || 0) - (a.frequency || 0));
-    } else if (sortVal === 'duration') {
-      const typeOrder = { solfeggio: 0, isochronic: 1, pure: 2 };
-      filtered.sort((a, b) => (typeOrder[a.type] || 2) - (typeOrder[b.type] || 2));
-    } else if (sortVal === 'brainwave') {
-      const bwOrder = { delta: 0, theta: 1, alpha: 2, beta: 3, gamma: 4 };
-      filtered.sort((a, b) => {
-        const aOrder = bwOrder[a.brainwave] !== undefined ? bwOrder[a.brainwave] : 5;
-        const bOrder = bwOrder[b.brainwave] !== undefined ? bwOrder[b.brainwave] : 5;
-        if (aOrder !== bOrder) return aOrder - bOrder;
-        return (a.frequency || 0) - (b.frequency || 0);
-      });
-    }
-    
-    saveFilterPreferences();
-    return filtered;
+    var typeOrder = { solfeggio: 0, isochronic: 1, pure: 2 };
+    var bwOrder = { delta: 0, theta: 1, alpha: 2, beta: 3, gamma: 4 };
+    if (sort === 'frequency_asc') out.sort(function (a, c) { return (a.frequency || 1000) - (c.frequency || 1000); });
+    else if (sort === 'frequency_desc') out.sort(function (a, c) { return (c.frequency || 0) - (a.frequency || 0); });
+    else if (sort === 'duration') out.sort(function (a, c) { return (typeOrder[a.type] === undefined ? 2 : typeOrder[a.type]) - (typeOrder[c.type] === undefined ? 2 : typeOrder[c.type]); });
+    else if (sort === 'brainwave') out.sort(function (a, c) {
+      var x = bwOrder[a.brainwave] === undefined ? 5 : bwOrder[a.brainwave], y = bwOrder[c.brainwave] === undefined ? 5 : bwOrder[c.brainwave];
+      return x !== y ? x - y : (a.frequency || 0) - (c.frequency || 0);
+    });
+    else out.sort(function (a, c) { return (c.relevance_score || 0) - (a.relevance_score || 0); });
+    return out;
   }
 
-  function renderPlaylist(files) {
-    queue = files.slice();
-    playlistDiv.innerHTML = '';
-    if (!files.length) {
-      playlistDiv.innerHTML = '<div style="padding:10px; color:#64748b;">No tracks match the current filters.</div>';
-      setVisible(playlistContainer, true);
-      setVisible(controls, false);
+  function render() {
+    savePrefs();
+    queue = applyFilters();
+    listDiv.textContent = '';
+    if (!queue.length) {
+      var p = document.createElement('p');
+      p.className = 'muted';
+      p.textContent = 'No tracks match these filters. Reset the filters to see all tracks for this mood.';
+      listDiv.appendChild(p);
       return;
     }
-
-    files.forEach((file, idx) => {
-      const card = document.createElement('div');
-      card.style.border = '1px solid #e2e8f0';
-      card.style.borderRadius = '12px';
-      card.style.padding = '10px';
-      card.style.background = '#fff';
-      const title = document.createElement('div');
-      title.style.fontWeight = '600';
-      title.style.color = '#1f2937';
-      title.textContent = file.label || file.filename;
-      const meta = document.createElement('div');
-      meta.style.fontSize = '0.9rem';
-      meta.style.color = '#64748b';
-      const lengthHint = file.length_hint === 'long' ? '⏱️ Long' : 'Short';
-      const typeLabel = file.type ? file.type.charAt(0).toUpperCase() + file.type.slice(1) : 'Audio';
-      const brainwaveLabel = file.brainwave ? ` • ${file.brainwave.charAt(0).toUpperCase() + file.brainwave.slice(1)}` : '';
-      const freqLabel = file.frequency ? ` • ${file.frequency} Hz` : '';
-      const relevanceLabel = file.relevance_score > 0 ? ` • ⭐${file.relevance_score}` : '';
-      meta.textContent = `${typeLabel} • ${lengthHint}${brainwaveLabel}${freqLabel}${relevanceLabel}`;
-      const actions = document.createElement('div');
-      actions.style.marginTop = '8px';
-      const playBtn = document.createElement('button');
-      playBtn.className = 'mood-btn';
-      playBtn.style.padding = '6px 12px';
-      playBtn.textContent = 'Play';
-      playBtn.addEventListener('click', () => playAt(idx));
-      actions.appendChild(playBtn);
-      card.appendChild(title);
-      card.appendChild(meta);
-      card.appendChild(actions);
-      playlistDiv.appendChild(card);
+    var wrap = document.createElement('div');
+    wrap.className = 'table-wrap';
+    var table = document.createElement('table');
+    table.className = 'table';
+    var thead = document.createElement('thead'), hr = document.createElement('tr');
+    ['Track', 'Type', 'Band', 'Frequency', 'Length', ''].forEach(function (h, i) {
+      var th = document.createElement('th');
+      th.scope = 'col';
+      if (i === 5) { var s = document.createElement('span'); s.className = 'mfh-visually-hidden'; s.textContent = 'Play'; th.appendChild(s); } else th.textContent = h;
+      hr.appendChild(th);
     });
-    setVisible(playlistContainer, files.length > 0);
-    setVisible(controls, files.length > 0);
+    thead.appendChild(hr);
+    var tbody = document.createElement('tbody');
+    queue.forEach(function (f, i) {
+      var tr = document.createElement('tr');
+      tr.className = 'track-row';
+      if (f.url === currentUrl) tr.setAttribute('aria-current', 'true');
+      tr.append(td(f.label || f.filename), td(f.type ? cap(f.type) : 'Audio'), td(f.brainwave ? cap(f.brainwave) : 'n/a'),
+        td(f.frequency ? f.frequency + ' Hz' : 'n/a'), td(f.length_hint === 'long' ? 'Long' : 'Short'));
+      var cell = document.createElement('td');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'btn btn-secondary btn-sm';
+      b.textContent = 'Play';
+      b.setAttribute('aria-label', 'Play ' + (f.label || f.filename));
+      b.addEventListener('click', function () { playAt(i); });
+      cell.appendChild(b);
+      tr.appendChild(cell);
+      tbody.appendChild(tr);
+    });
+    table.append(thead, tbody);
+    wrap.appendChild(table);
+    listDiv.appendChild(wrap);
   }
 
-  async function playAt(i) {
+  function playAt(i) {
     if (i < 0 || i >= queue.length) return;
-    currentIndex = i;
-    const item = queue[i];
+    var item = queue[i];
+    current = i;
+    currentUrl = item.url;
     audio.src = item.url;
-    setVisible(audio, true);
-    nowPlayingLabel.textContent = item.label || item.filename;
-    setVisible(nowPlayingWrap, true);
-    try { await audio.play(); } catch (err) { console.debug('Autoplay prevented', err); }
-  }
-
-  audio.addEventListener('ended', () => {
-    if (currentIndex + 1 < queue.length) {
-      playAt(currentIndex + 1);
-    }
-  });
-
-  playAllBtn.addEventListener('click', () => { if (queue.length) playAt(0); });
-  nextBtn.addEventListener('click', () => { if (currentIndex + 1 < queue.length) playAt(currentIndex + 1); });
-  clearBtn.addEventListener('click', () => {
-    queue = [];
-    currentIndex = -1;
-    setVisible(playlistContainer, false);
-    setVisible(controls, false);
-    setVisible(audio, false);
-    setVisible(nowPlayingWrap, false);
-  });
-
-  function onFilterChange() {
-    const filtered = applyFilters();
-    renderPlaylist(filtered);
-  }
-  
-  // Add event listeners for all filters
-  typeSel.addEventListener('change', onFilterChange);
-  brainwaveSel.addEventListener('change', onFilterChange);
-  sortSel.addEventListener('change', onFilterChange);
-  minFreqInput.addEventListener('input', onFilterChange);
-  maxFreqInput.addEventListener('input', onFilterChange);
-  searchInput.addEventListener('input', onFilterChange);
-  resetBtn.addEventListener('click', resetFilters);
-  
-  // Load saved preferences on initialization
-  loadFilterPreferences();
-
-  document.querySelectorAll('#music-buttons .mood-btn').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const mood = btn.getAttribute('data-mood');
-
-      // CSRF token for POSTs
-      const csrfMeta = document.querySelector('meta[name=\"csrf-token\"]');
-      const csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
-
-      try {
-        // Load local files (preferred)
-        // Get current filter settings
-        const minFreq = parseFloat(minFreqInput.value) || null;
-        const maxFreq = parseFloat(maxFreqInput.value) || null;
-        const filterType = typeSel.value === 'all' ? null : typeSel.value;
-        const sortBy = sortSel.value || 'default';
-        
-        const res = await fetch('/api/mood-audio', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(csrfToken && { 'X-CSRFToken': csrfToken })
-          },
-          body: JSON.stringify({ 
-            mood, 
-            min_frequency: minFreq,
-            max_frequency: maxFreq,
-            type: filterType,
-            sort_by: sortBy
-          })
-        });
-        const data = await res.json();
-        if (data && data.success && Array.isArray(data.files) && data.files.length > 0) {
-          allFiles = data.files;
-          const filtered = applyFilters();
-          renderPlaylist(filtered);
-          // Auto-start with first long track if available in filtered list
-          const firstLong = filtered.findIndex(f => f.length_hint === 'long');
-          const startIdx = firstLong >= 0 ? firstLong : 0;
-          if (filtered.length) { await playAt(startIdx); }
-          return;
-        }
-
-        // Fallback: curated search
-        const mapRes = await fetch('/api/mood-music');
-        const mapJson = await mapRes.json();
-        const moods = mapJson.moods || {};
-        const entry = moods[mood] || {};
-        const query = entry.query || ('binaural beats ' + mood);
-        const url = 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query);
-        try { window.open(url, '_blank', 'noopener'); } catch (_) { window.location.href = url; }
-
-        // Log selection (best-effort)
-        try { await fetch('/api/log-mood-selection', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...(csrfToken && { 'X-CSRFToken': csrfToken }) },
-          body: JSON.stringify({ mood, query, video: null })
-        }); } catch (_) {}
-
-      } catch (e) {
-        console.error('Play mood failed', e);
-        alert('Failed to load mood playlist.');
-      }
+    nowLabel.textContent = item.label || item.filename;
+    nowWrap.hidden = false;
+    document.querySelectorAll('.track-row').forEach(function (r, idx) {
+      if (idx === i) r.setAttribute('aria-current', 'true'); else r.removeAttribute('aria-current');
     });
-  });
-}
+    var pr = audio.play();
+    if (pr && pr.catch) pr.catch(function () { toast('Could not start this track. Press play on the player.', 'error'); });
+  }
 
-document.addEventListener('DOMContentLoaded', init);
+  function showResults(has, message) {
+    emptyBox.hidden = has;
+    listBox.hidden = !has;
+    playerBox.hidden = !has;
+    if (!has && message) emptyText.textContent = message;
+  }
+
+  function loadMood(btn) {
+    var mood = btn.getAttribute('data-mood');
+    document.querySelectorAll('.mood-btn').forEach(function (b) { b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'); });
+    btn.setAttribute('aria-busy', 'true');
+    note.textContent = 'Loading tracks for ' + mood + '.';
+    var min = parseFloat(minIn.value), max = parseFloat(maxIn.value);
+    fetch('/api/mood-audio', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': window.WL ? WL.csrf() : '' },
+      body: JSON.stringify({ mood: mood, min_frequency: isNaN(min) ? null : min, max_frequency: isNaN(max) ? null : max,
+        type: typeSel.value === 'all' ? null : typeSel.value, sort_by: sortSel.value || 'default' })
+    }).then(function (res) { return res.json().catch(function () { return null; }).then(function (d) { return { ok: res.ok, d: d }; }); })
+      .then(function (r) {
+        if (r.ok && r.d && r.d.success && Array.isArray(r.d.files) && r.d.files.length) {
+          allFiles = r.d.files;
+          showResults(true);
+          render();
+          note.textContent = allFiles.length + (allFiles.length === 1 ? ' track' : ' tracks') + ' for ' + mood + '. Press Play on a track.';
+        } else if (r.ok) {
+          allFiles = [];
+          showResults(false, 'There is no matching audio in this library for ' + mood + '. Try another mood, or use the breathing guide instead.');
+          note.textContent = 'No tracks found for ' + mood + '.';
+        } else {
+          showResults(false, 'The track list could not be loaded. Check your connection and try again.');
+          note.textContent = 'Could not load tracks.';
+          toast('Could not load tracks. Try again.', 'error');
+        }
+      })
+      .catch(function () {
+        showResults(false, 'The track list could not be loaded. Check your connection and try again.');
+        note.textContent = 'Could not load tracks.';
+        toast('Could not load tracks. Try again.', 'error');
+      })
+      .then(function () { btn.removeAttribute('aria-busy'); });
+  }
+
+  document.querySelectorAll('#music-buttons .mood-btn').forEach(function (b) { b.addEventListener('click', function () { loadMood(b); }); });
+  audio.addEventListener('ended', function () { if (current + 1 < queue.length) playAt(current + 1); });
+  audio.addEventListener('error', function () { if (audio.getAttribute('src')) toast('This track could not be played.', 'error'); });
+  playAll.addEventListener('click', function () { playAt(0); });
+  nextBtn.addEventListener('click', function () { playAt(current + 1); });
+  clearBtn.addEventListener('click', function () {
+    audio.pause();
+    audio.removeAttribute('src');
+    audio.load();
+    allFiles = []; queue = []; current = -1; currentUrl = '';
+    nowWrap.hidden = true;
+    listBox.hidden = true;
+    playerBox.hidden = true;
+    note.textContent = 'Choose a mood to list tracks. Nothing plays until you press Play.';
+  });
+
+  var onFilter = debounce(render, 250);
+  [typeSel, bwSel, sortSel].forEach(function (c) { c.addEventListener('change', render); });
+  [minIn, maxIn, searchIn].forEach(function (c) { c.addEventListener('input', onFilter); });
+  resetBtn.addEventListener('click', function () {
+    typeSel.value = 'all'; bwSel.value = 'all'; sortSel.value = 'default';
+    minIn.value = ''; maxIn.value = ''; searchIn.value = '';
+    try { localStorage.removeItem(STORE); } catch (e) { /* ignore */ }
+    if (allFiles.length) render();
+  });
+  filtersForm.addEventListener('submit', function (e) { e.preventDefault(); });
+
+  readPrefs();
+})();

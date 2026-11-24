@@ -16,3 +16,7 @@ class AIProvider(ABC):
             The AI's response as a string.
         """
         pass
+
+    def configured(self) -> bool:
+        """True when the provider has the credentials it needs (checked before the circuit breaker)."""
+        return True

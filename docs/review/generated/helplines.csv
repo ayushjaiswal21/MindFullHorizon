@@ -1,0 +1,7 @@
+﻿name,number,tel_link,hours,note,last_verified_in_code,in_app,verification_status_in_docs,code_location,clinician_verdict,comment
+Tele-MANAS (Govt. of India),14416,14416,24x7,"Free, about 20 languages. Also 1-800-891-4416.",2026-11,yes,verified via PIB release (official site not fetchable),utils/helplines.py,,
+KIRAN (Ministry of Social Justice),1800-599-0019,18005990019,24x7,Free mental-health helpline.,2026-11,yes,verified via PIB (some pages print 1800-500-0019: likely typo),utils/helplines.py,,
+"Emergency (police, ambulance)",112,112,24x7,If you or someone else is in immediate danger.,2026-11,yes,verified (MHA/ERSS),utils/helplines.py,,
+iCall (TISS),9152987821,,,,,no (listed in docs only),"number verified; hours conflict, show ""Mon-Sat, check site for hours""",docs/SAFETY_RESEARCH.md,,
+Vandrevala Foundation,+91 9999 666 555,,,,,no (listed in docs only),secondary sources only: UNVERIFIED on official site,docs/SAFETY_RESEARCH.md,,
+AASRA,022 2754 6669,,,,,no (listed in docs only),verified on https://aasra.info/helpline.html. Do NOT use 9820466726 (unverified),docs/SAFETY_RESEARCH.md,,

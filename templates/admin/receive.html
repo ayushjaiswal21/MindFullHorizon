@@ -1,0 +1,44 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_rx/_ui.html' import notice %}
+{% block title %}Receive stock{% endblock %}
+{% block page_scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_inventory.js') }}?v={{ asset_version }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_import.js') }}?v={{ asset_version }}" defer></script>
+{% endblock %}
+{% macro fld(id, label, type='text', required=True, extra='', help=None) %}
+<div class="field"><label class="label" for="{{ id }}">{{ label }}{% if not required %} <span class="mfh-optional">(optional)</span>{% endif %}</label><input class="input" id="{{ id }}" type="{{ type }}"{% if required %} required{% endif %} {{ extra|safe }}{% if help %} aria-describedby="{{ id }}-help"{% endif %}>{% if help %}<p class="help" id="{{ id }}-help">{{ help }}</p>{% endif %}</div>
+{% endmacro %}
+{% block rx_body %}
+{% set base = nav_url('admin.inventory', '/admin/inventory') %}
+<div class="page-header"><div><h1>Receive stock</h1><p class="lead">Record medicine that arrived. Each delivery is added to the stock history and cannot be edited afterwards. <a class="cl-link" href="{{ base }}">Back to stock levels</a></p></div></div>
+{{ notice() }}
+{% if not desk %}
+<div class="alert alert-warning" role="alert">{{ icon('lock') }}<p>Only the pharmacy desk can receive stock. Ask the administrator who has the pharmacy desk role.</p></div>
+{% else %}
+<form id="receive-form" class="card cl-block" data-url="/admin/api/inventory/receive" data-search-url="/admin/api/catalogue" novalidate>
+  <div class="card-header"><h2 class="text-lg">One delivery</h2></div>
+  <div class="card-body">
+    <div class="cl-grid-2"><div>
+      <div class="field"><label class="label" for="rcv-q">Find the medicine</label><input class="input" id="rcv-q" type="search" autocomplete="off" maxlength="100" aria-describedby="rcv-q-help"><p class="help" id="rcv-q-help">Type at least 2 letters of the name. Medicines that are controlled or inactive cannot be stocked.</p></div>
+      <div class="field"><label class="label" for="rcv-medicine">Medicine</label><select class="select" id="rcv-medicine" required><option value="">Search above, then choose</option></select></div>
+      {{ fld('rcv-batch', 'Batch number', extra='maxlength="40"') }}
+      {{ fld('rcv-expiry', 'Expiry date', 'date', help='The batch is not given out on its expiry date.') }}
+    </div><div>
+      {{ fld('rcv-qty', 'Quantity', 'number', extra='min="1" max="100000" step="1"') }}
+      {{ fld('rcv-cost', 'Unit cost (INR)', 'number', False, 'min="0" step="0.01"') }}
+      {{ fld('rcv-supplier', 'Supplier', 'text', False, 'maxlength="120"') }}
+      <div class="field"><label class="label" for="rcv-reason">Source</label><select class="select" id="rcv-reason"><option value="purchase">Purchase</option><option value="donation">Donation</option><option value="transfer_in">Transfer in</option><option value="opening_stock">Opening stock</option></select></div>
+    </div></div>
+    <p class="error-text" id="rcv-error" role="alert" hidden></p>
+    <button type="submit" class="btn btn-primary">Receive stock</button>
+    <p class="help" id="rcv-live" role="status" aria-live="polite"></p>
+  </div>
+</form>
+{% set import_url = '/admin/api/inventory/import' %}
+{% set import_title = 'Import stock from a CSV file' %}
+{% set import_help = 'Columns: generic_name, brand_name, strength, form, batch_no, expiry_date (YYYY-MM-DD), quantity, unit_cost, supplier. Use Check file first. Uploading the same file twice is refused, so stock is never counted twice.' %}
+{% include 'admin/_import_box.html' %}
+<p><a class="cl-link" href="{{ base }}/template.csv">Download the stock CSV template</a></p>
+{% endif %}
+{% endblock %}

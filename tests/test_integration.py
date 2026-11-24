@@ -10,7 +10,7 @@ PASSWORD = "Str0ng!Passw0rd"
 
 def _signup(client, **extra):
     data = dict(name="New", email="new@test.local", password=PASSWORD, confirm_password=PASSWORD,
-                role="patient", institution="Test University")
+                role="patient", institution="Test University", age_confirm="yes")
     data.update(extra)
     return client.post("/signup", data=data)
 

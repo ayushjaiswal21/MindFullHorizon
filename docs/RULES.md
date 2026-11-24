@@ -74,7 +74,7 @@ Related: [ARCHITECTURE.md](ARCHITECTURE.md) (how it is built), [PRD.md](PRD.md) 
 - **SEC-12** SocketIO events MUST authenticate the session, scope rooms to the user (or provider with a same-institution appointment), and CORS origins MUST NOT be `*`. Enforced by: `tests/test_security.py::test_socket_*`, `::test_socketio_cors_not_wildcard`.
 - **SEC-13** Passwords MUST be hashed with Werkzeug; OAuth-only users MUST have an unusable password. Enforced by: `tests/test_security.py::test_google_new_user_has_unusable_password_and_patient_dashboard`.
 - **SEC-14** `DEBUG_DISABLE_SECURITY` and Flask debug MUST be off in production. Enforced by: code review; OPS checklist.
-- **SEC-15** Vulnerability reports go through [SECURITY.md](../SECURITY.md); a fix for a reported issue MUST NOT discuss exploit details in a public issue. Enforced by: manual.
+- **SEC-15** Vulnerability reports go through [SECURITY.md](SECURITY.md); a fix for a reported issue MUST NOT discuss exploit details in a public issue. Enforced by: manual.
 
 ## PRIV: privacy and health data
 
@@ -138,9 +138,9 @@ Related: [ARCHITECTURE.md](ARCHITECTURE.md) (how it is built), [PRD.md](PRD.md) 
 - **TEST-02** Bug fixes MUST start with a failing test that reproduces the bug, then the fix. Enforced by: PR review checklist.
 - **TEST-03** New behaviour MUST ship with tests; security and safety behaviour MUST have a negative test (what must NOT happen). Enforced by: PR review checklist.
 - **TEST-04** Tests MUST be hermetic: temp DB, no network, no live model, no wall-clock dependence. Enforced by: `tests/conftest.py`.
-- **TEST-05** Scripts in `tests/manual/` are not tests and are excluded by `pytest.ini`; do not rely on them. Enforced by: `pytest.ini`.
+- **TEST-05** Scripts in `tests/manual/` are not tests and are not collected (pytest is configured in `tests/pytest.ini`); do not rely on them.
 - **TEST-06** A test that is flaky or skipped MUST have an owner and a reason in the PR; deleting a failing test to go green is forbidden. Enforced by: code review.
-- **TEST-07** Run tests in a venv that has `requirements-dev.txt` installed (see MEMORY.md snapshot); a green run in a different environment MUST say which. Enforced by: manual.
+- **TEST-07** Run tests in a venv that has `requirements/dev.txt` installed (see MEMORY.md snapshot); a green run in a different environment MUST say which. Enforced by: manual.
 
 ## GIT / RELEASE
 

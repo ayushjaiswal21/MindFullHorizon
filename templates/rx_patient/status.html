@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Prescription status - MindFull Horizon{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/rx_patient.css') }}">
+{% endblock %}
+
+{% block content %}
+{% set labels = {'valid': 'Valid', 'partially_dispensed': 'Valid, partly collected', 'dispensed': 'Collected', 'cancelled': 'Cancelled', 'expired': 'Expired'} %}
+<div class="container section">
+    <header class="page-header">
+        <h1>Prescription status</h1>
+        <p class="lead">This page confirms the status of a prescription number. It shows no patient details and no medicines.</p>
+    </header>
+    <section class="card" aria-labelledby="status-heading">
+        <div class="card-body">
+            <h2 class="pt-title" id="status-heading"><span class="rx-number">{{ s.number }}</span></h2>
+            <dl class="kv mt-3">
+                <div><dt>Status</dt><dd>{{ labels.get(s.status, s.status) }}</dd></div>
+                <div><dt>Issued</dt><dd>{{ s.issued_at|rx_date }}</dd></div>
+                <div><dt>Doctor</dt><dd>{{ s.doctor_name }}{% if s.doctor_reg_no %}, Reg. No. {{ s.doctor_reg_no }}{% endif %}</dd></div>
+                <div><dt>Institution</dt><dd>{{ s.institution }}</dd></div>
+            </dl>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from '_macros.html' import empty_state %}
+{% from 'provider_rx/_ui.html' import ts, pager %}
+{% macro meta_text(m) %}{% if m is mapping %}{% for k, v in m.items() %}{{ k }}={{ v }}{{ ', ' if not loop.last }}{% endfor %}{% else %}{{ m or '' }}{% endif %}{% endmacro %}
+{% block title %}Audit log{% endblock %}
+{% block rx_body %}
+{% set base = nav_url('admin.audit', '/admin/audit') %}
+{% set f = filters or {} %}
+<div class="page-header"><div><h1>Audit log</h1><p class="lead">Who did what in your institution. Entries hold short codes and ids only, never patient names or what anyone typed. Viewing this page is itself recorded.</p></div></div>
+<form class="cl-filters" method="get" action="{{ base }}">
+  <div class="field"><label class="label" for="a-action">Action</label><select class="select" id="a-action" name="action"><option value="">All</option>{% for a in actions or [] %}<option value="{{ a }}"{{ ' selected' if f.action == a }}>{{ a }}</option>{% endfor %}</select></div>
+  <div class="field"><label class="label" for="a-actor">Person</label><select class="select" id="a-actor" name="actor"><option value="">Everyone</option>{% for s in staff or [] %}{% set sid = s.id if s is mapping else s[0] %}{% set sname = s.name if s is mapping else s[1] %}<option value="{{ sid }}"{{ ' selected' if f.actor|string == sid|string }}>{{ sname }}</option>{% endfor %}</select></div>
+  <div class="field"><label class="label" for="a-from">From</label><input class="input" id="a-from" type="date" name="from" value="{{ f['from'] or '' }}"></div>
+  <div class="field"><label class="label" for="a-to">To</label><input class="input" id="a-to" type="date" name="to" value="{{ f.to or '' }}"></div>
+  <button type="submit" class="btn btn-primary">Filter</button><a class="btn btn-ghost" href="{{ base }}">Reset</a>
+</form>
+<p class="help">The last 7 days are shown unless you choose a range. A range can be at most 92 days.</p>
+{% if rows %}
+<div class="table-wrap"><table class="table"><caption class="sr-only">Audit entries</caption>
+<thead><tr><th scope="col">Time</th><th scope="col">Person</th><th scope="col">Action</th><th scope="col">Target</th><th scope="col">Details</th></tr></thead>
+<tbody>{% for r in rows %}<tr><td>{{ ts(r.created_at) }}</td><td>{{ r.actor_name or 'System' }}{% if r.actor_role %} <span class="muted">({{ r.actor_role }})</span>{% endif %}</td><td>{{ r.action }}</td><td>{{ r.target_type }}{% if r.target_id %} {{ r.target_id }}{% endif %}</td><td class="cl-wrap cl-mono">{{ meta_text(r.meta) }}</td></tr>{% endfor %}</tbody></table></div>
+{{ pager(meta) }}
+{% else %}
+{{ empty_state('No audit entries', 'No audit entries in this range.', 'clock') }}
+{% endif %}
+{% endblock %}

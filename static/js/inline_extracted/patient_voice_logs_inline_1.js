@@ -1,258 +1,200 @@
-let mediaRecorder;
-let audioChunks = [];
-let recordingTimer;
-let startTime;
+/* Voice logs: record in the browser, preview, then save. The microphone is only requested when the person
+   presses Start recording. No waveform or other animation. */
+(function () {
+  'use strict';
+  var root = document.getElementById('voice-root');
+  if (!root || window.__mfhVoice) return;
+  window.__mfhVoice = true;
 
-function startRecording() {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
+  var MAX_SECONDS = 120;
+  var $ = function (id) { return document.getElementById(id); };
+  var recBtn = $('recordBtn'), stopBtn = $('stopBtn'), upBtn = $('uploadBtn'), discardBtn = $('discardBtn'),
+      statusEl = $('recordingStatus'), timerEl = $('timer'), micEl = $('mic-state'), upStatus = $('uploadStatus'),
+      previewWrap = $('preview-wrap'), preview = $('preview'), list = $('voice-list');
+  var pageSize = parseInt(root.dataset.pageSize, 10) || 10;
 
-            mediaRecorder.ondataavailable = event => {
-                audioChunks.push(event.data);
-            };
+  var rec = null, stream = null, chunks = [], startedAt = 0, tick = null, previewUrl = '';
 
-            mediaRecorder.onstop = () => {
-                stream.getTracks().forEach(track => track.stop());
-            };
+  function say(t) { statusEl.textContent = t; }
+  function pad(n) { return ('0' + n).slice(-2); }
 
-            mediaRecorder.start();
-            startTime = Date.now();
+  /* Permission state without prompting. */
+  function describePermission(state) {
+    if (state === 'granted') micEl.textContent = 'Microphone: allowed for this site.';
+    else if (state === 'denied') micEl.textContent = 'Microphone: blocked. Allow it in your browser\'s site settings, then reload this page.';
+    else micEl.textContent = 'Microphone: not asked yet. Your browser asks for permission when you press Start recording.';
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof window.MediaRecorder === 'undefined') {
+    recBtn.disabled = true;
+    micEl.textContent = 'This browser cannot record audio. Try a current version of Chrome, Edge, Firefox or Safari.';
+  } else if (navigator.permissions && navigator.permissions.query) {
+    navigator.permissions.query({ name: 'microphone' }).then(function (p) {
+      describePermission(p.state);
+      p.onchange = function () { describePermission(p.state); };
+    }).catch(function () { /* some browsers do not support querying the microphone */ });
+  }
 
-            // Update UI
-            document.getElementById('recordBtn').disabled = true;
-            document.getElementById('stopBtn').disabled = false;
-            document.getElementById('recordingStatus').textContent = 'Recording...';
-            document.getElementById('recordingStatus').className = 'text-sm text-red-600 mb-2';
+  function releaseStream() {
+    if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; }
+  }
+  function clearPreview() {
+    if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = ''; }
+    preview.removeAttribute('src');
+    previewWrap.hidden = true;
+    upBtn.disabled = true;
+    chunks = [];
+  }
 
-            // Start timer
-            let seconds = 0;
-            recordingTimer = setInterval(() => {
-                seconds = Math.floor((Date.now() - startTime) / 1000);
-                const minutes = Math.floor(seconds / 60);
-                const remainingSeconds = seconds % 60;
-                document.getElementById('timer').textContent =
-                    `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  function stopRecording() {
+    clearInterval(tick);
+    if (rec && rec.state !== 'inactive') rec.stop();
+    stopBtn.disabled = true;
+    recBtn.disabled = false;
+  }
 
-                // Auto-stop after 2 minutes
-                if (seconds >= 120) {
-                    stopRecording();
-                }
-            }, 1000);
+  function startRecording() {
+    clearPreview();
+    navigator.mediaDevices.getUserMedia({ audio: true }).then(function (s) {
+      stream = s;
+      chunks = [];
+      rec = new MediaRecorder(s);
+      rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+      rec.onstop = function () {
+        releaseStream();
+        if (!chunks.length) { say('Nothing was recorded. Try again.'); return; }
+        var blob = new Blob(chunks, { type: 'audio/wav' });
+        previewUrl = URL.createObjectURL(blob);
+        preview.src = previewUrl;
+        previewWrap.hidden = false;
+        upBtn.disabled = false;
+        say('Recording finished. Play it back, then save or discard it.');
+        describePermission('granted');
+      };
+      rec.start();
+      startedAt = Date.now();
+      recBtn.disabled = true;
+      stopBtn.disabled = false;
+      say('Recording. Press Stop when you are done.');
+      timerEl.textContent = '00:00';
+      tick = setInterval(function () {
+        var s2 = Math.floor((Date.now() - startedAt) / 1000);
+        timerEl.textContent = pad(Math.floor(s2 / 60)) + ':' + pad(s2 % 60);
+        if (s2 >= MAX_SECONDS) stopRecording();
+      }, 500);
+    }).catch(function (err) {
+      releaseStream();
+      var name = err && err.name;
+      if (name === 'NotAllowedError' || name === 'SecurityError') {
+        describePermission('denied');
+        say('Microphone access was blocked. Allow it in your browser\'s site settings, then press Start recording again.');
+      } else if (name === 'NotFoundError') {
+        say('No microphone was found. Connect one and try again.');
+      } else {
+        say('The microphone could not be started. Close other apps that use it and try again.');
+      }
+    });
+  }
 
-            // Start waveform visualization
-            startWaveformVisualization(stream);
-        })
-        .catch(error => {
-            console.error('Error accessing microphone:', error);
-            alert('Error accessing microphone. Please check permissions.');
-        });
-}
-
-function stopRecording() {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-    }
-
-    clearInterval(recordingTimer);
-
-    // Update UI
-    document.getElementById('recordBtn').disabled = false;
-    document.getElementById('stopBtn').disabled = true;
-    document.getElementById('uploadBtn').disabled = false;
-    document.getElementById('recordingStatus').textContent = 'Recording stopped';
-    document.getElementById('recordingStatus').className = 'text-sm text-green-600 mb-2';
-
-    // Stop waveform visualization
-    stopWaveformVisualization();
-}
-
-function uploadRecording() {
-    if (audioChunks.length === 0) {
-        alert('No recording to upload');
-        return;
-    }
-
-    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-    const formData = new FormData();
-    formData.append('audio', audioBlob, 'voice_log.wav');
-
-    // Show upload status
-    document.getElementById('uploadStatus').classList.remove('hidden');
-
+  function upload() {
+    if (!chunks.length) { say('There is no recording to save.'); return; }
+    var fd = new FormData();
+    fd.append('audio', new Blob(chunks, { type: 'audio/wav' }), 'voice_log.wav');
+    upBtn.disabled = true;
+    upBtn.setAttribute('aria-busy', 'true');
+    discardBtn.disabled = true;
+    upStatus.hidden = false;
     fetch('/api/upload-voice', {
-        method: 'POST',
-        body: formData,
-        headers: {
-            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : ''
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('uploadStatus').classList.add('hidden');
-
-        if (data.success) {
-            location.reload(); // Refresh to show new voice log
-        } else {
-            alert('Upload failed: ' + data.message);
-        }
-    })
-    .catch(error => {
-        document.getElementById('uploadStatus').classList.add('hidden');
-        console.error('Upload error:', error);
-        alert('Upload failed. Please try again.');
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': window.WL ? WL.csrf() : '' },
+      body: fd
+    }).then(function (res) {
+      return res.json().catch(function () { return null; }).then(function (d) { return { ok: res.ok, status: res.status, d: d }; });
+    }).then(function (r) {
+      upStatus.hidden = true;
+      if (r.ok && r.d && r.d.success) {
+        say('Saved. Loading your list.');
+        if (window.WL) WL.toast('Voice log saved.', 'success');
+        window.location.reload();
+        return;
+      }
+      upBtn.disabled = false;
+      var m = 'The recording could not be saved. Try again.';
+      if (r.status === 429) m = 'You have reached the limit of 5 voice logs an hour. Try again later.';
+      else if (r.status === 401 || r.status === 403) m = 'Your session has expired. Log in again, then save.';
+      else if (r.d && r.d.message) m = r.d.message;
+      say(m);
+      if (window.WL) WL.toast(m, 'error');
+    }).catch(function () {
+      upStatus.hidden = true;
+      upBtn.disabled = false;
+      say('The network seems to be down. Your recording is still here. Try saving again.');
+    }).then(function () {
+      upBtn.removeAttribute('aria-busy');
+      discardBtn.disabled = false;
     });
-}
+  }
 
-// Simple waveform visualization
-let audioContext, analyser, dataArray, canvasCtx, animationId;
+  recBtn.addEventListener('click', startRecording);
+  stopBtn.addEventListener('click', stopRecording);
+  upBtn.addEventListener('click', upload);
+  discardBtn.addEventListener('click', function () {
+    clearPreview();
+    timerEl.textContent = '00:00';
+    say('Recording discarded. Ready to record. Maximum 2 minutes.');
+  });
+  window.addEventListener('beforeunload', function () { releaseStream(); clearInterval(tick); });
 
-function startWaveformVisualization(stream) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    analyser = audioContext.createAnalyser();
-    const source = audioContext.createMediaStreamSource(stream);
-    source.connect(analyser);
-
-    analyser.fftSize = 256;
-    const bufferLength = analyser.frequencyBinCount;
-    dataArray = new Uint8Array(bufferLength);
-
-    const canvas = document.getElementById('waveform');
-    canvasCtx = canvas.getContext('2d');
-    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-
-    function draw() {
-        const drawVisual = requestAnimationFrame(draw);
-
-        analyser.getByteFrequencyData(dataArray);
-
-        canvasCtx.fillStyle = '#f3f4f6';
-        canvasCtx.fillRect(0, 0, canvas.width, canvas.height);
-
-        canvasCtx.lineWidth = 2;
-        canvasCtx.strokeStyle = '#3b82f6';
-        canvasCtx.beginPath();
-
-        const sliceWidth = canvas.width * 1.0 / bufferLength;
-        let x = 0;
-
-        for (let i = 0; i < bufferLength; i++) {
-            const v = dataArray[i] / 128.0;
-            const y = v * canvas.height / 2;
-
-            if (i === 0) {
-                canvasCtx.moveTo(x, y);
-            } else {
-                canvasCtx.lineTo(x, y);
-            }
-
-            x += sliceWidth;
-        }
-
-        canvasCtx.stroke();
+  /* Paging and delete */
+  var more = $('show-more-btn'), moreStatus = $('show-more-status');
+  function refreshLists() {
+    var total = list.querySelectorAll('.voice-log').length;
+    var c = $('log-count');
+    if (c) c.textContent = '(' + total + ')';
+    $('voice-empty').hidden = total > 0;
+    if (more) {
+      var hidden = list.querySelectorAll('.voice-log[hidden]').length;
+      more.hidden = hidden === 0;
+      moreStatus.textContent = 'Showing ' + (total - hidden) + ' of ' + total + '.';
     }
+  }
+  if (more) {
+    more.addEventListener('click', function () {
+      var items = list.querySelectorAll('.voice-log[hidden]');
+      var first = items[0];
+      for (var i = 0; i < Math.min(pageSize, items.length); i++) items[i].hidden = false;
+      refreshLists();
+      if (first) { var h = first.querySelector('h3'); if (h) { h.tabIndex = -1; h.focus(); } }
+    });
+    refreshLists();
+  }
 
-    draw();
-}
-
-function stopWaveformVisualization() {
-    if (animationId) {
-        cancelAnimationFrame(animationId);
-    }
-    if (audioContext) {
-        audioContext.close();
-    }
-    const canvas = document.getElementById('waveform');
-    const canvasCtx = canvas.getContext('2d');
-    canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-}
-
-function deleteVoiceLog(logId) {
-    if (confirm('Are you sure you want to delete this voice log? This action cannot be undone.')) {
-        fetch(`/api/delete-voice-log/${logId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').getAttribute('content') : ''
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Remove the log entry from the DOM
-                const logElement = document.querySelector(`[data-log-id="${logId}"]`);
-                if (logElement) {
-                    logElement.remove();
-                }
-
-                // Show success message
-                showAlert('Voice log deleted successfully!', 'success');
-
-                // If no logs left, show empty state
-                const logsContainer = document.querySelector('.space-y-4');
-                if (logsContainer && logsContainer.children.length === 0) {
-                    location.reload(); // Refresh to show empty state
-                }
-            } else {
-                showAlert('Failed to delete voice log: ' + data.message, 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Delete error:', error);
-            showAlert('Failed to delete voice log. Please try again.', 'error');
+  list.addEventListener('click', function (e) {
+    var btn = e.target.closest('.delete-voice-log-btn');
+    if (!btn || !window.WL) return;
+    var id = btn.dataset.logId, card = btn.closest('.voice-log');
+    WL.ask({ title: 'Delete this voice log?', message: 'The recording and its measurements are removed and cannot be brought back.', confirmText: 'Delete voice log', danger: true })
+      .then(function (yes) {
+        if (!yes) return;
+        btn.disabled = true;
+        btn.setAttribute('aria-busy', 'true');
+        return WL.api('/api/delete-voice-log/' + encodeURIComponent(id), { method: 'DELETE' }).then(function (r) {
+          if (r.ok && r.data && r.data.success) {
+            if (card) card.remove();
+            refreshLists();
+            WL.toast('Voice log deleted.', 'success');
+            recBtn.focus();
+          } else {
+            btn.disabled = false;
+            btn.removeAttribute('aria-busy');
+            WL.toast('Could not delete the voice log. Try again.', 'error');
+          }
         });
-    }
-}
-
-function showAlert(message, type) {
-    // Create alert element
-    const alertDiv = document.createElement('div');
-    alertDiv.className = `alert alert-${type} mb-4 p-4 rounded-lg text-sm ${
-        type === 'success'
-            ? 'bg-green-100 text-green-800 border border-green-200'
-            : 'bg-red-100 text-red-800 border border-red-200'
-    }`;
-    alertDiv.textContent = message;
-
-    // Insert at the top of the content area
-    const container = document.querySelector('.patient-voice-logs-container .max-w-4xl');
-    container.insertBefore(alertDiv, container.firstChild);
-
-    // Remove after 5 seconds
-    setTimeout(() => {
-        if (alertDiv.parentNode) {
-            alertDiv.remove();
-        }
-    }, 5000);
-}
-
-// Check for microphone permissions on page load
-document.addEventListener('DOMContentLoaded', function() {
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(() => {
-                console.log('Microphone access granted');
-            })
-            .catch(() => {
-                console.log('Microphone access denied');
-                document.getElementById('recordingStatus').textContent = 'Microphone access required';
-                document.getElementById('recordingStatus').className = 'text-sm text-red-600 mb-2';
-            });
-    }
-});
-
-// New event listener code
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('recordBtn')?.addEventListener('click', startRecording);
-    document.getElementById('stopBtn')?.addEventListener('click', stopRecording);
-    document.getElementById('uploadBtn')?.addEventListener('click', uploadRecording);
-
-    document.body.addEventListener('click', function(event) {
-        const target = event.target.closest('button');
-        if (target && target.classList.contains('delete-voice-log-btn')) {
-            const logId = target.dataset.logId;
-            deleteVoiceLog(logId);
-        }
-    });
-});
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+        WL.toast('Could not delete the voice log. Check your connection and try again.', 'error');
+      });
+  });
+})();

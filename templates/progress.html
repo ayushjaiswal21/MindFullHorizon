@@ -1,231 +1,147 @@
 {% extends "base.html" %}
+{% from 'partials/icons.html' import icon %}
+{% from 'patient_macros.html' import band_badge, status_badge %}
 
-{% block title %}Progress Tracking - Mindful Horizon{% endblock %}
+{% block title %}Progress - MindFull Horizon{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
+{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto">
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">Your Mental Health Progress</h1>
-        <p class="text-gray-600">Track your mental health journey with detailed insights and trends</p>
-    </div>
+{% set has_scores = latest_gad7 or latest_phq9 or mood_data %}
+<div class="container section">
+    <header class="page-header">
+        <h1>Progress</h1>
+        <p class="lead">Your mood entries, screening scores and goals over time.</p>
+        <div class="page-actions">
+            <a class="btn btn-primary" href="{{ url_for('patient.assessment') }}">Take a screening</a>
+        </div>
+    </header>
 
-    <div class="grid md:grid-cols-3 gap-6 mb-8">
-        <div class="card">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-800">Anxiety Levels</h3>
-                <i class="fas fa-heart text-blue-500 text-xl"></i>
-            </div>
-            <div class="text-3xl font-bold text-blue-600 mb-2">{{ latest_gad7.score if latest_gad7 else 'N/A' }}{% if latest_gad7 %}/21{% endif %}</div>
-            <div class="text-sm text-gray-600 mb-3">Latest GAD-7 Score</div>
-            <div class="flex items-center">
-                {% if latest_gad7 %}
-                    {% set severity_info = get_severity_info('GAD-7', latest_gad7.score) %}
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-{{ severity_info.color }}-100 text-{{ severity_info.color }}-800">{{ severity_info.severity }}</span>
-                {% else %}
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">No Data</span>
-                {% endif %}
-                <span class="ml-2 text-sm text-gray-600">
-                    </span>
-            </div>
+    <div class="pt-stack">
+        <div class="grid gap-6 md:grid-cols-3">
+            <section class="card" aria-labelledby="gad-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="gad-heading">Anxiety (GAD-7)</h2>
+                    {% if latest_gad7 %}
+                    {% set sev = get_severity_info('GAD-7', latest_gad7.score) %}
+                    <p class="score-line mt-3">{{ latest_gad7.score }} <small>of 21</small></p>
+                    <p class="mt-2">{{ band_badge(sev.severity|lower) }} <span class="muted">{{ latest_gad7.created_at.strftime('%d %b %Y') if latest_gad7.created_at else '' }}</span></p>
+                    {% else %}
+                    <p class="score-line mt-3">n/a</p>
+                    <p class="pt-sub">No GAD-7 yet.</p>
+                    {% endif %}
+                </div>
+            </section>
+            <section class="card" aria-labelledby="phq-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="phq-heading">Depression (PHQ-9)</h2>
+                    {% if latest_phq9 %}
+                    {% set sev = get_severity_info('PHQ-9', latest_phq9.score) %}
+                    <p class="score-line mt-3">{{ latest_phq9.score }} <small>of 27</small></p>
+                    <p class="mt-2">{{ band_badge(sev.severity|lower) }} <span class="muted">{{ latest_phq9.created_at.strftime('%d %b %Y') if latest_phq9.created_at else '' }}</span></p>
+                    {% else %}
+                    <p class="score-line mt-3">n/a</p>
+                    <p class="pt-sub">No PHQ-9 yet.</p>
+                    {% endif %}
+                </div>
+            </section>
+            <section class="card" aria-labelledby="well-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="well-heading">Wellness index</h2>
+                    {% if has_scores %}
+                    <p class="score-line mt-3">{{ overall_wellness_score }} <small>of 10</small></p>
+                    {% else %}
+                    <p class="score-line mt-3">n/a</p>
+                    {% endif %}
+                    <p class="pt-sub">The average of your latest PHQ-9 and GAD-7 (flipped so higher is better) and your latest mood, on a 0 to 10 scale. It is a rough summary, not a clinical measure.</p>
+                </div>
+            </section>
         </div>
 
-        <div class="card">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-800">Depression Screen</h3>
-                <i class="fas fa-brain text-purple-500 text-xl"></i>
-            </div>
-            <div class="text-3xl font-bold text-purple-600 mb-2">{{ latest_phq9.score if latest_phq9 else 'N/A' }}{% if latest_phq9 %}/27{% endif %}</div>
-            <div class="text-sm text-gray-600 mb-3">Latest PHQ-9 Score</div>
-            <div class="flex items-center">
-                {% if latest_phq9 %}
-                    {% set severity_info = get_severity_info('PHQ-9', latest_phq9.score) %}
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-{{ severity_info.color }}-100 text-{{ severity_info.color }}-800">{{ severity_info.severity }}</span>
-                {% else %}
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">No Data</span>
-                {% endif %}
-                <span class="ml-2 text-sm text-gray-600">
-                    </span>
-            </div>
-        </div>
+        <p class="muted">Screening scores are a screening, not a diagnosis. Higher PHQ-9 and GAD-7 scores mean more symptoms were reported.</p>
 
-        <div class="card">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-800">Overall Wellness</h3>
-                <i class="fas fa-chart-line text-green-500 text-xl"></i>
-            </div>
-            <div class="text-3xl font-bold text-green-600 mb-2">{{ overall_wellness_score }}</div>
-            <div class="text-sm text-gray-600 mb-3">AI Wellness Score</div>
-            <div class="flex items-center">
-                {% if overall_wellness_score != 'N/A' %}
-                    {% set severity_info = get_severity_info('Daily Mood', overall_wellness_score) %}
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-{{ severity_info.color }}-100 text-{{ severity_info.color }}-800">{{ severity_info.severity }}</span>
-                {% else %}
-                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">No Data</span>
-                {% endif %}
-                <span class="ml-2 text-sm text-gray-600">
-                    </span>
-            </div>
-        </div>
-    </div>
-
-    <div class="grid lg:grid-cols-2 gap-8 mb-8">
-        <div class="card">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">
-                <i class="fas fa-smile text-yellow-500 mr-2"></i>Mood Trends (Last 30 Days)
-            </h3>
-            <div class="bg-gray-50 p-4 rounded-lg mb-4" style="height: 250px;">
-                <canvas id="moodChart"></canvas>
-            </div>
-            <div class="text-sm text-gray-600">
-                <i class="fas fa-info-circle mr-2"></i>
-                Your mood trends over time.
-            </div>
-        </div>
-
-        <div class="card">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">
-                <i class="fas fa-chart-bar text-blue-500 mr-2"></i>Assessment Score History
-            </h3>
-            <div class="bg-gray-50 p-4 rounded-lg mb-4" style="height: 250px;">
-                <canvas id="assessmentChart"></canvas>
-            </div>
-            <div class="text-sm text-gray-600">
-                <i class="fas fa-info-circle mr-2"></i>
-                Anxiety (GAD-7) and Depression (PHQ-9) scores over time.
-            </div>
-        </div>
-    </div>
-
-    <div class="card mb-8">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">
-            <i class="fas fa-robot text-purple-500 mr-2"></i>AI Progress Analysis
-        </h3>
-        
-        <div class="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-lg mb-6">
-            <h4 class="font-semibold text-gray-800 mb-3">Personalized Insights</h4>
-            <div class="space-y-3 text-sm text-gray-700">
-                {% if ai_recommendations and ai_recommendations.insights %}
-                    {% for insight in ai_recommendations.insights[:2] %}
-                    <div class="flex items-start">
-                        <i class="fas fa-check-circle text-green-500 mr-3 mt-1"></i>
-                        <span><strong>{{ insight.title }}:</strong> {{ insight.desc }}</span>
+        <div class="grid gap-6 lg:grid-cols-2">
+            <section class="card" aria-labelledby="mood-chart-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="mood-chart-heading">Mood, last 30 entries</h2>
+                    <p class="pt-sub">Scale from 1 (very low) to 10 (very good).</p>
+                    <div id="moodChart" class="mt-4" data-chart="mood">
+                        <div class="skeleton chart-skel" aria-hidden="true"></div>
                     </div>
-                    {% endfor %}
-                {% else %}
-                    <div class="flex items-start">
-                        <i class="fas fa-info-circle text-blue-500 mr-3 mt-1"></i>
-                        <span><strong>Analysis Available:</strong> Complete more assessments to receive personalized AI insights about your mental health progress.</span>
+                </div>
+            </section>
+            <section class="card" aria-labelledby="score-chart-heading">
+                <div class="card-body">
+                    <h2 class="pt-title" id="score-chart-heading">Screening scores</h2>
+                    <p class="pt-sub">One point per day you took a screening.</p>
+                    <div id="assessmentChart" class="mt-4" data-chart="screening">
+                        <div class="skeleton chart-skel" aria-hidden="true"></div>
                     </div>
-                    <div class="flex items-start">
-                        <i class="fas fa-lightbulb text-yellow-500 mr-3 mt-1"></i>
-                        <span><strong>Recommendation:</strong> Continue regular assessments and mood tracking for better AI analysis.</span>
-                    </div>
-                {% endif %}
-            </div>
+                    <div class="chart-legend" aria-hidden="true"><span><i></i>PHQ-9 (0 to 27)</span><span><i class="b"></i>GAD-7 (0 to 21)</span></div>
+                </div>
+            </section>
         </div>
-    </div>
 
-    <div class="card mb-8">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">
-            <i class="fas fa-target text-red-500 mr-2"></i>Mental Health Goals
-        </h3>
-        <div id="goals-container" class="space-y-2">
-            {% if goals %}
-                {% for goal in goals %}
-                <div class="flex items-center justify-between p-3 rounded-lg {% if goal.status == 'completed' %}bg-green-100{% else %}bg-gray-100{% endif %} hover:shadow-md transition-shadow">
-                    <div class="flex items-center">
-                        <input type="checkbox" data-goal-id="{{ goal.id }}" class="goal-checkbox form-checkbox h-5 w-5 text-blue-600" {% if goal.status == 'completed' %}checked{% endif %}>
-                        <div class="ml-3">
-                            <span class="text-gray-800 font-medium">{{ goal.title }}</span>
-                            {% if goal.description %}
-                            <p class="text-sm text-gray-600">{{ goal.description }}</p>
-                            {% endif %}
-                            {% if goal.target_value %}
-                            <div class="text-xs text-gray-500 mt-1">
-                                Progress: {{ goal.current_value }}{{ goal.unit if goal.unit else '' }} / {{ goal.target_value }}{{ goal.unit if goal.unit else '' }} 
-                                ({{ "%.0f"|format(goal.progress_percentage) }}%)
+        <section class="card" aria-labelledby="goals-heading">
+            <div class="card-body">
+                <div class="flex items-center justify-between gap-3 flex-wrap">
+                    <h2 class="pt-title" id="goals-heading">Goals</h2>
+                    <a class="btn btn-secondary btn-sm" href="{{ url_for('patient.goals') }}">Manage goals</a>
+                </div>
+                <div id="goals-container" class="mt-3">
+                    {% if goals %}
+                    <ul class="rows">
+                        {% for goal in goals %}
+                        <li>
+                            <div>
+                                <strong>{{ goal.title }}</strong>
+                                {% if goal.target_value %}
+                                <div class="muted">{{ goal.current_value or 0 }}{{ ' ' ~ goal.unit if goal.unit else '' }} of {{ goal.target_value }}{{ ' ' ~ goal.unit if goal.unit else '' }} ({{ "%.0f"|format(goal.progress_percentage) }}%)</div>
+                                <progress class="meter" max="100" value="{{ [goal.progress_percentage, 100]|min }}" aria-label="Progress on {{ goal.title }}"></progress>
+                                {% endif %}
                             </div>
-                            {% endif %}
-                        </div>
+                            {{ status_badge(goal.status) }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <div class="empty-state">
+                        {{ icon('target') }}
+                        <h3>No goals yet</h3>
+                        <p>Set a small goal, such as a walk or a bedtime, and update it as you go.</p>
+                        <a class="btn btn-primary btn-sm" href="{{ url_for('patient.goals') }}">Add a goal</a>
                     </div>
-                    <div class="flex items-center space-x-2">
-                        <span class="px-2 py-1 text-xs rounded-full 
-                            {% if goal.priority == 'high' %}bg-red-100 text-red-800
-                            {% elif goal.priority == 'medium' %}bg-yellow-100 text-yellow-800
-                            {% else %}bg-green-100 text-green-800{% endif %}">
-                            {{ goal.priority }}
-                        </span>
-                        <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
-                            {{ goal.category.replace('_', ' ') }}
-                        </span>
-                    </div>
+                    {% endif %}
                 </div>
-                {% endfor %}
-            {% else %}
-                <div class="text-center py-8 text-gray-500">
-                    <i class="fas fa-bullseye text-4xl mb-3"></i>
-                    <p class="text-lg mb-2">No goals yet</p>
-                    <p class="text-sm mb-4">Start by creating your first mental health goal!</p>
-                    <a href="{{ url_for('patient.goals') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
-                        <i class="fas fa-plus mr-2"></i>Create Goal
-                    </a>
-                </div>
-            {% endif %}
-        </div>
-        
-    </div>
-
-    <div class="card mb-8">
-        <h3 class="text-xl font-semibold text-gray-800 mb-4">
-            <i class="fas fa-trophy text-yellow-500 mr-2"></i>Achievements
-        </h3>
-        <ul id="achievements-list" class="space-y-2 text-sm text-green-700">
-            {% for achievement in achievements %}
-            <li class="flex items-center">
-                <i class="fas fa-star text-yellow-500 mr-2"></i>
-                {{ achievement }}
-            </li>
-            {% endfor %}
-        </ul>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-6">
-        <div class="card">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">
-                <i class="fas fa-tasks text-orange-500 mr-2"></i>Recommended Actions
-            </h3>
-            <div class="space-y-3">
-                {% for action in ai_recommendations.actions %}
-                <div class="flex items-start p-3 {% if action.priority == 'high' %}bg-red-50{% elif action.priority == 'medium' %}bg-orange-50{% else %}bg-blue-50{% endif %} rounded-lg">
-                    <i class="fas {% if action.priority == 'high' %}fa-exclamation-triangle text-red-500{% elif action.priority == 'medium' %}fa-lightbulb text-orange-500{% else %}fa-info-circle text-blue-500{% endif %} mr-3 mt-1"></i>
-                    <div>
-                        <div class="font-medium {% if action.priority == 'high' %}text-red-800{% elif action.priority == 'medium' %}text-orange-800{% else %}text-blue-800{% endif %}">{{ action.title }}</div>
-                        <div class="text-sm {% if action.priority == 'high' %}text-red-700{% elif action.priority == 'medium' %}text-orange-700{% else %}text-blue-700{% endif %}">{{ action.desc }}</div>
-                    </div>
-                </div>
-                {% endfor %}
+                {% if achievements %}
+                <h3 class="pt-title mt-4">Completed goals</h3>
+                <ul id="achievements-list" class="mt-2 list-disc pl-5">
+                    {% for achievement in achievements %}<li>{{ achievement }}</li>{% endfor %}
+                </ul>
+                {% endif %}
             </div>
-        </div>
+        </section>
 
-        <div class="card">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">
-                <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>Insights & Tips
-            </h3>
-            <div class="space-y-4">
-                {% set insight_colors = ['yellow', 'purple', 'indigo', 'green', 'blue'] %}
-                {% for insight in ai_recommendations.insights %}
-                {% set color = insight_colors[loop.index0 % insight_colors|length] %}
-                <div class="p-3 bg-{{ color }}-50 rounded-lg">
-                    <div class="font-medium text-{{ color }}-800 mb-2">{{ insight.title }}</div>
-                    <div class="text-sm text-{{ color }}-700">{{ insight.desc }}</div>
+        <section class="card" aria-labelledby="ideas-heading">
+            <div class="card-body">
+                <h2 class="pt-title" id="ideas-heading">Suggestions</h2>
+                <p class="pt-sub">Written by an AI assistant from your scores and goals. General information, not clinical advice.</p>
+                <div id="suggestions" class="mt-4" data-src="{{ url_for('patient.progress_suggestions') }}" aria-live="polite" aria-busy="true">
+                    <div class="skeleton card-skel" aria-hidden="true"></div>
+                    <noscript><p class="muted">Turn on JavaScript to load suggestions. Your scores and goals above do not need it.</p></noscript>
                 </div>
-                {% endfor %}
             </div>
-        </div>
+        </section>
     </div>
 </div>
 
-<!-- Chart.js for data visualization -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/progress_inline_1.js') }}"></script>
+<script type="application/json" id="progress-data">{{ {'mood': mood_data or [], 'labels': assessment_chart_labels or [], 'gad7': assessment_chart_gad7_data or [], 'phq9': assessment_chart_phq9_data or []}|tojson }}</script>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/patient-common.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/progress_inline_1.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/progress-suggestions.js') }}" defer></script>
 {% endblock %}

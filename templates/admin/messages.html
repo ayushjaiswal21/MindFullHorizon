@@ -1,0 +1,36 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from '_macros.html' import empty_state %}
+{% from 'provider_rx/_ui.html' import ts, pager %}
+{% block title %}Contact messages{% endblock %}
+{% block page_scripts %}<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_actions.js') }}?v={{ asset_version }}" defer></script>{% endblock %}
+{% block rx_body %}
+{% set base = nav_url('admin.messages', '/admin/messages') %}
+<div class="page-header"><div><h1>Contact messages</h1><p class="lead">Messages sent through the contact form.</p></div></div>
+<div class="alert alert-warning" role="note">{{ icon('alert') }}<p>Messages can contain personal or health information. Do not forward them.</p></div>
+{% if rows %}
+<div class="cl-split">
+<div>
+<div class="table-wrap"><table class="table"><caption class="sr-only">Contact messages</caption>
+<thead><tr><th scope="col">From</th><th scope="col">Subject</th><th scope="col">Date</th><th scope="col">Status</th></tr></thead>
+<tbody>{% for r in rows %}<tr{% if selected and selected.id == r.id %} class="is-flagged"{% endif %}><th scope="row">{{ r.name }}</th>
+<td><a class="cl-link" href="{{ base }}?id={{ r.id }}"{% if selected and selected.id == r.id %} aria-current="true"{% endif %}>{{ r.subject or 'No subject' }}</a></td><td>{{ ts(r.created_at, 'date') }}</td>
+<td>{% if r.read %}<span class="badge badge-neutral">Read</span>{% else %}<span class="badge badge-info">New</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{{ pager(meta) }}
+</div>
+<section class="card" aria-labelledby="msg-h" aria-live="polite"><div class="card-header"><h2 id="msg-h" class="text-lg">Message</h2></div>
+<div class="card-body">
+{% if selected %}
+<dl class="cl-dl"><dt>From</dt><dd>{{ selected.name }}</dd><dt>Email</dt><dd>{{ selected.email }}</dd><dt>Subject</dt><dd>{{ selected.subject or 'No subject' }}</dd><dt>Received</dt><dd>{{ ts(selected.created_at) }}</dd></dl>
+<p class="cl-message cl-panel-quiet mt-4">{{ selected.body }}</p>
+<div class="cl-actions mt-4">
+<a class="btn btn-secondary" href="mailto:{{ selected.email }}?subject={{ ('Re: ' ~ (selected.subject or ''))|urlencode }}">{{ icon('mail') }} Reply by email</a>
+{% if not selected.read %}<button type="button" class="btn btn-primary" data-api-post="/admin/api/messages/{{ selected.id }}/read" data-done="Marked as read">Mark as read</button>{% endif %}
+</div>
+{% else %}<p class="muted">Select a message to read it.</p>{% endif %}
+</div></section>
+</div>
+{% else %}
+{{ empty_state('No messages', 'No messages.', 'mail') }}
+{% endif %}
+{% endblock %}

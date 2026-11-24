@@ -1,0 +1,62 @@
+{#- Shared macros for the admin and prescribing screens.
+    ts(value, kind)        time shown in IST by static/js/clinical-common.js; kind is datetime, date or time. Falls back to UTC text.
+    notice()               the two standing notices (legal review pending, no interaction checking).
+    config_block(defaults, override)   JSON data block read by MFH.cfg(); URLs only, no Jinja in static JS.
+    status_badge(status)   text badge for prescription and profile states.
+    pager(meta)            Previous and Next links for server-rendered lists (keeps the current query string).
+    avail_badge(a)         availability badge with an icon and text. -#}
+{% from 'partials/icons.html' import icon %}
+
+{% macro ts(v, kind='datetime') -%}
+{%- if not v -%}n/a{%- else -%}
+{%- set s = v if v is string else v.isoformat() -%}
+{%- if s|length > 10 and s[-1] != 'Z' and '+' not in s[10:] %}{% set s = s ~ 'Z' %}{% endif -%}
+<time data-ist="{{ kind }}" datetime="{{ s }}">{{ s[:10] if kind == 'date' else s[:16]|replace('T', ' ') ~ ' UTC' }}</time>
+{%- endif -%}
+{%- endmacro %}
+
+{% macro notice() -%}
+<div class="alert alert-warning cl-notice" role="note">
+  {{ icon('alert') }}
+  <div>
+    <p><strong>Not ready for real patients.</strong> Legal and pharmacist review of prescribing and dispensing in MindFull Horizon is still pending. Use it for testing and the pilot only after your institution has agreed to that.</p>
+    <p>MindFull Horizon does not check drug interactions. It warns only when the same medicine or the same class appears twice.</p>
+  </div>
+</div>
+{%- endmacro %}
+
+{% macro config_block(defaults, override=None) -%}
+{%- set cfg = {} -%}
+{%- for k, v in defaults.items() %}{% set _ = cfg.update({k: v}) %}{% endfor -%}
+{%- if override %}{% for k, v in override.items() %}{% set _ = cfg.update({k: v}) %}{% endfor %}{% endif -%}
+<script type="application/json" id="page-config" nonce="{{ g.csp_nonce }}">{{ cfg|tojson }}</script>
+{%- endmacro %}
+
+{% macro status_badge(status) -%}
+{%- set m = {'draft': ('Draft', 'neutral'), 'issued': ('Issued', 'info'), 'partially_dispensed': ('Partly collected', 'info'),
+  'dispensed': ('Collected', 'success'), 'cancelled': ('Cancelled', 'danger'), 'expired': ('Expired', 'warning'),
+  'legacy': ('Legacy', 'warning'), 'pending': ('Pending', 'warning'), 'verified': ('Verified', 'success'),
+  'rejected': ('Rejected', 'danger'), 'suspended': ('Suspended', 'danger'), 'active': ('Active', 'success'),
+  'quarantined': ('Quarantined', 'warning'), 'closed': ('Closed', 'neutral')} -%}
+{%- set pair = m.get(status, (status or 'n/a', 'neutral')) -%}
+<span class="badge badge-{{ pair[1] }}">{{ pair[0] }}</span>
+{%- endmacro %}
+
+{% macro avail_badge(a) -%}
+{%- if a == 'in_stock' %}<span class="badge badge-success">{{ icon('check', size=14) }}In stock</span>
+{%- elif a == 'low' %}<span class="badge badge-warning">{{ icon('alert', size=14) }}Low</span>
+{%- elif a == 'out' %}<span class="badge badge-danger">{{ icon('x', size=14) }}Out of stock</span>
+{%- else %}<span class="badge badge-neutral">n/a</span>{% endif -%}
+{%- endmacro %}
+
+{% macro pager(meta) -%}
+{%- if meta and (meta.has_next or (meta.page or 1) > 1) -%}
+{%- set page = meta.page or 1 -%}
+<nav class="cl-pager" aria-label="Pages">
+  {%- set q = request.args.to_dict() -%}
+  {%- if page > 1 %}{% set _ = q.update({'page': page - 1}) %}<a class="btn btn-secondary btn-sm" href="{{ request.path }}?{{ q|urlencode }}">Previous</a>{% else %}<span></span>{% endif %}
+  <span class="muted">Page {{ page }}{% if meta.total is defined and meta.total is not none %}, {{ meta.total }} in total{% endif %}</span>
+  {%- if meta.has_next %}{% set _ = q.update({'page': page + 1}) %}<a class="btn btn-secondary btn-sm" href="{{ request.path }}?{{ q|urlencode }}">Next</a>{% else %}<span></span>{% endif %}
+</nav>
+{%- endif -%}
+{%- endmacro %}

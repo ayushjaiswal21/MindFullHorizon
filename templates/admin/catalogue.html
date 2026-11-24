@@ -1,0 +1,51 @@
+{% extends 'admin/_base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from '_macros.html' import empty_state %}
+{% from 'provider_rx/_ui.html' import pager, notice %}
+{% block title %}Medicine catalogue{% endblock %}
+{% block page_scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_actions.js') }}?v={{ asset_version }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/admin_import.js') }}?v={{ asset_version }}" defer></script>
+{% endblock %}
+{% block rx_body %}
+{% set f = filters or {} %}
+{% set base = nav_url('admin.catalogue', '/admin/catalogue') %}
+<div class="page-header"><div><h1>Medicine catalogue</h1><p class="lead">The list of medicines doctors can search. A medicine can be prescribed only after its list is confirmed by a second administrator.</p></div>
+  <div class="page-actions cl-actions"><a class="btn btn-primary" href="{{ base }}/new">{{ icon('plus') }} Add medicine</a>
+  <a class="btn btn-secondary" href="/admin/catalogue.csv">{{ icon('download') }} Export CSV</a>
+  <a class="btn btn-ghost" href="{{ base }}/template.csv">Download template</a></div></div>
+{{ notice() }}
+{% if not four_eyes %}<div class="alert alert-warning" role="status">{{ icon('alert') }}<p><strong>Four-eyes check is off.</strong> One administrator can both edit and confirm a medicine's list classification.</p></div>{% endif %}
+
+<form class="cl-filters" method="get" action="{{ base }}">
+  <div class="field"><label class="label" for="f-q">Search</label><input class="input" id="f-q" type="search" name="q" value="{{ f.q or '' }}" maxlength="100"></div>
+  <div class="field"><label class="label" for="f-list">List</label><select class="select" id="f-list" name="list"><option value="">All</option>{% for l in ['O', 'A', 'B', 'C'] %}<option value="{{ l }}"{{ ' selected' if f.list == l }}>List {{ l }}</option>{% endfor %}</select></div>
+  <div class="field"><label class="label" for="f-ver">Second check</label><select class="select" id="f-ver" name="verified"><option value="">All</option><option value="1"{{ ' selected' if f.verified == '1' }}>Confirmed</option><option value="0"{{ ' selected' if f.verified == '0' }}>Needs second check</option></select></div>
+  <div class="field"><label class="label" for="f-act">Status</label><select class="select" id="f-act" name="active"><option value="">All</option><option value="1"{{ ' selected' if f.active == '1' }}>Active</option><option value="0"{{ ' selected' if f.active == '0' }}>Inactive</option></select></div>
+  <button type="submit" class="btn btn-primary">Filter</button><a class="btn btn-ghost" href="{{ base }}">Reset</a>
+</form>
+
+{% if rows %}
+<div class="table-wrap cl-block"><table class="table"><caption class="sr-only">Medicines in the catalogue</caption>
+<thead><tr><th scope="col">Medicine</th><th scope="col">Form</th><th scope="col">Route</th><th scope="col">List</th><th scope="col">Schedule</th><th scope="col">Class</th><th scope="col">Status</th><th scope="col">Actions</th></tr></thead>
+<tbody>{% for r in rows %}
+{% set locked = four_eyes and r.updated_by_id is not none and r.updated_by_id == me_id %}
+<tr><th scope="row">{{ r.label }}</th><td>{{ r.form }}</td><td>{{ r.route }}</td><td><span class="badge badge-neutral">List {{ r.tpg_list }}</span></td><td>{{ r.schedule }}</td><td>{{ r.therapeutic_class or 'n/a' }}</td>
+<td><div class="cl-actions">{% if r.active %}<span class="badge badge-success">Active</span>{% else %}<span class="badge badge-neutral">Inactive</span>{% endif %}{% if not r.verified %}<span class="badge badge-warning">{{ icon('alert', size=14) }}Needs second check</span>{% endif %}{% if r.is_demo %}<span class="badge badge-info">Demo</span>{% endif %}</div></td>
+<td><div class="cl-actions"><a class="btn btn-secondary btn-sm" href="{{ base }}/{{ r.id }}/edit" aria-label="Edit {{ r.label }}">Edit</a>
+{% if r.active %}<button type="button" class="btn btn-ghost btn-sm" data-api-post="/admin/api/catalogue/{{ r.id }}/deactivate" data-ask="New prescriptions can no longer use this medicine. Prescriptions already issued keep it." data-ask-title="Deactivate {{ r.label }}?" data-ask-text="Deactivate" data-ask-danger data-done="Medicine deactivated" aria-label="Deactivate {{ r.label }}">Deactivate</button>
+{% else %}<button type="button" class="btn btn-ghost btn-sm" data-api-post="/admin/api/catalogue/{{ r.id }}/activate" data-done="Medicine activated" aria-label="Activate {{ r.label }}">Activate</button>{% endif %}
+{% if not r.verified %}<button type="button" class="btn btn-primary btn-sm" data-api-post="/admin/api/catalogue/{{ r.id }}/verify-list" data-ask="Confirm that List {{ r.tpg_list }} and schedule {{ r.schedule }} match the current Telemedicine Practice Guidelines notification." data-ask-title="Confirm the list for {{ r.label }}?" data-ask-text="Confirm list" data-done="List confirmed"{{ ' disabled' if locked }} aria-label="Confirm list for {{ r.label }}">Verify list</button>{% if locked %}<span class="help">A different administrator must confirm this list.</span>{% endif %}{% endif %}</div></td></tr>
+{% endfor %}</tbody></table></div>
+{{ pager(meta) }}
+{% elif f.q or f.list or f.verified or f.active %}
+{{ empty_state('No medicines match these filters', 'Change the search or filters, or reset them.', 'search') }}
+{% else %}
+{{ empty_state('The catalogue is empty', 'The catalogue is empty. Add a medicine or import a CSV file. MindFull Horizon does not include any medicine data.', 'pill', 'Add medicine', base ~ '/new') }}
+{% endif %}
+
+{% set import_url = '/admin/api/catalogue/import' %}
+{% set import_title = 'Import medicines from a CSV file' %}
+{% set import_help = 'Columns: generic_name, brand_name, strength, form, route, tpg_list, schedule, therapeutic_class, active. Imported medicines always need a second check. Use Check file first: nothing is saved until you press Import.' %}
+{% include 'admin/_import_box.html' %}
+{% endblock %}

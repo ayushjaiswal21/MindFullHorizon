@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% block title %}Something went wrong{% endblock %}
+{% block meta_description %}MindFull Horizon could not complete your request.{% endblock %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <div class="page-header">
+      <div>
+        <h1>Something went wrong on our side</h1>
+        <p class="lead">We could not complete that request, and it is not something you did. Wait a minute and try again. If it keeps happening, tell us what you were doing and we will look into it.</p>
+      </div>
+    </div>
+    <div class="page-actions">
+      <a class="btn btn-primary" href="{{ nav_url('core.index', '/') }}">{{ icon('home', size=18) }}<span>Back to home</span></a>
+      <a class="btn btn-secondary" href="/contact">{{ icon('mail', size=18) }}<span>Contact us</span></a>
+    </div>
+    <p class="muted" style="margin-top:1.5rem">If you need to talk to someone right now, the <a href="#helplines">helpline numbers</a> are at the bottom of this page.</p>
+  </div>
+</section>
+{% endblock %}

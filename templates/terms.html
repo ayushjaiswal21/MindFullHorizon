@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% from 'partials/breadcrumbs.html' import breadcrumb %}
+{% from '_macros.html' import jsonld_scripts, helpline_list, alert %}
+
+{% block title %}Terms of use{% endblock %}
+{% block meta_description %}{{ page_description }}{% endblock %}
+{% block canonical %}{{ canonical_url }}{% endblock %}
+{% block robots %}index, follow{% endblock %}
+{% block breadcrumbs %}{{ breadcrumb([('Home', '/'), ('Terms of use', None)]) }}{% endblock %}
+{% block head_extra %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+{{ jsonld_scripts(jsonld) }}
+{% endblock %}
+
+{% block content %}
+{% set placeholder = '[to be set by the operator]' %}
+<div class="container section">
+  <div class="page-header page-narrow">
+    <h1>Terms of use</h1>
+    <p class="lead">The rules for using Mindful Horizon, in plain English.</p>
+    <p class="muted">Version {{ consent_version }}, last updated {{ last_updated }}.</p>
+  </div>
+
+  <div class="page-narrow">
+    {% call alert('warning', title='Draft pending legal review', role='note') %}
+      These terms describe how the service works today. A lawyer has not reviewed them yet. Details in square brackets are not decided yet.
+    {% endcall %}
+
+    <nav class="toc" aria-label="Contents">
+      <p class="toc-title">Contents</p>
+      <ol>
+        <li><a href="#service">What the service is</a></li>
+        <li><a href="#not-medical">Not medical advice or an emergency service</a></li>
+        <li><a href="#eligibility">Who can use it</a></li>
+        <li><a href="#accounts">Accounts and invite codes</a></li>
+        <li><a href="#use">Acceptable use</a></li>
+        <li><a href="#ai">Limits of the AI</a></li>
+        <li><a href="#content">Your content</a></li>
+        <li><a href="#availability">Availability</a></li>
+        <li><a href="#liability">Limits of liability</a></li>
+        <li><a href="#termination">Ending your use</a></li>
+        <li><a href="#law">Governing law</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ol>
+    </nav>
+
+    <div class="prose">
+      <h2 id="service">What the service is</h2>
+      <p>Mindful Horizon is a web app for college students in India. It lets you log your mood, take PHQ-9 and GAD-7 screening questionnaires, keep a journal, use wellness exercises, chat with an AI companion and book sessions with a counsellor at your institution. Counsellors use it to see their assigned students, appointments and crisis alerts. It is run by {{ fiduciary_name or placeholder }} as an early-stage project.</p>
+
+      <h2 id="not-medical">Not medical advice or an emergency service</h2>
+      <p>The service gives screening results and general wellness information. It does not give a diagnosis, treatment or medical advice, and it does not replace a doctor, psychiatrist or counsellor. A screening score only shows that you may want to talk to someone.</p>
+      <p>It is not an emergency service and nobody watches the app around the clock. If you or someone else is in danger, call one of these numbers:</p>
+      {{ helpline_list(helplines) }}
+
+      <h2 id="eligibility">Who can use it</h2>
+      <p>You must be 18 or older. By creating an account you confirm that you are. If you are younger, do not use the service.</p>
+
+      <h2 id="accounts">Accounts and invite codes</h2>
+      <p>Student accounts can be created by anyone who meets the age rule. Counsellor accounts need an invite code from the institution. Do not share your password or an invite code. Give accurate details, and tell us if you think someone else has used your account. You are responsible for what happens under your account.</p>
+
+      <h2 id="use">Acceptable use</h2>
+      <p>Do not:</p>
+      <ul>
+        <li>use the service to harass, threaten or harm anyone, or to post content that is unlawful;</li>
+        <li>try to get into another person's account or data, or probe the service for weaknesses without our written permission;</li>
+        <li>overload the service, scrape it, or bypass its rate limits;</li>
+        <li>pretend to be a counsellor or another person;</li>
+        <li>use the AI companion to get content meant to harm yourself or others.</li>
+      </ul>
+      <p>We can limit or close an account that breaks these rules.</p>
+
+      <h2 id="ai">Limits of the AI</h2>
+      <p>The chat companion and AI suggestions come from a language model. It can be wrong, can miss things, and is not a therapist. It does not remember you like a person does. A fixed safety check looks at your messages and shows helplines when it finds signs of risk, but it can miss some cases. Do not rely on it to keep you safe. Treat suggestions as ideas and check anything important with a professional.</p>
+
+      <h2 id="content">Your content</h2>
+      <p>Your mood entries, journal, chat messages and other content stay yours. You allow us to store and process them to run the service, and to share them as the <a href="{{ url_for('pages.privacy') }}">privacy policy</a> describes. You can export or delete them from <a href="{{ account_data_url }}">your data page</a>.</p>
+      <p>Do not put someone else's private information into the app unless you have the right to.</p>
+
+      <h2 id="availability">Availability</h2>
+      <p>We try to keep the service running but we do not promise it will always be available or error-free. Features can change or stop. Do not depend on the service for anything urgent. For that, use the numbers above.</p>
+
+      <h2 id="liability">Limits of liability</h2>
+      <p>The service is provided as it is. To the extent the law allows, the operator is not liable for indirect or consequential loss, or for decisions you make based on screening results, AI replies or content from other users. Nothing in these terms limits liability that cannot be limited by law. [Final wording to be set after legal review.]</p>
+
+      <h2 id="termination">Ending your use</h2>
+      <p>You can stop at any time and delete your account from <a href="{{ account_data_url }}">your data page</a>. We can suspend or close an account that breaks these terms or puts others at risk. We may also end the service, and if we do we will try to give notice first.</p>
+
+      <h2 id="law">Governing law</h2>
+      <p>These terms are governed by the laws of India. Disputes go to the courts in {{ placeholder }} (the operator's city), unless the law gives you the right to go elsewhere.</p>
+
+      <h2 id="contact">Contact</h2>
+      <p>Questions about these terms: use the <a href="{{ url_for('pages.contact') }}">contact form</a>.{% if grievance_email %} For grievances write to <a href="mailto:{{ grievance_email }}">{{ grievance_email }}</a>.{% endif %}</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script defer src="{{ url_for('static', filename='js/components.js') }}" nonce="{{ g.csp_nonce }}"></script>
+{% endblock %}

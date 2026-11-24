@@ -4,7 +4,7 @@
 
 ```bash
 python -m venv venv && venv\Scripts\activate      # Windows
-pip install -r requirements.txt                    # tests: requirements-dev.txt, voice analysis: requirements-voice.txt
+pip install -r requirements.txt                    # tests: requirements/dev.txt, voice analysis: requirements/voice.txt
 cp .env.example .env                               # then fill in values
 # development: tables are created automatically on first start; production/Docker: SKIP_CREATE_ALL=1 flask db upgrade (docs/MIGRATIONS.md)
 python app.py                                      # http://127.0.0.1:5000
@@ -44,3 +44,12 @@ Metadata (`tracks.csv`, `data.json`) stays in git.
 - Validate input at every API boundary, check ownership before returning user data, never return `str(e)` to clients.
 - Never put patient text into logs.
 - AI features must degrade gracefully and must not give medical advice; crisis wording must show helpline numbers (Tele-MANAS 14416 in India).
+
+## Repository layout notes (root files)
+
+Only files that tools expect at the root stay there: `Dockerfile`, `.dockerignore`, `.env`/`.env.example`, `README.md`, `LICENSE`, `CLAUDE.md`, `render.yaml`, `requirements.txt` and the entry point `app.py` (gunicorn runs `app:app`). Everything else lives in folders:
+
+- `requirements/dev.txt` (tests) and `requirements/voice.txt` (optional voice analysis); both include `../requirements.txt`.
+- `tests/pytest.ini` holds the pytest settings; run `pytest tests -q` from the project root.
+- `tools/frontend/` holds the Tailwind build (`package.json`, `tailwind.config.js`, `build_css.mjs`). After adding layout classes to templates: `cd tools/frontend && npm ci && npm run build:css`, then commit `static/css/tailwind.css`.
+- `docs/SECURITY.md` is the vulnerability reporting policy (GitHub also finds it in `docs/`).

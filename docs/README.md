@@ -33,7 +33,7 @@ Everything in `docs/`, one line each. Status: **live** = kept current, **audit**
 | [research/product-market.md](research/product-market.md) | India problem size, regulation, competitors, evidence on what works, personas, proposed metrics, claims we must not make, MoSCoW. |
 | [research/queue-reliability.md](research/queue-reliability.md) | Job queue options, outbox and idempotency patterns, Gemini resilience, DB integrity, operability; basis for ADR-001. |
 
-Outside `docs/`: [../README.md](../README.md) (project front page), [../SECURITY.md](../SECURITY.md) (how to report vulnerabilities), [../CLAUDE.md](../CLAUDE.md) (short rules loaded by AI agents).
+Outside `docs/`: [../README.md](../README.md) (project front page), [SECURITY.md](SECURITY.md) (how to report vulnerabilities), [../CLAUDE.md](../CLAUDE.md) (short rules loaded by AI agents).
 
 ## Reading order
 
@@ -74,7 +74,7 @@ One fact lives in one doc; other docs link to it. Update the owner doc in the sa
 | Helpline numbers or clinical thresholds | `utils/helplines.py` (bump `LAST_VERIFIED`) or `ai/scoring.py` | SAFETY_RESEARCH.md table |
 | Crisis phrases or negation logic | `ai/severity.py` and `tests/test_safety.py` | SAFETY_RESEARCH.md fixtures |
 | New research finding | The relevant `research/*.md` with a URL and a verified/UNVERIFIED label | MEMORY.md section 6 |
-| Security reporting process | SECURITY.md | README.md |
+| Security reporting process | docs/SECURITY.md | README.md |
 | Short agent rules | CLAUDE.md (keep under 40 lines) | RULES.md is the long form |
 
 Conventions: every doc starts with a one-line purpose; facts must be checkable against files or tests; do not paste secrets, real user data or patient text; dated audits are replaced by a new dated doc, not silently edited; a doc that disagrees with code and tests is a bug in the doc.

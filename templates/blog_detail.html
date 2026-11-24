@@ -1,389 +1,136 @@
 {% extends 'base.html' %}
-{% block title %}{{ post.title }} - Mental Health Blog{% endblock %}
+{% from 'partials/icons.html' import icon %}
+{% from 'partials/breadcrumbs.html' import breadcrumb %}
+
+{% block title %}{{ post.title }}{% endblock %}
+{% block meta_description %}{{ post.content|striptags|truncate(155, True, '') }}{% endblock %}
+{% block canonical %}{{ (site_url or request.url_root.rstrip('/')) }}{{ url_for('blog.blog_detail', post_id=post.id) }}{% endblock %}
+{% block robots %}{{ 'index, follow' if post.is_published else 'noindex, nofollow' }}{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">{% endblock %}
+{% block breadcrumbs %}{{ breadcrumb([('Home', '/'), ('Blog', url_for('blog.blog_list')), (post.title, None)]) }}{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Back Navigation -->
-    <div class="mb-6">
-        <a href="{{ url_for('blog.blog_list') }}" class="inline-flex items-center text-blue-600 hover:text-blue-800">
-            <i class="fas fa-arrow-left mr-2"></i> Back to Blog
-        </a>
+{% set minutes = [((post.content.split()|length) / 200)|round(0, 'ceil')|int, 1]|max %}
+<div class="container section"
+     id="blog-root"
+     data-like-url="{{ url_for('blog.blog_like', post_id=post.id) }}"
+     data-comment-url="{{ url_for('blog.blog_comment', post_id=post.id) }}"
+     data-replies-url="{{ url_for('blog.blog_replies', post_id=post.id, comment_id=0) }}"
+     data-title="{{ post.title }}">
+  <article class="article">
+    <header>
+      <h1>{{ post.title }}</h1>
+      <p class="blog-meta">
+        <span>{{ post.author.name if post.author else 'Unknown author' }}</span>
+        <time datetime="{{ post.created_at.strftime('%Y-%m-%d') }}">{{ post.created_at.strftime('%d %b %Y') }}</time>
+        {% if post.updated_at and post.updated_at > post.created_at %}<span>Updated {{ post.updated_at.strftime('%d %b %Y') }}</span>{% endif %}
+        <span>{{ minutes }} min read</span>
+        <span class="badge badge-neutral">{{ (post.category or 'general').replace('_', ' ')|capitalize }}</span>
+        {% if not post.is_published %}<span class="badge badge-warning">Draft, only you can see this</span>{% endif %}
+      </p>
+      {% if post.tags %}
+      <ul class="blog-tags" aria-label="Tags">
+        {% for tag in post.tags.split(',') if tag.strip() %}
+        <li><span class="badge badge-neutral">{{ tag.strip() }}</span></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+    </header>
+
+    <div class="prose article-body home-block">{{ post.content }}</div>
+
+    <p class="help">Community writing, not medical advice.{% if helplines %} If you are in crisis, call {% for h in helplines %}<a href="tel:{{ h.tel }}">{{ h.number }}</a> ({{ h.name }}){{ ', ' if not loop.last else '.' }}{% endfor %}{% endif %}</p>
+
+    <div class="article-bar">
+      <div class="group">
+        {% if session.get('user_id') %}
+        <button id="likeBtn" type="button" class="btn btn-secondary" data-action="like" aria-pressed="{{ 'true' if user_has_liked else 'false' }}">
+          {{ icon('heart') }}<span id="likeLabel">{{ 'Liked' if user_has_liked else 'Like' }}</span> <span id="likeCount">{{ post.like_count }}</span>
+        </button>
+        {% else %}
+        <span class="muted">{{ post.like_count }} like{{ '' if post.like_count == 1 else 's' }}. <a href="{{ url_for('auth.login') }}">Log in</a> to like.</span>
+        {% endif %}
+        <button type="button" class="btn btn-secondary" data-action="share">{{ icon('external') }}Share</button>
+      </div>
+      {% if can_manage %}
+      <div class="group">
+        <a class="btn btn-secondary" href="{{ url_for('blog.blog_edit', post_id=post.id) }}">{{ icon('edit') }}Edit</a>
+        <button type="button" class="btn btn-danger" data-action="delete-open">{{ icon('trash') }}Delete</button>
+      </div>
+      {% endif %}
     </div>
+    <p id="blog-status" class="help" role="status" aria-live="polite"></p>
+  </article>
 
-    <!-- Article Header -->
-    <article class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="p-8">
-            <!-- Post Header -->
-            <div class="mb-8">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center space-x-4">
-                        <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
-                            {{ post.author.name[0].upper() if post.author else 'U' }}
-                        </div>
-                        <div>
-                            <h4 class="font-semibold text-gray-900 text-lg">{{ post.author.name if post.author else 'Unknown Author' }}</h4>
-                            <p class="text-gray-500">{{ post.created_at.strftime('%B %d, %Y • %I:%M %p') }}</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Category Badge -->
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        {{ post.category.title() if post.category else 'General' }}
-                    </span>
-                </div>
-                
-                <h1 class="text-4xl font-bold text-gray-900 mb-4">{{ post.title }}</h1>
-                
-                {% if post.tags %}
-                <div class="flex flex-wrap gap-2 mb-6">
-                    {% for tag in post.tags.split(',') %}
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700">
-                        #{{ tag.strip() }}
-                    </span>
-                    {% endfor %}
-                </div>
-                {% endif %}
-                
-                <!-- Post Stats -->
-                <div class="flex items-center space-x-6 text-sm text-gray-500 pb-6 border-b">
-                    <div class="flex items-center space-x-1">
-                        <i class="far fa-eye"></i>
-                        <span>{{ post.views }} views</span>
-                    </div>
-                    <div class="flex items-center space-x-1">
-                        <i class="far fa-clock"></i>
-                        <span>{{ (post.content|length / 200)|round|int }} min read</span>
-                    </div>
-                    {% if post.updated_at > post.created_at %}
-                    <div class="flex items-center space-x-1">
-                        <i class="fas fa-edit"></i>
-                        <span>Updated {{ post.updated_at.strftime('%B %d, %Y') }}</span>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
+  <section class="comments" aria-labelledby="comments-title">
+    <h2 id="comments-title">Comments (<span id="commentCount">{{ comment_total }}</span>)</h2>
 
-            <!-- Post Content -->
-            <div class="prose prose-lg max-w-none mb-8">
-                <div class="text-gray-800 leading-relaxed whitespace-pre-wrap">{{ post.content }}</div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="flex items-center justify-between py-6 border-t border-b border-gray-200">
-                <div class="flex items-center space-x-4">
-                    <!-- Like Button -->
-                    {% if session.get('user_id') %}
-                    <button id="likeBtn" type="button" data-action="like" aria-label="Like this post"
-                            class="flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors {% if user_has_liked %}bg-red-100 text-red-600{% else %}bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600{% endif %}">
-                        <i class="{% if user_has_liked %}fas{% else %}far{% endif %} fa-heart"></i>
-                        <span id="likeCount">{{ post.like_count }}</span>
-                        <span>{{ 'Like' if post.like_count != 1 else 'Like' }}</span>
-                    </button>
-                    {% else %}
-                    <div class="flex items-center space-x-2 px-4 py-2 text-gray-600">
-                        <i class="far fa-heart"></i>
-                        <span>{{ post.like_count }} likes</span>
-                    </div>
-                    {% endif %}
-                    
-                    <!-- Share Button -->
-                    <button type="button" data-action="share" class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">
-                        <i class="fas fa-share-alt"></i>
-                        <span>Share</span>
-                    </button>
-                </div>
-                
-                <!-- Author Actions -->
-                {% if can_manage %}
-                <div class="flex items-center space-x-2">
-                    <a href="{{ url_for('blog.blog_edit', post_id=post.id) }}" 
-                       class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors">
-                        <i class="fas fa-edit"></i>
-                        <span>Edit</span>
-                    </a>
-                    <button type="button" data-action="delete-open" 
-                            class="flex items-center space-x-2 px-4 py-2 rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors">
-                        <i class="fas fa-trash"></i>
-                        <span>Delete</span>
-                    </button>
-                </div>
-                {% endif %}
-            </div>
-        </div>
-    </article>
-
-    <!-- Comments Section -->
-    <div class="mt-8">
-        <div class="bg-white rounded-xl shadow-lg p-8">
-            <h3 class="text-2xl font-semibold text-gray-900 mb-6 flex items-center">
-                <i class="far fa-comments mr-3 text-blue-500"></i>
-                Comments (<span id="commentCount">{{ comment_total }}</span>)
-            </h3>
-            
-            <!-- Add Comment Form -->
-            {% if session.get('user_id') %}
-            <div class="mb-8 p-4 bg-gray-50 rounded-lg">
-                <div class="flex items-start space-x-4">
-                    <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                        {{ session.user_name[0].upper() if session.user_name else 'U' }}
-                    </div>
-                    <div class="flex-1">
-                        <label for="commentText" class="sr-only">Your comment</label>
-                        <textarea id="commentText" placeholder="Share your thoughts..." maxlength="1000" 
-                                  class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" 
-                                  rows="3"></textarea>
-                        <div class="flex justify-end mt-3">
-                            <button type="button" data-action="comment" 
-                                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                                Post Comment
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% else %}
-            <div class="mb-8 p-4 bg-gray-50 rounded-lg text-center">
-                <p class="text-gray-600">Please <a href="{{ url_for('auth.login') }}" class="text-blue-600 hover:text-blue-800">login</a> to leave a comment.</p>
-            </div>
-            {% endif %}
-            
-            <!-- Comments List -->
-            <div id="commentsList" class="space-y-6">
-                {% for comment in comments %}
-                <div class="comment" data-comment-id="{{ comment.id }}">
-                    <div class="flex items-start space-x-4">
-                        <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                            {{ (authors.get(comment.user_id) or '?')[0].upper() }}
-                        </div>
-                        <div class="flex-1">
-                            <div class="bg-gray-50 rounded-lg p-4">
-                                <div class="flex items-center justify-between mb-2">
-                                    <h4 class="font-semibold text-gray-900">{{ authors.get(comment.user_id) or 'Unknown' }}</h4>
-                                    <span class="text-sm text-gray-500">{{ comment.created_at.strftime('%B %d, %Y • %I:%M %p') }}</span>
-                                </div>
-                                <p class="text-gray-700">{{ comment.content }}</p>
-                            </div>
-                            
-                            {% if session.get('user_id') %}
-                            <button type="button" data-action="reply-toggle" data-id="{{ comment.id }}"
-                                    class="mt-2 text-sm text-blue-600 hover:text-blue-800">
-                                <i class="fas fa-reply mr-1"></i> Reply
-                            </button>
-                            {% endif %}
-                            
-                            <!-- Reply Form -->
-                            <div id="replyForm-{{ comment.id }}" class="mt-4 ml-4 hidden">
-                                <div class="flex items-start space-x-3">
-                                    <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
-                                        {{ session.user_name[0].upper() if session.user_name else 'U' }}
-                                    </div>
-                                    <div class="flex-1">
-                                        <label for="replyText-{{ comment.id }}" class="sr-only">Your reply</label>
-                                        <textarea id="replyText-{{ comment.id }}" placeholder="Write a reply..." maxlength="1000" 
-                                                  class="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none" 
-                                                  rows="2"></textarea>
-                                        <div class="flex justify-end mt-2 space-x-2">
-                                            <button type="button" data-action="reply-toggle" data-id="{{ comment.id }}"
-                                                    class="px-3 py-1 text-sm text-gray-600 hover:text-gray-800">
-                                                Cancel
-                                            </button>
-                                            <button type="button" data-action="reply-send" data-id="{{ comment.id }}"
-                                                    class="px-4 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700">
-                                                Reply
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Replies Container -->
-                            <div id="replies-{{ comment.id }}" class="mt-4 ml-4 space-y-3">
-                                <!-- Replies will be loaded here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% else %}
-                <div class="text-center py-8 text-gray-500">
-                    <i class="far fa-comment-dots text-4xl mb-3"></i>
-                    <p>No comments yet. Be the first to share your thoughts!</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
+    {% if session.get('user_id') %}
+    <div class="field">
+      <label class="label" for="commentText">Add a comment</label>
+      <textarea class="textarea" id="commentText" maxlength="1000" rows="3"></textarea>
+      <p class="help">Up to 1000 characters. Be kind. Do not share private details about other people.</p>
     </div>
+    <button type="button" class="btn btn-primary" data-action="comment">Post comment</button>
+    {% else %}
+    <p class="panel-muted"><a href="{{ url_for('auth.login') }}">Log in</a> to leave a comment.</p>
+    {% endif %}
+
+    <div id="commentsList">
+      {% for comment in comments %}
+      <div class="comment" data-comment-id="{{ comment.id }}">
+        <div class="comment-head">
+          <strong>{{ authors.get(comment.user_id) or 'Unknown' }}</strong>
+          <time datetime="{{ comment.created_at.strftime('%Y-%m-%d') }}">{{ comment.created_at.strftime('%d %b %Y, %I:%M %p') }}</time>
+        </div>
+        <p>{{ comment.content }}</p>
+        {% if session.get('user_id') %}
+        <button type="button" class="btn btn-ghost btn-sm" data-action="reply-toggle" data-id="{{ comment.id }}">Reply</button>
+        <div id="replyForm-{{ comment.id }}" class="reply-form" hidden>
+          <div class="field">
+            <label class="label" for="replyText-{{ comment.id }}">Your reply</label>
+            <textarea class="textarea" id="replyText-{{ comment.id }}" maxlength="1000" rows="2"></textarea>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" data-action="reply-send" data-id="{{ comment.id }}">Send reply</button>
+          <button type="button" class="btn btn-ghost btn-sm" data-action="reply-toggle" data-id="{{ comment.id }}">Cancel</button>
+        </div>
+        {% endif %}
+        <div id="replies-{{ comment.id }}" class="replies"></div>
+      </div>
+      {% else %}
+      <div class="empty-state" id="noComments">
+        <p>No comments yet. Start the conversation.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" style="display: none;">
-    <div class="bg-white rounded-lg p-6 max-w-md mx-4">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Confirm Delete</h3>
-        <p class="text-gray-600 mb-6">Are you sure you want to delete "<strong>{{ post.title }}</strong>"? This action cannot be undone.</p>
-        <div class="flex space-x-4">
-            <button type="button" data-action="delete-close" class="flex-1 px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">
-                Cancel
-            </button>
-            <form action="{{ url_for('blog.blog_delete', post_id=post.id) }}" method="post" class="flex-1">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-                <button type="submit" class="w-full px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700">
-                    Delete Post
-                </button>
-            </form>
-        </div>
+{% if can_manage %}
+<dialog id="deleteModal" class="confirm" aria-labelledby="deleteTitle">
+  <h2 id="deleteTitle">Delete this post?</h2>
+  <p>"{{ post.title }}" will be deleted with its likes and comments. This cannot be undone.</p>
+  <form action="{{ url_for('blog.blog_delete', post_id=post.id) }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <div class="group">
+      <button type="button" class="btn btn-secondary" data-action="delete-close">Cancel</button>
+      <button type="submit" class="btn btn-danger">Delete post</button>
     </div>
-</div>
+  </form>
+</dialog>
+{% endif %}
 
 <template id="comment-template">
-    <div class="comment" data-comment-id="">
-        <div class="flex items-start space-x-4">
-            <div class="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-white font-bold text-sm" data-slot="initial"></div>
-            <div class="flex-1">
-                <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="flex items-center justify-between mb-2">
-                        <h4 class="font-semibold text-gray-900" data-slot="author"></h4>
-                        <span class="text-sm text-gray-500" data-slot="date"></span>
-                    </div>
-                    <p class="text-gray-700" data-slot="content"></p>
-                </div>
-            </div>
-        </div>
+  <div class="comment" data-comment-id="">
+    <div class="comment-head">
+      <strong data-slot="author"></strong>
+      <time data-slot="date"></time>
     </div>
+    <p data-slot="content"></p>
+  </div>
 </template>
+{% endblock %}
 
-<script nonce="{{ g.csp_nonce }}">
-(function () {
-    const URLS = {
-        like: {{ url_for('blog.blog_like', post_id=post.id)|tojson }},
-        comment: {{ url_for('blog.blog_comment', post_id=post.id)|tojson }},
-        replies: {{ url_for('blog.blog_replies', post_id=post.id, comment_id=0)|tojson }}
-    };
-    const TITLE = {{ post.title|tojson }};
-    const csrf = () => document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    const post = (url, body) => fetch(url, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrf()},
-        body: JSON.stringify(body || {})
-    }).then(r => r.json());
-
-    // User text is inserted with textContent only, never parsed as HTML.
-    function commentNode(c) {
-        const node = document.getElementById('comment-template').content.firstElementChild.cloneNode(true);
-        node.dataset.commentId = c.id;
-        node.querySelector('[data-slot=initial]').textContent = (c.author_name || '?')[0].toUpperCase();
-        node.querySelector('[data-slot=author]').textContent = c.author_name;
-        node.querySelector('[data-slot=date]').textContent = c.created_at;
-        node.querySelector('[data-slot=content]').textContent = c.content;
-        return node;
-    }
-
-    function replyNode(r) {
-        const box = document.createElement('div');
-        box.className = 'bg-gray-100 rounded-lg p-3';
-        const head = document.createElement('div');
-        head.className = 'flex items-center justify-between mb-1';
-        const who = document.createElement('h5');
-        who.className = 'font-medium text-gray-900 text-sm';
-        who.textContent = r.author_name;
-        const when = document.createElement('span');
-        when.className = 'text-xs text-gray-500';
-        when.textContent = r.created_at;
-        head.append(who, when);
-        const body = document.createElement('p');
-        body.className = 'text-gray-700 text-sm';
-        body.textContent = r.content;
-        box.append(head, body);
-        return box;
-    }
-
-    function toggleLike() {
-        post(URLS.like).then(data => {
-            if (!data.success) return showMessageBox('Error', data.message || 'Please log in to like posts.', 'error');
-            const btn = document.getElementById('likeBtn');
-            const on = 'bg-red-100 text-red-600', off = 'bg-gray-100 text-gray-600 hover:bg-red-50 hover:text-red-600';
-            btn.className = 'flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ' + (data.liked ? on : off);
-            btn.querySelector('i').className = (data.liked ? 'fas' : 'far') + ' fa-heart';
-            document.getElementById('likeCount').textContent = data.like_count;
-        }).catch(() => showMessageBox('Error', 'Failed to update like. Please try again.', 'error'));
-    }
-
-    function addComment() {
-        const box = document.getElementById('commentText');
-        const content = box.value.trim();
-        if (!content) return showMessageBox('Error', 'Please enter a comment.', 'error');
-        post(URLS.comment, {content}).then(data => {
-            if (!data.success) return showMessageBox('Error', data.message || 'Failed to add comment.', 'error');
-            box.value = '';
-            const list = document.getElementById('commentsList');
-            list.querySelector('.text-center')?.remove();
-            list.appendChild(commentNode(data.comment));
-            document.getElementById('commentCount').textContent = data.comment_count;
-            showMessageBox('Success', 'Comment added.', 'success');
-        }).catch(() => showMessageBox('Error', 'Failed to add comment. Please try again.', 'error'));
-    }
-
-    function toggleReplyForm(id) {
-        const form = document.getElementById('replyForm-' + id);
-        if (!form) return;
-        form.classList.toggle('hidden');
-        if (!form.classList.contains('hidden')) document.getElementById('replyText-' + id)?.focus();
-    }
-
-    function addReply(id) {
-        const box = document.getElementById('replyText-' + id);
-        const content = box.value.trim();
-        if (!content) return showMessageBox('Error', 'Please enter a reply.', 'error');
-        post(URLS.comment, {content, parent_id: Number(id)}).then(data => {
-            if (!data.success) return showMessageBox('Error', data.message || 'Failed to add reply.', 'error');
-            box.value = '';
-            toggleReplyForm(id);
-            loadReplies(id);
-            document.getElementById('commentCount').textContent = data.comment_count;
-        }).catch(() => showMessageBox('Error', 'Failed to add reply. Please try again.', 'error'));
-    }
-
-    function loadReplies(id) {
-        fetch(URLS.replies.replace(/0\/replies$/, id + '/replies'))
-            .then(r => r.json())
-            .then(data => {
-                const box = document.getElementById('replies-' + id);
-                if (box) box.replaceChildren(...(data.replies || []).map(replyNode));
-            })
-            .catch(err => console.error('Error loading replies:', err));
-    }
-
-    function sharePost() {
-        if (navigator.share) {
-            navigator.share({title: TITLE, text: 'Check out this blog post on mental health:', url: location.href});
-        } else {
-            navigator.clipboard.writeText(location.href)
-                .then(() => showMessageBox('Success', 'Post URL copied to clipboard!', 'success'))
-                .catch(() => showMessageBox('Info', 'Share this post: ' + location.href, 'info'));
-        }
-    }
-
-    function deleteModal(show) {
-        const modal = document.getElementById('deleteModal');
-        modal.style.display = show ? 'flex' : 'none';
-        modal.classList.toggle('hidden', !show);
-    }
-
-    document.addEventListener('click', function (e) {
-        const el = e.target.closest('[data-action]');
-        if (!el) return;
-        ({
-            'like': toggleLike,
-            'comment': addComment,
-            'share': sharePost,
-            'reply-toggle': () => toggleReplyForm(el.dataset.id),
-            'reply-send': () => addReply(el.dataset.id),
-            'delete-open': () => deleteModal(true),
-            'delete-close': () => deleteModal(false)
-        })[el.dataset.action]?.();
-    });
-
-    document.addEventListener('DOMContentLoaded', function () {
-        document.querySelectorAll('.comment').forEach(c => loadReplies(c.dataset.commentId));
-    });
-})();
-</script>
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/blog_detail.js') }}" defer></script>
 {% endblock %}

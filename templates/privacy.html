@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% from 'partials/breadcrumbs.html' import breadcrumb %}
+{% from '_macros.html' import jsonld_scripts, helpline_list, alert %}
+
+{% block title %}Privacy policy{% endblock %}
+{% block meta_description %}{{ page_description }}{% endblock %}
+{% block canonical %}{{ canonical_url }}{% endblock %}
+{% block robots %}index, follow{% endblock %}
+{% block breadcrumbs %}{{ breadcrumb([('Home', '/'), ('Privacy policy', None)]) }}{% endblock %}
+{% block head_extra %}
+{{ super() }}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+{{ jsonld_scripts(jsonld) }}
+{% endblock %}
+
+{% block content %}
+{% set placeholder = '[to be set by the operator]' %}
+<div class="container section">
+  <div class="page-header page-narrow">
+    <h1>Privacy policy</h1>
+    <p class="lead">What Mindful Horizon stores about you, why, who can see it, and how to get a copy or delete it.</p>
+    <p class="muted">Version {{ consent_version }}, last updated {{ last_updated }}.</p>
+  </div>
+
+  <div class="page-narrow">
+    {% call alert('warning', title='Draft pending legal review', role='note') %}
+      This policy describes what the app does today. It has not yet been reviewed by a lawyer. Details marked in square brackets are not decided yet.
+    {% endcall %}
+
+    <nav class="toc" aria-label="Contents">
+      <p class="toc-title">Contents</p>
+      <ol>
+        <li><a href="#who">Who is responsible</a></li>
+        <li><a href="#collect">Data we collect</a></li>
+        <li><a href="#why">Why we use it and our legal basis</a></li>
+        <li><a href="#access">Who can see your data</a></li>
+        <li><a href="#processors">Services that receive data</a></li>
+        <li><a href="#cookies">Cookies and local storage</a></li>
+        <li><a href="#retention">How long we keep it</a></li>
+        <li><a href="#rights">Your rights</a></li>
+        <li><a href="#children">Children</a></li>
+        <li><a href="#security">Security</a></li>
+        <li><a href="#transfers">Data sent outside India</a></li>
+        <li><a href="#changes">Changes to this policy</a></li>
+        <li><a href="#help">If you need help now</a></li>
+        <li><a href="#contact">Contact and grievances</a></li>
+      </ol>
+    </nav>
+
+    <div class="prose">
+      <h2 id="who">Who is responsible</h2>
+      <p>The institution (data fiduciary) decides why and how your data is used: {{ fiduciary_name or placeholder }}. The service operator (processor) runs Mindful Horizon for the institution and handles your data only for that purpose. Mindful Horizon is an early-stage project. Its source code is public on <a href="{{ repo_url }}" rel="noopener">GitHub</a>.</p>
+
+      <h2 id="collect">Data we collect</h2>
+      <p>We store only what you give the app, plus a few technical records. Nothing is bought from other sources.</p>
+      <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th scope="col">Data</th><th scope="col">What it includes</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Account</th><td>Name, email address, institution, role (student or counsellor), a hashed password or a Google account ID if you sign in with Google, and when you accepted this policy and confirmed you are 18 or older.</td></tr>
+          <tr><th scope="row">Mood</th><td>Mood ratings and notes you log.</td></tr>
+          <tr><th scope="row">Screenings</th><td>Your PHQ-9 and GAD-7 answers, the scores calculated from them, and any AI explanation you asked for.</td></tr>
+          <tr><th scope="row">Journal</th><td>Entry titles, text and a sentiment label.</td></tr>
+          <tr><th scope="row">Voice logs</th><td>Audio measurements (length, pitch, loudness), a rough tone label and any AI note. The recording itself is analysed when you save and is not stored.</td></tr>
+          <tr><th scope="row">Chat</th><td>Messages you send to the AI companion and its replies.</td></tr>
+          <tr><th scope="row">Appointments</th><td>Appointment times, the counsellor, status, and notes a counsellor writes about a session.</td></tr>
+          <tr><th scope="row">Medication</th><td>Medication names you enter and when you log taking them.</td></tr>
+          <tr><th scope="row">Prescriptions</th><td>If a doctor at your institution issues you a prescription: your name, the diagnosis the doctor enters, allergies and current medicines as entered, the medicines with dose and duration, the doctor's name and registration number, dates, whether you sent it to the pharmacy desk and what was collected. Your decision to allow or withdraw e-prescriptions is stored with its date. The app does not prescribe by itself and the AI companion cannot prescribe.</td></tr>
+          <tr><th scope="row">Wellness activity</th><td>Goals, breathing, yoga and music sessions, digital-detox answers, and notifications.</td></tr>
+          <tr><th scope="row">Crisis records</th><td>When the safety check fires: the time, where it happened (chat or PHQ-9), a severity number and a short reason code. The message text is not stored in this record.</td></tr>
+          <tr><th scope="row">Contact messages</th><td>If you use the contact form: your name, email, subject and message.</td></tr>
+          <tr><th scope="row">Audit log</th><td>Which counsellor opened which kind of record and when. It holds identifiers, not the content.</td></tr>
+          <tr><th scope="row">Technical</th><td>Your IP address is used for rate limiting and appears in server logs. We do not write what you type into the logs.</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h2 id="why">Why we use it and our legal basis</h2>
+      <p>We use your data to run the features you use: showing your history, scoring screenings, replying in chat, booking and running appointments, and alerting counsellors when the safety check fires. We do not sell your data and we do not use it for advertising.</p>
+      <p>The legal basis is your consent under the Digital Personal Data Protection Act, 2023. You give it when you create your account, and you can withdraw it at any time (see Your rights). Withdrawing consent means we stop using your data and delete your account.</p>
+
+      <h2 id="access">Who can see your data</h2>
+      <ul>
+        <li><strong>You</strong> see everything in your account.</li>
+        <li><strong>Your assigned counsellor</strong> sees individual records only for the data your assignment allows. An assignment is created when you book an appointment with that counsellor, or when one is added manually. Counsellor pages do not show journal entries.</li>
+        <li><strong>Doctors and the pharmacy desk.</strong> A doctor you have booked can issue and see your prescriptions. A counsellor you have booked can see the medicine names, doses and dates of your prescriptions and the medicines you log, but not the diagnosis or allergies. The pharmacy desk of your institution sees a prescription only when you send it to the desk or give its number. Every such view is written to the audit log.</li>
+        <li><strong>Counsellors at your institution</strong> see group totals only, and only when the group is above a minimum size so that no one can be picked out. They also see unacknowledged crisis alerts for their institution, even without an assignment, so a safety alert is never missed.</li>
+        <li><strong>The audit log</strong> records every counsellor view of an individual record or crisis alert.</li>
+        <li><strong>The operator</strong> and anyone with access to the database or server can technically read stored data. Access is limited to people who run the service.</li>
+      </ul>
+      <p>We may disclose data if a law or a court order requires it, or to prevent serious harm to a person's life.</p>
+
+      <h2 id="processors">Services that receive data</h2>
+      <ul>
+        <li><strong>Google Gemini API</strong> (AI companion and AI suggestions). When you use an AI feature, we send the text for that feature: your chat message; a journal entry's title, text and sentiment; screening type, score and answers; goal, medication-log and mood summaries; a voice transcript and audio measurements. Counsellor tools can send a pasted session transcript to draft a note. We do not send your name, email address or user ID. Google processes the request to return a reply. Check Google's current terms for how it handles API data.</li>
+        <li><strong>The hosting provider</strong> stores the database and files and serves the app. [Hosting provider and region to be set by the operator.]</li>
+        <li><strong>An email (SMTP) provider</strong>, only if the operator has set one up, to forward contact-form messages to the team. [SMTP provider to be set by the operator.]</li>
+        <li><strong>Google sign-in</strong>, only if you choose it. Google tells us your name, email address and account ID.</li>
+        <li><strong>Content delivery networks</strong> may serve code libraries and fonts to your browser, which lets them see your IP address, as with any website.</li>
+      </ul>
+
+      <h2 id="cookies">Cookies and local storage</h2>
+      <ul>
+        <li>A <strong>session cookie</strong> keeps you signed in. It is needed for the service to work. It is signed so it cannot be altered, and it lasts up to 24 hours.</li>
+        <li>A <strong>consent cookie or setting</strong> remembers your choice about optional analytics.</li>
+        <li>A <strong>theme preference</strong> (light or dark) is stored in your browser.</li>
+        <li>Some pages keep small preferences, such as music filters or an unsaved blog draft, in your browser's local storage. They do not leave your device.</li>
+        <li><strong>First-party analytics</strong> run only if you accept them. They record page names and campaign tags, with no user ID and no IP address, and never anything you type. If you decline, nothing is recorded.</li>
+      </ul>
+      <p>We do not use advertising cookies.</p>
+
+      <h2 id="retention">How long we keep it</h2>
+      <p>We keep your data until you delete your account. When you delete it, the account and the records tied to it are removed from the service database. This includes prescriptions issued to you. Whether the law requires prescription records to be kept longer has not been settled and needs legal review. [Retention of prescription records to be set after legal review.] Contact messages may be kept so that the team can answer and track them. Backups, if the host keeps them, are kept for a period that we will confirm before launch. [Backup period to be set by the operator.]</p>
+
+      <h2 id="rights">Your rights</h2>
+      <p>Under the DPDP Act you can:</p>
+      <ul>
+        <li><strong>Access and export</strong> your data, and <strong>delete</strong> your account, from <a href="{{ account_data_url }}">your data page</a>.</li>
+        <li><strong>Correct</strong> details such as your name and institution from your profile, or ask us to fix a record through the contact page.</li>
+        <li><strong>Withdraw consent</strong> at any time by deleting your account, or by writing to us.</li>
+        <li><strong>Nominate</strong> another person to exercise your rights if you cannot.</li>
+        <li><strong>Complain</strong> to us first (see Contact and grievances). If we do not resolve it, you can complain to the Data Protection Board of India.</li>
+      </ul>
+
+      <h2 id="children">Children</h2>
+      <p>Accounts are for people aged 18 or older. You confirm this when you sign up. We do not knowingly keep data of people under 18. If you think a child has an account, tell us through the contact page and we will remove it.</p>
+
+      <h2 id="security">Security</h2>
+      <p>What is in place today:</p>
+      <ul>
+        <li>Passwords are stored as hashes, not as plain text.</li>
+        <li>Pages are meant to be served over HTTPS in production, and the session cookie is marked secure and HTTP-only there.</li>
+        <li>Security headers are set on responses, and forms are protected against cross-site request forgery.</li>
+        <li>Login, sign-up and contact forms are rate limited.</li>
+        <li>Counsellor access to individual records is limited by assignment and written to an audit log.</li>
+      </ul>
+      <p>We do not claim that data is encrypted at rest in the database, and we make no claim of certification under HIPAA or similar standards. No system is perfectly secure. If a breach affects your data, we will tell you and the authorities as the law requires.</p>
+
+      <h2 id="transfers">Data sent outside India</h2>
+      <p>Text sent to the Google Gemini API is processed by Google, and may be processed on servers outside India. The hosting provider's region is [to be set by the operator]. If you do not want your text sent to Google, do not use the AI chat, journal suggestions or other AI features. The rest of the app works without them.</p>
+
+      <h2 id="changes">Changes to this policy</h2>
+      <p>The version number and date at the top change when this policy changes. If a change affects how we use your data, we will ask for your consent again before it applies to you.</p>
+
+      <h2 id="help">If you need help now</h2>
+      <p>This service is not an emergency service. If you are in crisis, call:</p>
+      {{ helpline_list(helplines) }}
+
+      <h2 id="contact">Contact and grievances</h2>
+      <p>For privacy questions and complaints, write to the grievance contact: {% if grievance_email %}<a href="mailto:{{ grievance_email }}">{{ grievance_email }}</a>{% else %}{{ placeholder }}{% endif %}. You can also use the <a href="{{ url_for('pages.contact') }}">contact form</a>. Our <a href="{{ url_for('pages.terms') }}">terms of use</a> explain the rules for using the service.</p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script defer src="{{ url_for('static', filename='js/components.js') }}" nonce="{{ g.csp_nonce }}"></script>
+{% endblock %}

@@ -1,7 +1,8 @@
 import logging
+import sys
 
-# Configure basic logging early to handle import errors
-logging.basicConfig(level=logging.INFO)
+# Configure basic logging early to handle import errors (stdout: Render shows stdout in the dashboard)
+logging.basicConfig(level=logging.INFO, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 import json
@@ -10,8 +11,6 @@ import secrets  # Added for CSP nonce generation
 import base64
 
 from urllib.parse import quote
-from werkzeug.utils import secure_filename
-import uuid
 
 import os
 from datetime import datetime, timedelta, date, timezone
@@ -25,46 +24,13 @@ load_dotenv()
 # Debug: Check if .env was loaded successfully
 logger.info(f".env file loaded: GEMINI_API_KEY present = {'Yes' if os.getenv('GEMINI_API_KEY') else 'No'}")
 
-# Configure logging early
-import logging
-
-# Create a custom logger that outputs to both file and console
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-# Remove any existing handlers to avoid duplicates
-for handler in logger.handlers[:]:
-    logger.removeHandler(handler)
-
-# File handler
-file_handler = logging.FileHandler('mindful_horizon.log')
-file_handler.setLevel(logging.DEBUG)
-file_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(file_formatter)
-logger.addHandler(file_handler)
-
-# Console handler for terminal output
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-console_formatter = logging.Formatter('%(levelname)s - %(message)s')
-console_handler.setFormatter(console_formatter)
-logger.addHandler(console_handler)
+# The app logger is named 'app' explicitly. Production logs to stdout only; development adds logs/mindful_horizon.log.
+from utils.log_config import setup_app_logging, APP_LOGGER
+logger = setup_app_logging()
 
 from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, send_from_directory, g
-import nltk
-
-# Download NLTK data if not already present
-try:
-    nltk.data.find('tokenizers/punkt')
-except LookupError:
-    nltk.download('punkt')
-try:
-    nltk.data.find('corpora/wordnet')
-except LookupError:
-    nltk.download('wordnet')
 from flask_wtf.csrf import CSRFError
 from flask_socketio import SocketIO, emit, join_room, leave_room, rooms
-from flask_caching import Cache
 from flask_assets import Environment, Bundle
 # Import blueprints from routes package
 from routes import all_blueprints
@@ -72,16 +38,14 @@ from routes.auth import is_strong_password
 from ai.scoring import band_for, canonical_type
 
 import ai.service as ai_service
-from extensions import db, csrf, limiter
+from extensions import db, csrf, limiter, cache
+import utils.cache_utils  # noqa: F401  (registers the cache-invalidation session listeners)
 from models import User, Appointment, Gamification, DigitalDetoxLog, Notification, MoodLog  # the rest comes via `from models import *` below
 
 
 # File upload configuration
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'wav', 'mp3', 'ogg'}
-ALLOWED_MIME_TYPES = {
-    'image/png', 'image/jpeg', 'image/jpg', 'image/gif',
-    'audio/wav', 'audio/mpeg', 'audio/ogg'
-}
+ALLOWED_EXTENSIONS = {'wav', 'mp3', 'ogg'}  # voice logs only; nothing uploaded is stored on disk
+ALLOWED_MIME_TYPES = {'audio/wav', 'audio/mpeg', 'audio/ogg'}
 
 def validate_file_security(file):
     """
@@ -118,56 +82,19 @@ def validate_file_security(file):
         logger.error(f"Error during file validation: {e}")
         return False, "File validation error"
 
-# Import new dependencies for patient features
-try:
-    from textblob import TextBlob
-    import librosa
-    import numpy as np
-    TEXTBLOB_AVAILABLE = True
-    LIBROSA_AVAILABLE = True
-except ImportError as e:
-    logger.warning(f"Some patient feature dependencies not available: {e}")
-    TEXTBLOB_AVAILABLE = False
-    LIBROSA_AVAILABLE = False
-
 # Database configuration
 app = Flask(__name__)
 
-# Configure file uploads
-app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'static', 'uploads')
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max request size (voice logs are analysed in memory, never saved)
 
-# Ensure upload directory exists
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///mindful_horizon.db')
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_pre_ping': True,
-    'pool_recycle': 300,
-}
+from utils.database_utils import normalize_db_url, engine_options
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'instance', 'mindful_horizon.db')
-logger.info(f"DATABASE_URL: {os.environ.get('DATABASE_URL')}")
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL') or f'sqlite:///{db_path}'
-logger.info(f"Using database at: {app.config['SQLALCHEMY_DATABASE_URI']}")
-
+app.config['SQLALCHEMY_DATABASE_URI'] = normalize_db_url(os.environ.get('DATABASE_URL')) or f'sqlite:///{db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Database connection pooling configuration
-engine_options = {
-    'pool_size': 10,
-    'pool_recycle': 120,
-    'pool_pre_ping': True,
-    'max_overflow': 20
-}
-
-# Improve SQLite compatibility with threaded servers (e.g., SocketIO)
-if app.config.get('SQLALCHEMY_DATABASE_URI', '').startswith('sqlite:///'):
-    engine_options['connect_args'] = {'check_same_thread': False}
-
-app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
+# Pool settings differ per dialect (SQLite vs PostgreSQL); see utils/database_utils.py and docs/PERFORMANCE.md
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options(app.config['SQLALCHEMY_DATABASE_URI'])
 
 
 # Same-origin only unless CORS_ORIGINS (comma separated) is set.
@@ -176,15 +103,28 @@ socketio = SocketIO(app, cors_allowed_origins=[o.strip() for o in _cors.split(',
 
 # Rate limiter (see extensions.py for the limits)
 limiter.init_app(app)  # defined in extensions.py so blueprints can add per-route limits
+from utils.proxy import init_proxy  # ProxyFix behind Render's proxy (production or TRUST_PROXY=1)
+init_proxy(app)
 
 # Rate limiting exemption for health checks and static files
 @limiter.request_filter
 def exempt_health_checks():
     """Exempt health check endpoints from rate limiting"""
-    return request.endpoint in ['static', 'health_check']
+    return request.endpoint in ['static', 'ops.health', 'ops.ready']
 
-# Initialize caching
-cache = Cache(app, config={'CACHE_TYPE': 'simple'})
+# Caching is initialised in extensions.init_extensions (CACHE_TYPE env; `cache` is imported from extensions)
+
+# Template and static caching: reload templates only in debug; keep compiled templates on disk
+_debug = os.getenv('FLASK_DEBUG') == '1'
+app.config['TEMPLATES_AUTO_RELOAD'] = _debug
+if not _debug:
+    try:
+        from jinja2 import FileSystemBytecodeCache
+        _jinja_cache_dir = os.path.join(basedir, 'instance', 'jinja_cache')
+        os.makedirs(_jinja_cache_dir, exist_ok=True)
+        app.jinja_env.bytecode_cache = FileSystemBytecodeCache(_jinja_cache_dir)
+    except OSError:
+        logger.warning("Jinja bytecode cache directory is not writable; compiling templates in memory")
 
 # Configure session BEFORE initializing extensions
 _secret_key = os.getenv('SECRET_KEY')
@@ -194,13 +134,12 @@ if not _secret_key:
     logger.warning("SECRET_KEY not set: using a random per-process key (sessions reset on restart)")
     _secret_key = secrets.token_hex(32)
 app.secret_key = _secret_key
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Extended session lifetime
+# Sessions are Flask's signed cookies (no server-side storage); utils/session_stamp.py makes them revocable.
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=int(os.getenv('SESSION_LIFETIME_HOURS', '24') or 24))  # shared campus machines: short
 app.config['SESSION_COOKIE_SECURE'] = os.getenv('FLASK_ENV') == 'production'  # True in production with HTTPS
 app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS attacks
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # Strict would drop the cookie on the Google OAuth redirect
 app.config['SESSION_COOKIE_NAME'] = 'mindfullhorizon_session'  # Custom session cookie name
-app.config['SESSION_FILE_DIR'] = os.path.join(os.getcwd(), 'flask_session')
 app.config['WTF_CSRF_TIME_LIMIT'] = 604800  # 7 days, for prototype convenience
 
 # Additional security configurations
@@ -215,7 +154,10 @@ from extensions import init_extensions
 init_extensions(app)
 
 from models import *
+logger = logging.getLogger(APP_LOGGER)  # `from models import *` rebinds `logger` to models' logger
 from utils.database_utils import check_database, init_db
+from utils.session_stamp import init_session_stamp, stamp_session  # revocable cookie sessions
+init_session_stamp(app)
 
 # Check database connection at startup
 with app.app_context():
@@ -232,6 +174,15 @@ csrf.init_app(app)
 # Register all blueprints
 for blueprint in all_blueprints:
     app.register_blueprint(blueprint)
+
+from utils.logging_setup import init_logging  # request ids, access log, log redaction
+from utils.jobs import init_jobs  # job queue CLI + optional in-process worker (JOBS_INPROCESS)
+init_logging(app)
+init_jobs(app)
+from services.admin_cli import init_admin_cli  # flask create-admin and friends
+from services.ops_jobs import init_ops_cli  # flask ops-daily-schedule
+init_admin_cli(app)
+init_ops_cli(app)
 
 # Asset management
 assets = Environment(app)
@@ -277,9 +228,36 @@ def add_security_headers(response):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Permissions-Policy"] = "camera=(self), microphone=(self), geolocation=()"
-    response.headers["Content-Security-Policy-Report-Only"] = CSP_REPORT_ONLY
+    # CSP_ENFORCE=1 switches from Report-Only to enforcing (the lead flips it once no page needs inline code)
+    csp_header = "Content-Security-Policy" if app.config['CSP_ENFORCE'] else "Content-Security-Policy-Report-Only"
+    response.headers[csp_header] = CSP_REPORT_ONLY
     if os.getenv('FLASK_ENV') == 'production':
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return response
+
+app.config['CSP_ENFORCE'] = os.getenv('CSP_ENFORCE') == '1'
+
+# Versioned static files (?v=..., webassets ?<hash>, or a hash in the file name) never change under the same URL
+_HASHED_NAME = re.compile(r'\.[0-9a-f]{8,}\.[a-z0-9]+$')
+
+@app.after_request
+def add_cache_headers(response):
+    """Cheap, header-only caching policy (a route's own Cache-Control wins; static files are the exception, see below)."""
+    path = request.path
+    if path.startswith('/static/'):
+        # Versioned URLs never change content: ?v=..., any query on /static/gen/ (webassets hash) or a hash in the name.
+        if response.status_code == 200 and ('v' in request.args or (request.args and path.startswith('/static/gen/'))
+                                            or _HASHED_NAME.search(path)):
+            response.headers['Cache-Control'] = 'public, max-age=31536000, immutable'
+        return response  # other static: Flask's ETag + Last-Modified conditional responses (304)
+    if 'Cache-Control' in response.headers or response.status_code >= 500:
+        return response
+    mimetype = response.mimetype
+    if mimetype == 'text/html':
+        response.headers['Cache-Control'] = 'private, no-cache' if session.get('user_id') else 'no-cache'
+        response.vary.add('Cookie')
+    elif mimetype == 'application/json':
+        response.headers['Cache-Control'] = 'no-store'  # API bodies can hold personal health data
     return response
 
 # Secure CSRF error handler
@@ -313,7 +291,11 @@ def handle_internal_error(e):
     if request.endpoint == 'patient.patient_journal' and request.method == 'POST':
         flash('An error occurred while saving your journal entry. Please try again.', 'error')
         return redirect(url_for('patient.patient_journal'))
-    return redirect(url_for('core.index'))
+    from utils.site_context import render_error_page
+    return render_error_page(500)
+
+from utils.site_context import init_site_context  # context processor + 404 handler (templates/errors)
+init_site_context(app)
 
 
 
@@ -348,27 +330,43 @@ def favicon():
 @app.route('/chat')
 @login_required
 def chat():
-    return render_template('chat.html', user_name=session['user_name'])
+    from utils.chat_templates import public_list
+    return render_template('chat.html', user_name=session['user_name'], starters=public_list())
 
 
 @app.route('/api/message', methods=['POST'])
 @login_required
+@limiter.limit('30 per minute')
 def api_message():
+    """Quick message between a patient and a provider who are linked (ProviderPatient row or an appointment)."""
+    from models import ProviderPatient
+    data = request.get_json(silent=True)
+    data = data if isinstance(data, dict) else {}
+    recipient_id, message = data.get('recipient_id'), data.get('message')
+    if isinstance(recipient_id, str) and recipient_id.isdigit():
+        recipient_id = int(recipient_id)
+    if isinstance(recipient_id, bool) or not isinstance(recipient_id, int) or not isinstance(message, str) or not message.strip():
+        return jsonify(success=False, error='recipient_id and message are required'), 400
+    message = message.strip()
+    if len(message) > 1000:
+        return jsonify(success=False, error='Message is too long (1000 characters at most)'), 400
+    sender_id, role = session.get('user_id'), session.get('user_role')
+    recipient = db.session.get(User, recipient_id) if recipient_id != sender_id else None
+    allowed = False
+    if recipient and {role, recipient.role} == {'patient', 'provider'}:
+        patient_id, provider_id = (sender_id, recipient_id) if role == 'patient' else (recipient_id, sender_id)
+        allowed = (ProviderPatient.query.filter_by(provider_id=provider_id, patient_id=patient_id).first() is not None
+                   or Appointment.query.filter_by(user_id=patient_id, provider_id=provider_id).first() is not None)
+    if not allowed:  # same answer for unknown, self, wrong role and unlinked recipients: no user enumeration
+        return jsonify(success=False, error='You cannot message this recipient'), 403
     try:
-        data = request.get_json() or {}
-        recipient_id = data.get('recipient_id')
-        message = data.get('message', '').strip()
-        if not recipient_id or not message:
-            return jsonify(success=False, error='recipient_id and message are required'), 400
-
-        # create notification
-        notif = Notification(sender_id=session.get('user_id'), recipient_id=recipient_id, message=message, type='message', payload=None)
+        notif = Notification(sender_id=sender_id, recipient_id=recipient_id, message=message, type='message', payload=None)
         db.session.add(notif)
         db.session.commit()
         return jsonify(success=True, id=notif.id)
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Failed to create message: {e}")
+        logger.error("Failed to create message: %s", type(e).__name__)
         return jsonify(success=False, error='Could not send message'), 500
 
 
@@ -420,41 +418,10 @@ def profile():
                 return redirect(url_for('profile'))
             user.set_password(password)
 
-        # Handle profile picture upload with enhanced security
-        if 'profile_pic' in request.files:
-            file = request.files['profile_pic']
-            if file and file.filename:
-                is_valid, error_message = validate_file_security(file)
-                if is_valid:
-                    try:
-                        filename = secure_filename(file.filename)
-                        # Ensure unique filename to prevent overwrites and path traversal
-                        unique_filename = str(uuid.uuid4()) + '_' + filename
-                        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-
-                        # Additional security: ensure path is within upload folder
-                        if not os.path.abspath(file_path).startswith(os.path.abspath(app.config['UPLOAD_FOLDER'])):
-                            flash('Invalid file path detected.', 'error')
-                        else:
-                            # Use context manager to ensure file is properly closed
-                            try:
-                                with open(file_path, 'wb') as f:
-                                    file.seek(0)  # Reset file pointer
-                                    f.write(file.read())
-                                user.profile_pic = unique_filename
-                                flash('Profile picture updated successfully!', 'success')
-                            except Exception as e:
-                                logger.error(f"Error saving profile picture: {e}")
-                                flash('Error saving profile picture.', 'error')
-                    except Exception as e:
-                        logger.error(f"Error processing profile picture upload: {e}")
-                        flash('Error processing profile picture.', 'error')
-                else:
-                    flash(error_message, 'error')
-
         try:
             db.session.commit()
             session['user_name'] = user.name  # Update session name if changed
+            stamp_session(user)  # a new password changes the stamp: keep THIS session valid
             flash('Profile updated successfully!', 'success')
         except Exception as e:
             db.session.rollback()
@@ -485,558 +452,9 @@ def profile():
                          avg_screen_time_7_days=avg_screen_time_7_days,
                          avg_screen_time_30_days=avg_screen_time_30_days)
 
-@app.route('/api/mood-music', methods=['GET'])
-def api_mood_music():
-    """Return a curated mapping of moods to YouTube search queries (and optional curated video IDs).
+from routes.audio import register_audio_routes
+register_audio_routes(app)
 
-    The frontend can fetch this and either open a search page or use curated video IDs to embed a player.
-    """
-    # Default static mapping (fallback)
-    mood_map = {
-        'happy': {'query': 'binaural beats happy uplifting 528hz', 'videos': []},
-        'sad': {'query': 'binaural beats sad calming 432hz', 'videos': []},
-        'angry': {'query': 'binaural beats anger release calming bass', 'videos': []},
-        'calm': {'query': 'binaural beats calm relaxation 432hz mindfulness', 'videos': []},
-        'anxious': {'query': 'binaural beats anxiety relief slow tempo 432hz', 'videos': []},
-        'focus': {'query': 'binaural beats focus concentration alpha waves 432hz', 'videos': []}
-    }
-
-    # Prefer DB-backed tracks if the optional `binaural_tracks` table has entries.
-    try:
-        from models import BinauralTrack
-        db_tracks_exist = BinauralTrack.query.limit(1).first() is not None
-    except Exception:
-        db_tracks_exist = False
-
-    if db_tracks_exist:
-        try:
-            from models import BinauralTrack
-            # Build mood_map from DB
-            mapping = {
-                'happy': [], 'sad': [], 'angry': [], 'calm': [], 'anxious': [], 'focus': []
-            }
-            for t in BinauralTrack.query.all():
-                e = (t.emotion or '').lower()
-                # Simple heuristic mapping from stored emotion to our mood buckets
-                if any(x in e for x in ('happy', 'uplift', 'joy', 'positive')):
-                    mapping['happy'].append(t)
-                elif any(x in e for x in ('sad', 'melancholy', 'blue')):
-                    mapping['sad'].append(t)
-                elif any(x in e for x in ('angry', 'anger', 'irritat')):
-                    mapping['angry'].append(t)
-                elif any(x in e for x in ('calm', 'relax', 'peace')):
-                    mapping['calm'].append(t)
-                elif any(x in e for x in ('anxious', 'anxiety', 'tense')):
-                    mapping['anxious'].append(t)
-                elif any(x in e for x in ('focus', 'concentr', 'study', 'attention')):
-                    mapping['focus'].append(t)
-                else:
-                    # fallback: put in calm
-                    mapping['calm'].append(t)
-
-            # Convert to response shape using dictionary comprehensions
-            resp_map = {
-                k: {'query': mood_map[k]['query'], 'videos': []}
-                for k in mapping.keys()
-            }
-
-            # Process each mood's tracks
-            for k in mapping:
-                for t in mapping[k]:
-                    if t.youtube_id:
-                        resp_map[k]['videos'].append({'id': t.youtube_id, 'title': t.title})
-                    else:
-                        resp_map[k]['query'] = resp_map[k]['query'] + ' ' + t.title
-
-            # Deduplicate
-            for k in resp_map:
-                seen = set()
-                dedup = []
-                for it in resp_map[k]['videos']:
-                    if it['id'] and it['id'] not in seen:
-                        seen.add(it['id'])
-                        dedup.append(it)
-                resp_map[k]['videos'] = dedup
-
-            return jsonify({'success': True, 'moods': resp_map})
-
-        except Exception as e:
-            logger.debug(f"Failed to build mood map from DB tracks: {e}")
-            # fall through to file-based parsing/fallback
-
-    # Attempt to enrich mapping from a local copy of the binaural-beats dataset
-    # Expected location: ./data/binaural-beats-dataset/ (user can git clone the repo there)
-    dataset_dir = os.path.join(basedir, 'data', 'binaural-beats-dataset')
-    try:
-        if os.path.isdir(dataset_dir):
-            # Try common filenames in the dataset
-            possible_files = ['tracks.csv', 'dataset.csv', 'tracks.json', 'data.json']
-            found = None
-            for fn in possible_files:
-                path = os.path.join(dataset_dir, fn)
-                if os.path.isfile(path):
-                    found = path
-                    break
-
-            if found:
-                # Prefer CSV, otherwise JSON
-                if found.lower().endswith('.csv'):
-                    import csv
-                    with open(found, 'r', encoding='utf-8') as fh:
-                        reader = csv.DictReader(fh)
-                        for row in reader:
-                            # Dataset may have columns like: title, artist, emotion, youtube_id, tags
-                            emotion = (row.get('emotion') or row.get('mood') or '').strip().lower()
-                            youtube_id = (row.get('youtube_id') or row.get('video_id') or row.get('youtube') or '').strip()
-                            title = (row.get('title') or row.get('name') or '').strip()
-                            if not emotion:
-                                continue
-
-                            # Map dataset emotion labels to our mood keys
-                            mapping = {
-                                'happy': ['happy', 'uplifting', 'joy', 'positive'],
-                                'sad': ['sad', 'melancholy', 'blue'],
-                                'angry': ['angry', 'anger', 'irritated'],
-                                'calm': ['calm', 'relaxed', 'relaxation', 'peaceful'],
-                                'anxious': ['anxious', 'anxiety', 'tense'],
-                                'focus': ['focus', 'concentration', 'study', 'attention']
-                            }
-
-                            for mood_key, labels in mapping.items():
-                                if any(label in emotion for label in labels):
-                                    if youtube_id:
-                                        mood_map[mood_key]['videos'].append({'id': youtube_id, 'title': title})
-                                    else:
-                                        # If no direct video id, append title to query suggestions
-                                        mood_map[mood_key]['query'] = mood_map[mood_key]['query'] + ' ' + title
-                                    break
-
-                else:
-                    # JSON file
-                    import json
-                    with open(found, 'r', encoding='utf-8') as fh:
-                        data = json.load(fh)
-                        # Expect list of tracks
-                        items = data if isinstance(data, list) else data.get('tracks') or data.get('data') or []
-                        for item in items:
-                            emotion = (item.get('emotion') or item.get('mood') or '')
-                            if emotion:
-                                emotion = emotion.strip().lower()
-                            youtube_id = (item.get('youtube_id') or item.get('video_id') or item.get('youtube') or '')
-                            title = (item.get('title') or item.get('name') or '')
-                            if not emotion:
-                                continue
-
-                            mapping = {
-                                'happy': ['happy', 'uplifting', 'joy', 'positive'],
-                                'sad': ['sad', 'melancholy', 'blue'],
-                                'angry': ['angry', 'anger', 'irritated'],
-                                'calm': ['calm', 'relaxed', 'relaxation', 'peaceful'],
-                                'anxious': ['anxious', 'anxiety', 'tense'],
-                                'focus': ['focus', 'concentration', 'study', 'attention']
-                            }
-
-                            for mood_key, labels in mapping.items():
-                                if any(label in emotion for label in labels):
-                                    if youtube_id:
-                                        mood_map[mood_key]['videos'].append({'id': youtube_id, 'title': title})
-                                    else:
-                                        mood_map[mood_key]['query'] = mood_map[mood_key]['query'] + ' ' + title
-                                    break
-
-    except Exception as e:
-        # Fail gracefully — keep default mapping and log
-        logger.debug(f"Failed to load local binaural-beats dataset: {e}")
-
-    # Deduplicate video lists by id
-    for k, v in mood_map.items():
-        vids = v.get('videos') or []
-        seen = set()
-        deduped = []
-        for it in vids:
-            vid = it.get('id')
-            if not vid:
-                continue
-            if vid in seen:
-                continue
-            seen.add(vid)
-            deduped.append(it)
-        mood_map[k]['videos'] = deduped
-
-    return jsonify({'success': True, 'moods': mood_map})
-
-
-@app.route('/api/play-mood', methods=['POST'])
-@api_login_required
-def api_play_mood():
-    """Attempt to play a binaural track for the requested mood.
-
-    Priority:
-      1. Look for local audio files in data/binaural-beats-dataset/audio/ whose filename contains the mood.
-         If found, return its /audio/ URL for the browser to play (never launch anything on the server).
-      2. If DB has BinauralTrack with youtube_id for the mood, return a YouTube URL for frontend to open.
-      3. Otherwise return a YouTube search URL for the mood query.
-
-    Returns JSON: { success: True, action: 'local'|'youtube', url }
-    """
-    data = request.get_json(silent=True)
-    mood = str(data.get('mood') or '').strip().lower() if isinstance(data, dict) else ''
-
-    if not mood:
-        return jsonify({'success': False, 'message': 'Missing mood parameter'}), 400
-
-    # 1) local audio folder
-    audio_dir = os.path.join(basedir, 'data', 'binaural-beats-dataset', 'audio')
-    try:
-        if os.path.isdir(audio_dir):
-            # look for files containing the mood in filename
-            for fn in os.listdir(audio_dir):
-                if mood in fn.lower() and fn.lower().endswith(('.mp3', '.wav', '.m4a', '.flac')):
-                    return jsonify({'success': True, 'action': 'local', 'url': f'/audio/audio/{quote(fn)}'})
-
-    except Exception as e:
-        logger.debug(f"Error while searching for local audio files: {e}")
-
-    # 2) DB-backed YouTube id
-    try:
-        from models import BinauralTrack
-        tracks = BinauralTrack.query.filter(BinauralTrack.emotion.ilike(f"%{mood}%")).all()
-        if tracks:
-            # Prefer tracks with youtube_id
-            for t in tracks:
-                if t.youtube_id:
-                    url = f"https://www.youtube.com/watch?v={t.youtube_id}"
-                    return jsonify({'success': True, 'action': 'youtube', 'url': url})
-    except Exception:
-        pass
-
-    # Removed YouTube fallback. If no local file/DB record found return not found.
-    return jsonify({'success': False, 'message': 'No local audio or DB track found for this mood.'}), 404
-
-
-@app.route('/audio/<path:filename>')
-def serve_audio(filename):
-    """Serve audio files from data/binaural-beats-dataset for in-browser playback.
-
-    Supports both 'audio/' and 'tracks/' subdirectories found in common datasets.
-
-    NOTE: This route is intentionally simple. If you deploy publicly, consider adding
-    authentication and range requests for large files.
-    """
-    base_dir = os.path.join(basedir, 'data', 'binaural-beats-dataset')
-
-    # Hosted deploys keep the big mp3s off git: set AUDIO_BASE_URL (e.g. an R2/S3 bucket URL)
-    # and any file missing locally is redirected there.
-    audio_base = os.environ.get('AUDIO_BASE_URL', '').rstrip('/')
-    if audio_base and '..' not in filename.replace('\\', '/').split('/') \
-            and not os.path.isfile(os.path.join(base_dir, filename)):
-        from urllib.parse import quote
-        return redirect(f"{audio_base}/{quote(filename)}")
-
-    if not os.path.isdir(base_dir):
-        return jsonify({'success': False, 'message': 'Audio directory not found'}), 404
-
-    # Prevent directory traversal and ensure the file resides within base_dir
-    safe_filename = os.path.normpath(filename).replace('\\', '/')
-    if safe_filename.startswith('../') or safe_filename.startswith('..\\') or '..' in safe_filename.split('/'):
-        return jsonify({'success': False, 'message': 'Invalid filename'}), 400
-
-    full_path = os.path.join(base_dir, safe_filename)
-    try:
-        full_path = os.path.normpath(full_path)
-        # Ensure full_path is inside base_dir
-        if not full_path.startswith(os.path.normpath(base_dir)):
-            return jsonify({'success': False, 'message': 'Invalid path'}), 400
-        # Serve via send_from_directory using base_dir and the relative safe path
-        return send_from_directory(base_dir, safe_filename)
-    except Exception:
-        return jsonify({'success': False, 'message': 'File not found'}), 404
-
-
-@app.route('/api/mood-audio', methods=['POST'])
-def api_mood_audio():
-    """Return a list of audio URLs for the requested mood, using local audio files only.
-
-    Searches common subdirectories in the dataset ('audio/', 'tracks/').
-    Supports additional filtering by frequency range, type, and sorting.
-
-    Response: { success: True, files: [ { url: '/audio/..', filename: '...' }, ... ] }
-    """
-    data = request.get_json() or {}
-    mood = (data.get('mood') or '').strip().lower()
-    min_freq = data.get('min_frequency')
-    max_freq = data.get('max_frequency')
-    filter_type = (data.get('type') or '').strip().lower()
-    sort_by = (data.get('sort_by') or 'default').strip().lower()
-    
-    if not mood:
-        return jsonify({'success': False, 'message': 'Missing mood parameter'}), 400
-
-    base_dir = os.path.join(basedir, 'data', 'binaural-beats-dataset')
-    if not os.path.isdir(base_dir):
-        return jsonify({'success': False, 'files': []})
-
-    subdirs = ['audio', 'tracks']
-
-    # Enhanced mood mapping with more comprehensive keywords and frequency ranges
-    mood_keywords = {
-        'calm': {
-            'keywords': ['delta', 'theta', 'calm', 'relax', 'peace', 'meditat', 'sleep', 'rest'],
-            'brainwaves': ['delta', 'theta'],
-            'freq_range': (0.5, 8.0),  # Delta: 0.5-4 Hz, Theta: 4-8 Hz
-            'priority_freq': [2.0, 4.0, 6.0]
-        },
-        'focus': {
-            'keywords': ['alpha', 'beta', 'focus', 'concentr', 'study', 'work', 'attent', 'alert'],
-            'brainwaves': ['alpha', 'beta'],
-            'freq_range': (8.0, 30.0),  # Alpha: 8-12 Hz, Beta: 12-30 Hz
-            'priority_freq': [10.0, 12.0, 15.0, 20.0]
-        },
-        'anxious': {
-            'keywords': ['theta', 'delta', 'anxiety', 'stress', 'tension', 'worry', 'calm', 'sooth'],
-            'brainwaves': ['theta', 'delta'],
-            'freq_range': (0.5, 8.0),
-            'priority_freq': [4.0, 6.0, 8.0]
-        },
-        'happy': {
-            'keywords': ['alpha', 'gamma', 'happy', 'joy', 'uplift', 'positive', 'energiz', 'boost'],
-            'brainwaves': ['alpha', 'gamma'],
-            'freq_range': (8.0, 100.0),  # Alpha: 8-12 Hz, Gamma: 30+ Hz
-            'priority_freq': [10.0, 40.0, 60.0]
-        },
-        'sad': {
-            'keywords': ['theta', 'delta', 'sad', 'melanchol', 'blue', 'depress', 'comfort', 'heal'],
-            'brainwaves': ['theta', 'delta'],
-            'freq_range': (0.5, 8.0),
-            'priority_freq': [4.0, 6.0]
-        },
-        'angry': {
-            'keywords': ['delta', 'theta', 'anger', 'rage', 'frustrat', 'calm', 'cool', 'release'],
-            'brainwaves': ['delta', 'theta'],
-            'freq_range': (0.5, 8.0),
-            'priority_freq': [2.0, 4.0, 6.0]
-        }
-    }
-    
-    mood_config = mood_keywords.get(mood, {
-        'keywords': [mood],
-        'brainwaves': [],
-        'freq_range': (0.0, 1000.0),
-        'priority_freq': []
-    })
-    keywords = mood_config['keywords']
-
-    def parse_track_info(filename):
-        # Example names:
-        # Alpha_12_Hz.mp3
-        # Alpha_10_Hz_Isochronic_Pulses.mp3
-        # Alpha_12_Hz_Solfeggio_396_Hz.mp3
-        try:
-            base = os.path.splitext(filename)[0]
-            parts = base.split('_')
-            info = {
-                'brainwave': None,
-                'frequency': None,
-                'type': 'pure',  # pure|isochronic|solfeggio
-                'solfeggio_frequency': None,
-                'label': filename,
-                'length_hint': 'short'  # long for solfeggio (15m), others are usually short
-            }
-            if parts:
-                bw = parts[0].lower()
-                if bw in ('alpha','beta','delta','gamma','theta'):
-                    info['brainwave'] = bw
-            # Find main Hz
-            for i, p in enumerate(parts):
-                if p.lower() == 'hz' and i > 0:
-                    try:
-                        info['frequency'] = float(parts[i-1])
-                    except Exception:
-                        pass
-            name_l = filename.lower()
-            if 'isochronic_pulses' in name_l:
-                info['type'] = 'isochronic'
-            if 'solfeggio' in name_l:
-                info['type'] = 'solfeggio'
-                info['length_hint'] = 'long'
-                # Extract solfeggio frequency
-                try:
-                    # ..._Solfeggio_396_Hz
-                    idx = parts.index('Solfeggio') if 'Solfeggio' in parts else parts.index('Solfeggio'.lower())
-                except Exception:
-                    idx = -1
-                if idx != -1 and idx + 2 < len(parts) and parts[idx+2].lower() == 'Hz'.lower():
-                    try:
-                        info['solfeggio_frequency'] = float(parts[idx+1])
-                    except Exception:
-                        pass
-            # Build label
-            bw_label = (info['brainwave'] or '').capitalize()
-            freq_label = f"{int(info['frequency']) if info['frequency'] and info['frequency'].is_integer() else info['frequency']} Hz" if info['frequency'] else ''
-            suffix = ''
-            if info['type'] == 'isochronic':
-                suffix = ' (Isochronic)'
-            elif info['type'] == 'solfeggio':
-                sf = f" {int(info['solfeggio_frequency']) if info['solfeggio_frequency'] and float(info['solfeggio_frequency']).is_integer() else info['solfeggio_frequency']} Hz" if info['solfeggio_frequency'] else ''
-                suffix = f" (Solfeggio{sf})"
-            pretty = ' '.join([s for s in [bw_label, freq_label] if s]).strip() + suffix
-            info['label'] = pretty or filename
-            return info
-        except Exception:
-            return {
-                'brainwave': None,
-                'frequency': None,
-                'type': 'pure',
-                'solfeggio_frequency': None,
-                'label': filename,
-                'length_hint': 'short'
-            }
-
-    matches = []
-    for sub in subdirs:
-        d = os.path.join(base_dir, sub)
-        if not os.path.isdir(d):
-            continue
-        try:
-            for fn in os.listdir(d):
-                name_l = fn.lower()
-                if not name_l.endswith(('.mp3', '.wav', '.m4a', '.flac')):
-                    continue
-                # Enhanced matching logic
-                meta = parse_track_info(fn)
-                should_include = False
-                
-                # Check keyword matching
-                if any(kw in name_l for kw in keywords):
-                    should_include = True
-                
-                # Check brainwave matching
-                if meta['brainwave'] and meta['brainwave'].lower() in mood_config['brainwaves']:
-                    should_include = True
-                
-                # Check frequency range matching
-                if meta['frequency'] and mood_config['freq_range']:
-                    freq = meta['frequency']
-                    min_range, max_range = mood_config['freq_range']
-                    if min_range <= freq <= max_range:
-                        should_include = True
-                
-                if should_include:
-                    # Apply additional filters
-                    if min_freq is not None and meta['frequency'] and meta['frequency'] < min_freq:
-                        continue
-                    if max_freq is not None and meta['frequency'] and meta['frequency'] > max_freq:
-                        continue
-                    if filter_type and filter_type != 'all' and meta['type'] != filter_type:
-                        continue
-                        
-                    rel = f"{sub}/{fn}"
-                    # Ensure URL uses forward slashes
-                    rel_url = rel.replace('\\', '/').replace('\\', '/')
-                    
-                    # Calculate relevance score for sorting
-                    relevance_score = 0
-                    if meta['brainwave'] and meta['brainwave'].lower() in mood_config['brainwaves']:
-                        relevance_score += 10
-                    if meta['frequency'] and meta['frequency'] in mood_config['priority_freq']:
-                        relevance_score += 5
-                    if any(kw in name_l for kw in keywords[:3]):  # Prioritize first 3 keywords
-                        relevance_score += 3
-                        
-                    matches.append({
-                        'url': url_for('serve_audio', filename=rel_url),
-                        'filename': fn,
-                        'label': meta['label'],
-                        'length_hint': meta['length_hint'],
-                        'type': meta['type'],
-                        'brainwave': meta['brainwave'],
-                        'frequency': meta['frequency'],
-                        'solfeggio_frequency': meta['solfeggio_frequency'],
-                        'relevance_score': relevance_score
-                    })
-        except Exception as e:
-            logger.debug(f"Failed to scan directory {d}: {e}")
-
-    # Enhanced sorting logic
-    def get_sort_key(item, sort_method):
-        if sort_method == 'relevance':
-            return (-item.get('relevance_score', 0), item.get('label', 'zzz'))
-        elif sort_method == 'frequency_asc':
-            return (item.get('frequency') or 1e9, item.get('label', 'zzz'))
-        elif sort_method == 'frequency_desc':
-            return (-(item.get('frequency') or 0), item.get('label', 'zzz'))
-        elif sort_method == 'duration':
-            # Solfeggio tracks are typically longer
-            length_priority = {'solfeggio': 0, 'isochronic': 1, 'pure': 2}
-            return (length_priority.get(item.get('type', 'pure'), 2), item.get('label', 'zzz'))
-        elif sort_method == 'brainwave':
-            brainwave_order = {'delta': 0, 'theta': 1, 'alpha': 2, 'beta': 3, 'gamma': 4}
-            return (brainwave_order.get(item.get('brainwave', 'unknown'), 5), item.get('frequency', 0))
-        else:  # default
-            # Default: relevance first, then type, then brainwave, then frequency
-            type_rank = {'solfeggio': 0, 'isochronic': 1, 'pure': 2}
-            return (
-                -item.get('relevance_score', 0),
-                type_rank.get(item.get('type') or 'pure', 2),
-                item.get('brainwave') or 'zzzz',
-                item.get('frequency') or 1e9
-            )
-    
-    matches.sort(key=lambda x: get_sort_key(x, sort_by))
-
-    return jsonify({'success': True, 'files': matches})
-
-
-@app.route('/music')
-def music():
-    """Render the music discovery page which allows users to pick a mood and play binaural beats."""
-    return render_template('music.html')
-
-
-@app.route('/api/log-mood-selection', methods=['POST'])
-@limiter.limit('30 per hour')
-def api_log_mood_selection():
-    """Log a user's mood music selection for analytics/debugging.
-
-    Accepts JSON: { mood: 'calm', query: '...', video: 'youtube_id' }
-    Logging is appended to `mood_selections.log` and written to the application logger.
-    """
-    if not request.is_json:
-        return jsonify({'success': False, 'message': 'Request must be JSON'}), 400
-
-    data = request.get_json() or {}
-    mood = data.get('mood')
-    query = data.get('query')
-    video = data.get('video')
-    user_id = session.get('user_id')
-
-    if not mood:
-        return jsonify({'success': False, 'message': 'Missing mood field'}), 400
-
-    log_entry = {
-        'timestamp': datetime.utcnow().isoformat() + 'Z',
-        'user_id': user_id,
-        'mood': mood,
-        'query': query,
-        'video': video,
-        'ip': request.remote_addr
-    }
-
-    try:
-        # Log via application logger for centralized logs
-        logger.info(f"Mood selection: {log_entry}")
-
-        # Also append to a simple file for quick analytics without DB migration
-        try:
-            with open(os.path.join(basedir, 'instance', 'mood_selections.log'), 'a', encoding='utf-8') as f:
-                f.write(json.dumps(log_entry) + "\n")
-        except Exception as file_err:
-            logger.debug(f"Failed to write mood selection to file: {file_err}")
-
-        return jsonify({'success': True, 'message': 'Selection logged'})
-    except Exception as e:
-        logger.error(f"Error logging mood selection: {e}")
-        return jsonify({'success': False, 'message': 'Failed to log selection'}), 500
 
 @app.context_processor
 def utility_processor():
@@ -1050,9 +468,9 @@ def utility_processor():
             color = {'minimal': 'green', 'mild': 'yellow', 'moderate': 'orange'}.get(band, 'red')
             return {'severity': band.title(), 'color': color}
         if assessment_type == 'Daily Mood':
-            if score >= 4:
+            if score >= 7:  # mood is stored 1-10
                 return {'severity': 'Positive', 'color': 'green'}
-            elif score >= 3:
+            elif score >= 4:
                 return {'severity': 'Neutral', 'color': 'yellow'}
             else:
                 return {'severity': 'Negative', 'color': 'red'}
@@ -1085,12 +503,11 @@ def delete_journal_entry(entry_id):
 @login_required
 @role_required('patient')
 def delete_voice_log(voice_log_id):
-    """Delete one of the session user's voice logs and its audio file."""
+    """Delete one of the session user's voice logs (measurements and note; no audio is stored)."""
     from models import VoiceLog
     voice_log = VoiceLog.query.filter_by(id=voice_log_id, user_id=session['user_id']).first()
     if not voice_log:
         return jsonify({'success': False, 'message': 'Voice log not found'}), 404
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], os.path.basename(voice_log.filename))
     try:
         db.session.delete(voice_log)
         db.session.commit()
@@ -1098,37 +515,18 @@ def delete_voice_log(voice_log_id):
         db.session.rollback()
         logger.exception("Error deleting voice log")
         return jsonify({'success': False, 'message': 'Failed to delete voice log'}), 500
-    try:
-        if os.path.exists(file_path):
-            os.remove(file_path)
-    except OSError:
-        logger.warning("Could not delete audio file")
     return jsonify({'success': True, 'message': 'Voice log deleted successfully'})
 
 
-def classify_emotion(audio_features):
-    """Rough emotion guess from pitch/energy/zero-crossing features (heuristic, not a clinical signal)."""
-    pitch = audio_features.get('mean_pitch', 0)
-    energy = audio_features.get('mean_energy', 0)
-    zcr = audio_features.get('mean_zcr', 0)
-    if pitch > 200 and energy > 0.1:
-        return 'happy'
-    if pitch and pitch < 150 and energy < 0.05:
-        return 'sad'
-    if zcr > 0.1:
-        return 'stressed'
-    if 150 <= pitch <= 200 and 0.05 <= energy <= 0.1:
-        return 'calm'
-    return 'neutral'
-
-
-def get_ai_voice_emotion_analysis(file_path, audio_features, basic_emotion='neutral'):
+def get_ai_voice_emotion_analysis(audio_features, basic_emotion='neutral'):
     """Return "emotion: explanation". Uses Gemini when a key is set, else the acoustic guess."""
     fallback = f"{basic_emotion.title()}: Estimated from the sound of your recording only."
     if not os.environ.get('GEMINI_API_KEY'):
         return fallback
     try:
-        text = ai_service.analyze_voice_emotion('', audio_features) or ''
+        from utils.ai_cap import run_capped
+        ok, text = run_capped(ai_service.analyze_voice_emotion, '', audio_features, seconds=8.0)
+        text = text if ok and isinstance(text, str) else ''
         m = re.search(r'EMOTION:\s*([A-Za-z]+)', text)
         if m:
             insight = re.search(r'INSIGHTS:\s*(.+)', text)
@@ -1155,83 +553,33 @@ def upload_voice():
     if not is_valid:
         return jsonify({'success': False, 'message': error_message}), 400
 
-    file_path = None
     try:
-        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-        ext = audio_file.filename.rsplit('.', 1)[1].lower()
-        filename = secure_filename(f"{user_id}_{uuid.uuid4()}.{ext}")
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        audio_file.save(file_path)
-
-        audio_features = {}
-        emotion = 'neutral'
-        if LIBROSA_AVAILABLE:
-            try:
-                y, sr = librosa.load(file_path, duration=120)  # max 2 minutes
-                audio_features = {'duration': len(y) / sr, 'sample_rate': sr}
-                pitches, _ = librosa.piptrack(y=y, sr=sr)
-                pitch_values = pitches[pitches > 0]
-                if len(pitch_values) > 0:
-                    audio_features['mean_pitch'] = float(np.mean(pitch_values))
-                    audio_features['pitch_std'] = float(np.std(pitch_values))
-                audio_features['mean_energy'] = float(np.mean(librosa.feature.rms(y=y)))
-                audio_features['mean_zcr'] = float(np.mean(librosa.feature.zero_crossing_rate(y)))
-                audio_features['mean_spectral_centroid'] = float(np.mean(librosa.feature.spectral_centroid(y=y, sr=sr)))
-                emotion = classify_emotion(audio_features)
-            except Exception:
-                logger.warning("Audio feature extraction failed; using neutral")
-
-        analysis = get_ai_voice_emotion_analysis(file_path, audio_features, emotion)
+        from utils.voice_features import extract_features  # analysed in memory/temp file; only the numbers are stored
+        audio_features, emotion = extract_features(audio_file, audio_file.filename.rsplit('.', 1)[1].lower())
+        analysis = get_ai_voice_emotion_analysis(audio_features, emotion)
         voice_log = VoiceLog(
             user_id=user_id,
-            filename=filename,
+            filename='not-stored',  # placeholder for the non-null column: the audio is never kept
             emotion=analysis.split(':')[0].strip().lower()[:30] or emotion,
             audio_features=audio_features,
             ai_analysis=analysis,
         )
         db.session.add(voice_log)
         db.session.commit()
-        award_points(user_id, 20, 'voice_log')
+        award_points(user_id, 20, 'voice_log', ref=f'voice:{voice_log.id}')
 
         return jsonify({
             'success': True,
-            'message': 'Voice log uploaded and processed successfully!',
+            'message': 'Voice log saved. The audio was analysed and not kept.',
             'voice_log': {'id': voice_log.id, 'emotion': voice_log.emotion, 'audio_features': audio_features}
         })
     except Exception:
         db.session.rollback()
         logger.exception("Error uploading voice file")
-        if file_path and os.path.exists(file_path):
-            os.remove(file_path)
         return jsonify({'success': False, 'message': 'Failed to process voice recording'}), 500
 
 
-# Health check endpoint for monitoring
-@app.route('/health')
-def health_check():
-    """Health check endpoint for monitoring and load balancers."""
-    try:
-        # Test database connection
-        db.session.execute(db.text('SELECT 1'))
-        db_status = 'healthy'
-    except Exception as e:
-        logger.error(f"Health check DB error: {e}")
-        db_status = 'unhealthy'
-
-    # Test AI services
-    try:
-        ai_check = ai_service.check_api_status()
-        ai_status = 'available' if ai_check.get('model_available') else 'unavailable'
-    except Exception as e:
-        logger.error(f"Health check AI error: {e}")
-        ai_status = 'error'
-
-    return jsonify({
-        'status': 'healthy',
-        'database': db_status,
-        'ai_service': ai_status,
-        'timestamp': datetime.now().isoformat()
-    }), 200
+# /health and /ready live in routes/ops.py (ops_bp)
 
 @app.route('/api/ai-status')
 @login_required
@@ -1311,7 +659,13 @@ def handle_chat_message(data):
         logger.error(f"Chat handler error: {e}")
         reply_text = "I apologize, but I'm having trouble responding right now. Please try again in a moment."
         is_crisis = False
-    
+
+    # O-02: rule-based floor, independent of the model; the emergency reply below never waits on the DB write
+    from utils.crisis import text_is_crisis, try_record_crisis
+    if text_is_crisis(user_message):
+        is_crisis = True
+        try_record_crisis(session.get('user_id'), 'chat', 9, 'chat_self_harm')
+
     emit('chat_response', {'reply': reply_text, 'is_crisis': is_crisis})
 
 # --- SocketIO Telehealth Handlers ---
@@ -1392,6 +746,7 @@ def google_logged_in(blueprint, token):
 
         logger.info(f"Looking for user with google_id={google_id}")
         user = User.query.filter_by(google_id=google_id).first()
+        new_google_user = False
 
         if not user:
             logger.info(f"User not found with google_id, looking for user with email={email}")
@@ -1407,6 +762,7 @@ def google_logged_in(blueprint, token):
                 logger.info("google_id linked to existing user.")
             else:
                 logger.info("No existing user found, creating a new user with default patient role.")
+                new_google_user = True
                 # Create new user with default patient role and institution
                 user = User(
                     email=email, 
@@ -1435,6 +791,10 @@ def google_logged_in(blueprint, token):
                 except Exception as gam_error:
                     logger.error(f'Error creating gamification profile for Google user: {gam_error}')
                     db.session.rollback()
+
+        if user.role == 'admin' or user.deactivated_at is not None:  # admins sign in with a password at /admin/login only
+            flash("Please sign in with your email and password.", "danger")
+            return redirect(url_for("auth.login"))
 
         logger.info(f"Logging in user: {user.email} (id={user.id})")
         
@@ -1471,9 +831,15 @@ def google_logged_in(blueprint, token):
         session['user_name'] = user.name
         session['user_role'] = user.role
         session['user_institution'] = user.institution or 'Default University'
+        stamp_session(user)
         session.modified = True
         logger.info("Session created for user.")
-        
+
+        from routes.auth import needs_reconsent
+        if new_google_user or needs_reconsent(user):  # no consent was recorded for this sign-in yet (P-05)
+            session['consent_pending'] = True
+            return redirect(url_for('auth.consent'))
+
         if user.role == 'patient':
             logger.info("User is a patient, redirecting to patient_dashboard.")
             return redirect(url_for('patient.patient_dashboard'))
@@ -1506,6 +872,7 @@ def save_role():
         user.role = 'patient'
         db.session.commit()
         session['user_role'] = 'patient'
+        stamp_session(user)  # the role is part of the stamp
         return redirect(url_for('patient.patient_dashboard'))
     except Exception as e:
         db.session.rollback()

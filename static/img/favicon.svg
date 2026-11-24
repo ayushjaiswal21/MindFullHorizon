@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <title>MindFull Horizon</title>
+  <rect width="32" height="32" rx="6" fill="#0F766E"/>
+  <path fill="#fff" d="M4.5 22V10h2.8L10 15l2.7-5h2.8v12h-2.8v-6.6l-1.8 3.1H9.1l-1.8-3.1V22z"/>
+  <path fill="#fff" d="M18 10h2.8v4.6h3.9V10h2.8v12h-2.8v-4.6h-3.9V22H18z"/>
+</svg>

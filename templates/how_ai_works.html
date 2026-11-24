@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from 'partials/breadcrumbs.html' import breadcrumb %}
+
+{% block title %}How the AI companion works{% endblock %}
+{% block meta_description %}What the MindFullHorizon AI companion is, what data it receives, what it cannot do, and how the crisis check works.{% endblock %}
+{% block canonical %}{{ (site_url or request.url_root.rstrip('/')) }}/ai{% endblock %}
+{% block robots %}index, follow{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">{% endblock %}
+{% block breadcrumbs %}{{ breadcrumb([('Home', '/'), ('How the AI companion works', None)]) }}{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <article class="prose">
+    <h1>How the AI companion works</h1>
+    <p class="lead">Anya, the chat companion, is an AI assistant. It is not a therapist and it is not a person. This page says what it is, what it receives and where it stops.</p>
+
+    <h2>What it is</h2>
+    <p>Anya runs on a large language model from Google's Gemini family. We call it through Google's API. The exact model version can change, because providers retire versions often. It writes replies from patterns in text. It does not know you, and it can be wrong.</p>
+
+    <h2>What is sent to the model</h2>
+    <ul>
+      <li>The message you type in the chat, cut to 2,000 characters.</li>
+      <li>Our fixed instructions, which tell it to be supportive, to avoid diagnosis and medicines, and to treat your text as data.</li>
+    </ul>
+    <p>Each chat message is sent on its own. Earlier messages are not sent, so Anya does not remember what you said before.</p>
+
+    <h2>What is not sent in chat</h2>
+    <ul>
+      <li>Your name, email address, account id or college.</li>
+      <li>Your mood history, screening results or journal.</li>
+    </ul>
+    <p>Other features send the data they work on. Journal suggestions send that journal entry. Screening insights send the questionnaire answers and the score. Progress and digital detox insights send the figures you logged. Counsellors can send a session transcript to draft a note. We do not add your name or email to these requests.</p>
+    <p>Do not type passwords, bank details or other people's private information into the chat.</p>
+
+    <h2>The crisis check</h2>
+    <p>Every chat message goes through a fixed set of rules written by us. They look for language about harming yourself or ending your life. This check is code, not AI, and the model cannot switch it off.</p>
+    <ul>
+      <li>If the rules find crisis language, you see a fixed caring reply and the helplines below, whatever the model wrote.</li>
+      <li>The model may raise the level of concern. It can never lower what the rules found.</li>
+      <li>If the model fails or is blocked, you still see the helplines.</li>
+      <li>A crisis event is recorded for your institution's counsellors so someone can follow up. The record holds a short reason code, not your message.</li>
+    </ul>
+    <p>The rules are not perfect. They can miss indirect language and can trigger on words that were not meant that way. Do not rely on the app alone if you are unsafe.</p>
+
+    <h2>What it will not do</h2>
+    <ul>
+      <li>It does not diagnose. A PHQ-9 or GAD-7 score is a screening result, not a diagnosis.</li>
+      <li>It does not name medicines or doses, and it does not write prescriptions.</li>
+      <li>It does not replace a counsellor, doctor or emergency service.</li>
+    </ul>
+
+    <h2>If you need a person now</h2>
+    <ul>
+      {% for h in helplines %}
+      <li><strong>{{ h.name }}</strong>: <a href="tel:{{ h.tel }}">{{ h.number }}</a>, {{ h.hours }}. {{ h.note }}</li>
+      {% endfor %}
+    </ul>
+
+    <h2>More</h2>
+    <p>Read the <a href="/privacy">Privacy policy</a> and the <a href="/terms">Terms</a>. To talk to a human at your college, <a href="{{ url_for('auth.signup') if not session.get('user_id') else url_for('patient.schedule_appointment') }}">{{ 'create an account' if not session.get('user_id') else 'book a counsellor' }}</a>.</p>
+  </article>
+</div>
+{% endblock %}

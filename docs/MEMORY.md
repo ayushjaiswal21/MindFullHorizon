@@ -28,10 +28,10 @@ Rules live in [RULES.md](RULES.md). Plan and status live in [TRACKER.md](TRACKER
 | Archived deploy files | `.archive/deploy/` (Procfile, render.yaml, vercel.json) |
 | Audio dataset | `data/binaural-beats-dataset/` (csv/json in git, mp3 ignored) |
 
-**Run.** `python -m venv venv`, activate, `pip install -r requirements-dev.txt`, copy `.env.example` to `.env` and set `SECRET_KEY`, then `python app.py` (http://127.0.0.1:5000; creates `instance/mindful_horizon.db` on first start). Migrations: [MIGRATIONS.md](MIGRATIONS.md). Env vars and hosting: [DEVELOPMENT.md](DEVELOPMENT.md).
+**Run.** `python -m venv venv`, activate, `pip install -r requirements/dev.txt`, copy `.env.example` to `.env` and set `SECRET_KEY`, then `python app.py` (http://127.0.0.1:5000; creates `instance/mindful_horizon.db` on first start). Migrations: [MIGRATIONS.md](MIGRATIONS.md). Env vars and hosting: [DEVELOPMENT.md](DEVELOPMENT.md).
 
 **Test.** `pytest tests -q` from the project root. Temp SQLite DB, `GEMINI_API_KEY` removed, rate limiter and CSRF off in the test app, no network.
-*Test environment note:* no virtualenv is stored in the repo (`venv/` is git-ignored and absent), and the system Python 3.11.9 on the owner's machine had no Flask installed when this file was written, so a bare `pytest` fails on import. Create a venv and install `requirements-dev.txt` first. Use Python 3.11. If a result came from some other environment, say so (TEST-07).
+*Test environment note:* no virtualenv is stored in the repo (`venv/` is git-ignored and absent), and the system Python 3.11.9 on the owner's machine had no Flask installed when this file was written, so a bare `pytest` fails on import. Create a venv and install `requirements/dev.txt` first. Use Python 3.11. If a result came from some other environment, say so (TEST-07).
 
 ---
 
@@ -207,7 +207,7 @@ Read order (about 30 minutes): this file, [README.md](README.md), [RULES.md](RUL
 Commands (project root, venv active):
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r requirements/dev.txt
 pytest tests -q                              # full suite, temp DB, no network
 pytest tests/test_safety.py -q               # crisis, scoring, AI wrapper
 pytest tests/test_security.py -q             # auth, CSRF-adjacent, headers, sockets
@@ -239,3 +239,28 @@ Open questions for the owner:
 Destructive or irreversible actions taken (should be none without approval):
 Next step I would take:
 ```
+
+## Branch consolidation (2026-11-24)
+
+The overhaul commit `59f606b` was fast-forwarded onto `main`. The old `main` is kept as tag `pre-overhaul-2026-11` (`f2a0355`). The remote branches below were deleted after checking they were already contained in `main` or superseded. To restore one, run `git push origin <sha>:refs/heads/<name>` (GitHub keeps unreachable commits for a limited time, so do it soon if needed).
+
+| Branch | Tip SHA | State when deleted |
+|--------|---------|--------------------|
+| `cleanup/overhaul-2026-11` | `59f606bed63c7716eb86e994e99e05e90bd3a748` | equal to `main` |
+| `tidy/diagnose-icons-auth-20251106` | `5945bc4182e61fe5324994597cb67ebec49d75ef` | fully merged into old `main` |
+| `snyk-fix-e2a2980d0f8f6a4a87448e2ff0801af7` | `5a262785110379949dd39789bedf8f7d5e9229ca` | fully merged into old `main` |
+| `snyk-fix-5411f8bd849f6b39f8d1e0d261768491` | `ecb2e745391a745868b65e31814c7a94ec9f044b` | 1 unique Snyk commit (jinja2 3.1.6, python-multipart 0.0.18); jinja2 floor added to `requirements.txt`, python-multipart is not used |
+
+Working rule from now on: only green checkpoints (full suite passing) are pushed, directly to `main`.
+
+## Owner decisions and gotchas (2026-11-24, evening)
+
+Decisions are in [TRACKER.md](TRACKER.md) section 3 (P-01 to P-09). Gotchas found in real use:
+
+- **Unit tests missed real bugs.** Script load order broke the assessment Start buttons; a legacy `scripts.js` swallowed chat submits; `prefers-reduced-motion` hid the breathing circle; a missing session stamp looped the admin login. Use `tools/e2e/` for UI work.
+- **Never call the AI inside a page render.** The progress page took 25 to 60 seconds that way. Use a capped JSON endpoint with a negative cache.
+- **The Windows clock ticks in about 15 ms steps**; two cache-generation bumps in one tick shared a value. `utils/cache_utils.bump` now adds at least 1.
+- **Templates are cached** (`TEMPLATES_AUTO_RELOAD` off): restart the server to see template edits.
+- **Cookie sessions** carry an HMAC stamp (id, password hash, role). New sign-in paths must call `stamp_session(user)`; tests are lenient (TESTING accepts stamp-less sessions), so check the stamp directly.
+- **A free Render instance sleeps**, so crisis escalation timers stop; a pilot needs an always-on instance.
+- **`.env` GEMINI_API_KEY**: a key that was exposed is auto-disabled by Google; replace it after rotating.
