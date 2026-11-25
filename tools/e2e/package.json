@@ -3,5 +3,5 @@
   "private": true,
   "type": "module",
   "description": "Real-browser checks (Microsoft Edge via playwright-core). Needs a running server: python scripts/local_demo.py --port 5000",
-  "dependencies": { "playwright-core": "1.48.2" }
+  "dependencies": { "playwright-core": "1.65.1" }
 }
