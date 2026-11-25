@@ -294,7 +294,9 @@ def test_voice_upload_list_delete(app, patient_client, make_user):
 
 
 def test_shared_data_not_used():
-    for f in ("routes/patient.py", "app.py"):
+    import glob
+    files = ["app.py"] + glob.glob("routes/patient/*.py")
+    for f in files:
         assert "shared_data" not in open(f, encoding="utf-8").read(), f
 
 
