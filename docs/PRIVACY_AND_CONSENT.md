@@ -108,7 +108,7 @@ When a user is deleted the database sets `actor_id` to empty on their earlier au
 | `blog_posts`, `blog_comments`, `blog_likes` | Community content | Public or logged-in readers | Until deletion | Yes |
 | `jobs`, `analytics_events` | Background work and consent-gated page events | Operator | Jobs 7 to 90 days (see DESIGN.md); events to be set | Jobs hold ids only; events hold no user id |
 
-Health data is stored as plain text in the database; there is no field-level encryption yet (tracker item O-04). Do not describe it as encrypted.
+As of tracker item D-19, the clinical/journal/safety-plan free-text columns (clinical notes, journal entries, mood notes, assessment answers, voice transcripts, safety plan) are encrypted at rest with a server-held key (`utils/field_encryption.py`). Appointment notes, prescription diagnosis/allergies/current-meds and notification messages are still plain text pending a separate review (O-04b); do not describe those as encrypted, and do not describe this as end-to-end encryption, HIPAA compliance or any certification — the operator still holds the key and can read the data.
 
 ## 9. AI and personal text (decision 2026-11-24)
 

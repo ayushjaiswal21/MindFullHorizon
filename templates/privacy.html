@@ -141,7 +141,7 @@
         <li>Login, sign-up and contact forms are rate limited.</li>
         <li>Counsellor access to individual records is limited by assignment and written to an audit log.</li>
       </ul>
-      <p>We do not claim that data is encrypted at rest in the database, and we make no claim of certification under HIPAA or similar standards. No system is perfectly secure. If a breach affects your data, we will tell you and the authorities as the law requires.</p>
+      <p>Clinical and personal free text (clinical notes, journal entries, mood notes, screening answers, voice transcripts, your safety plan) is encrypted at rest in the database with a key the operator holds and can use to decrypt it; appointment notes, prescription details and notification messages are not yet encrypted. We make no claim of certification under HIPAA or similar standards. No system is perfectly secure. If a breach affects your data, we will tell you and the authorities as the law requires.</p>
 
       <h2 id="transfers">Data sent outside India</h2>
       {% if ai_personal_text %}

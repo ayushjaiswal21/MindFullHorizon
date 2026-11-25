@@ -77,7 +77,11 @@ def test_privacy_placeholders_when_env_unset(client, monkeypatch):
 def test_privacy_makes_no_false_claims(client):
     body = client.get('/privacy').get_data(as_text=True).lower()
     assert 'hipaa' in body and 'make no claim' in body  # mentioned only to disclaim
-    assert 'encrypted at rest in the database' in body and 'do not claim' in body
+    # O-04/D-19: clinical free text is encrypted at rest, but the operator's key can still read it
+    # (not end-to-end encryption, no certification claim) and some fields are still plaintext.
+    assert 'encrypted at rest in the database' in body
+    assert 'not yet encrypted' in body
+    assert 'key the operator holds' in body
 
 
 # ---------- contact ----------
