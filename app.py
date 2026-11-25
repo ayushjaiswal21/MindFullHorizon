@@ -196,15 +196,9 @@ js_bundle = Bundle(
     output='gen/packed.js'
 )
 assets.register('js_all', js_bundle)
-
-css_bundle = Bundle(
-    'css/enhanced.css',
-    'css/fallback-cards.css',
-    'css/styles.css',
-    filters='cssmin',
-    output='gen/packed.css'
-)
-assets.register('css_all', css_bundle)
+# css_all (enhanced.css + fallback-cards.css + styles.css) removed 2026-11-25: never rendered by any
+# template (`{% assets "css_all" %}` had no caller) and enhanced.css/fallback-cards.css had no other
+# reference either; see docs/TRACKER.md O-10. styles.css is still served directly via base.html legacy_head.
 
 from utils.security_headers import init_security_headers  # nonce, CSP and the other security headers
 init_security_headers(app)

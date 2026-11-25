@@ -11,6 +11,7 @@ import sqlite3
 import logging
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
+from extensions import db  # noqa: F401  (re-exported: `from models import db` is used elsewhere)
 
 # Module logger
 logger = logging.getLogger(__name__)
