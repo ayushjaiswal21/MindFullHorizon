@@ -41,5 +41,5 @@ requests>=2.28.0,<3.0.0              # also used by the Docker healthcheck
 
 # Security floors (transitive; supersedes the stale Snyk branch snyk-fix-5411f8bd, which pinned jinja2 3.1.6 / python-multipart 0.0.18; python-multipart is not used)
 Jinja2>=3.1.6,<4.0.0
-urllib3>=2.5.0,<3.0.0
+urllib3>=2.8.0,<3.0.0
 tzdata>=2024.1                       # IANA tz data for zoneinfo (Asia/Kolkata); Windows has none
