@@ -1,6 +1,5 @@
 {
  "ai/service.py": 423,
- "app.py": 887,
  "routes/audio.py": 573,
  "routes/auth.py": 375,
  "routes/provider.py": 649,
