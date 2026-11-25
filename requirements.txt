@@ -16,7 +16,7 @@ Flask-Limiter>=3.0.0,<4.0.0
 
 # Static asset bundling (app.py bundles js/css with these filters)
 Flask-Assets>=2.0,<3.0.0
-webassets>=2.0,<3.0.0
+webassets>=3.0.0,<4.0.0
 jsmin>=3.0.1
 cssmin>=0.2.0
 Brotli>=1.0.0,<2.0.0          # optional: lets Flask-Compress serve brotli
