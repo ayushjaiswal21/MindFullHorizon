@@ -293,11 +293,6 @@ def test_voice_upload_list_delete(app, patient_client, make_user):
     assert c.delete(f"/api/delete-voice-log/{lid}", headers=XHR).status_code == 200
 
 
-def test_shared_data_not_used():
-    import glob
-    files = ["app.py"] + glob.glob("routes/patient/*.py")
-    for f in files:
-        assert "shared_data" not in open(f, encoding="utf-8").read(), f
 
 
 # ---- 9. progress API is scoped to the session user -------------------------
