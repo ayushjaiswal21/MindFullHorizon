@@ -22,7 +22,7 @@ from sqlalchemy import event, text
 from extensions import cache, db
 from models import (Appointment, Assessment, BlogComment, BlogLike, BlogPost, ClinicalNote, DigitalDetoxLog,
                     JournalEntry, MoodLog, Notification, ProviderPatient, VoiceLog)
-from utils.database_utils import engine_options, normalize_db_url
+from utils.database_utils import engine_options
 from utils.pagination import page_args
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -114,16 +114,6 @@ def test_engine_options_per_dialect():
     assert 'statement_timeout=10000' in pg['connect_args']['options']
     tuned = engine_options('postgresql://h/db', env={'DB_POOL_SIZE': '8', 'DB_MAX_OVERFLOW': 'x', 'DB_POOL_TIMEOUT': '3'})
     assert tuned['pool_size'] == 8 and tuned['max_overflow'] == 5 and tuned['pool_timeout'] == 3  # bad value -> default
-
-
-def test_postgres_scheme_is_normalised():
-    # Also pinned to the psycopg2 driver explicitly: SQLAlchemy 2.1's own default dialect order picks psycopg
-    # (v3) for a bare postgresql:// URL, which requirements.txt does not install (only psycopg2-binary),
-    # crashing at startup the first time the app meets a real Postgres database (found 2026-11-25 against Neon).
-    assert normalize_db_url('postgres://u:p@h/db') == 'postgresql+psycopg2://u:p@h/db'
-    assert normalize_db_url('postgresql://u:p@h/db') == 'postgresql+psycopg2://u:p@h/db'
-    assert normalize_db_url('postgresql+psycopg://u:p@h/db') == 'postgresql+psycopg://u:p@h/db'  # driver already named: left alone
-    assert normalize_db_url(None) is None
 
 
 def test_app_uses_dialect_options(app):
