@@ -3,7 +3,7 @@ from flask import current_app, flash, render_template, request, session
 
 import ai.service as ai_service
 from decorators import login_required, role_required
-from models import ClinicalNote, Gamification, db
+from models import ClinicalNote, Gamification, User, db
 from utils.ai_cap import run_capped
 from utils.audit import audit
 from utils.timeutil import utcnow
@@ -24,7 +24,7 @@ def ai_documentation():
             patient = None
             patient_context = None
             if patient_email:
-                patient = assigned_patients().filter_by(email=patient_email.lower()).first()
+                patient = assigned_patients().filter(User.email == patient_email.lower()).first()
                 if patient is None:  # same answer for "no such user" and "not your patient": no existence leak
                     flash('No assigned patient with that email.', 'error')
                     return render_template('ai_documentation.html', user_name=session['user_name'], transcript=transcript, patient_email=patient_email)

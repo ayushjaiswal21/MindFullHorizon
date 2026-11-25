@@ -67,7 +67,7 @@ def test_no_counsellor_template_aggregates_the_ai_detox_score():
     assert "wellness_score_data" not in analytics_html
     assert "wellnessChart" not in analytics_html
 
-    core_src = _read("routes/provider.py")
+    core_src = _read("routes/provider/analytics.py")
     assert "wellness_score_data" not in core_src
 
     js_src = _read("static/js/inline_extracted/analytics_inline_1.js")
