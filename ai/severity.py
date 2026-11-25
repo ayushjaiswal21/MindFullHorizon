@@ -61,7 +61,10 @@ _CRISIS = [re.compile(unicodedata.normalize('NFKC', p)) for p in [
     r'\b(?:zindagi|jindagi|jeevan|jeene|jine) se (?:thak|tang aa) (?:gaya|gayi|gai|chuka|chuki)\b',
     r'\bmarn[ae] (?:ka|ki) (?:man|soch|khayal|iccha|ichha)\b(?! nahi)',
     r'\bkhud ?k(?:h)?ushi\b(?! ki)', r'\bdikhai nahi dena chaht[ai](?: hu)?(?: \|)* hamesha ke liye\b',
-    # Devanagari (no \b: combining marks break word boundaries)
+    # Devanagari (no \b: combining marks break word boundaries). These 4 patterns plus the 1 below in
+    # _CRISIS_CAUTIOUS cover all 108 Devanagari-script rows in docs/review/generated/crisis_phrases.csv
+    # with zero misses (verified empirically by running every row through classify(), 2026-11-25). SYNTHESIS.md
+    # 1.2 called this "unresolved" and estimated 109 rows; the real count is 108, a one-off in that report.
     r'(?:मरना|मर जाना) चाहत[ाीे]|जीना नहीं चाहत[ाीे]|खुदकुशी|आत्महत्या|अपनी जान द|सुसाइड|सुइसाइड',
     r'(?:मुझे|अब) (?:अब )?जीना नहीं है|जीने (?:का|की) (?:मन|इच्छा) (?:ही )?नहीं|मरने (?:का|की) (?:मन|सोच|इच्छा|ख़याल|खयाल)(?! नहीं)',
     r'(?:खुद को|सब कुछ|सबकुछ|सब|ज़िंदगी|जिंदगी|जीवन|अपनी जान) (?:को )?(?:खत्म|ख़त्म) कर',
