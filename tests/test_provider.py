@@ -148,6 +148,40 @@ def test_appointment_row_alone_does_not_make_patient_reachable(app, make_user, p
     assert c.get(f"/provider/wellness-report/{foreign}").status_code == 404
 
 
+def test_reject_drops_link_with_no_other_basis(app, make_user, provider_client):
+    """O-14: a provider link created by booking a request must not survive a reject with nothing else behind it."""
+    c, pid = provider_client
+    p = make_user("patient", name="Only Requested")
+    appt = add(app, Appointment(user_id=p, provider_id=pid, date=date.today(), time="9:00", appointment_type="video"))
+    add(app, ProviderPatient(provider_id=pid, patient_id=p, source="appointment"))  # created at request time, like dashboard.py
+    assert c.post(f"/provider/appointments/reject/{appt}", json={"reason": "x"}).status_code == 200
+    with app.app_context():
+        assert ProviderPatient.query.filter_by(provider_id=pid, patient_id=p).first() is None
+
+
+def test_reject_keeps_link_backed_by_another_appointment(app, make_user, provider_client):
+    """A patient with a separate accepted/completed appointment with this provider stays reachable after a reject."""
+    c, pid = provider_client
+    p = make_user("patient", name="Has History")
+    add(app, Appointment(user_id=p, provider_id=pid, date=date.today(), time="9:00", appointment_type="video", status="completed"))
+    appt = add(app, Appointment(user_id=p, provider_id=pid, date=date.today(), time="10:00", appointment_type="video"))
+    add(app, ProviderPatient(provider_id=pid, patient_id=p, source="appointment"))
+    assert c.post(f"/provider/appointments/reject/{appt}", json={"reason": "x"}).status_code == 200
+    with app.app_context():
+        assert ProviderPatient.query.filter_by(provider_id=pid, patient_id=p).first() is not None
+
+
+def test_reject_keeps_manual_link(app, make_user, provider_client):
+    """A manually-assigned link (not created by this request) is never touched by a reject."""
+    c, pid = provider_client
+    p = make_user("patient", name="Manually Assigned")
+    appt = add(app, Appointment(user_id=p, provider_id=pid, date=date.today(), time="9:00", appointment_type="video"))
+    add(app, ProviderPatient(provider_id=pid, patient_id=p, source="manual"))
+    assert c.post(f"/provider/appointments/reject/{appt}", json={"reason": "x"}).status_code == 200
+    with app.app_context():
+        assert ProviderPatient.query.filter_by(provider_id=pid, patient_id=p).first() is not None
+
+
 def test_wellness_report_page_wiring(app, make_user, provider_client):
     c, pid = provider_client
     p = make_user("patient", name="Report Person")

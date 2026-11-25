@@ -12,7 +12,7 @@ from utils.audit import audit; from utils.followups import on_acknowledged
 from utils.state import TransitionError, transition, CONFLICT_MESSAGE
 from utils.timeutil import ist_today, utcnow
 from sqlalchemy.exc import IntegrityError
-from utils.assignments import link_provider_patient
+from utils.assignments import link_provider_patient, unlink_if_unrequested
 from utils.cache_utils import cached, SUMMARY_TTL, ANALYTICS_TTL
 from utils.pagination import page_args, page_meta
 from utils.query_utils import latest_rows
@@ -273,6 +273,8 @@ def _move_appointment(appointment_id, new_status, ok_message, link_patient=False
         transition(appointment, new_status, 'provider', **fields)
         if link_patient:
             link_provider_patient(session['user_id'], appointment.user_id)  # P-02: accepting a request assigns the patient
+        if new_status == 'rejected':
+            unlink_if_unrequested(appointment.provider_id, appointment.user_id)  # O-14: don't leave a reject-only link
         db.session.commit()
         return jsonify({'success': True, 'message': ok_message, 'status': new_status})
     except TransitionError:

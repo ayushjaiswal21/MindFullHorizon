@@ -8,7 +8,7 @@ import logging
 from extensions import db
 from models import User, Gamification, RPMData, Appointment, MoodLog, Assessment
 from decorators import patient_required, login_required
-from utils.assignments import link_provider_patient
+from utils.assignments import link_provider_patient, unlink_if_unrequested
 from routes.rx_patient import dashboard_context
 from utils.booking import staff_options, booking_extras, record_erx_consent, schedule_context
 from utils import idempotency as idem
@@ -174,8 +174,11 @@ def cancel_appointment(appointment_id):
     if not appt:
         flash('Appointment not found.', 'error')
     else:
+        was_pending = appt.status == 'pending'
         try:
             transition(appt, 'cancelled', 'patient')
+            if was_pending:
+                unlink_if_unrequested(appt.provider_id, appt.user_id)  # O-14: request withdrawn before any acceptance
             db.session.commit()
             flash('Appointment cancelled.', 'success')
         except TransitionError:
