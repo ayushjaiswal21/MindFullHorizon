@@ -31,7 +31,7 @@ gunicorn>=21.0.0,<22.0.0
 eventlet>=0.33.0,<1.0.0
 
 # AI and text
-google-generativeai>=0.3.0,<1.0.0   # SDK is end-of-life; migrating to google-genai is tracked in docs/TRACKER.md
+google-genai>=1.0.0,<4.0.0           # replaces the end-of-life google-generativeai (O-12/AI-11, see docs/TRACKER.md)
 textblob>=0.17.0,<1.0.0              # journal sentiment (pulls in nltk)
 rapidfuzz>=3.0,<4.0                  # MIT; ai/fuzzy_crisis.py edit-distance-1 crisis-vocabulary snap (SYNTHESIS.md 3(a) a3)
 

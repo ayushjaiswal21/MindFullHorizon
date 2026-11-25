@@ -288,39 +288,38 @@ def test_gemini_impl_uses_system_instruction_and_env_model(monkeypatch):
     class FakeResp:
         text = "hello"
 
-    class FakeModel:
-        def __init__(self, name, system_instruction=None):
-            calls["name"], calls["si"] = name, system_instruction
-
-        def generate_content(self, contents, generation_config=None, request_options=None):
-            calls["contents"], calls["opts"] = contents, request_options
+    class FakeModels:
+        def generate_content(self, model=None, contents=None, config=None):
+            calls["model"], calls["contents"], calls["config"] = model, contents, config
             return FakeResp()
+
+    class FakeClient:
+        def __init__(self, api_key=None):
+            self.models = FakeModels()
     monkeypatch.setattr(g, "GEMINI_API_KEY", "k")
     monkeypatch.setattr(g, "GEMINI_MODEL_NAME", "my-model")
-    monkeypatch.setattr(g.genai, "configure", lambda **k: None)
-    monkeypatch.setattr(g.genai, "GenerativeModel", FakeModel)
+    monkeypatch.setattr(g.genai, "Client", FakeClient)
     assert g.ask_gemini_system_user("SYS", "USER", personal=False) == "hello"
-    assert calls["name"] == "my-model" and calls["si"] == "SYS" and calls["contents"] == "USER"
-    assert calls["opts"]["timeout"] > 0
+    assert calls["model"] == "my-model" and calls["contents"] == "USER"
+    assert calls["config"].system_instruction == "SYS"
+    assert calls["config"].http_options.timeout > 0
 
 
 def test_gemini_safety_block_raises_blocked(monkeypatch):
     import ai.gemini_impl as g
 
     class Resp:
-        @property
-        def text(self):
-            raise ValueError("response.text quick accessor ... finish_reason is SAFETY")
+        text = None  # no candidates / finish_reason SAFETY: google-genai returns None, not an exception
 
-    class M:
-        def __init__(self, *a, **k):
-            pass
-
+    class FakeModels:
         def generate_content(self, *a, **k):
             return Resp()
+
+    class FakeClient:
+        def __init__(self, api_key=None):
+            self.models = FakeModels()
     monkeypatch.setattr(g, "GEMINI_API_KEY", "k")
-    monkeypatch.setattr(g.genai, "configure", lambda **k: None)
-    monkeypatch.setattr(g.genai, "GenerativeModel", M)
+    monkeypatch.setattr(g.genai, "Client", FakeClient)
     with pytest.raises(g.GeminiBlocked):
         g.ask_gemini_system_user("s", "u", personal=False)
 

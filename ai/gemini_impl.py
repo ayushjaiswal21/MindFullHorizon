@@ -1,7 +1,7 @@
 """Gemini access behind the AIProvider seam, plus resilience (breaker, bounded retries).
 
-The SDK call lives only in GeminiProvider. `google.generativeai` is end-of-life: a future `google-genai`
-adapter is another AIProvider subclass passed to set_provider(); breaker, retries and callers do not change.
+The SDK call lives only in GeminiProvider, using `google-genai` (the old `google.generativeai` was end-of-life
+and is no longer installed). breaker, retries and callers do not change if the SDK changes again.
 The default model was never exercised against the live API in CI (tests use fakes). See docs/LLM_SECURITY.md.
 """
 import logging
@@ -18,11 +18,11 @@ from utils.circuit_breaker import CircuitBreaker
 
 
 class _LazyGenai:
-    """Imports google.generativeai on first use (about 1.4 s and 40 MB at startup otherwise).
-    Attributes set on this object (tests monkeypatch `configure` / `GenerativeModel`) win over the real module."""
+    """Imports google.genai on first use (avoids the import cost at startup otherwise).
+    Attributes set on this object (tests monkeypatch `Client` / `types`) win over the real module."""
 
     def __getattr__(self, name):
-        import google.generativeai as real
+        import google.genai as real
         return getattr(real, name)
 
 
@@ -102,35 +102,36 @@ def _counts_against_breaker(exc):
 
 
 class GeminiProvider(AIProvider):
-    """google.generativeai adapter. Reads module settings at call time so tests and env changes apply."""
+    """google-genai adapter. Reads module settings at call time so tests and env changes apply."""
 
     def configured(self):
         return bool(GEMINI_API_KEY)
 
-    def _generate(self, model_name, system_prompt, user_text, max_tokens, temperature, timeout):
+    def _generate(self, client, model_name, system_prompt, user_text, max_tokens, temperature, timeout):
         # system rules go in system_instruction, so user text is never concatenated into the instructions
-        model = genai.GenerativeModel(model_name, system_instruction=system_prompt)
-        response = model.generate_content(
-            user_text,
-            generation_config=genai.types.GenerationConfig(max_output_tokens=max_tokens, temperature=temperature),
-            request_options={"timeout": timeout},
+        config = genai.types.GenerateContentConfig(
+            system_instruction=system_prompt,
+            max_output_tokens=max_tokens,
+            temperature=temperature,
+            http_options=genai.types.HttpOptions(timeout=int(timeout * 1000)),  # ms, not s
         )
-        try:
-            return response.text
-        except ValueError as e:  # no candidates / finish_reason SAFETY
-            raise GeminiBlocked("response blocked or empty") from e
+        response = client.models.generate_content(model=model_name, contents=user_text, config=config)
+        text = response.text  # None (not an exception) on no candidates / finish_reason SAFETY
+        if text is None:
+            raise GeminiBlocked("response blocked or empty")
+        return text
 
     def ask(self, prompt, system_prompt="", max_tokens=1024, temperature=0.2, timeout=None, **_):
-        genai.configure(api_key=GEMINI_API_KEY)
+        client = genai.Client(api_key=GEMINI_API_KEY)
         timeout = timeout or GEMINI_TIMEOUT
         try:
-            return self._generate(GEMINI_MODEL_NAME, system_prompt, prompt, max_tokens, temperature, timeout)
+            return self._generate(client, GEMINI_MODEL_NAME, system_prompt, prompt, max_tokens, temperature, timeout)
         except Exception as e:
             # A retired or unknown model id falls back to the alias; transient errors are retried by the caller.
             if isinstance(e, GeminiBlocked) or is_transient(e) or GEMINI_MODEL_NAME == FALLBACK_MODEL:
                 raise
             logger.warning("Gemini model %s failed (%s), retrying with %s", GEMINI_MODEL_NAME, type(e).__name__, FALLBACK_MODEL)
-            return self._generate(FALLBACK_MODEL, system_prompt, prompt, max_tokens, temperature, timeout)
+            return self._generate(client, FALLBACK_MODEL, system_prompt, prompt, max_tokens, temperature, timeout)
 
 
 PROVIDER: AIProvider = GeminiProvider()
