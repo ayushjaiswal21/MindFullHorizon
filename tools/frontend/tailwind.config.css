@@ -1,0 +1,14 @@
+/* Layout utilities only (flex, grid, spacing, sizing, text size, responsive display).
+   Colour comes from static/css/site.css tokens: no preflight (site.css has its own reset),
+   no theme colours defined, so colour-bearing utility classes have nothing to generate from. */
+@import "tailwindcss/theme.css" layer(theme) source(none);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+
+@source "../../templates/**/*.html";
+@source "../../static/js/**/*.js";
+@source not "../../static/js/**/*.min.js";
+@source not "../../static/gen/**";
+
+@theme {
+  --color-*: initial;
+}
