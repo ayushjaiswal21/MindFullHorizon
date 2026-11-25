@@ -84,8 +84,9 @@ jobs:
       - name: Start the container in production mode (runs flask db upgrade, then gunicorn)
         run: |
           key=$(python3 -c "import secrets; print(secrets.token_urlsafe(48))")
+          fek=$(python3 -c "import base64, secrets; print(base64.urlsafe_b64encode(secrets.token_bytes(32)).decode())")
           docker run -d --name mfh -p 8080:5000 \
-            -e FLASK_ENV=production -e SECRET_KEY="$key" \
+            -e FLASK_ENV=production -e SECRET_KEY="$key" -e FIELD_ENCRYPTION_KEY="$fek" \
             -e DATABASE_URL=sqlite:////tmp/ci.db -e TRUST_PROXY=0 \
             mindfull-ci
       - name: Wait for /health (up to 90 s), then check /ready (migrations applied)

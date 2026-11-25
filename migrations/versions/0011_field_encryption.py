@@ -87,11 +87,16 @@ def _retype_columns(to_binary):
 
 
 def upgrade():
+    # Check the key BEFORE any schema change: calling this after _retype_columns (as an earlier version of
+    # this migration did) meant a missing key left the DB in an inconsistent half-migrated state (columns
+    # already retyped to binary but not yet encrypted) and, on SQLite, a dangling _alembic_tmp_* table from
+    # the batch_alter_table that never got to rename itself back, which then broke every retry with "table
+    # already exists" instead of the real "key missing" error. Fail here instead: zero schema change yet.
+    cipher = _cipher()
     rows = _read_existing()
     _retype_columns(to_binary=True)
 
     bind = op.get_bind()
-    cipher = _cipher()
     for table_name, col_name, is_json, _existing_type in _FIELDS:
         tbl = sa.table(table_name, sa.column('id'), sa.column(col_name))
         for row_id, value in rows[(table_name, col_name)]:
