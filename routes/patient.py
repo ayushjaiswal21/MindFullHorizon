@@ -944,6 +944,12 @@ def save_mood():
         return jsonify({'success': False, 'message': 'Mood must be a whole number from 1 to 10'}), 400
     notes = str(data.get('notes') or '').strip()[:500] or None
 
+    # O-06: run free-text notes through the same rule-based check journal/chat use. The event holds a code
+    # only, never the text. Mood scores stay ungamified either way (no points/streak here, crisis or not).
+    from utils.crisis import record_crisis, text_is_crisis_detailed
+    from utils.helplines import helplines_text
+    crisis, crisis_matched_via = text_is_crisis_detailed(notes) if notes else (False, None)
+
     user_id = session['user_id']
     key = idem.get_key()
     saved = jsonify({'success': True, 'message': 'Mood saved. Thanks for checking in.'})
@@ -957,7 +963,13 @@ def save_mood():
         user = db.session.get(User, user_id)
         if user:
             user.last_assessment_at = utcnow()
+        if crisis:  # '_fuzzy' suffix = audit-only tag, hit via the edit-distance-1 layer, not an exact regex
+            record_crisis(user_id, 'mood', 9, 'mood_self_harm_fuzzy' if crisis_matched_via == 'fuzzy' else 'mood_self_harm')
         db.session.commit()
+        if crisis:
+            return jsonify({'success': True,
+                            'message': 'We noticed your words sound painful. You do not have to carry this alone. '
+                                        'If you are in danger call 112. Free support: ' + helplines_text()})
         return saved
     except IntegrityError:
         db.session.rollback()
