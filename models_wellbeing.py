@@ -5,6 +5,7 @@ All three belong to one user, are deleted with the account (FK CASCADE) and are 
 SafetyPlan text is sensitive free text: never log it, never send it to the AI.
 """
 from extensions import db
+from utils.field_encryption import EncryptedJSON, EncryptedText
 from utils.timeutil import utcnow
 
 __all__ = ["SafetyPlan", "SleepLog", "ReminderPref"]
@@ -16,12 +17,13 @@ class SafetyPlan(db.Model):
     __tablename__ = 'safety_plans'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    warning_signs = db.Column(db.Text, nullable=True)
-    coping_alone = db.Column(db.Text, nullable=True)
-    places_people = db.Column(db.Text, nullable=True)
-    help_people = db.Column(db.JSON, nullable=True)  # list of {"name": str, "phone": str}, at most 5
-    professionals = db.Column(db.Text, nullable=True)  # the student's own additions; national helplines are not stored
-    safer_surroundings = db.Column(db.Text, nullable=True)
+    # O-04: safety-plan text (and the named contacts in help_people) is sensitive free text, encrypted at rest.
+    warning_signs = db.Column(EncryptedText, nullable=True)
+    coping_alone = db.Column(EncryptedText, nullable=True)
+    places_people = db.Column(EncryptedText, nullable=True)
+    help_people = db.Column(EncryptedJSON, nullable=True)  # list of {"name": str, "phone": str}, at most 5
+    professionals = db.Column(EncryptedText, nullable=True)  # the student's own additions; national helplines are not stored
+    safer_surroundings = db.Column(EncryptedText, nullable=True)
     share_with_counsellors = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
     client_request_id = db.Column(db.String(64), nullable=True)  # idempotency key (utils/idempotency.py)
     created_at = db.Column(db.DateTime, nullable=False, default=utcnow)

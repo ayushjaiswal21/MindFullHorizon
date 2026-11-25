@@ -1,6 +1,7 @@
 """Core clinical workflow tables: notes, appointments, goals, medications, crisis events, assignments."""
 from datetime import datetime
 from extensions import db
+from utils.field_encryption import EncryptedText
 from utils.timeutil import ist_today
 
 __all__ = [
@@ -17,9 +18,9 @@ class ClinicalNote(db.Model):
     provider_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     patient_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     session_date = db.Column(db.DateTime, nullable=False)
-    transcript = db.Column(db.Text, nullable=True)
-    ai_generated_note = db.Column(db.Text, nullable=True)
-    provider_notes = db.Column(db.Text, nullable=True)
+    transcript = db.Column(EncryptedText, nullable=True)  # O-04: clinical free text, encrypted at rest
+    ai_generated_note = db.Column(EncryptedText, nullable=True)
+    provider_notes = db.Column(EncryptedText, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (db.Index('idx_note_patient_session', 'patient_id', 'session_date'),)

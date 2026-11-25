@@ -1,6 +1,7 @@
 """Patient self-logged wellness activities: assessments, detox, exercises, journal, mood, voice."""
 from datetime import datetime
 from extensions import db
+from utils.field_encryption import EncryptedJSON, EncryptedText
 from utils.timeutil import ist_today
 
 __all__ = [
@@ -18,9 +19,10 @@ class Assessment(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     assessment_type = db.Column(db.String(50), nullable=False, index=True)  # 'GAD-7', 'PHQ-9', 'mood'
     score = db.Column(db.Integer, nullable=False)
-    responses = db.Column(db.JSON, nullable=True)  # Store individual question responses
-    contextual_responses = db.Column(db.JSON, nullable=True) # Store contextual question responses
-    ai_insights = db.Column(db.Text, nullable=True)  # AI-generated insights (stored as JSON string)
+    # O-04: responses/contextual_responses can carry free text (e.g. mood check-in notes), encrypted at rest.
+    responses = db.Column(EncryptedJSON, nullable=True)  # Store individual question responses
+    contextual_responses = db.Column(EncryptedJSON, nullable=True) # Store contextual question responses
+    ai_insights = db.Column(EncryptedText, nullable=True)  # AI-generated insights (stored as JSON string)
     client_request_id = db.Column(db.String(64), nullable=True)  # idempotency key (utils/idempotency.py)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
@@ -183,7 +185,7 @@ class MoodLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     mood_score = db.Column(db.Integer, nullable=False)  # e.g., 1-10 scale
-    notes = db.Column(db.Text, nullable=True)
+    notes = db.Column(EncryptedText, nullable=True)  # O-04: free text, encrypted at rest
     client_request_id = db.Column(db.String(64), nullable=True)  # idempotency key (utils/idempotency.py)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
@@ -204,10 +206,11 @@ class JournalEntry(db.Model):
     __tablename__ = 'journal_entries'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
-    title = db.Column(db.String(100), nullable=False)
-    content = db.Column(db.Text, nullable=False)
+    # O-04: journal text is clinical free text, encrypted at rest.
+    title = db.Column(EncryptedText, nullable=False)
+    content = db.Column(EncryptedText, nullable=False)
     sentiment = db.Column(db.String(20), nullable=True)
-    ai_suggestions = db.Column(db.Text, nullable=True)  # extra: the journal page shows AI suggestions
+    ai_suggestions = db.Column(EncryptedText, nullable=True)  # extra: the journal page shows AI suggestions
     client_request_id = db.Column(db.String(64), nullable=True)  # idempotency key (utils/idempotency.py)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
@@ -220,13 +223,13 @@ class VoiceLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     filename = db.Column(db.String(255), nullable=False)
-    transcript = db.Column(db.Text, nullable=True)
+    transcript = db.Column(EncryptedText, nullable=True)  # O-04: voice transcript, encrypted at rest
     # emotion: unused by new code since 2026-11-25 (migration 0010). The tone/emotion label was measured invalid
     # (docs/research/ai/SYNTHESIS.md 1.1, 3(c) item c1: pitch thresholds mostly detect pitch/sex not mood, EU AI
     # Act recital 44, Kintsugi shutdown). Column kept, nullable, non-destructive; never written for new rows.
     emotion = db.Column(db.String(30), nullable=True)
     # audio_features: now holds only {'duration': seconds} for new rows (pitch/energy/zcr/spectral-centroid, which
     # fed only the removed label and are speaker-identifying, are no longer computed or stored); see migration 0010.
-    audio_features = db.Column(db.JSON, nullable=True)  # extra: voice log page renders these
-    ai_analysis = db.Column(db.Text, nullable=True)  # extra: voice log page renders this (unused for voice since 0010)
+    audio_features = db.Column(db.JSON, nullable=True)  # extra: voice log page renders these (duration only, not sensitive)
+    ai_analysis = db.Column(EncryptedText, nullable=True)  # extra: voice log page renders this (unused for voice since 0010), encrypted at rest (O-04)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
