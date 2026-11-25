@@ -46,6 +46,10 @@ services:
       - key: DOCTOR_INVITE_CODE    # doctors need it to sign up (must differ from the counsellor code)
         generateValue: true
       # ---- you fill these in when Render asks ----
+      - key: FIELD_ENCRYPTION_KEY  # column-level encryption at rest for clinical free text (O-04). Generate with:
+                                   # python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+                                   # Back it up outside the database; losing it makes those rows unreadable.
+        sync: false
       - key: DATABASE_URL          # Neon DIRECT connection string (host without -pooler), ends with ?sslmode=require
         sync: false
       - key: SITE_URL              # https://your-name.onrender.com or your own domain, no trailing slash
