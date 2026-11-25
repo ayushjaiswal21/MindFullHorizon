@@ -8,8 +8,8 @@ The context processor feeds the dashboard panel, the caseload flags and the repo
 from flask import Blueprint, jsonify, request, session
 from sqlalchemy import select
 
-from decorators import login_required, provider_required
-from extensions import db
+from core.decorators import login_required, provider_required
+from core.extensions import db
 from models import Appointment, ClinicalNote, FollowUpPlan, FollowUpStep
 from utils import appt_reminders, followup_views, followups, score_flags, trend_flags
 from utils.audit import audit

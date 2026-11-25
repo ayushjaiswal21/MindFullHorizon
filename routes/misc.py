@@ -34,8 +34,8 @@ def log_client_error():
 
 
 def register_misc_routes(app):
-    from decorators import login_required
-    from extensions import csrf, limiter
+    from core.decorators import login_required
+    from core.extensions import csrf, limiter
 
     app.add_url_rule('/api/ai-status', 'ai_status', login_required(ai_status))
     # Error logging endpoint for client-side errors

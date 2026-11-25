@@ -12,7 +12,7 @@ from datetime import datetime, timedelta, timezone
 from flask import current_app
 from itsdangerous import BadSignature, URLSafeSerializer, URLSafeTimedSerializer
 
-from extensions import db
+from core.extensions import db
 from models import ReminderPref, User
 from utils.jobs import enqueue, register
 from utils.mailer import send_mail, smtp_configured

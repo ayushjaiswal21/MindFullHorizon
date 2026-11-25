@@ -4,7 +4,7 @@ Same metadata as models.py (imported at the bottom of that file, so `from models
 Design: docs/CLINICAL_DESIGN.md sections 2 to 4 and 6. Table and constraint names are exact: tests compare them with
 the migrations.
 """
-from extensions import db
+from core.extensions import db
 from utils.timeutil import utcnow
 
 __all__ = ["PrescriberProfile", "Medicine", "InventoryBatch", "ReorderRule", "Prescription", "PrescriptionItem",

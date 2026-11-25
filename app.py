@@ -31,7 +31,7 @@ from flask_assets import Environment, Bundle
 from routes import all_blueprints
 from ai.scoring import band_for, canonical_type
 
-from extensions import db, csrf, limiter, cache
+from core.extensions import db, csrf, limiter, cache
 import utils.cache_utils  # noqa: F401  (registers the cache-invalidation session listeners)
 
 # Database configuration
@@ -102,7 +102,7 @@ app.config['REMEMBER_COOKIE_HTTPONLY'] = True
 app.config['REMEMBER_COOKIE_SAMESITE'] = 'Lax'
 
 # Initialize database extensions AFTER session configuration
-from extensions import init_extensions
+from core.extensions import init_extensions
 init_extensions(app)
 
 from models import *

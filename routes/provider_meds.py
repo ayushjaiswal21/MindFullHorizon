@@ -6,8 +6,8 @@ patients are reachable (404 otherwise) and every read is audited with a count, n
 """
 from flask import Blueprint, jsonify, session
 
-from decorators import login_required, provider_required
-from extensions import db
+from core.decorators import login_required, provider_required
+from core.extensions import db
 from utils import rx_text
 from utils.audit import audit
 

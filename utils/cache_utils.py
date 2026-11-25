@@ -11,7 +11,7 @@ import time
 from sqlalchemy import event
 from sqlalchemy.orm import Session
 
-from extensions import cache
+from core.extensions import cache
 
 SUMMARY_TTL = 60
 ANALYTICS_TTL = 120

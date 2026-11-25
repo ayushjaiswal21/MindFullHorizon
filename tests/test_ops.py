@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy import text
 
 import routes.ops as ops
-from extensions import db
+from core.extensions import db
 from utils import jobs
 from utils.logging_setup import RedactionFilter, redact
 
@@ -78,7 +78,7 @@ def test_alembic_head_matches_migrations_folder():
 
 
 def test_ops_endpoints_exempt_from_rate_limit(client):
-    from extensions import limiter
+    from core.extensions import limiter
     limiter.enabled = True
     try:
         assert all(client.get(p).status_code == 200 for p in ("/health", "/ready") for _ in range(70))  # default is 60/min

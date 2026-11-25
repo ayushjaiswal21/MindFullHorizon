@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import Job, Notification, PrescriberProfile, Prescription
 from services import ops_jobs
 from tests import inv_helpers as h

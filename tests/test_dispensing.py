@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import InventoryBatch, InventoryTransaction, PrescriberProfile, Prescription, PrescriptionItem
 from services import dispensing, inventory
 from services.errors import ServiceError

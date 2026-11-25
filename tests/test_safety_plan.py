@@ -2,7 +2,7 @@
 import json
 import logging
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, ProviderPatient, SafetyPlan
 
 SECRET = "my-very-private-warning-sign-xyz"

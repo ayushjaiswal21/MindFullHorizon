@@ -1,7 +1,7 @@
 """Counsellor and doctor read-only Medications panel (docs/CLINICAL_DESIGN.md 5.3)."""
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, Medication, Prescription, ProviderPatient
 from rx_helpers import make_doctor, make_medicine, make_rx, page
 

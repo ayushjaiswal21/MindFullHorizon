@@ -4,9 +4,9 @@ from datetime import datetime
 from flask import render_template, session, redirect, url_for, flash, request, jsonify
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import Goal
-from decorators import patient_required, login_required
+from core.decorators import patient_required, login_required
 from utils import idempotency as idem
 from utils.gamification import award_points
 from utils.timeutil import ist_today

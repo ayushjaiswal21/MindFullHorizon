@@ -13,7 +13,7 @@ import json
 import csv
 from datetime import datetime
 
-from extensions import db
+from core.extensions import db
 
 # Import the app module to access Flask app context and models
 import importlib, sys

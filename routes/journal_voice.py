@@ -53,7 +53,7 @@ def validate_file_security(file):
 
 def delete_journal_entry(entry_id):
     """Delete one of the session user's journal entries."""
-    from extensions import db
+    from core.extensions import db
     from models import JournalEntry
 
     entry = JournalEntry.query.filter_by(id=entry_id, user_id=session['user_id']).first()
@@ -71,7 +71,7 @@ def delete_journal_entry(entry_id):
 
 def delete_voice_log(voice_log_id):
     """Delete one of the session user's voice logs (measurements and note; no audio is stored)."""
-    from extensions import db
+    from core.extensions import db
     from models import VoiceLog
 
     voice_log = VoiceLog.query.filter_by(id=voice_log_id, user_id=session['user_id']).first()
@@ -89,7 +89,7 @@ def delete_voice_log(voice_log_id):
 
 def upload_voice():
     """Upload a voice recording, analyse it if possible and store a VoiceLog for the session user."""
-    from extensions import db
+    from core.extensions import db
     from models import VoiceLog
     from utils.gamification import award_points
 
@@ -127,8 +127,8 @@ def upload_voice():
 
 
 def register_journal_voice_routes(app):
-    from decorators import login_required, role_required
-    from extensions import limiter
+    from core.decorators import login_required, role_required
+    from core.extensions import limiter
 
     app.add_url_rule('/api/delete-journal-entry/<int:entry_id>', 'delete_journal_entry',
                       login_required(role_required('patient')(delete_journal_entry)), methods=['DELETE'])

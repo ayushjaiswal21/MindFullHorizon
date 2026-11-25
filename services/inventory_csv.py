@@ -6,7 +6,7 @@ import csv
 import hashlib
 import io
 
-from extensions import db
+from core.extensions import db
 from models import Medicine
 from services import catalogue
 from services import inventory as stock

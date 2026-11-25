@@ -1,6 +1,6 @@
 """Points and streaks (never attached to assessment/mood scores; see CLAUDE.md)."""
 from datetime import datetime
-from extensions import db
+from core.extensions import db
 
 __all__ = ["Gamification", "PointsLedger"]
 

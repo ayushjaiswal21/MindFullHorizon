@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from flask import render_template, session
 from sqlalchemy import func
 
-from decorators import login_required, role_required
+from core.decorators import login_required, role_required
 from models import Assessment, BlogInsight, DigitalDetoxLog, Gamification, User, db
 from utils.cache_utils import ANALYTICS_TTL, cached
 from utils.timeutil import ist_today, utcnow

@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import Appointment, BlogPost, MoodLog
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

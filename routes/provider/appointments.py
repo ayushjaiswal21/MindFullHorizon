@@ -3,7 +3,7 @@ from flask import abort, jsonify, render_template, request, session
 from sqlalchemy import and_, or_
 from sqlalchemy.exc import IntegrityError
 
-from decorators import can_join_telehealth, login_required, role_required
+from core.decorators import can_join_telehealth, login_required, role_required
 from models import Appointment, DigitalDetoxLog, RPMData, User, db
 from utils.assignments import link_provider_patient, unlink_if_unrequested
 from utils.pagination import page_args, page_meta

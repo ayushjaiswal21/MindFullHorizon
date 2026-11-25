@@ -7,7 +7,7 @@ time. Text is generic (day, time, provider name); no health detail. Email goes t
 """
 from datetime import datetime, timedelta, timezone
 
-from extensions import db
+from core.extensions import db
 from models import Appointment, Job, Notification, User
 from utils.jobs import enqueue, register
 from utils.timeutil import IST, ist_now, utcnow

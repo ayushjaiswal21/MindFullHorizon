@@ -6,7 +6,7 @@ on the existing row because (user_id, kind, version) is unique.
 """
 from datetime import timedelta
 
-from extensions import db
+from core.extensions import db
 from models import ConsentRecord
 from services import config
 from utils.audit import audit

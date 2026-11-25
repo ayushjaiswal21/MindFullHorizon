@@ -1,7 +1,7 @@
 """Core User model."""
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-from extensions import db
+from core.extensions import db
 
 __all__ = ["User"]
 

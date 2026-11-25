@@ -3,7 +3,7 @@ from datetime import datetime
 
 from flask import render_template, session
 
-from decorators import login_required, role_required
+from core.decorators import login_required, role_required
 from models import Assessment, ClinicalNote, DigitalDetoxLog, Gamification, RPMData, db
 from utils.audit import audit
 from ai.scoring import canonical_type

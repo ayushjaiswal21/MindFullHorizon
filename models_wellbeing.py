@@ -4,7 +4,7 @@ Same metadata as models.py (imported at the bottom of that file, so `from models
 All three belong to one user, are deleted with the account (FK CASCADE) and are part of the account export.
 SafetyPlan text is sensitive free text: never log it, never send it to the AI.
 """
-from extensions import db
+from core.extensions import db
 from utils.field_encryption import EncryptedJSON, EncryptedText
 from utils.timeutil import utcnow
 

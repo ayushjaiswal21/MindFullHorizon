@@ -4,7 +4,7 @@ from datetime import timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import InventoryBatch, Medicine
 from services import inventory_csv as csvs
 from services.errors import ServiceError

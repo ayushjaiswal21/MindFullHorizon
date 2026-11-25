@@ -4,8 +4,8 @@ The address is always the account email. Turning reminders on only queues a conf
 until the student opens the signed link (services/reminders.py)."""
 from flask import flash, redirect, render_template, request, session, url_for
 
-from decorators import login_required, patient_required
-from extensions import csrf, db, limiter
+from core.decorators import login_required, patient_required
+from core.extensions import csrf, db, limiter
 from models import ReminderPref, User
 from routes.patient import patient_bp
 from services import reminders as rem

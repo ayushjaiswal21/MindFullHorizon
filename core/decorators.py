@@ -95,7 +95,7 @@ def prescriptions_required(f):
 def can_join_telehealth(patient_id):
     """True for the patient themself, or a provider of the same institution (case-insensitive) linked to them by a
     ProviderPatient row or a non-rejected appointment. The single rule for the provider page and the socket join."""
-    from extensions import db
+    from core.extensions import db
     from models import Appointment, ProviderPatient, User
     from utils.assignments import same_institution
     uid, role = session.get('user_id'), session.get('user_role')
@@ -130,7 +130,7 @@ def _json_error(status, code):
 def _audit_denied(code):
     """One AuditLog row in its own short transaction, so it survives the rollback of the denied request."""
     try:
-        from extensions import db
+        from core.extensions import db
         from models import AuditLog
         from utils.timeutil import utcnow
         with db.engine.begin() as conn:
@@ -154,7 +154,7 @@ def _deny(status, json_code, html_endpoint, message, audit_code=None):
 
 def _fresh_user(role):
     """The logged-in User row if it still exists, has `role` and is not deactivated; else None."""
-    from extensions import db
+    from core.extensions import db
     from models import User
     user = db.session.get(User, session.get('user_id') or 0)
     if user is None or user.role != role or user.deactivated_at is not None:

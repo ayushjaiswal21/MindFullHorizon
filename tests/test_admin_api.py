@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, ContactMessage, CrisisEvent, PrescriberProfile, User
 from services import prescriber
 from utils.timeutil import utcnow

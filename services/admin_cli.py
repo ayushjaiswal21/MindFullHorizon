@@ -13,7 +13,7 @@ import os
 
 import click
 
-from extensions import db
+from core.extensions import db
 from models import PrescriberProfile, User
 from services.roles import norm_inst
 from utils.audit import audit

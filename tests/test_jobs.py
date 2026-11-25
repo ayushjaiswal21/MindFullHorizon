@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import ContactMessage, Job
 from utils import jobs, mailer
 

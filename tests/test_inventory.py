@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, InventoryBatch, InventoryTransaction
 from services import inventory
 from services.errors import ServiceError

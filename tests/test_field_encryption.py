@@ -7,7 +7,7 @@ those tests cannot: what is actually sitting in the database column.
 from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy import text
 
-from extensions import db
+from core.extensions import db
 from models import Assessment, ClinicalNote, JournalEntry, MoodLog
 from models_wellbeing import SafetyPlan
 from utils.field_encryption import EncryptedText, reset_cipher_cache

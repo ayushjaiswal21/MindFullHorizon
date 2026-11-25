@@ -7,7 +7,7 @@ from datetime import timedelta
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import InventoryBatch, InventoryTransaction, Prescription, PrescriptionItem
 from services.db_util import cas
 from services.errors import ServiceError

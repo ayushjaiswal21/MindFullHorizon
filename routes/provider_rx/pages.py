@@ -1,8 +1,8 @@
 """Server-rendered prescribing pages (design 5.3): prescribe, my prescriptions, detail, print."""
 from flask import abort, g, redirect, render_template, request, url_for
 
-from decorators import login_required, prescriptions_required, verified_prescriber_required
-from extensions import db
+from core.decorators import login_required, prescriptions_required, verified_prescriber_required
+from core.extensions import db
 from models import Prescription
 from routes.provider_rx._common import limits, page_config, patient_or_404, rx_texts
 from services.prescriptions import effective_status, serialize

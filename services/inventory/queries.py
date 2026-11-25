@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from sqlalchemy import and_, case, func
 
-from extensions import db
+from core.extensions import db
 from models import InventoryBatch, InventoryTransaction, Medicine, ReorderRule
 from services import config
 from services.inventory import _common as c

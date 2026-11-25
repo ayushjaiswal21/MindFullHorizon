@@ -1,8 +1,8 @@
 """The doctor's prescribing profile (design 2, 5.3). Reachable while pending, rejected or suspended."""
 from flask import flash, g, redirect, render_template, request, url_for
 
-from decorators import doctor_provider_required, login_required, prescriptions_required
-from extensions import db
+from core.decorators import doctor_provider_required, login_required, prescriptions_required
+from core.extensions import db
 from services import prescriber
 from services.errors import ServiceError
 from services.http import iso

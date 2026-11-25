@@ -1,8 +1,8 @@
 """Annual report: page, print view and CSV (design 5.4). Aggregates with K = MIN_AGGREGATE_GROUP suppression."""
 from flask import Response, g, render_template
 
-from decorators import admin_required
-from extensions import db
+from core.decorators import admin_required
+from core.extensions import db
 from routes.admin import admin_bp
 from routes.admin._inv import arg_int, inst
 from services import annual_report

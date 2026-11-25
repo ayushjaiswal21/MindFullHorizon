@@ -1,7 +1,7 @@
 """Admin sign-in and the admin home (design 1.2, 5.4). Admins are created only by `flask create-admin`."""
 from flask import current_app, flash, make_response, redirect, render_template, request, session, url_for
 
-from extensions import limiter
+from core.extensions import limiter
 from models import User
 from routes.admin import admin_bp
 from routes.auth import LOGIN_ERROR

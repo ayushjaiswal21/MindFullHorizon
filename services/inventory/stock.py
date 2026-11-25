@@ -1,7 +1,7 @@
 """Receiving, adjusting, writing off and quarantining stock; reorder levels (design 4.5). Pharmacy desk only (routes)."""
 from decimal import Decimal, InvalidOperation
 
-from extensions import db
+from core.extensions import db
 from models import InventoryBatch, Medicine, ReorderRule
 from services.catalogue import clean
 from services.db_util import cas

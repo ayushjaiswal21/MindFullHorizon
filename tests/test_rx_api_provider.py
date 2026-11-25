@@ -4,7 +4,7 @@ import os
 import pytest
 
 from conftest import _login_as
-from extensions import db
+from core.extensions import db
 from models import Appointment, AuditLog, Prescription, PrescriberProfile
 from tests.rx_support import give_consent, item, link, make_consult, make_med, ready_draft, setup
 

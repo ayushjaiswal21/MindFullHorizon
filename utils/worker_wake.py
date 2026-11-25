@@ -47,7 +47,7 @@ def sleep_until_woken(stop_event, seconds):
 def next_wait(poll_interval, idle_max, now=None):
     """Seconds to sleep: until the earliest claimable job's run_at (one cheap query), never below `poll_interval`
     and never above `idle_max` (nothing scheduled -> idle_max)."""
-    from extensions import db
+    from core.extensions import db
     from models import Job
     from utils.jobs import CLAIMABLE
     now = now or datetime.utcnow()

@@ -9,8 +9,8 @@ import hmac
 import json
 import os
 import re
-from extensions import limiter
-from decorators import login_required
+from core.extensions import limiter
+from core.decorators import login_required
 from utils.audit import audit
 from utils.session_stamp import stamp_session
 from services.errors import ServiceError

@@ -2,8 +2,8 @@ from datetime import date
 
 from flask import Blueprint, request, jsonify, current_app, session, url_for
 from ai.service import ask_with_severity
-from decorators import api_login_required
-from extensions import db
+from core.decorators import api_login_required
+from core.extensions import db
 from models import Appointment, Notification
 from utils.crisis import record_crisis
 from utils.pagination import paginate, set_page_headers

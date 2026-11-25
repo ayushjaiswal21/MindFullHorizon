@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 from flask import Blueprint, render_template, jsonify, request, session, current_app
 from sqlalchemy.exc import SQLAlchemyError
-from decorators import api_login_required
+from core.decorators import api_login_required
 
 core_bp = Blueprint('core', __name__)
 

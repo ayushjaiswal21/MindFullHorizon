@@ -10,7 +10,7 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 
-from extensions import db
+from core.extensions import db
 from models import ContactMessage
 from utils.jobs import PermanentJobError, register
 

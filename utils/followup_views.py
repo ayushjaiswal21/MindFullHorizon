@@ -8,7 +8,7 @@ from datetime import timedelta
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import aliased, selectinload
 
-from extensions import db
+from core.extensions import db
 from models import Appointment, FollowUpPlan, FollowUpStep, ProviderPatient, User
 from utils.followups import OUTCOMES
 from utils.timeutil import ist_today

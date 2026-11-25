@@ -1,6 +1,6 @@
 """Desk-side lookups and views of a prescription (design 4.6). No list of all prescriptions exists, only the queue
 of prescriptions the patient chose to send and a lookup by number."""
-from extensions import db
+from core.extensions import db
 from models import PrescriberProfile, Prescription
 from services.errors import ServiceError
 from services.http import iso

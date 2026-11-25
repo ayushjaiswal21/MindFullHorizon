@@ -10,7 +10,7 @@ from alembic.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine
 
-from extensions import db
+from core.extensions import db
 from tests.conftest import ROOT
 
 

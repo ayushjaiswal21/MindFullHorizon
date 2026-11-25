@@ -1,7 +1,7 @@
 """Gentle gamification: daily visit award, streak math (IST, weekly forgiveness), badges, the card, no points for scores."""
 from datetime import date, datetime, timedelta
 
-from extensions import db
+from core.extensions import db
 from models import Gamification, JournalEntry, PointsLedger
 from utils.gamification import award_daily_visit
 from utils.gamification_card import badges, card_context, level_for, streak_from_days, streak_badge_dates, week_dots

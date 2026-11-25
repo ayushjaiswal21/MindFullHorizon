@@ -34,7 +34,7 @@ def _seed_prescription(app):
 
 
 def _seed_blog(app):
-    from extensions import db
+    from core.extensions import db
     from models import BlogPost, User
     with app.app_context():
         author = User.query.filter_by(email='demo.provider@example.com').first()

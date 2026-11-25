@@ -5,7 +5,7 @@ from datetime import timedelta
 import pytest
 
 from conftest import _login_as
-from extensions import db
+from core.extensions import db
 from models import (Appointment, Assessment, BreathingExerciseLog, Gamification, Goal, JournalEntry, Medication,
                     MedicationLog, MoodLog, PointsLedger, YogaLog)
 from utils.gamification import award_points

@@ -125,7 +125,7 @@ def sitemap_entries():
 def event_counts(days=30):
     """Read-only aggregate for later dashboards: {event name: count} over the last `days` days."""
     from sqlalchemy import func
-    from extensions import db
+    from core.extensions import db
     from models import AnalyticsEvent
     since = datetime.utcnow() - timedelta(days=max(int(days), 1))
     rows = (db.session.query(AnalyticsEvent.name, func.count(AnalyticsEvent.id))

@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import pytest
 from sqlalchemy import event
 
-from extensions import db
+from core.extensions import db
 from models import Job
 from utils import jobs, worker_wake
 

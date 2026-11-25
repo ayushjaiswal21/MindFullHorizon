@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import Job, ReminderPref, User
 from services import reminders as rem
 from utils.jobs import run_once

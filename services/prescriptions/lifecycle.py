@@ -1,5 +1,5 @@
 """Cancel, amend, expiry (design 3.8). Issued prescriptions are never edited: amending writes a new draft."""
-from extensions import db
+from core.extensions import db
 from models import Prescription, PrescriptionItem
 from services import prescriber
 from services.db_util import cas

@@ -3,7 +3,7 @@
 Same metadata as models.py (imported at the bottom of that file). A plan belongs to one acknowledged CrisisEvent;
 steps hold dates, a status and a fixed outcome code only. Any note text is a ClinicalNote, never a step column.
 """
-from extensions import db
+from core.extensions import db
 from utils.timeutil import utcnow
 
 __all__ = ["FollowUpPlan", "FollowUpStep"]

@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from sqlalchemy import func
 
-from extensions import db
+from core.extensions import db
 from models import Appointment, Prescription, User
 from services import prescriber
 from services.http import iso

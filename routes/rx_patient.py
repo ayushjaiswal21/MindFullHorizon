@@ -7,8 +7,8 @@ import logging
 
 from flask import Blueprint, abort, jsonify, render_template, request, session
 
-from decorators import login_required, patient_required, prescriptions_required
-from extensions import db, limiter
+from core.decorators import login_required, patient_required, prescriptions_required
+from core.extensions import db, limiter
 from models import ProviderPatient, User
 from services.errors import ServiceError
 from services.http import fail, idem_key, iso, json_body, service_errors

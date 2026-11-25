@@ -13,8 +13,8 @@ import ai.service as ai_service
 from ai import gemini_impl
 from utils import ai_policy
 from ai.scoring import canonical_type
-from decorators import login_required, patient_required
-from extensions import db
+from core.decorators import login_required, patient_required
+from core.extensions import db
 from models import Assessment, Goal, ProgressRecommendation, User
 from routes.patient import patient_bp
 from utils.ai_cap import NegativeCache, run_capped

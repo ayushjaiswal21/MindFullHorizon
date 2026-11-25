@@ -5,7 +5,7 @@ This finds the same medicine or the same class only. It is NOT a drug interactio
 from collections import namedtuple
 from dataclasses import dataclass, field
 
-from extensions import db
+from core.extensions import db
 from models import Medication, Prescription, PrescriptionItem, User
 from services import prescriber
 from services.errors import ServiceError

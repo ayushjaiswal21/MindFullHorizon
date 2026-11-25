@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app, session
-from decorators import api_login_required
-from extensions import db
+from core.decorators import api_login_required
+from core.extensions import db
 from models import MoodLog
 from utils.pagination import paginate
 from utils import idempotency as idem

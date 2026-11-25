@@ -7,7 +7,7 @@ address exist. The text carries no patient name and no health data. Delivery is 
 import os
 from datetime import timedelta
 
-from extensions import db
+from core.extensions import db
 from models import FollowUpPlan, FollowUpStep, Notification, User
 from utils.jobs import register
 from utils.timeutil import ist_today, utcnow

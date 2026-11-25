@@ -9,7 +9,7 @@ from datetime import datetime, timedelta, timezone
 import click
 from sqlalchemy import update
 
-from extensions import db
+from core.extensions import db
 from models import InventoryBatch, Notification, Prescription, User
 from services.inventory import alert_counts, reconcile
 from services.prescriber import review_due_count

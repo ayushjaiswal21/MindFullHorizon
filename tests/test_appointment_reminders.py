@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 import pytest
 
 from conftest import _login_as
-from extensions import db
+from core.extensions import db
 from models import Appointment, Job, Notification, ProviderPatient
 from utils import appt_reminders as ar
 from utils import jobs

@@ -9,7 +9,7 @@ import pytest
 
 import app as app_module
 from conftest import PASSWORD, ROOT
-from extensions import db
+from core.extensions import db
 from models import Appointment, MoodLog, User
 
 

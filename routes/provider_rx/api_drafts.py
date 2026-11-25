@@ -1,8 +1,8 @@
 """Draft prescription CRUD (design 5.3, 5.5). A draft belongs to one doctor; another doctor's id answers 404."""
 from flask import g, jsonify, request
 
-from decorators import login_required, prescriptions_required, verified_prescriber_required
-from extensions import db
+from core.decorators import login_required, prescriptions_required, verified_prescriber_required
+from core.extensions import db
 from models import Prescription
 from services import prescriptions
 from services.errors import ServiceError

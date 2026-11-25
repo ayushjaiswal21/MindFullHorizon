@@ -10,7 +10,7 @@ import re
 from flask import flash, jsonify, redirect, request, url_for
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 
 KEY_RE = re.compile(r'[A-Za-z0-9._-]{8,64}')
 

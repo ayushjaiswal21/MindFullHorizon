@@ -11,7 +11,7 @@ from functools import lru_cache
 from flask import Blueprint, jsonify
 from sqlalchemy import inspect, text
 
-from extensions import csrf, db, limiter
+from core.extensions import csrf, db, limiter
 from utils.database_utils import wait_for_database
 
 ops_bp = Blueprint('ops', __name__)

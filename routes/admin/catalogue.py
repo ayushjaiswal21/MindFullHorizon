@@ -5,8 +5,8 @@ institutions; classification changes need a second administrator (four-eyes).
 """
 from flask import Response, g, jsonify, render_template, request, url_for
 
-from decorators import admin_required, prescriptions_required
-from extensions import db, limiter
+from core.decorators import admin_required, prescriptions_required
+from core.extensions import db, limiter
 from routes.admin import admin_bp
 from routes.admin._inv import page_errors
 from services import catalogue as cat

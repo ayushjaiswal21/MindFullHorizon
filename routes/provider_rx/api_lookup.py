@@ -4,8 +4,8 @@ import logging
 from flask import g, jsonify, request
 from sqlalchemy import func, or_
 
-from decorators import doctor_provider_required, login_required, prescriptions_required, verified_prescriber_required
-from extensions import limiter
+from core.decorators import doctor_provider_required, login_required, prescriptions_required, verified_prescriber_required
+from core.extensions import limiter
 from models import Medicine, ProviderPatient, User
 from routes.provider_rx._common import limits, patient_or_404
 from services import prescriptions

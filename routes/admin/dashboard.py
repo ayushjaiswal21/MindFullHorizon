@@ -1,8 +1,8 @@
 """Admin overview (design 5.4): one page and one JSON call, both built from `services.admin_dashboard.build`."""
 from flask import g, jsonify, render_template
 
-from decorators import admin_required
-from extensions import db
+from core.decorators import admin_required
+from core.extensions import db
 from routes.admin import admin_bp
 from routes.admin._inv import inst
 from services import admin_dashboard

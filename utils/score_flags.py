@@ -7,7 +7,7 @@ type, or entered a higher severity band. It describes a screening result, not a 
 from sqlalchemy import func, select
 
 from ai.scoring import GAD7_BANDS, PHQ9_BANDS, canonical_type
-from extensions import db
+from core.extensions import db
 from models import Assessment, ProviderPatient
 
 RISE_POINTS = 5

@@ -6,7 +6,7 @@ from sqlalchemy import case, func, select, update
 from sqlalchemy.exc import IntegrityError
 
 from models import Gamification, PointsLedger
-from extensions import db
+from core.extensions import db
 from utils.timeutil import ist_day_bounds, ist_today
 
 logger = logging.getLogger(__name__)

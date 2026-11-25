@@ -6,7 +6,7 @@ import uuid
 
 from flask import flash, jsonify, redirect, render_template, request, session, url_for
 
-from decorators import login_required, patient_required
+from core.decorators import login_required, patient_required
 from routes.patient import patient_bp
 from services import sleep_log as sl
 from utils import idempotency as idem

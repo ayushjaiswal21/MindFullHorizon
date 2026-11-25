@@ -1,7 +1,7 @@
 """Query helpers that keep cost flat as tables grow (no per-row queries, no loading whole histories)."""
 from sqlalchemy import func, select
 
-from extensions import db
+from core.extensions import db
 
 
 def latest_rows(model, key_col, order_cols, ids, *conditions, extra_partition=()):

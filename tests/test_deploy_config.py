@@ -223,7 +223,7 @@ def test_every_render_env_var_is_read_by_the_code():
     source = ''
     for folder in ('.', 'ai', 'routes', 'utils'):
         base = os.path.join(ROOT, folder)
-        for name in (os.listdir(base) if folder != '.' else ['app.py', 'extensions.py']):
+        for name in (os.listdir(base) if folder != '.' else ['app.py', os.path.join('core', 'extensions.py')]):
             if name.endswith('.py'):
                 with open(os.path.join(base, name), encoding='utf-8', errors='ignore') as fh:
                     source += fh.read()

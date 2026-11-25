@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from utils.timeutil import ist_today
 from models import (BreathingExerciseLog, Gamification, Goal, MedicationLog, Medication,
                     MoodLog, Appointment, User)

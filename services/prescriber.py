@@ -6,7 +6,7 @@ Every admin-side function treats a profile of another institution as not found (
 import re
 from datetime import timedelta
 
-from extensions import db
+from core.extensions import db
 from models import PrescriberProfile, User
 from services import config
 from services.db_util import cas, for_update, inst_match

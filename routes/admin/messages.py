@@ -1,8 +1,8 @@
 """Contact message inbox for administrators (design 5.4). Messages can hold personal information: every view is audited."""
 from flask import g, jsonify, render_template
 
-from decorators import admin_required
-from extensions import db
+from core.decorators import admin_required
+from core.extensions import db
 from models import ContactMessage
 from routes.admin import admin_bp
 from routes.admin._inv import arg_int

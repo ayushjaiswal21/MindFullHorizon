@@ -13,7 +13,7 @@ day. It describes a pattern in self-reported logs for a human to look at, not a 
 """
 from sqlalchemy import select
 
-from extensions import db
+from core.extensions import db
 from models import MoodLog, ProviderPatient
 from models_wellbeing import SleepLog
 from utils.timeutil import to_ist_date

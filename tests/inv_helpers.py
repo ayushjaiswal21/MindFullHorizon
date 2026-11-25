@@ -1,7 +1,7 @@
 """Builders for inventory and dispensing tests. They write rows directly with the models (no service under test)."""
 from datetime import timedelta
 
-from extensions import db
+from core.extensions import db
 from models import InventoryBatch, InventoryTransaction, Medicine, Prescription, PrescriptionItem
 from utils.rx_numbers import new_number
 from utils.timeutil import ist_today, utcnow

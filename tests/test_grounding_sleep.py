@@ -128,7 +128,7 @@ def test_sleep_gives_no_points_and_is_not_shown_to_counsellors(app, patient_clie
     c.post("/patient/sleep", data=entry(note="counsellor-must-not-see"))
     assert points(app, uid) == base
     prov = make_user("provider")
-    from extensions import db
+    from core.extensions import db
     from models import ProviderPatient
     with app.app_context():
         db.session.add(ProviderPatient(provider_id=prov, patient_id=uid, source="manual"))

@@ -10,7 +10,7 @@ import hmac
 
 from flask import current_app, request, session
 
-from extensions import db
+from core.extensions import db
 from models import User
 
 _SKIP_ENDPOINTS = frozenset({'static', 'ops.health', 'ops.ready'})

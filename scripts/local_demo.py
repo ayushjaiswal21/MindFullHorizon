@@ -80,7 +80,7 @@ def _sample_data(db, users):
 
 def seed():
     from app import app
-    from extensions import db
+    from core.extensions import db
     from models import CrisisEvent, User
     from scripts.seed_demo import seed as seed_base
     with app.app_context():

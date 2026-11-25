@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import (Appointment, Assessment, ClinicalNote, CrisisEvent, DigitalDetoxLog, ProviderPatient,
                     RPMData)
 

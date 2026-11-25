@@ -8,8 +8,8 @@ import logging
 
 from flask import jsonify, render_template, request, session
 
-from decorators import can_join_telehealth, login_required
-from extensions import limiter
+from core.decorators import can_join_telehealth, login_required
+from core.extensions import limiter
 
 logger = logging.getLogger('app')  # same logger (and file handler) the routes used inside app.py
 
@@ -21,7 +21,7 @@ def chat():
 
 def api_message():
     """Quick message between a patient and a provider who are linked (ProviderPatient row or an appointment)."""
-    from extensions import db
+    from core.extensions import db
     from models import Appointment, Notification, ProviderPatient, User
 
     data = request.get_json(silent=True)

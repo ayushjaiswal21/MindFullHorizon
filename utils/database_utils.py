@@ -6,7 +6,7 @@ from flask import current_app
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
-from extensions import db
+from core.extensions import db
 
 
 def normalize_db_url(url):

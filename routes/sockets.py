@@ -9,7 +9,7 @@ import re
 from flask import session
 from flask_socketio import emit, join_room, leave_room, rooms
 
-from decorators import can_join_telehealth
+from core.decorators import can_join_telehealth
 
 logger = logging.getLogger('app')  # same logger (and file handler) the handlers used inside app.py
 

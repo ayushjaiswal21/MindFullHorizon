@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import Prescription
 from tests import inv_helpers as h
 

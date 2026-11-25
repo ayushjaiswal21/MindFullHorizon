@@ -1,7 +1,7 @@
 """Cross-domain institutional aggregate query, split out of the old flat models.py."""
 from datetime import date, datetime, timedelta
 from sqlalchemy import case, func, select, union
-from extensions import db
+from core.extensions import db
 from utils.timeutil import ist_today
 
 from .user import User

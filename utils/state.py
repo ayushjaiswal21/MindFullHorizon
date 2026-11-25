@@ -7,7 +7,7 @@ The caller commits.
 """
 from sqlalchemy import update
 
-from extensions import db
+from core.extensions import db
 from models import Appointment
 from utils.timeutil import utcnow
 

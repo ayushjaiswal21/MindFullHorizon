@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from sqlalchemy import func, or_
 
-from extensions import db
+from core.extensions import db
 from models import (AuditLog, ContactMessage, CrisisEvent, InventoryBatch, InventoryTransaction, Prescription, User)
 from services import config
 from services.db_util import inst_match

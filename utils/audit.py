@@ -1,7 +1,7 @@
 """Access/change audit trail. Store ids and short codes only, never patient text."""
 import logging
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog
 
 logger = logging.getLogger(__name__)

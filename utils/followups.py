@@ -13,7 +13,7 @@ from datetime import timedelta
 
 from sqlalchemy import func, update
 
-from extensions import db
+from core.extensions import db
 from models import FollowUpPlan, FollowUpStep
 from utils.audit import audit
 from utils.jobs import enqueue

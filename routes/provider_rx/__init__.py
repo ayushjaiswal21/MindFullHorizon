@@ -11,7 +11,7 @@ from utils.rx_format import rx_datetime
 
 def _rx_section():
     """{'show', 'state', 'review_due_at'} for a logged-in doctor, else None (counsellors, patients, admins, flag off)."""
-    from extensions import db
+    from core.extensions import db
     from models import User
     from services import prescriber
     from services.http import iso

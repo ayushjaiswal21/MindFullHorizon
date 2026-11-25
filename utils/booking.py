@@ -4,7 +4,7 @@ Kept out of routes/patient.py so that file does not grow. Counsellor bookings ar
 consent. A doctor booking needs video or in person plus an active e-prescription consent (ticked on the form or
 given earlier on the prescriptions page).
 """
-from extensions import db
+from core.extensions import db
 from utils import rx_text
 
 MODALITIES = ('video', 'in_person')

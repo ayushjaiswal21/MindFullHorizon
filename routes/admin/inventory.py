@@ -5,8 +5,8 @@ The institution always comes from the logged-in admin's row.
 """
 from flask import g, jsonify, render_template, request, url_for
 
-from decorators import admin_required, pharmacy_desk_required, prescriptions_required
-from extensions import db, limiter
+from core.decorators import admin_required, pharmacy_desk_required, prescriptions_required
+from core.extensions import db, limiter
 from routes.admin import admin_bp
 from routes.admin._inv import arg_int, inst, tx_json
 from routes.admin.catalogue import csv_response, read_upload

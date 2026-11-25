@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import SleepLog
 from utils import idempotency as idem
 from utils.timeutil import ist_today

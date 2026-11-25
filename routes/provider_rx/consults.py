@@ -1,8 +1,8 @@
 """Start and complete a consult (design 3.3). The start time is the doctor's own recorded action, not proof of a call."""
 from flask import flash, g, jsonify, redirect, request, url_for
 
-from decorators import login_required, prescriptions_required, verified_prescriber_required
-from extensions import db
+from core.decorators import login_required, prescriptions_required, verified_prescriber_required
+from core.extensions import db
 from models import Appointment
 from services.db_util import cas
 from services.errors import ServiceError

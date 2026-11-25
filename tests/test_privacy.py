@@ -4,7 +4,7 @@ from datetime import date, datetime
 from types import SimpleNamespace
 
 import app as app_module
-from extensions import db
+from core.extensions import db
 from models import (SafetyPlan, SleepLog, ReminderPref, Appointment, Assessment, AuditLog, ConsentRecord, CrisisEvent, Goal, JournalEntry, MoodLog,
                     Notification, User, VoiceLog)
 

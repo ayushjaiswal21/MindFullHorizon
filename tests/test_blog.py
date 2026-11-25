@@ -1,7 +1,7 @@
 """Blog: ownership, drafts, API auth, replies, XSS-safe rendering."""
 import os
 
-from extensions import db
+from core.extensions import db
 from models import BlogComment, BlogPost
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

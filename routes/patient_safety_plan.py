@@ -4,8 +4,8 @@ import uuid
 
 from flask import flash, g, jsonify, redirect, render_template, request, session, url_for
 
-from decorators import login_required, patient_required
-from extensions import db
+from core.decorators import login_required, patient_required
+from core.extensions import db
 from routes.patient import patient_bp
 from services import safety_plan as sp
 from utils import idempotency as idem

@@ -9,7 +9,7 @@ from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import InventoryBatch, InventoryTransaction, Prescription, PrescriptionItem
 from services.catalogue import clean
 from services.db_util import cas, for_update

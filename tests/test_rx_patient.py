@@ -3,7 +3,7 @@ import os
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, Prescription
 from rx_helpers import KEY, ROOT, make_doctor, make_medicine, make_rx, page
 from utils.rx_numbers import new_number

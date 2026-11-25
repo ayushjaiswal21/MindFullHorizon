@@ -9,7 +9,7 @@ from statistics import median
 from sqlalchemy import func, or_, union
 
 from ai.scoring import band_for, canonical_type
-from extensions import db
+from core.extensions import db
 from models import (Appointment, Assessment, BreathingExerciseLog, CrisisEvent, DigitalDetoxLog, InventoryBatch,
                     InventoryTransaction, MedicationLog, MoodLog, MusicTherapyLog, PrescriberProfile, Prescription,
                     User, YogaLog)

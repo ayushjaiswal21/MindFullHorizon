@@ -2,7 +2,7 @@
 from sqlalchemy import and_, or_
 from sqlalchemy.orm import selectinload
 
-from extensions import db
+from core.extensions import db
 from models import Medication, Prescription, User
 from services.errors import ServiceError
 from services.http import iso

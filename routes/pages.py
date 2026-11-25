@@ -11,7 +11,7 @@ from datetime import datetime
 from flask import (Blueprint, current_app, redirect, render_template, request, session, url_for)
 from itsdangerous import BadSignature, URLSafeSerializer
 
-from extensions import db, limiter
+from core.extensions import db, limiter
 from models import ContactMessage
 from utils import ai_policy
 from utils.helplines import get_helplines

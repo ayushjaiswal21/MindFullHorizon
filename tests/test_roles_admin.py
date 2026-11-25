@@ -1,7 +1,7 @@
 """Roles, signup by provider type, admin CLI, login rules, decorators (design 1.2 to 1.5)."""
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, PrescriberProfile, User
 from tests.conftest import PASSWORD
 

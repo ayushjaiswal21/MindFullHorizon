@@ -3,9 +3,9 @@ import logging
 from flask import session, request, jsonify
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import MoodLog, Assessment, User
-from decorators import patient_required
+from core.decorators import patient_required
 from utils import idempotency as idem
 from utils.timeutil import utcnow
 

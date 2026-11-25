@@ -27,7 +27,7 @@ os.environ["CHAT_ROUTER_ENABLED"] = "0"
 os.chdir(ROOT)
 
 import app as app_module  # noqa: E402  (must come after the env setup above)
-from extensions import db  # noqa: E402
+from core.extensions import db  # noqa: E402
 from models import User  # noqa: E402
 
 PASSWORD = "Str0ng!Passw0rd"

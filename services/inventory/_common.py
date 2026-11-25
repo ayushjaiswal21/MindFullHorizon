@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import InventoryBatch, InventoryTransaction
 from services import config
 from services.db_util import cas, for_update

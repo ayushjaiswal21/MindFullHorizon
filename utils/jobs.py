@@ -17,7 +17,7 @@ import click
 from sqlalchemy import func, update
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import Job
 from utils.worker_wake import WAKE, mark_session, next_wait, sleep_until_woken
 

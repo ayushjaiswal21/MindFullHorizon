@@ -26,7 +26,7 @@ def register_google_oauth(app):
     @oauth_authorized.connect_via(google_bp)
     def google_logged_in(blueprint, token):
         """Handles the logic after a user logs in with Google."""
-        from extensions import db
+        from core.extensions import db
         from models import Gamification, User
         from utils.session_stamp import stamp_session
 

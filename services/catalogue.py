@@ -6,7 +6,7 @@ import re
 
 from sqlalchemy import or_
 
-from extensions import db
+from core.extensions import db
 from models import Medicine
 from services import config
 from services.errors import ServiceError

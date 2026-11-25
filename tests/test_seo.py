@@ -5,7 +5,7 @@ from datetime import datetime
 import pytest
 
 import app as app_module
-from extensions import db
+from core.extensions import db
 from models import AnalyticsEvent, BlogPost, JournalEntry
 from utils.seo import EVENT_NAMES, PRIVATE_PREFIXES, event_counts
 

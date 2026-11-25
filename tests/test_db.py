@@ -9,7 +9,7 @@ from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import IntegrityError
 
 import models as m
-from extensions import db
+from core.extensions import db
 from tests.conftest import PASSWORD, ROOT
 
 

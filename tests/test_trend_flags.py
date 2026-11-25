@@ -1,7 +1,7 @@
 """Unit, perf-guard and integration tests for utils/trend_flags.py (docs/TREND_FLAGS.md)."""
 from datetime import date, timedelta
 
-from extensions import db
+from core.extensions import db
 from models import MoodLog, ProviderPatient
 from models_wellbeing import SleepLog
 from test_perf import _count_queries, _seed_caseload

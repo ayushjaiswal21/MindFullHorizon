@@ -1,7 +1,7 @@
 """Provider-patient assignment (decision P-02): a provider sees an individual patient only through a ProviderPatient row."""
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import Appointment, ProviderPatient, User
 
 

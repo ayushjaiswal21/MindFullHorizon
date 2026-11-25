@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from flask import abort, flash, jsonify, redirect, render_template, request, session, url_for
 
-from decorators import login_required, role_required
+from core.decorators import login_required, role_required
 from models import Appointment, ClinicalNote, CrisisEvent, DigitalDetoxLog, User, db
 from utils.audit import audit
 from utils.followups import on_acknowledged

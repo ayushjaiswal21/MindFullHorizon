@@ -1,7 +1,7 @@
 """Small query helpers shared by the services."""
 from sqlalchemy import func, update
 
-from extensions import db
+from core.extensions import db
 
 
 def inst_match(column, key):

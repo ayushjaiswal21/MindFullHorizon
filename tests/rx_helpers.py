@@ -5,7 +5,7 @@ Rows are made directly so these tests do not depend on the issue flow.
 import os
 from datetime import timedelta
 
-from extensions import db
+from core.extensions import db
 from models import ConsentRecord, Medicine, PrescriberProfile, Prescription, PrescriptionItem, User
 from utils.rx_numbers import new_number
 from utils.timeutil import utcnow

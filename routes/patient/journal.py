@@ -3,9 +3,9 @@ import logging
 from flask import render_template, session, redirect, url_for, flash, request
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import JournalEntry
-from decorators import patient_required
+from core.decorators import patient_required
 from utils import idempotency as idem
 from utils.gamification import award_points
 from utils.ai_cap import run_capped

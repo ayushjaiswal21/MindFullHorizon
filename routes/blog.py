@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, session, redirect, url_for, flash, request, jsonify, abort
 from models import BlogPost, BlogComment, BlogLike, db, User
-from decorators import login_required, api_login_required
+from core.decorators import login_required, api_login_required
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import joinedload

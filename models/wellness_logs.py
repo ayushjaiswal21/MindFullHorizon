@@ -1,6 +1,6 @@
 """Patient self-logged wellness activities: assessments, detox, exercises, journal, mood, voice."""
 from datetime import datetime
-from extensions import db
+from core.extensions import db
 from utils.field_encryption import EncryptedJSON, EncryptedText
 from utils.timeutil import ist_today
 

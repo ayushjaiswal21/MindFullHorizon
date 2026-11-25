@@ -19,7 +19,7 @@ from cachelib import SimpleCache
 from flask import Flask
 from sqlalchemy import event, text
 
-from extensions import cache, db
+from core.extensions import cache, db
 from models import (Appointment, Assessment, BlogComment, BlogLike, BlogPost, ClinicalNote, DigitalDetoxLog,
                     JournalEntry, MoodLog, Notification, ProviderPatient, VoiceLog)
 from utils.database_utils import engine_options

@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import (Appointment, Assessment, AuditLog, ClinicalNote, CrisisEvent, DigitalDetoxLog, Prescription,
                     ProviderPatient, User)
 
@@ -246,7 +246,7 @@ def test_prescriptions_pages_work_when_flag_on(app, make_user, provider_client, 
 
 
 def test_prescription_gate_json_for_api_paths(app, monkeypatch):
-    from decorators import prescriptions_required
+    from core.decorators import prescriptions_required
     monkeypatch.setenv("ENABLE_PRESCRIPTIONS", "0")
     with app.test_request_context("/api/prescriptions"):
         resp, status = prescriptions_required(lambda: "ok")()

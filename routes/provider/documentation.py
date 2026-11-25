@@ -2,7 +2,7 @@
 from flask import current_app, flash, render_template, request, session
 
 import ai.service as ai_service
-from decorators import login_required, role_required
+from core.decorators import login_required, role_required
 from models import ClinicalNote, Gamification, User, db
 from utils.ai_cap import run_capped
 from utils.audit import audit

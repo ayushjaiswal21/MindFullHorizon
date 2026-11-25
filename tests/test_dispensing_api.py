@@ -3,7 +3,7 @@ import threading
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import InventoryTransaction, Prescription, PrescriptionItem
 from services import dispensing, inventory
 from services.errors import ServiceError

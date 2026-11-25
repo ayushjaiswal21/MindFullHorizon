@@ -1,5 +1,5 @@
 """JSON shapes of a prescription for each viewer (design 5.5, 5.2). Patient shapes never carry warnings or notes."""
-from extensions import db
+from core.extensions import db
 from models import PrescriberProfile, User
 from services.http import iso
 from services.prescriptions._common import ACTIVE

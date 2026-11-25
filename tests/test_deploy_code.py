@@ -16,7 +16,7 @@ from sqlalchemy import event
 from sqlalchemy.exc import OperationalError
 
 import app as app_module
-from extensions import db
+from core.extensions import db
 from models import User, VoiceLog
 from utils import database_utils, log_config, proxy
 from utils.database_utils import engine_options, normalize_db_url, wait_for_database
@@ -38,7 +38,7 @@ def _email(app, uid):
 
 # ---------- 1. sessions: signed cookies plus a stamp ----------
 def test_no_server_side_session_storage(app):
-    import extensions
+    import core.extensions as extensions
     assert not hasattr(extensions, "flask_session") and "SESSION_TYPE" not in app.config
     assert "SESSION_FILE_DIR" not in app.config and not hasattr(extensions, "prune_session_files")
     assert app.config["SESSION_COOKIE_NAME"] == "mindfullhorizon_session"

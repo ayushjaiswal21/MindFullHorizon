@@ -4,9 +4,9 @@ from sqlalchemy.orm import load_only
 from sqlalchemy.exc import IntegrityError
 from datetime import timedelta
 
-from extensions import db
+from core.extensions import db
 from models import BreathingExerciseLog, YogaLog, DigitalDetoxLog
-from decorators import patient_required, login_required
+from core.decorators import patient_required, login_required
 from utils import idempotency as idem, ai_caveats
 from utils.gamification import award_points
 from utils.ai_cap import run_capped

@@ -4,7 +4,7 @@ from functools import wraps
 from flask import jsonify, request
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from services.errors import ServiceError
 from utils.idempotency import KEY_RE
 

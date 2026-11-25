@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, Prescription
 from services import prescriptions as P
 from tests.rx_support import KEY, code_of, issue, issued, item, ready_draft, setup

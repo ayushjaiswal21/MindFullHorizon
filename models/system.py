@@ -1,6 +1,6 @@
 """Cross-cutting system tables: notifications, background jobs, audit, consent, analytics."""
 from datetime import datetime
-from extensions import db
+from core.extensions import db
 
 __all__ = ["Notification", "Job", "AuditLog", "ConsentRecord", "AnalyticsEvent"]
 

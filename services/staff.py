@@ -1,7 +1,7 @@
 """Staff list and (de)activation for institution admins (design 5.4). Providers only; never a patient."""
 from sqlalchemy import or_
 
-from extensions import db
+from core.extensions import db
 from models import PrescriberProfile, User
 from services.db_util import inst_match
 from services.errors import ServiceError

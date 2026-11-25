@@ -13,7 +13,7 @@ import pytest
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 import utils.seo as seo
-from extensions import db
+from core.extensions import db
 from models import BlogPost
 
 SITE = 'https://mfh.example.org'

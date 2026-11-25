@@ -12,7 +12,7 @@ import logging
 import os
 from datetime import datetime, timedelta
 
-from extensions import db
+from core.extensions import db
 from models import CrisisEvent, Notification, User
 from utils.jobs import PermanentJobError, enqueue, register
 

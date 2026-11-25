@@ -7,7 +7,7 @@ from datetime import date, timedelta
 
 from sqlalchemy import func, select
 
-from extensions import db
+from core.extensions import db
 from models import BreathingExerciseLog, Gamification, Goal, JournalEntry, PointsLedger
 from utils.timeutil import ist_today, to_ist_date
 

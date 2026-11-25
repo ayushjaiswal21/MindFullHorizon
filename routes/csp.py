@@ -4,7 +4,7 @@ from urllib.parse import urlsplit
 
 from flask import Blueprint, request
 
-from extensions import csrf, limiter
+from core.extensions import csrf, limiter
 
 csp_bp = Blueprint('csp', __name__)
 logger = logging.getLogger(__name__)

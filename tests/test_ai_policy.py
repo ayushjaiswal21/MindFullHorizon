@@ -104,7 +104,7 @@ def test_every_call_site_in_the_source_is_classified():
 # ---- off: no model call for any personal feature --------------------------------------------------------
 def _exercise(app, patient_client, provider_client, make_user):
     """Hit every personal call site once; returns nothing, the caller reads the provider's counter."""
-    from extensions import db
+    from core.extensions import db
     from models import Assessment, ProviderPatient
     c, uid = patient_client
     pc, prov_id = provider_client

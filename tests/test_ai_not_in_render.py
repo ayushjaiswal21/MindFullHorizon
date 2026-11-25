@@ -6,7 +6,7 @@ import pytest
 
 import ai.service as ai_service
 from ai import gemini_impl
-from extensions import db
+from core.extensions import db
 from models import Assessment, ProviderPatient
 from routes import patient_progress
 from utils.timeutil import utcnow

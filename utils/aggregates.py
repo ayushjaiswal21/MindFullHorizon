@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 
 from sqlalchemy import func
 
-from extensions import db
+from core.extensions import db
 from models import (Appointment, Assessment, DigitalDetoxLog, User, get_institutional_summary)
 from utils.timeutil import ist_today
 

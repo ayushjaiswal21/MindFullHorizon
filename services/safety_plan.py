@@ -6,7 +6,7 @@ import re
 
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import ProviderPatient, SafetyPlan
 from utils import idempotency as idem
 from utils.audit import audit

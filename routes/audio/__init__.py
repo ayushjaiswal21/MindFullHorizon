@@ -4,8 +4,8 @@ play, catalog, misc).
 Endpoint names and URLs are unchanged (`url_for('serve_audio')` etc.): they are registered on the app
 with `add_url_rule`, not on a blueprint, because a blueprint would prefix every endpoint name.
 """
-from decorators import api_login_required
-from extensions import limiter
+from core.decorators import api_login_required
+from core.extensions import limiter
 
 from .mood_music import api_mood_music
 from .play import api_play_mood, serve_audio

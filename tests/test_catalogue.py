@@ -1,7 +1,7 @@
 """Medicine catalogue: create, edit, four-eyes, uniqueness, routes (design 4.1, 4.12)."""
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, Medicine
 from services import catalogue
 from services.errors import ServiceError

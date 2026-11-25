@@ -1,7 +1,7 @@
 """Shared helpers for the prescription services: text cleaning, ownership lookups, status groups."""
 import re
 
-from extensions import db
+from core.extensions import db
 from models import Prescription, ProviderPatient, User
 from services.errors import ServiceError
 from services.roles import same_inst

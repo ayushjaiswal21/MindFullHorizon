@@ -1,6 +1,6 @@
 """Blog system and public contact-form models."""
 from datetime import datetime
-from extensions import db
+from core.extensions import db
 
 __all__ = ["BlogPost", "BlogLike", "BlogComment", "BlogInsight", "ContactMessage"]
 

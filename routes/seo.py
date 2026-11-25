@@ -10,7 +10,7 @@ from flask import Blueprint, Response, jsonify, render_template, request, sessio
 from markupsafe import Markup, escape
 from werkzeug.routing import BuildError
 
-from extensions import csrf, db, limiter
+from core.extensions import csrf, db, limiter
 from utils.seo import (DISCOVERY_PATHS, EVENT_NAMES, PRIVATE_PREFIXES, is_indexable_path, public_pages,
                        sitemap_entries, site_url)
 

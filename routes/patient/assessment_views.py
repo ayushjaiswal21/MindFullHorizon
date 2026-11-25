@@ -5,9 +5,9 @@ import os
 from flask import render_template, session, flash, request, jsonify
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import User, Assessment
-from decorators import patient_required, login_required
+from core.decorators import patient_required, login_required
 from utils import idempotency as idem
 from utils.ai_cap import run_capped
 from utils.timeutil import utcnow

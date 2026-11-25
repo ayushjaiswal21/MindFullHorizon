@@ -5,7 +5,7 @@ import pytest
 
 import app as app_module
 from conftest import _login_as
-from extensions import db
+from core.extensions import db
 from models import Appointment, CrisisEvent, Notification, ProviderPatient, get_institutional_summary
 from utils.state import RULES, TransitionError, canonical, transition
 from utils.timeutil import ist_today

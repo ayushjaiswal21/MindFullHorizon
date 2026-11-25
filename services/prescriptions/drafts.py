@@ -1,7 +1,7 @@
 """Draft prescriptions: create, edit (row_version), delete (design 3.2, 3.8)."""
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import Medicine, Prescription, PrescriptionItem, User
 from services import config, prescriber
 from services.db_util import cas

@@ -5,8 +5,8 @@ There is no list of all prescriptions, and an id in the URL opens only a queued 
 """
 from flask import abort, g, jsonify, render_template, url_for
 
-from decorators import pharmacy_desk_required, prescriptions_required
-from extensions import db, limiter
+from core.decorators import pharmacy_desk_required, prescriptions_required
+from core.extensions import db, limiter
 from routes.admin import admin_bp
 from routes.admin._inv import inst, may_open, page_errors, remember_rx, tx_json
 from services import dispensing as svc

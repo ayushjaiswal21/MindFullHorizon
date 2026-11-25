@@ -4,7 +4,7 @@ Patients are never listed as actors, so no student name reaches an admin screen.
 """
 from datetime import timedelta
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, User
 from services.db_util import inst_match
 from services.http import iso

@@ -3,7 +3,7 @@ from datetime import timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, PrescriberProfile, User
 from services import prescriber
 from services.errors import ServiceError

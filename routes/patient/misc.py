@@ -3,7 +3,7 @@ import logging
 from flask import render_template, session, flash, redirect, url_for, jsonify, current_app
 
 from models import Assessment, MoodLog, VoiceLog
-from decorators import patient_required, login_required, prescriptions_required
+from core.decorators import patient_required, login_required, prescriptions_required
 from routes.rx_patient import list_page
 from utils.pagination import paginate
 

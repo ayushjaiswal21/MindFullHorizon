@@ -3,7 +3,7 @@ from datetime import timedelta, timezone
 
 from sqlalchemy import case, func
 
-from extensions import db
+from core.extensions import db
 from models import InventoryBatch, InventoryTransaction, Medicine, Prescription, PrescriptionItem
 from services import config
 from services.inventory import stock_levels

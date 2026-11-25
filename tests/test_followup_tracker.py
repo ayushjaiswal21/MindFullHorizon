@@ -5,7 +5,7 @@ from datetime import date, datetime, timedelta
 import pytest
 
 from conftest import _login_as
-from extensions import db
+from core.extensions import db
 from models import (Appointment, AuditLog, ClinicalNote, CrisisEvent, FollowUpPlan, FollowUpStep, Job, Notification,
                     ProviderPatient)
 from utils import followups, jobs

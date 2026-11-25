@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import pytest
 
 import app as app_module
-from extensions import db
+from core.extensions import db
 from models import Assessment, CrisisEvent, Job, JournalEntry, Notification
 from utils import crisis, jobs
 

@@ -27,7 +27,7 @@ def seed(force=False):
     if os.getenv('FLASK_ENV') == 'production' and not force:
         sys.exit('Refusing to seed demo users when FLASK_ENV=production (use --force only on a throwaway database).')
     from app import app
-    from extensions import db
+    from core.extensions import db
     from models import User
     from scripts.seed_clinical import DEMO_INSTITUTION, seed_clinical
     from utils.timeutil import ist_today, utcnow

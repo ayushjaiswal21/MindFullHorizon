@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, Medication, Prescription, PrescriberProfile
 from services import consent, prescriptions as P
 from services.errors import ServiceError

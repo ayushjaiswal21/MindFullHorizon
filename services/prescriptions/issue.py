@@ -8,7 +8,7 @@ from datetime import timedelta
 
 from sqlalchemy.exc import IntegrityError
 
-from extensions import db
+from core.extensions import db
 from models import AuditLog, Prescription, User
 from services import config, prescriber
 from services.db_util import cas

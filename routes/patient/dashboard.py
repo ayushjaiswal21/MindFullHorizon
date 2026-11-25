@@ -5,9 +5,9 @@ from sqlalchemy.orm import joinedload
 from sqlalchemy.exc import IntegrityError
 import logging
 
-from extensions import db
+from core.extensions import db
 from models import User, Gamification, RPMData, Appointment, MoodLog, Assessment
-from decorators import patient_required, login_required
+from core.decorators import patient_required, login_required
 from utils.assignments import link_provider_patient, unlink_if_unrequested
 from routes.rx_patient import dashboard_context
 from utils.booking import staff_options, booking_extras, record_erx_consent, schedule_context

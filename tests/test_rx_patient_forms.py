@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 import pytest
 
-from extensions import db
+from core.extensions import db
 from models import Appointment, ConsentRecord, ProviderPatient
 from rx_helpers import ROOT, consent_row, make_doctor, make_medicine, make_rx, page
 from utils.rx_text import ERX_CONSENT_TEXT

@@ -22,7 +22,7 @@ def favicon():
 
 
 def profile():
-    from extensions import db
+    from core.extensions import db
     from models import DigitalDetoxLog, Gamification, User
     from routes.auth import is_strong_password
     from utils.session_stamp import stamp_session
@@ -91,7 +91,7 @@ def role_selection():
 
 def save_role():
     """Lets a role-less/patient account confirm 'patient'. Provider accounts are only created via the signup invite code."""
-    from extensions import db
+    from core.extensions import db
     from models import User
     from utils.session_stamp import stamp_session
 
@@ -113,7 +113,7 @@ def save_role():
 
 
 def register_profile_onboarding_routes(app):
-    from decorators import login_required
+    from core.decorators import login_required
 
     app.add_url_rule('/favicon.ico', 'favicon', favicon)
     app.add_url_rule('/profile', 'profile', login_required(profile), methods=['GET', 'POST'])
