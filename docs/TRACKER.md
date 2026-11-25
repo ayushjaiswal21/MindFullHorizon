@@ -1,6 +1,6 @@
 # Tracker
 
-Last updated: 2026-11-24. Single place for work status. Rule: an item is **Done** only with a test or a verifiable file or behaviour in the "Evidence" column. Update this file in the same PR as the change (see [RULES.md](RULES.md)).
+Last updated: 2026-11-25. Single place for work status. Rule: an item is **Done** only with a test or a verifiable file or behaviour in the "Evidence" column. Update this file in the same PR as the change (see [RULES.md](RULES.md)).
 
 Test suite: about 2,000 tests (run `pip install -r requirements/dev.txt && pytest tests -q`). Real-browser checks: `tools/e2e/` (see its README).
 
@@ -22,6 +22,9 @@ Test suite: about 2,000 tests (run `pip install -r requirements/dev.txt && pytes
 | D-12 | Performance | Lazy heavy imports, pooling, pagination contract, cache with invalidation, flat query counts, memory test | tests/test_perf.py; docs/PERFORMANCE.md |
 | D-13 | Deploy kit | Render + Neon files, predeploy checker, cookie sessions with stamp, no local uploads, ProxyFix, stdout logs, Neon options, event-driven worker | tests/test_deploy_code.py, test_deploy_config.py, test_jobs_wake.py; docs/DEPLOY.md |
 | D-14 | Research and review kits | Competitive research, prescribing research, colour research; clinician, legal and pilot packets with an exporter | docs/research/, docs/review/ |
+| D-15 | AI build wave (2026-11-25) | Fuzzy, typo-tolerant crisis-vocabulary matching on top of the deterministic detector; a clinician-approved lexical chat router answering ordinary messages from a fixed knowledge base before the model (`CHAT_ROUTER_ENABLED=1` in production); deterministic mood/sleep trend flags (no AI call, no points/streaks); a device-only browser text-to-speech "Listen" button. Voice-tone/emotion inference was built, then explicitly removed as invalid per research | `ai/fuzzy_crisis.py`, `ai/router.py`, `ai/kb.py`, `utils/trend_flags.py`, `static/js/speech-output.js`, migration 0010, `docs/research/ai/SYNTHESIS.md` |
+| D-16 | Patient tools (shipped since D-10, mis-tracked as missing) | Safety plan builder, sleep log, email reminders, post-crisis 3-session follow-up tracker | `services/safety_plan.py`, `services/sleep_log.py`, `services/reminders.py`, `utils/followups.py`, `utils/followup_jobs.py`, `models/` follow-up and wellbeing tables; `tests/test_safety_plan.py`, `test_grounding_sleep.py`, `test_reminders*.py`, `test_followup_tracker.py` |
+| D-17 | Cleanup (2026-11-25) | `extensions.py`/`decorators.py` moved into `core/` (old files kept as re-export shims); flat `models.py` split into a `models/` package by domain, re-exported from `models/__init__.py` | `core/`, `models/` |
 
 ## 2. Open issues
 
@@ -30,7 +33,7 @@ Test suite: about 2,000 tests (run `pip install -r requirements/dev.txt && pytes
 | O-01 | High | Owner action: rotate the Gemini key (the old key sat in a local `.env`); the live Gemini path was never exercised in CI | `.env` |
 | O-02 | High | Clinician review of crisis phrases and the safety flow (not started); the crisis wording now tells the student that college counsellors can see an alert, wording needs sign-off | docs/review/ |
 | O-03 | High | Legal review: DPA with the college, privacy and terms drafts, prescribing and pharmacy rules, prescription deletion with the patient account, record retention | docs/review/ |
-| O-04 | High | Health data is plaintext at rest (no field encryption); do not claim otherwise | `models.py` |
+| O-04 | High | Health data is plaintext at rest (no field encryption); do not claim otherwise | `models/` |
 | O-05 | High | Free Render sleeps and stops escalation timers: a pilot needs an always-on instance, `CRISIS_ESCALATION_EMAIL`, an on-call counsellor SOP | docs/DEPLOY.md, docs/review/PILOT_PLAN.md |
 | O-06 | Medium | Mood entries have no crisis detector | `routes/mood.py` |
 | O-07 | Medium | Layout sweep at 390 to 1440 px in both themes (known: `/patient/schedule` overflows at 390 px) | templates, CSS |
@@ -43,7 +46,7 @@ Test suite: about 2,000 tests (run `pip install -r requirements/dev.txt && pytes
 | O-14 | Low | Logout is GET; no timing equalisation on login; rejecting an appointment keeps the provider link; blog like toggle race returns 500 | routes |
 | O-15 | Low | No CI yet (pytest and `scripts/scan_imports.py` on every push) | repo |
 | O-16 | Low | Hinglish and Devanagari phrase lists need native-speaker and clinician review | `ai/severity.py` |
-| O-17 | Low | Hindi UI, SMS paging, drug-interaction database, safety plan builder, sleep log, email reminders, post-crisis 3-session tracker are not built | PRD |
+| O-17 | Low | Hindi UI, SMS paging, drug-interaction database, telehealth TURN server, peer support are not built | PRD |
 
 ## 3. Decisions (owner, 2026-11-24)
 
@@ -61,5 +64,6 @@ Test suite: about 2,000 tests (run `pip install -r requirements/dev.txt && pytes
 
 ## 4. Changelog
 
+- 2026-11-25: AI build wave (fuzzy crisis matching, lexical chat router, trend flags, device-only TTS; voice-tone inference removed as invalid); cleanup pass (`core/` package, `models/` package split); STATUS.md and TRACKER.md corrected where they still said "not built" for shipped features.
 - 2026-11-24 (evening): clinical build (admin, doctor, prescriptions, inventory), redesign, colour themes, real-use bug fixes (assessment, progress, chat, breathing), gamification, deploy-readiness code. Docs refreshed.
 - 2026-11-24 (morning): first cleanup, security, safety, patient, DB and provider waves; docs set written.
