@@ -15,7 +15,7 @@ from sqlalchemy import select
 
 from core.extensions import db
 from models import MoodLog, ProviderPatient
-from models_wellbeing import SleepLog
+from models import SleepLog
 from utils.timeutil import to_ist_date
 
 MIN_POINTS = 6  # fewer points than this: not enough evidence either way

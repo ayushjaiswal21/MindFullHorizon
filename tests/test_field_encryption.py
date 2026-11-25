@@ -9,7 +9,7 @@ from sqlalchemy import text
 
 from core.extensions import db
 from models import Assessment, ClinicalNote, JournalEntry, MoodLog
-from models_wellbeing import SafetyPlan
+from models import SafetyPlan
 from utils.field_encryption import EncryptedText, reset_cipher_cache
 
 SECRET = "I have been thinking about ending my life and nobody knows."
