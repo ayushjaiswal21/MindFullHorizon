@@ -38,7 +38,7 @@ Test suite: about 2,000 tests (run `pip install -r requirements/dev.txt && pytes
 | O-06 | Medium | Mood entries have no crisis detector | `routes/mood.py` |
 | O-07 | Medium | Layout sweep at 390 to 1440 px in both themes (known: `/patient/schedule` overflows at 390 px) | templates, CSS |
 | O-08 | Medium | Per-page meta tags, `/ai` in the sitemap, CSP still Report-Only (needs `frame-src` for youtube-nocookie) | templates, `app.py` |
-| O-09 | Medium | 300-line file limit: about 23 files exceed it (`app.py`, `models.py`, `routes/patient.py`, `routes/provider.py`, `routes/auth.py`, several JS, templates, CSS) | repo |
+| O-09 | Medium | 300-line file limit: 19 files still exceed it (`app.py`, `routes/provider.py`, `routes/audio.py`, `routes/auth.py`, `scripts/export_review_packet.py`, `ai/service.py`, `utils/llm_guard.py`, several JS, test files, `static/css/site.css`). `models.py` and `routes/patient.py` were split into packages 2026-11-25 (see D-17) | repo, `scripts/oversize_baseline.json` |
 | O-10 | Medium | Legacy assets still loaded or dead: `static/js/scripts.js`, `enhanced.css`, `fallback-cards.css`, old inline JS bundle, `legacy_head` and `legacy_scripts` blocks in `base.html` | static, templates |
 | O-11 | Medium | PostgreSQL paths (row locks, partial indexes, migrations) and the Docker build were never run; only SQLite was available | docs/DEPLOY.md |
 | O-12 | Medium | `google.generativeai` SDK is end-of-life (an adapter seam exists for `google-genai`) | `ai/gemini_impl.py` |
