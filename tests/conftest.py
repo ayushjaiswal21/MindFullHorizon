@@ -15,6 +15,7 @@ sys.path.insert(0, ROOT)
 _tmpdir = tempfile.mkdtemp(prefix="mfh_test_")
 os.environ["DATABASE_URL"] = "sqlite:///" + os.path.join(_tmpdir, "test.db").replace("\\", "/")
 os.environ["SECRET_KEY"] = "test-secret-key"
+os.environ["FIELD_ENCRYPTION_KEY"] = "Np-xJxiYevyQbUyJxGq9YmpsVLKckGgTN_BjVNlbNwo="  # fixed test-only Fernet key (utils/field_encryption.py)
 os.environ["FLASK_ENV"] = "testing"
 # Set explicitly (not popped): load_dotenv() never overrides an existing variable, so whatever a developer's real
 # .env happens to have set (a real key, CHAT_ROUTER_ENABLED=1 for local testing, etc.) can never leak into a test
