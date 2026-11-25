@@ -42,7 +42,9 @@ except ImportError:  # pragma: no cover
 FINGERPRINT_FILES = [
     'ai/severity.py', 'ai/scoring.py', 'ai/service.py', 'ai/gemini_impl.py', 'ai_prompts/psychologist_system.txt',
     'utils/crisis.py', 'utils/helplines.py', 'utils/llm_guard.py', 'utils/jobs.py', 'utils/mailer.py',
-    'routes/chat.py', 'routes/patient.py', 'routes/provider.py', 'app.py',
+    'routes/chat.py', 'routes/patient.py', 'routes/provider/__init__.py', 'routes/provider/analytics.py',
+    'routes/provider/appointments.py', 'routes/provider/cli.py', 'routes/provider/dashboard.py',
+    'routes/provider/documentation.py', 'routes/provider/helpers.py', 'routes/provider/wellness.py', 'app.py',
 ]
 
 KEY_PATTERNS = [r'AIza[0-9A-Za-z_\-]{20,}', r'\bsk-[A-Za-z0-9_\-]{20,}', r'GOCSPX-[0-9A-Za-z_\-]{10,}',
@@ -923,7 +925,7 @@ def build_flow(out, stamp, commit, dirty, sev, scoring, guard=None):
         p += ['Escalation email subject: ' + '; '.join(f'`{m}`' for m in mail_subject), '',
               'Email body holds the institution name, event id and time only. It never holds the student message.', '']
     p += ['Providers of the institution can also see all unacknowledged events on their dashboard without any assignment, and every '
-          'acknowledgement is written to the audit log (`routes/provider.py`).', '']
+          'acknowledgement is written to the audit log (`routes/provider/` package).', '']
     p += ['## 6. What the code does NOT do (read from the code, verify with the owner)', '']
     p += [f'- No out-of-hours logic: {"no hour, weekday or timezone handling was found in utils/crisis.py" if no_hours else "UNKNOWN, time-related words exist in utils/crisis.py; read it"}. '
           'An alert at 02:00 follows the same timeline as one at 14:00 and waits for a counsellor to log in.',
