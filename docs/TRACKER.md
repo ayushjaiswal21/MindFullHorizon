@@ -46,6 +46,7 @@ Test suite: about 2,000 tests (run `pip install -r requirements/dev.txt && pytes
 | O-13 | Medium | Budgets, breaker, cache and rate limiter are per process; a second worker needs Redis | docs/PERFORMANCE.md |
 | O-14 | Low | Logout is GET; no timing equalisation on login; blog like toggle race returns 500. (The provider-link part of this item — rejecting an appointment kept the provider link — was fixed 2026-11-25, see D-20.) | routes |
 | O-16 | Low | Hinglish and Devanagari phrase lists need native-speaker and clinician review | `ai/severity.py` |
+| O-17 | Low | `test_completed_appointment_offers_next_step_but_never_auto_completes` is flaky: passes alone, intermittently fails as part of the full suite. Likely the `met > (prior or plan.created_at)` comparison in `utils/followup_views.py::panel()` landing on two timestamps too close together to compare reliably, not a logic bug (noticed 2026-11-25, pre-existing, unrelated to that day's changes) | `tests/test_followup_tracker.py`, `utils/followup_views.py` |
 | O-17 | Low | Hindi UI, SMS paging, drug-interaction database, telehealth TURN server, peer support are not built | PRD |
 
 ## 3. Decisions (owner, 2026-11-24)
