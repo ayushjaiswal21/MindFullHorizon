@@ -1,0 +1,5 @@
+{# Calm badge for a screening score change or a mood/sleep trend flag. Describes a pattern or a result, never a
+   diagnosis, and triggers nothing. mood/sleep flags (utils/trend_flags.py) get a distinguishing icon; score
+   flags (utils/score_flags.py) keep their plain look. #}
+{% from 'partials/icons.html' import icon %}
+{% macro flag_badges(flags) %}{% for f in flags or [] %}<span class="badge badge-warning fu-flag">{% if f.kind == 'mood' %}{{ icon('mood', label='Mood trend', size=14) }}{% elif f.kind == 'sleep' %}{{ icon('moon', label='Sleep trend', size=14) }}{% endif %}{{ f.text }}</span>{% endfor %}{% endmacro %}

@@ -8,6 +8,7 @@ from datetime import date
 from flask import current_app, has_request_context, jsonify, render_template, request, url_for
 from werkzeug.routing import BuildError
 
+from utils import ai_policy, daily_tip
 from utils.feature_flags import prescriptions_enabled
 from utils.helplines import get_helplines
 
@@ -73,6 +74,8 @@ def _context():
         'site_last_updated': SITE_LAST_UPDATED,
         'site_last_updated_display': _display_date(SITE_LAST_UPDATED),
         'asset_version': _asset_version(),
+        'ai_personal_text': ai_policy.personal_text_allowed(),  # copy must match what is really sent to a model
+        'anya_kind': ai_policy.assistant_kind(),
     }
 
 
@@ -97,5 +100,5 @@ def render_error_page(code):
 
 def init_site_context(app):
     app.context_processor(_context)
-    app.jinja_env.globals.update(abs_url=abs_url, nav_url=nav_url)
+    app.jinja_env.globals.update(abs_url=abs_url, nav_url=nav_url, daily_tip=daily_tip.get_tip)
     app.register_error_handler(404, lambda e: render_error_page(404))

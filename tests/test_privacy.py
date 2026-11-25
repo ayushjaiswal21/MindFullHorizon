@@ -5,7 +5,7 @@ from types import SimpleNamespace
 
 import app as app_module
 from extensions import db
-from models import (Appointment, Assessment, AuditLog, ConsentRecord, CrisisEvent, Goal, JournalEntry, MoodLog,
+from models import (SafetyPlan, SleepLog, ReminderPref, Appointment, Assessment, AuditLog, ConsentRecord, CrisisEvent, Goal, JournalEntry, MoodLog,
                     Notification, User, VoiceLog)
 
 PASSWORD = "Str0ng!Passw0rd"
@@ -180,6 +180,9 @@ def _fill(app, uid, text=SECRET):
             Notification(recipient_id=uid, message=text),
             CrisisEvent(user_id=uid, source="chat", severity=3, reason="self_harm"),
             ConsentRecord(user_id=uid, kind="privacy", version="2026-11"),
+            SafetyPlan(user_id=uid, warning_signs=text), SleepLog(user_id=uid, night_date=date.today(), bedtime="23:00",
+                                                                   wake_time="07:00", duration_minutes=480, quality=3, note=text),
+            ReminderPref(user_id=uid, nonce="n0nce-" + str(uid)),
         ])
         db.session.commit()
 
@@ -201,6 +204,8 @@ def test_export_has_only_own_data(app, patient_client, make_user):
     assert data["voice_logs"][0]["transcript"] == SECRET and len(data["assessments"]) == 1
     assert data["crisis_events"][0]["reason"] == "self_harm" and "acknowledged_by" not in data["crisis_events"][0]
     assert "clinical_notes" not in data
+    assert data["safety_plans"][0]["warning_signs"] == SECRET and data["sleep_logs"][0]["note"] == SECRET
+    assert len(data["reminder_prefs"]) == 1 and len(data["safety_plans"]) == 1
     with app.app_context():
         row = AuditLog.query.filter_by(action="export_account").one()
         assert row.actor_id == uid and not row.meta
@@ -244,7 +249,8 @@ def test_delete_removes_everything_and_logs_only_id(app, patient_client, make_us
     assert r.status_code == 302
     with app.app_context():
         assert db.session.get(User, uid) is None
-        for model in (JournalEntry, VoiceLog, MoodLog, Assessment, Goal, Notification, CrisisEvent, ConsentRecord, Appointment):
+        for model in (JournalEntry, VoiceLog, MoodLog, Assessment, Goal, Notification, CrisisEvent, ConsentRecord, Appointment,
+                      SafetyPlan, SleepLog, ReminderPref):
             assert model.query.count() == 0, model.__name__
         log = AuditLog.query.filter_by(action="delete_account").one()
         assert log.target_id == uid and log.actor_id is None and not log.meta

@@ -57,7 +57,14 @@
       var j = r.json;
       if (r.res.ok && j && j.ok) {
         var box = C.addMessage('Anya', j.reply, 'bot');
-        if (j.saved) C.addNote(box, 'Saved answer');
+        if (j.saved) {
+          C.addNote(box, 'Saved answer');
+          /* Listen reads only this saved, pre-approved answer text, never a live model reply. */
+          if (window.MFH && typeof MFH.createListenButton === 'function') {
+            var actions = box.querySelector('.msg-actions');
+            if (actions) actions.appendChild(MFH.createListenButton(j.reply));
+          }
+        }
       } else if (r.res.status === 401) {
         C.addError('Your session has expired. Log in again to continue.');
       } else {

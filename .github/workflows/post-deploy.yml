@@ -1,0 +1,74 @@
+# Checks the live site after CI passes on main. Needs no secrets: it only requests public URLs.
+# Set the repository variable SITE_URL (Settings, Secrets and variables, Actions, Variables) to turn it on.
+# See docs/CICD.md. Action versions: see the note in ci.yml.
+name: Post-deploy check
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: post-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  live-site:
+    name: live site is healthy
+    # Only after a successful CI run that was triggered by a push (not a pull request), or when run by hand.
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      SITE_URL: ${{ vars.SITE_URL }}
+    steps:
+      - name: Skip when SITE_URL is not set
+        id: gate
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "::notice::Repository variable SITE_URL is not set, so the live-site check was skipped. See docs/CICD.md."
+            echo "run=no" >> "$GITHUB_OUTPUT"
+          else
+            case "$SITE_URL" in https://*) ;; *) echo "::error::SITE_URL must start with https://"; exit 1 ;; esac
+            echo "run=yes" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Give Render time to start the new deploy
+        if: steps.gate.outputs.run == 'yes'
+        run: sleep 150  # Render deploys after CI passes; a Docker build takes a few minutes. /health has no build id, so this is a heuristic.
+
+      - name: Wait for /health, then /ready (up to 10 minutes, with backoff)
+        if: steps.gate.outputs.run == 'yes'
+        run: |
+          base="${SITE_URL%/}"
+          code() { curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$1" || true; }
+          wait_for() {
+            path="$1"; delay=5; start=$SECONDS
+            while [ $((SECONDS - start)) -lt 600 ]; do
+              c=$(code "$base$path")
+              echo "GET $path -> $c (after $((SECONDS - start)) s)"
+              [ "$c" = "200" ] && return 0
+              sleep $delay; delay=$((delay * 2)); [ $delay -gt 45 ] && delay=45
+            done
+            echo "::error::$base$path did not return 200 within 10 minutes. Check the Render deploy log and docs/CICD.md (How to read a failure)."
+            return 1
+          }
+          wait_for /health   # a sleeping free instance needs about a minute to cold start
+          wait_for /ready    # 200 means the database answers and the migrations match the code
+
+      - name: robots.txt and sitemap.xml return 200
+        if: steps.gate.outputs.run == 'yes'
+        run: |
+          base="${SITE_URL%/}"
+          bad=0
+          for path in /robots.txt /sitemap.xml; do
+            c=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$base$path" || true)
+            echo "GET $path -> $c"
+            if [ "$c" != "200" ]; then echo "::error::$base$path returned $c, expected 200"; bad=1; fi
+          done
+          exit $bad

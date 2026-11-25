@@ -28,9 +28,17 @@ def _minutes():
 
 
 def text_is_crisis(text):
-    """True if the rule-based detector (ai/severity.py) flags self-harm language. Never calls an LLM."""
-    from ai.severity import classify
-    return classify(text) == 'crisis'
+    """True if the rule-based detector (floor + raise-only fuzzy layer, ai/severity.py + ai/fuzzy_crisis.py)
+    flags self-harm language. Never calls an LLM."""
+    return text_is_crisis_detailed(text)[0]
+
+
+def text_is_crisis_detailed(text):
+    """(is_crisis, matched_via): matched_via is 'exact', 'fuzzy' or 'none', for audit tagging (never calls an LLM).
+    'fuzzy' means only the edit-distance-1 crisis-vocabulary layer found it, not the exact-match regexes."""
+    from ai.fuzzy_crisis import classify_with_fuzzy
+    level, matched_via = classify_with_fuzzy(text)
+    return level == 'crisis', matched_via
 
 
 def record_crisis(user_id, source, severity, reason):

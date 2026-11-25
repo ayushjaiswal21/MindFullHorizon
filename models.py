@@ -599,9 +599,14 @@ class VoiceLog(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     filename = db.Column(db.String(255), nullable=False)
     transcript = db.Column(db.Text, nullable=True)
+    # emotion: unused by new code since 2026-11-25 (migration 0010). The tone/emotion label was measured invalid
+    # (docs/research/ai/SYNTHESIS.md 1.1, 3(c) item c1: pitch thresholds mostly detect pitch/sex not mood, EU AI
+    # Act recital 44, Kintsugi shutdown). Column kept, nullable, non-destructive; never written for new rows.
     emotion = db.Column(db.String(30), nullable=True)
+    # audio_features: now holds only {'duration': seconds} for new rows (pitch/energy/zcr/spectral-centroid, which
+    # fed only the removed label and are speaker-identifying, are no longer computed or stored); see migration 0010.
     audio_features = db.Column(db.JSON, nullable=True)  # extra: voice log page renders these
-    ai_analysis = db.Column(db.Text, nullable=True)  # extra: voice log page renders this
+    ai_analysis = db.Column(db.Text, nullable=True)  # extra: voice log page renders this (unused for voice since 0010)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 
@@ -755,3 +760,5 @@ def get_institutional_summary(institution, db=db, days_active=7, days_risk=7, da
 
 
 from models_clinical import *  # noqa: E402,F401,F403  (same metadata; keeps `from models import Prescription` working)
+from models_wellbeing import *  # noqa: E402,F401,F403  (safety plan, sleep log, reminder preference)
+from models_followup import *  # noqa: E402,F401,F403  (post-crisis follow-up plans and steps)

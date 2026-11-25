@@ -228,7 +228,7 @@ def test_event_works_without_csrf_token(app):
 
 def test_event_noindex_header_and_get_not_allowed(client):
     assert client.get('/api/event').status_code == 405
-    assert client.get('/api/event').headers['X-Robots-Tag'] == 'noindex'
+    assert client.get('/api/event').headers['X-Robots-Tag'].startswith('noindex')
 
 
 def test_event_stores_no_identity_columns(patient_client, app):

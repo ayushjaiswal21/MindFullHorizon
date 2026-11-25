@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% from 'partials/icons.html' import icon %}
 
-{% block title %}Analytics - Mindful Horizon{% endblock %}
+{% block title %}Analytics{% endblock %}
+{% block meta_description %}Aggregate mood and screening figures for your institution, shown as totals and trends.{% endblock %}
 
 {% macro stat(label, value, note='') %}
 <div class="stat">
@@ -57,24 +58,12 @@
         </div>
         {% else %}
         {% set st = a.screen_time_data %}
-        {% set ws = a.wellness_score_data|select|list %}
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="card">
                 <div class="card-header"><h3>Average daily screen time</h3></div>
                 <div class="card-body">
                     <p class="help">Average screen time ranged from {{ st|min }} to {{ st|max }} hours per day across {{ labels|length }} day{{ '' if labels|length == 1 else 's' }} with logs.</p>
                     <div class="pv-chart"><canvas id="screenTimeChart" role="img" aria-label="Line chart of average daily screen time in hours. The table below has the same values."></canvas></div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header"><h3>Average wellness score</h3></div>
-                <div class="card-body">
-                    {% if ws %}
-                    <p class="help">Scores run from 1 (Poor) to 5 (Excellent) and ranged from {{ ws|min }} to {{ ws|max }}. Days without a score are left blank.</p>
-                    {% else %}
-                    <p class="help">No wellness scores were recorded in this period.</p>
-                    {% endif %}
-                    <div class="pv-chart"><canvas id="wellnessChart" role="img" aria-label="Line chart of average wellness score from 1 to 5. The table below has the same values."></canvas></div>
                 </div>
             </div>
         </div>
@@ -84,13 +73,12 @@
                 <div class="table-wrap">
                     <table class="table">
                         <caption class="sr-only">Daily averages for the last 30 days</caption>
-                        <thead><tr><th scope="col">Date</th><th scope="col">Screen time (hours)</th><th scope="col">Wellness score (1 to 5)</th></tr></thead>
+                        <thead><tr><th scope="col">Date</th><th scope="col">Screen time (hours)</th></tr></thead>
                         <tbody>
                             {% for d in labels %}
                             <tr>
                                 <th scope="row">{{ d }}</th>
                                 <td>{{ a.screen_time_data[loop.index0] }}</td>
-                                <td>{{ a.wellness_score_data[loop.index0] or 'n/a' }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -133,7 +121,7 @@
     <p class="help">Last updated {{ datetime.now().strftime('%d %b %Y, %H:%M') }}.</p>
 </div>
 
-<script type="application/json" id="analytics-data" nonce="{{ g.csp_nonce }}">{{ {'labels': a.chart_labels, 'screen_time': a.screen_time_data, 'wellness': a.wellness_score_data}|tojson }}</script>
+<script type="application/json" id="analytics-data" nonce="{{ g.csp_nonce }}">{{ {'labels': a.chart_labels, 'screen_time': a.screen_time_data}|tojson }}</script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/provider-charts.js') }}" defer></script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/analytics_inline_1.js') }}" defer></script>
 {% endblock %}

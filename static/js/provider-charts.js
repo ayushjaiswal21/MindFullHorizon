@@ -1,6 +1,6 @@
 // Shared by the analytics page and the wellness report. Chart.js is loaded only when a canvas needs it.
 (function () {
-    const CHART_URL = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+    const CHART_URL = '/static/vendor/chart.umd.min.js';
     const charts = [];
     let loading = null;
 

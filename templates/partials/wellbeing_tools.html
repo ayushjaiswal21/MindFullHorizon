@@ -1,0 +1,12 @@
+{# Compact "Support tools" list for the patient dashboard. Private tools; no points for the safety plan or the sleep log. #}
+{% from 'partials/icons.html' import icon %}
+{% set spl = safety_plan_link() if safety_plan_link is defined else none %}
+<section aria-labelledby="support-tools-heading">
+    <h2 class="pt-title mb-3" id="support-tools-heading">Support tools</h2>
+    <ul class="link-list">
+        <li><a href="{{ url_for('patient.safety_plan') }}">{{ icon('shield') }}<div><strong>My safety plan</strong><span>{{ 'Open or print your plan.' if spl and spl.exists else 'Write a private plan for hard moments.' }}</span></div></a></li>
+        <li><a href="{{ url_for('patient.grounding') }}">{{ icon('leaf') }}<div><strong>Grounding exercise</strong><span>Five steps using your senses, about two minutes.</span></div></a></li>
+        <li><a href="{{ url_for('patient.sleep_log') }}">{{ icon('moon') }}<div><strong>Sleep log</strong><span>Note your nights and see the last 14 days.</span></div></a></li>
+        <li><a href="{{ url_for('patient.reminders') }}">{{ icon('bell') }}<div><strong>Reminder emails</strong><span>Optional, off until you confirm.</span></div></a></li>
+    </ul>
+</section>

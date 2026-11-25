@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% from 'partials/icons.html' import icon %}
 
-{% block title %}Breathing exercises | MindFull Horizon{% endblock %}
+{% block title %}Breathing exercises{% endblock %}
+{% block meta_description %}Guided breathing exercises you can follow on screen to slow down when you feel stressed.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
@@ -42,7 +43,7 @@
         </fieldset>
 
         <div class="breath-options">
-          <div class="field" style="max-width:14rem">
+          <div class="field field-narrow">
             <label for="session-minutes" class="label">Length in minutes</label>
             <input type="number" id="session-minutes" class="input" min="1" max="180" step="1" value="5" inputmode="numeric" aria-describedby="session-minutes-help session-minutes-error">
             <p id="session-minutes-help" class="help">1 to 180 minutes.</p>
@@ -72,7 +73,7 @@
           <button type="button" class="btn btn-ghost" id="stop-btn" disabled>Stop</button>
         </div>
 
-        <div id="save-prompt" class="alert alert-success" hidden style="width:100%">
+        <div id="save-prompt" class="alert alert-success w-full" hidden>
           <p id="save-prompt-text" class="mb-2"></p>
           <button type="button" class="btn btn-primary btn-sm" id="save-session-btn">Save this session</button>
         </div>
@@ -93,7 +94,7 @@
     <section class="card" aria-labelledby="guided-heading">
       <div class="card-header"><h2 id="guided-heading" class="text-lg">Ready-made sessions</h2></div>
       <div class="card-body">
-        <div class="wl-grid" style="grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))">
+        <div class="wl-grid wl-grid-auto">
           <button type="button" class="session-card start-guided-session-btn" data-session-type="breathing" data-session-name="morning" data-session-duration="5" data-pattern="box">
             <strong>Morning reset</strong><span>Box breathing, 5 minutes</span>
           </button>

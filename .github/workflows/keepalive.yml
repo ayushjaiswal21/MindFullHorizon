@@ -1,0 +1,42 @@
+# Keeps a free Render instance awake by requesting /health every 5 minutes, and doubles as a free outage alarm:
+# when the site does not answer, this run fails and GitHub emails the repository owner.
+# Needs no secrets. Set the repository variable SITE_URL (Settings, Secrets and variables, Actions, Variables).
+# Read docs/DEPLOY_FREE.md first: Render's terms on keep-alive traffic are not clear, and GitHub may delay scheduled runs.
+# /health does not touch the database, so Neon can sleep between real requests.
+name: Keep-alive
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: keepalive
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    name: request /health
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      SITE_URL: ${{ vars.SITE_URL }}
+    steps:
+      - name: Request /health
+        run: |
+          if [ -z "$SITE_URL" ]; then
+            echo "SITE_URL is not set; nothing to do (see docs/DEPLOY_FREE.md)"
+            exit 0
+          fi
+          url="${SITE_URL%/}/health"
+          for attempt in 1 2 3; do
+            code=$(curl -s -o /dev/null -m 70 -w '%{http_code}' "$url" || true)
+            echo "attempt $attempt: HTTP ${code:-none}"
+            if [ "$code" = "200" ]; then exit 0; fi
+            sleep 20
+          done
+          echo "::error::$url did not answer 200 after 3 attempts (a cold start can take about a minute)"
+          exit 1

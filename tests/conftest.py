@@ -16,10 +16,13 @@ _tmpdir = tempfile.mkdtemp(prefix="mfh_test_")
 os.environ["DATABASE_URL"] = "sqlite:///" + os.path.join(_tmpdir, "test.db").replace("\\", "/")
 os.environ["SECRET_KEY"] = "test-secret-key"
 os.environ["FLASK_ENV"] = "testing"
-# Set to "" (not popped): load_dotenv() never overrides an existing variable, so a real key in .env cannot leak into tests.
+# Set explicitly (not popped): load_dotenv() never overrides an existing variable, so whatever a developer's real
+# .env happens to have set (a real key, CHAT_ROUTER_ENABLED=1 for local testing, etc.) can never leak into a test
+# run's behaviour. Tests that want a flag on use monkeypatch.setenv, which overrides this baseline per test.
 os.environ["GEMINI_API_KEY"] = ""
 os.environ["GOOGLE_OAUTH_CLIENT_ID"] = ""
 os.environ["GOOGLE_OAUTH_CLIENT_SECRET"] = ""
+os.environ["CHAT_ROUTER_ENABLED"] = "0"
 os.chdir(ROOT)
 
 import app as app_module  # noqa: E402  (must come after the env setup above)
@@ -111,11 +114,17 @@ def provider_client(app, make_user):
 
 @pytest.fixture(autouse=True)
 def reset_llm_state():
-    """Fresh AI budgets and a closed circuit breaker for every test."""
+    """Fresh AI budgets and a closed circuit breaker for every test.
+
+    Also clears routes.patient_progress.FAILED: a process-global 10-minute negative cache keyed by user id.
+    SQLite reuses row ids after clean_db empties the tables, so a later test's patient can reuse an id another
+    test's FAILED entry was keyed on, silently skipping the model call it meant to exercise."""
     from ai import gemini_impl
+    from routes.patient_progress import FAILED as progress_failed_cache
     from utils import llm_guard
     llm_guard.reset_state()
     gemini_impl.BREAKER.reset()
+    progress_failed_cache.clear()
     yield
 
 
@@ -170,3 +179,13 @@ def desk_client(app, make_user):
     uid = make_user("admin", institution="Test University", is_pharmacy_desk=True)
     _login_as(c, app, uid)
     return c, uid
+
+
+@pytest.fixture(autouse=True)
+def personal_text_on_by_default(monkeypatch):
+    """Existing tests exercise the model path (fakes only), so they run with AI_SEND_PERSONAL_TEXT on. The real default
+    is OFF: tests/test_ai_policy.py unsets it and checks the safe mode, the copy and the tip."""
+    monkeypatch.setenv("AI_SEND_PERSONAL_TEXT", "1")
+    from utils import daily_tip
+    daily_tip.reset()
+    yield

@@ -15,7 +15,7 @@ import ai.service as ai_service
 from ai.scoring import canonical_type, band_for
 from utils.gamification import award_points
 from utils.ai_cap import run_capped
-from utils import idempotency as idem
+from utils import ai_caveats, idempotency as idem
 from utils.state import TransitionError, transition, CONFLICT_MESSAGE
 from utils.timeutil import ist_now, ist_today, ist_day_bounds, to_ist_date, utcnow
 from utils.validation import parse_duration, MIN_DURATION_MINUTES, MAX_DURATION_MINUTES
@@ -457,12 +457,12 @@ def digital_detox():
         score = latest_log.ai_score
         suggestion = latest_log.ai_suggestion
     
-    return render_template('digital_detox.html', 
+    return render_template('digital_detox.html',
                          user_name=session['user_name'],
                          screen_time_log=screen_time_log,
                          avg_screen_time=avg_screen_time,
                          score=score,
-                         suggestion=suggestion)
+                         suggestion=suggestion, logged_count=len(screen_time_log), detox_caveat=ai_caveats.DETOX_CAVEAT)
 
 @patient_bp.route('/goals', methods=['GET', 'POST'])
 @login_required
@@ -793,8 +793,8 @@ def log_digital_detox():
             log.screen_time_hours = screen_time
             log.academic_score = academic_score
             log.social_interactions = social_interactions
-            log.ai_score = ai_analysis.get('ai_score', 'N/A')
-            log.ai_suggestion = ai_analysis.get('ai_suggestion', 'No suggestion available')
+            log.ai_score = ai_analysis.get('score', 'N/A')
+            log.ai_suggestion = ai_analysis.get('analysis', 'No suggestion available')
 
         new_log = DigitalDetoxLog.query.filter_by(user_id=user_id, date=today).first()
         is_new = new_log is None
@@ -824,7 +824,8 @@ def log_digital_detox():
                 'social_interactions': new_log.social_interactions,
                 'ai_score': new_log.ai_score
             },
-            'ai_analysis': ai_analysis
+            'ai_analysis': ai_analysis,
+            'logged_count': DigitalDetoxLog.query.filter_by(user_id=user_id).count(), 'caveat': ai_caveats.DETOX_CAVEAT
         })
 
     except (ValueError, TypeError) as e:
@@ -886,15 +887,15 @@ def patient_journal():
         ai_suggestions = get_ai_journal_suggestions(title, content)
 
         # O-02: rule-based check on the text; the event holds a code only, never the text. Same transaction as the entry.
-        from utils.crisis import record_crisis, text_is_crisis
+        from utils.crisis import record_crisis, text_is_crisis_detailed
         from utils.helplines import helplines_text
-        crisis = text_is_crisis(f"{title}\n{content}")
+        crisis, crisis_matched_via = text_is_crisis_detailed(f"{title}\n{content}")
         try:
             entry = JournalEntry(user_id=user_id, title=title, content=content, sentiment=sentiment_result,
                                  ai_suggestions=ai_suggestions, client_request_id=key)
             db.session.add(entry)
-            if crisis:
-                record_crisis(user_id, 'journal', 9, 'journal_self_harm')
+            if crisis:  # '_fuzzy' suffix = audit-only tag, hit via the edit-distance-1 layer, not an exact regex
+                record_crisis(user_id, 'journal', 9, 'journal_self_harm_fuzzy' if crisis_matched_via == 'fuzzy' else 'journal_self_harm')
             db.session.commit()
         except Exception as exc:
             db.session.rollback()

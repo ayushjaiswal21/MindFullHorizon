@@ -1,0 +1,33 @@
+{# Deterministic mood/sleep trend flags (utils/trend_flags.py), same sparkline+table pattern as _report.html. #}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_followups/_flags.html' import flag_badges %}
+<section class="card fu-card" aria-labelledby="trend-heading">
+    <div class="card-header"><h2 id="trend-heading">Mood and sleep patterns</h2></div>
+    <div class="card-body">
+        {% if trend_spark %}
+        <p class="help">Logged mood (1 to 10) and sleep (hours per night). A flag appears only after a sustained downward pattern across several logged days, never from a single low day. This is a pattern in self-reported logs for you to look at, not a diagnosis or a prediction (docs/TREND_FLAGS.md).</p>
+        <div class="fu-spark-grid">
+            {% for kind, sp in trend_spark.items() %}
+            <div class="fu-spark-box">
+                <div class="stat-label">{{ 'Mood' if kind == 'mood' else 'Sleep' }}, last {{ sp.rows|length }} day{{ '' if sp.rows|length == 1 else 's' }}</div>
+                <svg class="fu-spark" viewBox="0 0 160 48" width="160" height="48" role="img" aria-label="{{ kind }} from {{ sp.rows[0][0] }} to {{ sp.rows[-1][0] }}, latest {{ '%.1f'|format(sp.rows[-1][1]) }} of {{ sp.max }}. The table below has the same values.">
+                    {% if sp.xy|length > 1 %}<polyline points="{% for x, y in sp.xy %}{{ '%.1f,%.1f'|format(x, y) }} {% endfor %}" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>{% endif %}
+                    {% for x, y in sp.xy %}<circle cx="{{ '%.1f'|format(x) }}" cy="{{ '%.1f'|format(y) }}" r="{{ 3 if loop.last else 2 }}" fill="currentColor"/>{% endfor %}
+                </svg>
+                <div>{{ flag_badges(sp.flags) }}{% if not sp.flags %}<span class="muted">No change flag</span>{% endif %}</div>
+                <details class="mt-2">
+                    <summary>Show {{ 'mood' if kind == 'mood' else 'sleep' }} as a table</summary>
+                    <div class="table-wrap"><table class="table">
+                        <caption class="sr-only">{{ kind }} by date</caption>
+                        <thead><tr><th scope="col">Date</th><th scope="col">{{ 'Mood (1-10)' if kind == 'mood' else 'Hours slept' }}</th></tr></thead>
+                        <tbody>{% for d, v in sp.rows %}<tr><th scope="row">{{ d }}</th><td>{{ '%.1f'|format(v) }}</td></tr>{% endfor %}</tbody>
+                    </table></div>
+                </details>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">{{ icon('mood') }}<h3>No mood or sleep logs yet</h3><p>A trend flag needs several logged days of the same kind.</p></div>
+        {% endif %}
+    </div>
+</section>

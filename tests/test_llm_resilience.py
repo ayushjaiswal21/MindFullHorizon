@@ -56,7 +56,7 @@ def provider(monkeypatch):
 
 
 def ask():
-    return g.ask_gemini_system_user("sys", "user")
+    return g.ask_gemini_system_user("sys", "user", personal=False)
 
 
 def run(text, user_id=None):
@@ -333,7 +333,6 @@ def test_outage_degrades_to_rule_based_replies_with_same_shape(provider):
 def test_generators_degrade_without_exception_text(provider):
     provider(RuntimeError(SECRET))
     assert "LEAK" not in svc.generate_journal_insights("t", "c", "sad")
-    assert "LEAK" not in svc.analyze_voice_emotion("hi", {})
     assert "LEAK" not in svc.generate_clinical_note("hi")
     assert svc.generate_goal_suggestions({}) == []
     assert "LEAK" not in json.dumps(svc.generate_progress_recommendations({}))

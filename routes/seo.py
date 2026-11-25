@@ -11,7 +11,8 @@ from markupsafe import Markup, escape
 from werkzeug.routing import BuildError
 
 from extensions import csrf, db, limiter
-from utils.seo import EVENT_NAMES, PRIVATE_PREFIXES, public_pages, sitemap_entries, site_url
+from utils.seo import (DISCOVERY_PATHS, EVENT_NAMES, PRIVATE_PREFIXES, is_indexable_path, public_pages,
+                       sitemap_entries, site_url)
 
 seo_bp = Blueprint('seo', __name__)
 
@@ -27,6 +28,10 @@ _SHORTCUTS = {
         ('patient.breathing', 'Breathing', 'Guided breathing exercises.'),
         ('patient.yoga', 'Yoga', 'Yoga sessions and videos.'),
         ('music', 'Music', 'Calming music and sounds.'),
+        ('patient.safety_plan', 'Safety plan', 'Write a private plan for hard moments.'),
+        ('patient.grounding', 'Grounding exercise', 'A five-step exercise using your senses.'),
+        ('patient.sleep_log', 'Sleep log', 'Note your sleep and see the last 14 days.'),
+        ('patient.reminders', 'Reminder emails', 'Choose an optional reminder email.'),
     ],
     'provider': [
         ('provider.provider_dashboard', 'Dashboard', 'Your patients and appointments.'),
@@ -77,8 +82,16 @@ def sitemap():
 
 @seo_bp.after_app_request
 def _noindex_headers(response):
-    if request.path == '/search' or request.path.startswith('/api/'):
-        response.headers['X-Robots-Tag'] = 'noindex'
+    """One rule for every response: anything that is not a public page gets X-Robots-Tag noindex.
+
+    Exempt: public pages (their <meta name="robots"> decides, so a draft post stays noindex there), the discovery
+    files and static assets. A route that sets its own X-Robots-Tag keeps it.
+    """
+    path = request.path
+    if (is_indexable_path(path) or path in DISCOVERY_PATHS or request.endpoint == 'static'
+            or 'X-Robots-Tag' in response.headers):
+        return response
+    response.headers['X-Robots-Tag'] = 'noindex, nofollow'
     return response
 
 

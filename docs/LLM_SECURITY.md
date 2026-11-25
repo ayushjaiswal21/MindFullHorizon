@@ -27,7 +27,9 @@ Strips HTML and script/style, fenced code, markdown images and links (link text 
 | Env var | Default | Meaning |
 |---------|---------|---------|
 | `GEMINI_API_KEY` | none | Blank means every AI feature uses the rule-based fallbacks |
-| `GEMINI_MODEL_NAME` | `gemini-flash-latest` | Pin a dated model id in production (model drift) |
+| `AI_SEND_PERSONAL_TEXT` | `0` (off) | Truthy only for 1/true/yes/on. Off: no personal content is sent to any model (see "Personal-text policy") |
+| `AI_PERSONAL_TEXT_APPROVED_BY` | none | Free-text record of the college's written approval; nowhere in the UI; the predeploy check warns when the flag is on without it |
+| `GEMINI_MODEL_NAME` | `gemini-flash-lite-latest` | Pin a dated model id in production (model drift) |
 | `GEMINI_TIMEOUT` | 20 | Seconds per request |
 | `AI_MAX_RETRIES` | 2 (ceiling 2) | Retries on transient errors only (timeouts, 408, 429, 5xx, connection errors), full jitter, max 4 s sleep |
 | `AI_BREAKER_FAILURES` | 2 | Consecutive failed requests that open the circuit |
@@ -58,7 +60,7 @@ Strips HTML and script/style, fenced code, markdown images and links (link text 
 4. Consider `response_mime_type="application/json"` with an enum schema for `recommended_action`; the code validates anyway.
 5. Re-run the tests, then a live smoke run (below).
 
-**Unverified live:** CI uses fakes and a blank key, so the real API was never called from tests. The default model alias `gemini-flash-latest`, the `system_instruction` call form of the legacy SDK, safety-block behaviour (`response.text` raising `ValueError`), exception classes and `.code` values on 429/5xx, and the request `timeout` option are unverified against the live service. Do a manual live run with a paid-tier key before relying on any of it (the free tier may use content for training, see research section 4). A model change can alter behaviour; re-run the corpus when the model or prompt changes.
+**Verified live (2026-11-24, owner's rotated key):** `python scripts/check_gemini.py` passed the direct call and the full companion pipeline with `gemini-flash-lite-latest` (about 1.5 s). The `gemini-flash-latest` alias returned ResourceExhausted (free-tier quota) and `gemini-2.0-flash` and `gemini-2.5-flash-lite` return 404 for new keys, so the default is the lite alias. Re-run the script after any key, model or SDK change. Tests still use fakes.
 
 ## Known limits
 
@@ -69,3 +71,47 @@ Strips HTML and script/style, fenced code, markdown images and links (link text 
 - Output guard patterns are English-only; a Hinglish dosage or method sentence can pass. Native-speaker review is needed.
 - Crisis wordlists (English, Hinglish, Devanagari) are constructed fixtures and need clinician and native-speaker review (O-20). Known gaps: bare "khatam kar lena" is not matched (too many benign uses), "kms" gives only a soft check-in, fiction framings ("in a story...") rely on the model and the output guard.
 - Provider-facing AI text should still show the code-computed crisis flag beside it (target in `docs/DESIGN.md`); this module does not change provider views.
+
+## Personal-text policy (zero-cost deployment, decision 2026-11-24)
+
+**Why.** The owner deploys at zero cost. Google's Gemini API free tier (unpaid services) may use submitted content to improve Google products; the paid tier does not (ai.google.dev/gemini-api/terms, data logging page). Billing is not acceptable, so: AI only for non-personal work. Student-authored or health-related text must never reach an external model in this mode.
+
+**How.** `utils/ai_policy.py`: `personal_text_allowed()` reads `AI_SEND_PERSONAL_TEXT` on every call (default off). The one choke point is `ask_gemini_system_user(..., *, personal)`: `personal` is a required keyword, so an unclassified call raises `TypeError`, and `personal=True` with the flag off raises `PersonalTextBlocked` (a `RuntimeError`) before the key check, breaker or provider, so the existing deterministic fallbacks answer. `tests/test_ai_policy.py` also scans the source for any call to `ask_gemini_system_user`, `ask` or `_personal_call` that does not state `personal=`. The chat entry points (`ask_with_severity`, `_simple_chat`) also check the flag up front: no model call, no per-user budget used, no "AI unavailable" notice, a fixed reply (`ai/replies.py`) instead.
+
+| Call site | `personal` | Off-mode result |
+|-----------|-----------|-----------------|
+| Chat `/api/chat` (`ask_with_severity`), `/api/ask` and socket chat (`_simple_chat`) | True | crisis, friend and soft fixed replies as before; otherwise `off_reply()` |
+| Journal suggestions (`generate_journal_insights`) | True | crisis helplines text, else the existing thank-you text |
+| Voice analysis (`analyze_voice_emotion`) | True | acoustic guess from `utils/voice_features.py` |
+| Assessment insights (`generate_assessment_insights`) | True | fixed text and helplines |
+| Progress recommendations (`generate_progress_recommendations`) | True | route answers "unavailable" with an honest message |
+| Digital detox (`generate_digital_detox_insights`) | True | N/A score, no suggestion |
+| Goal suggestions (`generate_goal_suggestions`) | True | empty list (no route calls it today) |
+| Medication adherence (`analyze_medication_adherence`) | True | fixed fallback (no route calls it today) |
+| Counsellor session note draft (`generate_clinical_note`, `routes/provider.py`) | True | "write the note yourself" |
+| Starter-question answers (`utils/chat_templates.py`) | False | unchanged: fixed allowlisted question, cached 24 h |
+| Tip of the day (`utils/daily_tip.py`) | False | n/a |
+
+The crisis floor, the canned template answers, `CRISIS_REPLY` and the helplines never touch a model and are unchanged by the flag.
+
+## Caveat policy for LLM-generated scores (decision 2026-11-25)
+
+`analyze_medication_adherence` (adherence score 0-100) and `generate_digital_detox_insights`
+(digital-detox score) each invent a number from a handful of logged entries, with no clinical
+validation. Per `docs/research/ai/SYNTHESIS.md` section 3(c) item c2, both are kept (not removed)
+but must always carry the exact caveat text in `utils/ai_caveats.py` (`ADHERENCE_CAVEAT`,
+`DETOX_CAVEAT`) directly beside the score, plus the raw logged-entries count next to it, on every
+screen where the score appears (`templates/digital_detox.html`, `templates/profile.html`,
+`templates/wellness_report.html`). The score must never appear bare to a counsellor, and must
+never be fed into an aggregate, chart, ranking or alert: the institution-wide "average wellness
+score" chart that used to average `DigitalDetoxLog.ai_score` across patients (`routes/provider.py`
+`_analytics_core`, `templates/analytics.html`) was removed for this reason. `generate_goal_suggestions`
+returns titles/descriptions with no numeric score, so this policy does not apply to it.
+`generate_progress_recommendations` is also free-text (insights/actions), already labelled "written
+by an AI assistant ... general information, not clinical advice" in `templates/progress.html`.
+
+**Tip of the day.** One short general tip, generated at most once per IST day per process from a fixed prompt plus a topic from a fixed list (no user data), started by `GET /api/tip` (never by a page render) in a background thread, passed through `guard_output`, held in process memory (no database). A page shows one of 30 vetted static tips (`utils/tip_data.py`) until the model's tip lands, and whenever the model is off, down, blocked or no key is set. The dashboard card is labelled "General tip, not advice for you".
+
+**Turning personal-text AI on.** Only with the college's written approval. Set `AI_SEND_PERSONAL_TEXT=1` and record who approved and when in `AI_PERSONAL_TEXT_APPROVED_BY`; the on-page copy (chat, `/ai`, privacy, terms, FAQ, landing) then describes what is sent and that Google's free-tier terms may allow it to use submitted content. A paid Gemini tier would remove that concern, but is not part of this deployment.
+
+**Not verified.** The behaviour on a multi-process host: the daily tip is per process, so each worker may make one call a day.

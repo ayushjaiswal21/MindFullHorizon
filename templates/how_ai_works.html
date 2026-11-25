@@ -2,7 +2,7 @@
 {% from 'partials/breadcrumbs.html' import breadcrumb %}
 
 {% block title %}How the AI companion works{% endblock %}
-{% block meta_description %}What the MindFullHorizon AI companion is, what data it receives, what it cannot do, and how the crisis check works.{% endblock %}
+{% block meta_description %}What the MindFull Horizon AI companion is, what data it receives, what it cannot do, and how the crisis check works.{% endblock %}
 {% block canonical %}{{ (site_url or request.url_root.rstrip('/')) }}/ai{% endblock %}
 {% block robots %}index, follow{% endblock %}
 {% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">{% endblock %}
@@ -12,6 +12,7 @@
 <div class="container section">
   <article class="prose">
     <h1>How the AI companion works</h1>
+    {% if ai_personal_text %}
     <p class="lead">Anya, the chat companion, is an AI assistant. It is not a therapist and it is not a person. This page says what it is, what it receives and where it stops.</p>
 
     <h2>What it is</h2>
@@ -31,13 +32,37 @@
     </ul>
     <p>Other features send the data they work on. Journal suggestions send that journal entry. Screening insights send the questionnaire answers and the score. Progress and digital detox insights send the figures you logged. Counsellors can send a session transcript to draft a note. We do not add your name or email to these requests.</p>
     <p>Do not type passwords, bank details or other people's private information into the chat.</p>
+    <p>Google's free-tier terms may allow it to use submitted content to improve its products, which is why the operator needs your college's written approval before switching this on.</p>
+
+    {% else %}
+    <p class="lead">Anya, the chat companion, is an automated assistant. It is not a therapist and it is not a person. On this server no AI model reads what you write. This page says what happens instead and where it stops.</p>
+
+    <h2>What happens when you write in the chat</h2>
+    <p>Your message goes through a fixed set of rules written by us (the crisis check, below). Anya replies from saved answers and fixed texts. The starter questions have saved answers. No AI model reads your message, and nothing in the chat is written by a model in reply to you.</p>
+
+    <h2>Where an AI model is used</h2>
+    <p>Google's Gemini model is used only for general content that has nothing to do with you, such as the tip of the day on the student dashboard and the saved answers to the fixed starter questions. Those requests are fixed text. They contain nothing a student wrote and no data tied to an account.</p>
+
+    <h2>What is not sent to any AI model</h2>
+    <ul>
+      <li>Chat messages, journal entries, voice log measurements, mood notes and screening answers and scores.</li>
+      <li>Goals, medication logs, screen-time values and progress summaries.</li>
+      <li>Counsellor session transcripts. Counsellors write session notes themselves.</li>
+    </ul>
+    <p>Do not type passwords, bank details or other people's private information into the chat.</p>
+
+    <h2>Can this change?</h2>
+    <p>The operator of this service can switch personal-text AI on. Google's free-tier terms may allow Google to use content sent to it to improve its products, so this needs your college's written approval first. If it is switched on, this page and the privacy policy change to say exactly what is sent.</p>
+    {% endif %}
 
     <h2>The crisis check</h2>
     <p>Every chat message goes through a fixed set of rules written by us. They look for language about harming yourself or ending your life. This check is code, not AI, and the model cannot switch it off.</p>
     <ul>
-      <li>If the rules find crisis language, you see a fixed caring reply and the helplines below, whatever the model wrote.</li>
+      <li>If the rules find crisis language, you see a fixed caring reply and the helplines below, {% if ai_personal_text %}whatever the model wrote{% else %}and no model is involved{% endif %}.</li>
+      {% if ai_personal_text %}
       <li>The model may raise the level of concern. It can never lower what the rules found.</li>
       <li>If the model fails or is blocked, you still see the helplines.</li>
+      {% endif %}
       <li>A crisis event is recorded for your institution's counsellors so someone can follow up. The record holds a short reason code, not your message.</li>
     </ul>
     <p>The rules are not perfect. They can miss indirect language and can trigger on words that were not meant that way. Do not rely on the app alone if you are unsafe.</p>

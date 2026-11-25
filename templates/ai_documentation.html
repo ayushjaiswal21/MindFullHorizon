@@ -2,6 +2,7 @@
 {% from 'partials/icons.html' import icon %}
 
 {% block title %}Draft a session note{% endblock %}
+{% block meta_description %}Counsellor tool for drafting a session note. Review and edit every draft before you use it.{% endblock %}
 {% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">{% endblock %}
 
 {% block content %}
@@ -14,11 +15,11 @@
     </div>
   </header>
 
-  <div class="alert alert-info" role="note">
-    The transcript is sent to Google's Gemini model to write the draft. We do not add the patient's name or email. The model can be wrong and does not diagnose or prescribe. Read
+  <div class="alert alert-info" role="note"><p>
+    {% if ai_personal_text %}The transcript is sent to Google's Gemini model to write the draft. We do not add the patient's name or email.{% else %}AI drafting is switched off on this server: the transcript is not sent to any AI model, so no draft is written and you write the note yourself.{% endif %} The model can be wrong and does not diagnose or prescribe. Read
     <a href="{{ url_for('core.how_ai_works') }}">how the AI works</a>.
     If you enter a patient email, the draft is saved to that patient's record with the transcript.
-  </div>
+  </p></div>
 
   <div class="card home-block">
     <div class="card-body">

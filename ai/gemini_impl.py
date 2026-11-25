@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeout
 from dotenv import load_dotenv
 
 from ai.interface import AIProvider
+from utils import ai_policy
 from utils.circuit_breaker import CircuitBreaker
 
 
@@ -34,7 +35,10 @@ logger = logging.getLogger(__name__)
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 # Model ids are retired often: set GEMINI_MODEL_NAME to pin one; the "-latest" alias is the default.
-GEMINI_MODEL_NAME = os.environ.get("GEMINI_MODEL_NAME", "gemini-flash-latest")
+# Verified live on 2026-11-24 with scripts/check_gemini.py: "gemini-flash-lite-latest" answers in about 1 s; the
+# "gemini-flash-latest" alias returned ResourceExhausted (free-tier quota) for the owner's key; older ids such as
+# gemini-2.0-flash and gemini-2.5-flash-lite return 404 for new keys.
+GEMINI_MODEL_NAME = os.environ.get("GEMINI_MODEL_NAME", "gemini-flash-lite-latest")
 FALLBACK_MODEL = "gemini-flash-latest"
 try:
     GEMINI_TIMEOUT = float(os.environ.get("GEMINI_TIMEOUT", "20"))
@@ -53,6 +57,8 @@ _uniform = random.uniform     # patched in tests
 
 if not GEMINI_API_KEY:
     logger.warning("GEMINI_API_KEY is not set: AI features use fallbacks")
+if ai_policy.personal_text_allowed() and not ai_policy.approval_recorded():
+    logger.warning("AI_SEND_PERSONAL_TEXT is on but AI_PERSONAL_TEXT_APPROVED_BY is empty: record the college's written approval")
 
 
 class GeminiBlocked(Exception):
@@ -165,13 +171,18 @@ def _interactive_attempt(ask, deadline):
 
 
 def ask_gemini_system_user(system_prompt: str, user_text: str, max_tokens: int = 1024,
-                           temperature: float = 0.2, timeout: float = None, interactive: bool = False):
+                           temperature: float = 0.2, timeout: float = None, interactive: bool = False, *,
+                           personal: bool):
     """Call the model with a system instruction and the user's text.
+
+    `personal` is required (utils/ai_policy.py): True when the text carries anything a student wrote or anything tied
+    to a user. It is blocked (PersonalTextBlocked, a RuntimeError) unless AI_SEND_PERSONAL_TEXT is on.
 
     Raises GeminiBlocked on safety blocks, AIUnavailable while the breaker is open, RuntimeError without a key
     (before any retry, sleep or breaker use). Retries (max 2, jittered) only transient errors; one request counts
     as one breaker outcome. `interactive=True` (a student is waiting): all attempts share one deadline of at most
     INTERACTIVE_TIMEOUT seconds and there is at most one retry, so a dead provider costs one wait, then the breaker opens."""
+    ai_policy.check(personal)  # before the key, breaker, retries or any provider call
     if not getattr(PROVIDER, "configured", lambda: True)():
         raise RuntimeError("GEMINI_API_KEY not set")
     if not BREAKER.allow():

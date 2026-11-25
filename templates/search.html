@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}Search - Mindful Horizon{% endblock %}
-{% block meta_description %}Search public pages and blog articles on Mindful Horizon.{% endblock %}
+{% block title %}{{ ('Search: ' ~ q)|truncate(41, True, '...') if q else 'Search' }}{% endblock %}
+{% block meta_description %}{% if q %}Search results for {{ q|truncate(60, True, '...') }} across the public pages and blog posts of MindFull Horizon.{% else %}Search the public pages and blog posts of MindFull Horizon.{% endif %}{% endblock %}
 {% block canonical %}{{ canonical_url }}{% endblock %}
 {% block robots %}noindex, nofollow{% endblock %}
 
@@ -22,7 +22,7 @@
         <p class="lead">Search public pages and blog articles. Your journal, chats and notes are never searched.</p>
     </div>
 
-    <form action="{{ url_for('seo.search') }}" method="get" role="search" class="field" style="max-width: 36rem;">
+    <form action="{{ url_for('seo.search') }}" method="get" role="search" class="field field-wide">
         <label class="label" for="search-q">Search Mindful Horizon</label>
         <div class="flex gap-2">
             <input class="input" id="search-q" type="search" name="q" value="{{ q }}" maxlength="100" autocomplete="off">

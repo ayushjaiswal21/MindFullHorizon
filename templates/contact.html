@@ -2,7 +2,7 @@
 {% from 'partials/breadcrumbs.html' import breadcrumb %}
 {% from '_macros.html' import jsonld_scripts, helpline_list, form_field, alert %}
 
-{% block title %}Contact{% endblock %}
+{% block title %}Contact us{% endblock %}
 {% block meta_description %}{{ page_description }}{% endblock %}
 {% block canonical %}{{ canonical_url }}{% endblock %}
 {% block robots %}index, follow{% endblock %}
@@ -31,7 +31,7 @@
             Your message was saved for the team to read. Email forwarding is not set up on this service, so no email confirmation will be sent to you. We read messages in order.
           {% endif %}
         {% endcall %}
-        <p style="margin-top:1rem"><a class="btn btn-secondary" href="{{ url_for('pages.contact') }}">Send another message</a></p>
+        <p class="mt-4"><a class="btn btn-secondary" href="{{ url_for('pages.contact') }}">Send another message</a></p>
       {% else %}
         {% if form_error %}{{ alert('danger', message=form_error, role='alert') }}{% endif %}
         <form method="post" action="{{ url_for('pages.contact') }}" class="auth-form" data-validate>

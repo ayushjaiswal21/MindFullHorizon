@@ -86,6 +86,27 @@
 </div>
 {% endmacro %}
 
+{#-
+  listen_button: a "Listen" button using the browser's own speechSynthesis (static/js/speech-output.js).
+  Only for existing, clinician-approved static text - never a live AI reply, never text the student typed.
+  Pass `text` (the exact string to read) or `target` (a CSS selector; its current textContent is read at click
+  time, for text a script may still swap in, e.g. the daily tip). `lang` is a BCP-47 hint such as "hi-IN"; the
+  player prefers a local, on-device voice matching it, else the browser default. Hidden automatically in
+  browsers without speechSynthesis.
+#}
+{% macro listen_button(text=None, target=None, lang=None, id=None, cls='') %}
+{% from 'partials/icons.html' import icon %}
+<button type="button" class="btn btn-ghost btn-sm mfh-listen{{ ' ' ~ cls if cls }}"
+  {%- if id %} id="{{ id }}"{% endif %}
+  {%- if text %} data-speak-text="{{ text }}"{% endif %}
+  {%- if target %} data-speak-target="{{ target }}"{% endif %}
+  {%- if lang %} data-speak-lang="{{ lang }}"{% endif %}
+  aria-pressed="false" aria-label="Listen to this">
+  <span class="mfh-listen-icon">{{ icon('play', size=18) }}</span>
+  <span class="mfh-listen-label" aria-live="polite">Listen</span>
+</button>
+{% endmacro %}
+
 {# alert: kind is info | success | warning | danger. Text from `message` or the call block. #}
 {% macro alert(kind='info', message=None, title=None, role=None) %}
 {% from 'partials/icons.html' import icon %}

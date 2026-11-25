@@ -52,7 +52,8 @@ def chat_handler():
         if resp.get('escalate'):
             # event + alert job commit together; the emergency reply above is returned even if this fails
             try:
-                record_crisis(session['user_id'], 'chat', resp.get('severity'), 'chat_self_harm')
+                record_crisis(session['user_id'], 'chat', resp.get('severity'),  # '_fuzzy' = audit-only tag
+                              'chat_self_harm_fuzzy' if resp.get('fuzzy') else 'chat_self_harm')
                 db.session.commit()
             except Exception as exc:
                 db.session.rollback()

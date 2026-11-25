@@ -38,3 +38,6 @@
 
 .pv-report-meta { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; }
 .pv-prewrap { white-space: pre-wrap; }
+
+/* The crisis alert is the first thing in this container; keep it off the header edge. */
+#provider-config { padding-top: 1rem; }

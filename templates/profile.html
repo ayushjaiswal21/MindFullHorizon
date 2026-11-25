@@ -2,7 +2,8 @@
 {% from 'partials/icons.html' import icon %}
 {% from '_macros.html' import form_field %}
 
-{% block title %}Profile - MindFull Horizon{% endblock %}
+{% block title %}Profile{% endblock %}
+{% block meta_description %}View and update your name, institution and account details.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
@@ -58,8 +59,12 @@
                         <div><dt>Average, last 7 logs</dt><dd>{{ '%.1f h'|format(avg_screen_time_7_days) if avg_screen_time_7_days is not none else 'n/a' }}</dd></div>
                         <div><dt>Average, last 30 logs</dt><dd>{{ '%.1f h'|format(avg_screen_time_30_days) if avg_screen_time_30_days is not none else 'n/a' }}</dd></div>
                         <div><dt>Latest score</dt><dd>{{ digital_detox_logs[0].ai_score if digital_detox_logs and digital_detox_logs[0].ai_score else 'n/a' }}</dd></div>
+                        <div><dt>Logged entries used</dt><dd>{{ digital_detox_logs|length }}</dd></div>
                     </dl>
-                    <p class="mt-3"><a href="{{ url_for('patient.digital_detox') }}">Open screen time log</a></p>
+                    {% if digital_detox_logs and digital_detox_logs[0].ai_score %}
+                    <p class="alert alert-info mt-2">This score is an estimate written by an AI model from a few logged entries. It is not a clinical measurement. Use the logged screen-time entries below to see what was actually recorded.</p>
+                    {% endif %}
+                    <p class="mt-3"><a class="tap-link" href="{{ url_for('patient.digital_detox') }}">Open screen time log</a></p>
                 </div>
             </section>
             {% endif %}

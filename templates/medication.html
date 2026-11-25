@@ -2,7 +2,8 @@
 {% from 'partials/icons.html' import icon %}
 {% from '_macros.html' import form_field, empty_state %}
 
-{% block title %}Medication log - MindFull Horizon{% endblock %}
+{% block title %}Medication log{% endblock %}
+{% block meta_description %}Keep a personal log of the medicines you take and when you take them.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">

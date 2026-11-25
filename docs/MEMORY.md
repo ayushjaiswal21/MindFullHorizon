@@ -264,3 +264,11 @@ Decisions are in [TRACKER.md](TRACKER.md) section 3 (P-01 to P-09). Gotchas foun
 - **Cookie sessions** carry an HMAC stamp (id, password hash, role). New sign-in paths must call `stamp_session(user)`; tests are lenient (TESTING accepts stamp-less sessions), so check the stamp directly.
 - **A free Render instance sleeps**, so crisis escalation timers stop; a pilot needs an always-on instance.
 - **`.env` GEMINI_API_KEY**: a key that was exposed is auto-disabled by Google; replace it after rotating.
+
+## History rewrite (2026-11-24, owner approved)
+
+The public repository's history contained a committed `.env` (12 commits: two old Gemini keys, CloseRouter and OpenRouter keys, SECRET_KEY values, a DATABASE_URL), early SQLite database files, Flask session files, uploads, a log file, a `test_login_credentials.md` and 46 audio files. History was rewritten with `git filter-repo` (paths removed: `.env`, `instance/`, `flask_session/`, `static/uploads/`, `*.db`, `*.sqlite*`, `*.mp3`, `*.wav`, `mindful_horizon.log`, `test_login_credentials.md`) and force-pushed. `main` is now `6fd5f10` (154 commits, 3.5 MB pack instead of 208 MB); every commit SHA changed. File contents of all kept files are identical to the pre-rewrite tree. The tag `pre-overhaul-2026-11` and the branch SHAs listed in the "Branch consolidation" section above no longer exist.
+
+What the rewrite does NOT do: the old commits stay reachable on GitHub through the 22 pull-request refs (`refs/pull/N/head`) and through any fork or old clone. The only real protection is that every key that was ever committed is revoked. Revoke list: both old Gemini keys (Google AI Studio), the CloseRouter key and the OpenRouter key. GitHub Support can purge cached views and pull-request refs on request ("Removing sensitive data from a repository").
+
+The audio files are no longer in git. They stay on the owner's disk (ignored by `.gitignore`). For a deployment, host them in object storage or a release asset and set `AUDIO_BASE_URL` (decision P-03).

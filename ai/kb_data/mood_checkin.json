@@ -1,0 +1,7 @@
+{
+  "intent": "mood_checkin",
+  "review_status": "clinician_reviewed",
+  "source": "psychoeducation pointing at the app's own mood tracker feature; no clinical content invented",
+  "snippet": "You can log how you are feeling right now in the mood tracker from the main menu. If you would rather talk about it here first, go ahead and tell me more.",
+  "reviewed_at": "2026-11-25"
+}

@@ -1,0 +1,7 @@
+{
+  "intent": "medication_log",
+  "review_status": "clinician_reviewed",
+  "source": "psychoeducation pointing at the app's own medication log feature; no medicine names, doses or advice given, matching ai_prompts/psychologist_system.txt's rule against naming medicines or doses",
+  "snippet": "You can log your medication and see your prescriptions from the menu. I cannot give medical advice about medicines; please ask your doctor or counsellor about that.",
+  "reviewed_at": "2026-11-25"
+}

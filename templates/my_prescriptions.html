@@ -2,7 +2,8 @@
 {% from 'partials/icons.html' import icon %}
 {% from '_macros.html' import empty_state %}
 
-{% block title %}{{ 'My prescriptions' if prescriptions_enabled else 'Not available' }} - MindFull Horizon{% endblock %}
+{% block title %}{{ 'My prescriptions' if prescriptions_enabled else 'Not available' }}{% endblock %}
+{% block meta_description %}Prescriptions issued to you by a verified doctor, with their status and details.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">

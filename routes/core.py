@@ -82,6 +82,14 @@ def how_ai_works():
 def status():
     return jsonify({"status": "ok"})
 
+@core_bp.route('/api/tip')
+@api_login_required
+def tip():
+    """Tip of the day: general content, no user data. Starts the once-a-day model call, answers at once."""
+    from utils import daily_tip
+    return jsonify(daily_tip.get_tip(refresh=True))
+
+
 @core_bp.route('/api/ask', methods=['POST'])
 @api_login_required
 def ask_route():

@@ -1,0 +1,7 @@
+{
+  "intent": "booking",
+  "review_status": "clinician_reviewed",
+  "source": "paraphrase of the 'counsellor' chat starter template (utils/chat_templates.py) and the 'counsellor-sees' FAQ entry",
+  "snippet": "You can book a session with a counsellor from the appointments page in the menu. You do not need to wait for a crisis to talk to someone.",
+  "reviewed_at": "2026-11-25"
+}

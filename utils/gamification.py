@@ -15,7 +15,7 @@ DAILY_CAP = 3  # max point awards per activity type per IST day
 # Never gamify assessments or mood scores (docs/SAFETY_RESEARCH.md).
 NO_POINTS = {'assessment', 'mood'}
 ACTIVITY_TYPES = {'log_medication', 'breathing_exercise', 'yoga_session', 'digital_detox_log', 'journal_entry', 'voice_log',
-                  'goal_progress', 'visit'}
+                  'goal_progress', 'visit', 'grounding_exercise'}
 VISIT_POINTS = 5  # once per IST day, whatever the person does; unrelated to any score (docs/GAMIFICATION.md)
 
 

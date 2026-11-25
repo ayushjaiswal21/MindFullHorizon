@@ -1,11 +1,12 @@
 {% extends "base.html" %}
 {% from 'partials/icons.html' import icon %}
 
-{% block title %}Video session - Mindful Horizon{% endblock %}
+{% block title %}Video session{% endblock %}
+{% block meta_description %}Join a video session with your counsellor or patient. Allow camera and microphone access in your browser.{% endblock %}
 
 {% block legacy_head %}{% endblock %}
 {% block legacy_scripts %}
-<script nonce="{{ g.csp_nonce }}" src="https://cdn.socket.io/4.7.4/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='vendor/socket.io.min.js') }}"></script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_2.js') }}"></script>
 {% endblock %}
 

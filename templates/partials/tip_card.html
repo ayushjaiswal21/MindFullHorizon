@@ -1,0 +1,14 @@
+{#- Dashboard "Tip of the day": general content from utils/daily_tip.py, no user data involved. The render shows the
+    saved tip; static/js/tip.js asks /api/tip, which may swap in today's model-written one. -#}
+{% from '_macros.html' import listen_button %}
+{% set tip = daily_tip() %}
+<section class="card" id="tip-card" aria-labelledby="tip-heading" data-src="{{ url_for('core.tip') }}" data-tip-source="{{ tip.source }}">
+    <div class="card-body">
+        <h2 class="pt-title" id="tip-heading">Tip of the day</h2>
+        <p class="mt-3" data-tip-text>{{ tip.text }}</p>
+        {{ listen_button(target='#tip-card [data-tip-text]', id='tip-listen') }}
+        <p class="pt-sub">General tip, not advice for you.</p>
+    </div>
+</section>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/speech-output.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/tip.js') }}" defer></script>

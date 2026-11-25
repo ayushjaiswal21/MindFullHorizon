@@ -112,7 +112,8 @@ def _generate(tpl):
     system = SYSTEM + llm_guard.canary_line()
     try:
         raw = gemini_impl.ask_gemini_system_user(system, llm_guard.wrap('user_message', tpl.text),
-                                                 max_tokens=400, temperature=0.4, interactive=True)
+                                                 max_tokens=400, temperature=0.4, interactive=True,
+                                                 personal=False)  # fixed allowlisted question, no user data
     except Exception:  # outage, block, breaker open: the static answer is used; the class is logged by the caller
         return None
     guarded = llm_guard.guard_output(raw, system_prompt=system)

@@ -1,0 +1,43 @@
+# Weekly dependency update PRs. Minor and patch updates are grouped into one PR per ecosystem; majors come alone.
+# CI (.github/workflows/ci.yml) runs on every one of them. See docs/CICD.md.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directories: ["/", "/requirements"]
+    schedule: {interval: weekly, day: monday}
+    open-pull-requests-limit: 3
+    labels: [dependencies, python]
+    groups:
+      python-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directories: ["/tools/frontend", "/tools/e2e"]
+    schedule: {interval: weekly, day: monday}
+    open-pull-requests-limit: 3
+    labels: [dependencies, javascript]
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule: {interval: weekly, day: monday}
+    open-pull-requests-limit: 2
+    labels: [dependencies, github-actions]
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: docker
+    directory: "/"
+    schedule: {interval: weekly, day: monday}
+    open-pull-requests-limit: 2
+    labels: [dependencies, docker]
+    groups:
+      docker-minor-patch:
+        update-types: [minor, patch]
+    # The base image is pinned to python 3.11 on purpose (requirements need it); ignore major and minor Python jumps.
+    ignore:
+      - dependency-name: python
+        update-types: ["version-update:semver-major", "version-update:semver-minor"]

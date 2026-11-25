@@ -342,7 +342,7 @@ Environment variables:
 | `FLASK_ENV` | yes | `production` turns on Secure cookies, HSTS, and skips `create_all` |
 | `DATABASE_URL` | production | Defaults to the SQLite file |
 | `GEMINI_API_KEY` | for AI | Without it every AI call falls back to canned text |
-| `GEMINI_MODEL_NAME`, `GEMINI_TIMEOUT` | no | Default `gemini-flash-latest`, 20 s |
+| `GEMINI_MODEL_NAME`, `GEMINI_TIMEOUT` | no | Default `gemini-flash-lite-latest` (verified live 2026-11-24), 20 s; interactive calls are capped at 10 s |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | for Google sign-in | |
 | `PROVIDER_INVITE_CODE` | for provider signup | Unset means provider signup is closed |
 | `CORS_ORIGINS` | no | Comma list; unset means same-origin SocketIO |

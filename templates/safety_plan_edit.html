@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'patient_macros.html' import helpline_list %}
+
+{% block title %}{{ 'Edit' if exists else 'Make' }} my safety plan{% endblock %}
+{% block meta_description %}Write a short private plan for the moments when things feel too much.{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellbeing.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <header class="page-header">
+    <h1>{{ 'Edit my safety plan' if exists else 'Make my safety plan' }}</h1>
+    <p class="lead">Write in your own words. You can leave any part empty and come back later. Only you can read this unless you choose to share it.</p>
+    <div class="page-actions">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('patient.safety_plan') }}">{{ icon('arrow-left') }} Back</a>
+    </div>
+  </header>
+
+  <aside class="alert alert-info" role="note">
+    A safety plan is a personal tool. It is not a diagnosis and it does not replace a counsellor. If you are in danger now, call 112 or a helpline instead of finishing this page.
+  </aside>
+
+  {% if error %}<div class="alert alert-danger mt-4" role="alert">{{ error }}</div>{% endif %}
+
+  <form method="post" action="{{ url_for('patient.safety_plan_save') }}" class="sp-form mt-6" novalidate>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="client_request_id" value="{{ request_id }}">
+
+    {% macro text_field(i, key, title, hint) %}
+    <div class="field">
+      <label class="label" for="f-{{ key }}">{{ i }}. {{ title }}</label>
+      <p class="help" id="h-{{ key }}">{{ hint }}</p>
+      <textarea class="textarea" id="f-{{ key }}" name="{{ key }}" rows="4" maxlength="{{ limits.MAX_TEXT }}" aria-describedby="h-{{ key }}" autocomplete="off">{{ v[key] }}</textarea>
+    </div>
+    {% endmacro %}
+
+    {% for key, title, hint in fields[:3] %}{{ text_field(loop.index, key, title, hint) }}{% endfor %}
+
+    <fieldset class="sp-people-set">
+      <legend class="label">4. People I can ask for help</legend>
+      <p class="help">Name and phone number of people you trust, for example a friend, a relative or a warden. Up to {{ limits.MAX_PEOPLE }}.</p>
+      {% for p in people %}
+      <div class="sp-person">
+        <div class="field"><label class="label" for="pn-{{ loop.index0 }}">Name {{ loop.index }}</label>
+          <input class="input" id="pn-{{ loop.index0 }}" name="person_name_{{ loop.index0 }}" type="text" maxlength="{{ limits.MAX_NAME }}" value="{{ p.name }}" autocomplete="off"></div>
+        <div class="field"><label class="label" for="pp-{{ loop.index0 }}">Phone {{ loop.index }}</label>
+          <input class="input" id="pp-{{ loop.index0 }}" name="person_phone_{{ loop.index0 }}" type="tel" inputmode="tel" maxlength="{{ limits.MAX_PHONE }}" value="{{ p.phone }}" autocomplete="off"></div>
+      </div>
+      {% endfor %}
+    </fieldset>
+
+    {% for key, title, hint in fields[3:] %}{{ text_field(loop.index + 4, key, title, hint) }}
+      {% if key == 'professionals' %}
+      <div class="panel-muted sp-helplines"><p class="muted">These national helplines are always shown on your plan. You do not need to type them.</p>{{ helpline_list(helplines, false) }}</div>
+      {% endif %}
+    {% endfor %}
+
+    <div class="wl-actions mt-6">
+      <button class="btn btn-primary" type="submit">Save my plan</button>
+      <a class="btn btn-ghost" href="{{ url_for('patient.safety_plan') }}">Cancel</a>
+    </div>
+    <p class="wl-note mt-3">Your plan is stored in your account, is never sent to the AI and is deleted if you delete your account. It is included if you download your data.</p>
+  </form>
+</div>
+{% endblock %}

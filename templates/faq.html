@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from 'partials/breadcrumbs.html' import breadcrumb %}
-{% from '_macros.html' import jsonld_scripts %}
+{% from '_macros.html' import jsonld_scripts, listen_button %}
 
 {% block title %}Frequently asked questions{% endblock %}
 {% block meta_description %}{{ page_description }}{% endblock %}
@@ -26,17 +26,21 @@
       <summary>{{ item.q }}</summary>
       <div class="mfh-answer">
         <p>{{ item.a }}</p>
-        {% if item.link %}<p><a href="{{ account_data_url if item.link[0] == 'auth.account_data' else url_for(item.link[0]) }}">{{ item.link[1] }}</a></p>{% endif %}
+        {% if item.id in ('self-harm', 'counsellor-sees', 'ai-model') %}
+        {{ listen_button(text=item.a, id='listen-faq-' ~ item.id) }}
+        {% endif %}
+        {% if item.link %}<p><a class="tap-link" href="{{ account_data_url if item.link[0] == 'auth.account_data' else url_for(item.link[0]) }}">{{ item.link[1] }}</a></p>{% endif %}
       </div>
     </details>
     {% endfor %}
   </div>
 
-  <p class="muted page-narrow" style="margin-top:1.5rem">Question not covered here? Use the <a href="{{ url_for('pages.contact') }}">contact page</a>. If you are in crisis, call Tele-MANAS on {{ tele_manas }} or emergency services on {{ emergency_number }}.</p>
+  <p class="muted page-narrow mt-6">Question not covered here? Use the <a href="{{ url_for('pages.contact') }}">contact page</a>. If you are in crisis, call Tele-MANAS on {{ tele_manas }} or emergency services on {{ emergency_number }}.</p>
 </div>
 {% endblock %}
 
 {% block scripts %}
 {{ super() }}
 <script defer src="{{ url_for('static', filename='js/components.js') }}" nonce="{{ g.csp_nonce }}"></script>
+<script defer src="{{ url_for('static', filename='js/speech-output.js') }}" nonce="{{ g.csp_nonce }}"></script>
 {% endblock %}

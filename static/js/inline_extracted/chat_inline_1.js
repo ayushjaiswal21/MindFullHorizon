@@ -117,6 +117,8 @@
       el('p', null, 'Free support, any time:'),
       helplineList(lines)
     );
+    var spl = byId('safety-plan-line'); /* extra line after the fixed crisis text and helplines, never instead of them */
+    if (spl) { var extra = spl.cloneNode(true); extra.removeAttribute('id'); extra.hidden = false; banner.append(extra); }
     banner.hidden = false;
     removeStarters();
     var n = byId('chat-notice');

@@ -8,7 +8,7 @@ from datetime import datetime, date, timedelta
 import json
 import os
 from models import ProviderPatient
-from utils.audit import audit
+from utils.audit import audit; from utils.followups import on_acknowledged
 from utils.state import TransitionError, transition, CONFLICT_MESSAGE
 from utils.timeutil import ist_today, utcnow
 from sqlalchemy.exc import IntegrityError
@@ -227,7 +227,7 @@ def acknowledge_crisis(event_id):
     won = CrisisEvent.query.filter(CrisisEvent.id == event.id, CrisisEvent.acknowledged_at.is_(None)).update(
         {'acknowledged_at': utcnow(), 'acknowledged_by': session['user_id']}, synchronize_session=False)
     if won:
-        audit(session['user_id'], 'ack_crisis', 'crisis_event', event.id)
+        on_acknowledged(event, session['user_id'])  # audits ack_crisis and opens the follow-up plan (utils/followups.py)
     db.session.commit()
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return jsonify(success=True)
@@ -401,12 +401,14 @@ def ai_documentation():
                 if patient is None:  # same answer for "no such user" and "not your patient": no existence leak
                     flash('No assigned patient with that email.', 'error')
                     return render_template('ai_documentation.html', user_name=session['user_name'], transcript=transcript, patient_email=patient_email)
-                recent_detox = DigitalDetoxLog.query.filter_by(user_id=patient.id).order_by(DigitalDetoxLog.date.desc(), DigitalDetoxLog.id.desc()).first()
                 gamification = Gamification.query.filter_by(user_id=patient.id).first()
 
+                # No unvalidated AI-generated number (DigitalDetoxLog.ai_score) is fed in here: an AI estimate
+                # shaping another AI generation that becomes a counsellor-facing note is exactly the cascading-AI
+                # risk SYNTHESIS.md c2 warns against, worse than showing the estimate directly because the note
+                # drafter can restate it as if it were a fact with no caveat attached. Only real logged
+                # engagement (points/streak) goes in.
                 patient_context = {
-                    'wellness_trend': recent_detox.ai_score if recent_detox and recent_detox.ai_score else 'Not available',
-                    'digital_score': recent_detox.ai_score if recent_detox and recent_detox.ai_score else 'Not available',
                     'engagement': f'{gamification.points} points, {gamification.streak} day streak' if gamification else 'Low'
                 }
 
@@ -452,26 +454,20 @@ def _analytics_core(k):
     stats = db.session.query(func.avg(Gamification.points), func.avg(Gamification.streak), func.count(Gamification.id)
                              ).filter(Gamification.user_id.in_(pids)).first()
 
-    # one row per (day, ai_score): the day's log count, hours and score mix are folded in Python from a few rows
+    # one row per day: the day's log count and total hours are folded in Python from a few rows.
+    # Deliberately does NOT aggregate DigitalDetoxLog.ai_score (the LLM-generated digital-detox
+    # score): SYNTHESIS.md section 3(c) item c2 bans feeding that score into any aggregate, chart
+    # or ranking, even with a caveat attached, because an institution-wide average of an
+    # unvalidated per-student estimate loses the raw context that makes the estimate checkable.
     days = {}
-    for day, score, n, hours in db.session.query(
-            DigitalDetoxLog.date, DigitalDetoxLog.ai_score, func.count(), func.sum(DigitalDetoxLog.screen_time_hours)
-    ).filter(DigitalDetoxLog.user_id.in_(pids), DigitalDetoxLog.date >= since).group_by(DigitalDetoxLog.date, DigitalDetoxLog.ai_score):
-        d = days.setdefault(day.strftime('%Y-%m-%d'), {'count': 0, 'hours': 0.0, 'scores': []})
-        d['count'] += n
-        d['hours'] += hours or 0
-        if score:
-            d['scores'] += [score] * n
-    score_values = {'Excellent': 5, 'Good': 4, 'Fair': 3, 'Needs Improvement': 2, 'Poor': 1}
+    for day, n, hours in db.session.query(
+            DigitalDetoxLog.date, func.count(), func.sum(DigitalDetoxLog.screen_time_hours)
+    ).filter(DigitalDetoxLog.user_id.in_(pids), DigitalDetoxLog.date >= since).group_by(DigitalDetoxLog.date):
+        days[day.strftime('%Y-%m-%d')] = {'count': n, 'hours': hours or 0}
     labels = [d for d in sorted(days) if days[d]['count'] >= k] if total_patients >= k else []
-    screen, wellness = [], []
-    for day in labels:
-        d = days[day]
-        screen.append(round(d['hours'] / d['count'], 1))
-        nums = [score_values[s] for s in d['scores'] if s in score_values]
-        wellness.append(round(sum(nums) / len(nums), 1) if nums else 0)
+    screen = [round(days[day]['hours'] / days[day]['count'], 1) for day in labels]
     return {'total_patients': total_patients, 'active_patients': active_patients, 'assessments_30_days': assessments_30_days,
-            'gamification_stats': tuple(stats), 'chart_labels': labels, 'screen_time_data': screen, 'wellness_score_data': wellness}
+            'gamification_stats': tuple(stats), 'chart_labels': labels, 'screen_time_data': screen}
 
 @provider_bp.route('/analytics')
 @login_required
@@ -491,7 +487,7 @@ def analytics():
     core = cached('inst', ('analytics', normalize_institution_name(institution), k), ANALYTICS_TTL, lambda: _analytics_core(k))
     total_patients, active_patients, assessments_30_days, gamification_stats = (
         core['total_patients'], core['active_patients'], core['assessments_30_days'], core['gamification_stats'])
-    chart_labels, screen_time_data, wellness_score_data = core['chart_labels'], core['screen_time_data'], core['wellness_score_data']
+    chart_labels, screen_time_data = core['chart_labels'], core['screen_time_data']
 
     big = total_patients >= k  # below K nothing about the group is shown
     active_ok = big and (active_patients == 0 or active_patients >= k)
@@ -507,7 +503,6 @@ def analytics():
         'total_gamified_users': cell(gamification_stats[2]) if big else None,
         'chart_labels': chart_labels,
         'screen_time_data': screen_time_data,
-        'wellness_score_data': wellness_score_data,
         'blog_insights': recent_blog_insights,
         'institutional_data': institutional_data
     }

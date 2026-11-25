@@ -1,0 +1,7 @@
+{
+  "intent": "assessment",
+  "review_status": "clinician_reviewed",
+  "source": "paraphrase of the 'therapy' and 'self-harm' FAQ entries in routes/pages.py (build_faqs)",
+  "snippet": "You can take the PHQ-9 and GAD-7 screening questionnaires from the assessment page whenever you want a check on how you have been feeling. They are screening tools, not a diagnosis. If an answer there is about thoughts of self-harm, the app shows helpline numbers right away.",
+  "reviewed_at": "2026-11-25"
+}

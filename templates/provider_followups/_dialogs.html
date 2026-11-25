@@ -1,0 +1,26 @@
+{# Mark-done dialog shared by the dashboard panel and the report timeline. Outcome is a fixed list; the note is optional and is saved as a session note. #}
+<dialog id="fuDoneDialog" class="pv-dialog" aria-labelledby="fuDoneTitle">
+    <h2 id="fuDoneTitle" class="text-lg">Record this follow-up</h2>
+    <p class="help" id="fuDoneFor"></p>
+    <div class="field">
+        <label class="label" for="fuOutcome">What happened</label>
+        <select id="fuOutcome" class="select">
+            {% for code, label in fu_outcomes.items() %}<option value="{{ code }}">{{ label }}</option>{% endfor %}
+        </select>
+    </div>
+    <div class="field">
+        <label class="label" for="fuNote">Session note (optional)</label>
+        <textarea id="fuNote" class="textarea" rows="3" maxlength="2000" aria-describedby="fuNoteHelp"></textarea>
+        <p id="fuNoteHelp" class="help">Saved with your session notes for this student. The follow-up tracker itself stores no text.</p>
+    </div>
+    <div class="fu-dialog-actions">
+        <div class="flex flex-wrap gap-2">
+            <button type="button" class="btn btn-ghost btn-sm" data-fu-alt="missed">Mark missed</button>
+            <button type="button" class="btn btn-ghost btn-sm" data-fu-alt="skipped">Skip</button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <button type="button" class="btn btn-ghost" id="fuDoneCancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="fuDoneSave">Mark done</button>
+        </div>
+    </div>
+</dialog>

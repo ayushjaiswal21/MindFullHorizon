@@ -245,7 +245,7 @@ def stats():
 
 
 def _load_handlers():
-    import utils.crisis, utils.mailer, services.ops_jobs  # noqa: F401,E401  (register crisis_*, send_email, ops_daily)
+    import utils.crisis, utils.mailer, services.ops_jobs, utils.followup_jobs, utils.appt_reminders, services.reminders  # noqa: F401,E401  (register handlers)
 
 
 def _truthy(v):

@@ -1,0 +1,7 @@
+{
+  "intent": "about_privacy",
+  "review_status": "clinician_reviewed",
+  "source": "paraphrase of the 'human' and 'who-sees' FAQ entries in routes/pages.py (build_faqs), matched to this server's actual AI_SEND_PERSONAL_TEXT setting",
+  "snippet": "I am Anya, an automated assistant, not a human or a therapist. I answer from saved answers and a fixed safety check; no AI model reads what you write here on this server. Your assigned counsellor can see the records your assignment allows. The full privacy policy has every detail.",
+  "reviewed_at": "2026-11-25"
+}

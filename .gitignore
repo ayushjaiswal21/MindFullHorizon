@@ -34,3 +34,6 @@ htmlcov/
 
 # node tooling (built CSS is committed)
 node_modules/
+
+# e2e screenshots written by tools/e2e specs
+tools/e2e/*.png

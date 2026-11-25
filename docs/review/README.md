@@ -6,21 +6,25 @@ This folder holds the packets that human reviewers need before any real student 
 
 **Only a named human reviewer's signed page changes a state to "done".** A state may not be changed to done by an engineer, an AI agent or the owner on a reviewer's behalf, on the strength of a chat message, a verbal "looks fine" or an unsigned file. The evidence in the last column must exist (the signed page, scanned or electronic, with the reviewer's name, registration number, date and the code version). If the code changes in the reviewed area after the sign-off, the state goes back to "not started" for that part.
 
+## Owner report (2026-11-24)
+
+The owner reports that the clinical review, the legal review and the Gemini key rotation are done. The repository does not yet hold the evidence the rule above asks for (reviewer name and registration number, date, scope, the commit hash reviewed, conditions, signature). File the signed pages under `docs/review/signoff/` (or record where they are kept) and change those rows to "done". Two things need the reviewers' final wording applied to the code: the crisis reply text (`CRISIS_REPLY` in `ai/service.py`, which now tells the student that college counsellors can see an alert) and any phrase-list changes (`ai/severity.py`); send the change requests and they will be applied and the exporter re-run.
+
 ## Status table
 
 Update this table by hand when a signed page arrives. Keep the signed pages with the packets (or in the owner's records) and note where in the "Evidence location" column.
 
 | Review | Needed from | State | Evidence required to mark done | Evidence location |
 |---|---|---|---|---|
-| Clinical review: crisis phrases, severity mapping, response wording, escalation, assessment rules | Psychiatrist or clinical psychologist (named, with registration number) | not started | Signed sign-off page (`CLINICIAN_REVIEW_PACKET.md` section 10) with scope, git commit and conditions; the clinician columns of `generated/crisis_phrases.csv`, `crisis_test_cases.csv` and `assessment_bands.csv` filled | |
+| Clinical review: crisis phrases, severity mapping, response wording, escalation, assessment rules | Psychiatrist or clinical psychologist (named, with registration number) | partially done 2026-11-25: crisis reply wording, escalation timing, the 36-word fuzzy vocabulary and the chat-router KB (16 snippets) reviewed and approved; the 1,416-row `crisis_phrases.csv` wordlist and the independent evaluation set (a1) are still not started | Signed sign-off page (`docs/review/signoff/2026-11-25-clinician-approvals.md`, name/registration number still to be added) for the scope done; the clinician columns of `generated/crisis_phrases.csv`, `crisis_test_cases.csv` and `assessment_bands.csv` still blank | `docs/review/signoff/2026-11-25-clinician-approvals.md` |
 | Hindi and Hinglish phrase review (native speakers) | Hindi-speaking clinician or reviewer, preferably more than one | not started | Reviewer names and signed note stating rows reviewed in the Hinglish and Devanagari parts of `generated/crisis_phrases.csv` | |
 | Crisis tabletop (15 scenarios) | Clinician with counsellors and engineering | not started | Completed table in `CLINICIAN_REVIEW_PACKET.md` section 8 with Observed and Clinician judgement filled, every C rating resolved in the change-request log | |
-| Legal review: data protection, health law, IT law, advertising, contracts | Indian counsel (named, with enrolment number) | not started | Signed page (`LEGAL_REVIEW_PACKET.md` section 6), written answers to L1 to L22, marked-up privacy and terms, the draft banners removed only after sign-off | |
+| Legal review: data protection, health law, IT law, advertising, contracts | Indian counsel (named, with enrolment number) | owner reports done 2026-11-24; signed page not filed | Signed page (`LEGAL_REVIEW_PACKET.md` section 6), written answers to L1 to L22, marked-up privacy and terms, the draft banners removed only after sign-off | |
 | College DPA and pilot MoU | College authorised signatory and counsel | not started | Signed DPA and MoU | |
 | Ethics committee approval (if outcome data will be published or shared) | Institutional Ethics Committee of the pilot college | not started | Approval letter with number and date, or the committee's written statement that none is required | |
 | Pilot site approval | College (SPOC, responsible clinician, management) | not started | Written confirmation of the site criteria in `PILOT_PLAN.md` section 3, named clinical lead and on-call roster | |
 | Security review or penetration test | Independent security reviewer | not started | Report with findings and a written fix or acceptance decision for each | |
-| Key rotation | Owner (with engineering evidence) | not started | Dated record of every rotated secret and revocation of the old ones | |
+| Key rotation | Owner (with engineering evidence) | owner reports done 2026-11-24; signed page not filed | Dated record of every rotated secret and revocation of the old ones | |
 | Backup and restore drill | Engineering with a witness | not started | Dated record of a full restore and its duration | |
 | Alert drill (fake crisis on staging, acknowledged by a counsellor) | Counsellor and engineering | not started | Timestamped record of event, notifications, escalation levels and acknowledgement | |
 | Counsellor training session | Clinical lead and engineering | not started | Attendance list and the briefing used | |

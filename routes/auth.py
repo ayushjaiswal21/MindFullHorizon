@@ -16,9 +16,9 @@ from utils.session_stamp import stamp_session
 from services.errors import ServiceError
 from services.prescriber import submit_profile
 from services.roles import home_endpoint
+from services.wellbeing_export import WELLBEING_EXPORT
 
 auth_bp = Blueprint('auth', __name__)
-
 CONSENT_KINDS = ('privacy', 'age18')
 DELETE_PHRASE = 'DELETE MY ACCOUNT'  # typed by Google-only users, who have no password to re-enter
 LOGIN_ERROR = 'Invalid email, password or role. Please check them and try again.'
@@ -287,7 +287,7 @@ _EXPORT = [
     ('consent_records', ConsentRecord, 'user_id', ()),
     ('blog_posts', BlogPost, 'author_id', ()), ('blog_comments', BlogComment, 'user_id', ()),
     ('contact_messages', ContactMessage, 'user_id', ()), ('assigned_providers', ProviderPatient, 'patient_id', ('id', 'patient_id')),
-]
+] + WELLBEING_EXPORT
 
 
 def export_user_data(user):

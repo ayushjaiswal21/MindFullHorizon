@@ -3,7 +3,8 @@
 {% from '_macros.html' import form_field, empty_state %}
 {% from 'patient_macros.html' import status_badge, helpline_list %}
 
-{% block title %}Appointments - MindFull Horizon{% endblock %}
+{% block title %}Appointments{% endblock %}
+{% block meta_description %}Book a session with a counsellor at your college and see your upcoming appointments.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">

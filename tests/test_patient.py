@@ -281,7 +281,7 @@ def test_voice_upload_list_delete(app, patient_client, make_user):
     assert c.post("/api/upload-voice", data={}, headers=XHR).status_code == 400
     with app.app_context():
         logs = VoiceLog.query.all()
-        assert len(logs) == 1 and logs[0].user_id == uid and logs[0].emotion
+        assert len(logs) == 1 and logs[0].user_id == uid and logs[0].emotion is None
         lid = logs[0].id
     assert c.get("/patient/voice-logs").status_code == 200
     assert _gam(app, uid)[0] == 20 + 5  # 20 for the voice log, 5 for the first page visit of the day

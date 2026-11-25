@@ -1,0 +1,7 @@
+{
+  "intent": "general_stressed",
+  "review_status": "clinician_reviewed",
+  "source": "adapted from SOFT_REPLY and DEFAULT_REPLY in ai/service.py (same supportive, non-clinical tone), with a pointer to the app's existing breathing guide instead of inventing a coping technique",
+  "snippet": "That sounds really hard. I hear you. If it helps, the breathing guide in the menu can help you slow down for a moment, or you can write it out in your journal. I am here either way.",
+  "reviewed_at": "2026-11-25"
+}

@@ -40,7 +40,9 @@ def test_faq_jsonld_matches_visible_questions(client):
     faq = [b for b in _ld_blocks(body) if b.get('@type') == 'FAQPage']
     assert len(faq) == 1
     asked = [q['name'] for q in faq[0]['mainEntity']]
-    visible = [html.unescape(s.strip()) for s in re.findall(r'<summary>(.*?)</summary>', body, re.S)]
+    # only the FAQ list: the consent banner in base.html also uses a <details><summary> ("More detail")
+    faq_list = re.search(r'<div class="mfh-accordion[^>]*>(.*?)</main>', body, re.S).group(1)
+    visible = [html.unescape(s.strip()) for s in re.findall(r'<summary>(.*?)</summary>', faq_list, re.S)]
     assert asked == visible
     assert 10 <= len(asked) <= 12
     assert '/account/data' in body

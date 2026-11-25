@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% from 'partials/icons.html' import icon %}
 
-{% block title %}Chat with Anya | MindFull Horizon{% endblock %}
+{% block title %}Chat with Anya{% endblock %}
+{% block meta_description %}Talk with Anya, an AI companion. Anya is not a therapist and cannot replace a counsellor or a helpline.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
@@ -12,13 +13,18 @@
   <div class="max-w-3xl mx-auto">
     <header class="page-header">
       <h1>Chat with Anya</h1>
+      {% if ai_personal_text %}
       <p class="lead">Anya is an AI assistant, not a therapist. Use it to talk through how you feel and to find a coping step to try. It cannot diagnose you or replace your counsellor.</p>
+      {% else %}
+      <p class="lead">Anya replies from saved answers and a safety check; no AI model reads what you write. Anya is an automated assistant, not a therapist. Pick a question for a saved answer. If you write your own message, a fixed safety check looks for signs of danger and shows help numbers if it finds any. It cannot diagnose you or replace your counsellor.</p>
+      {% endif %}
       <div class="page-actions">
         <a class="btn btn-ghost btn-sm" href="{{ url_for('patient.patient_dashboard') }}">{{ icon('arrow-left') }} Back to dashboard</a>
       </div>
     </header>
 
     <div id="chat-banner" class="crisis-banner mb-4 no-print" role="alert" hidden></div>
+    {% set spl = safety_plan_link() %}{% if spl %}<p id="safety-plan-line" class="mt-2" hidden><a class="tap-link" href="{{ spl.url }}"><strong>{{ spl.label }}</strong></a></p>{% endif %}
     <div id="chat-notice" class="alert alert-info mb-4 no-print" hidden></div>
 
     <section class="card" aria-labelledby="chat-heading">
@@ -29,7 +35,7 @@
       <div id="chat-print-head" class="chat-print-head" hidden>
         <p class="chat-print-title">MindFull Horizon: conversation with Anya</p>
         <p id="chat-print-date"></p>
-        <p>AI-generated, not advice. Anya is an AI assistant, not a therapist.</p>
+        <p>{% if ai_personal_text %}AI-generated, not advice. Anya is an AI assistant, not a therapist.{% else %}Saved answers, not advice. Anya is an automated assistant, not a therapist.{% endif %}</p>
       </div>
       <div id="chat-messages" class="chat-log" role="log" aria-live="polite" aria-relevant="additions" aria-label="Conversation with Anya" tabindex="0" data-chat-id="{{ session.user_id }}">
         <div id="chat-history" class="chat-history" aria-label="Earlier messages"></div>
@@ -39,7 +45,7 @@
         </div>
         <div class="msg msg-bot">
           <p class="msg-who">Anya</p>
-          <p class="msg-text">Hello, I'm Anya. I am an AI, not a therapist, and I can make mistakes. How are you feeling today?</p>
+          <p class="msg-text">{% if ai_personal_text %}Hello, I'm Anya. I am an AI, not a therapist, and I can make mistakes. How are you feeling today?{% else %}Hello, I'm Anya, an automated assistant. I reply from saved answers and a safety check, and no AI model reads what you write. Pick a question below, or book a counsellor if you want to talk to a person.{% endif %}</p>
         </div>
         <div id="chat-starters" class="cheerful-prompt no-print">
           <p class="help">Not sure where to start? Pick a question and Anya will answer it. Or type your own message below.</p>
@@ -73,6 +79,7 @@
 {% endblock %}
 
 {% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/speech-output.js') }}" defer></script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/chat_inline_1.js') }}" defer></script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/chat_actions.js') }}" defer></script>
 {% endblock %}

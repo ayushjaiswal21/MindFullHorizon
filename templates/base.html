@@ -69,9 +69,9 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/tailwind.css') }}?v={{ asset_version }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}?v={{ asset_version }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v={{ asset_version }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}?v={{ asset_version }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}?v={{ asset_version }}" media="print">
   {% block legacy_head %}
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
   {% endblock %}
 
@@ -110,6 +110,9 @@
               {{ nav_item('patient.goals', 'Goals', '/patient/goals', 'target') }}
               {{ nav_item('patient.progress', 'Progress', '/patient/progress', 'chart') }}
               {{ nav_item('patient.breathing', 'Breathing', '/patient/breathing', 'wind') }}
+              {{ nav_item('patient.grounding', 'Grounding', '/patient/grounding', 'leaf') }}
+              {{ nav_item('patient.sleep_log', 'Sleep log', '/patient/sleep', 'moon') }}
+              {{ nav_item('patient.safety_plan', 'Safety plan', '/patient/safety-plan', 'shield') }}
               {{ nav_item('patient.yoga', 'Yoga', '/patient/yoga', 'activity') }}
               {{ nav_item('music', 'Music', '/music', 'music') }}
               {{ nav_item('patient.medication', 'Medications', '/patient/medication', 'pill') }}
@@ -162,6 +165,7 @@
             <div class="menu-popover" id="menu-account">
               <span class="menu-group-title">Account</span>
               {{ nav_item('profile', 'Profile', '/profile', 'user') }}
+              {% if role == 'patient' %}{{ nav_item('patient.reminders', 'Reminder emails', '/patient/reminders', 'bell') }}{% endif %}
               {% if role == 'patient' and prescriptions_enabled %}{{ nav_item('patient.my_prescriptions', 'Prescriptions', '/patient/my-prescriptions', 'pill') }}{% endif %}
               {{ nav_item('auth.logout', 'Sign out', '/logout', 'logout') }}
             </div>
@@ -189,7 +193,7 @@
         <script type="application/json" id="flash-data">{{ messages | tojson }}</script>
       {% endif %}
       <noscript>
-        <div class="container" style="padding-top:1rem">
+        <div class="container pt-md">
           <div class="alert alert-warning">{{ icon('alert') }}<p>JavaScript is turned off. Pages still load, but the mood check-in, chat, charts and the menu button need it.</p></div>
           {% for category, message in messages or [] %}
             <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category in ('error', 'danger') else 'warning' if category == 'warning' else 'info' }}" role="status"><p>{{ message }}</p></div>
@@ -230,6 +234,7 @@
             {% for h in helplines %}
             <li><a href="tel:{{ h.tel }}">{{ h.name.split(' (')[0] }}: {{ h.number }}</a><span class="muted">{{ h.hours }}. {{ h.note }}</span></li>
             {% endfor %}
+            {% set spl = safety_plan_link() %}{% if spl %}<li><a href="{{ spl.url }}">{{ spl.label }}</a></li>{% endif %}
           </ul>
         </div>
       </div>
@@ -247,8 +252,12 @@
     <div class="container consent-inner">
       <div>
         <h2 id="consent-title" tabindex="-1">Cookies and analytics</h2>
-        <p>Essential cookies keep you signed in and protect forms, and are always on. If you accept analytics, we count page views and a few clicks on our own server, with the utm_source, utm_medium and utm_campaign of the link you arrived from. We never send what you type into the journal, chat or assessments. We use no advertising cookies.</p>
-        <p>Your choice is saved as a cookie and in local storage, both named mfh_consent, for 12 months. Your theme choice is kept in local storage. <a href="/privacy">Privacy policy</a></p>
+        <p>Essential cookies keep you signed in and are always on. Analytics are optional and counted on our own server. No advertising cookies.</p>
+        <details class="consent-more">
+          <summary>More detail</summary>
+          <p>If you accept analytics, we count page views and a few clicks on our own server, with the utm_source, utm_medium and utm_campaign of the link you arrived from. We never send what you type into the journal, chat or assessments.</p>
+          <p>Your choice is saved as a cookie and in local storage, both named mfh_consent, for 12 months. Your theme choice is kept in local storage. <a href="/privacy">Privacy policy</a></p>
+        </details>
       </div>
       <div class="consent-actions">
         <button type="button" class="btn btn-secondary" data-consent="essential">Essential only</button>
@@ -258,8 +267,8 @@
   </section>
 
   {% block legacy_scripts %}
-  <script nonce="{{ g.csp_nonce }}" src="https://cdn.socket.io/4.7.4/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script nonce="{{ g.csp_nonce }}" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='vendor/socket.io.min.js') }}"></script>
+  <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
   {% assets "js_all" %}
   <script nonce="{{ g.csp_nonce }}" src="{{ ASSET_URL }}" crossorigin="anonymous"></script>
   {% endassets %}

@@ -1,0 +1,74 @@
+/* Shared responsive rules (360px to 1920px). Loaded after site.css and components.css; tokens only, no colours.
+   Page-specific fixes live in that page's CSS file. */
+
+/* Flex and grid children may shrink below their content width; without this a long word or wide table pushes the page. */
+.grid > *, .flex > *, .page-header > *, .card-body > *, .field, .cl-grid > *, .cl-grid-2 > *, .cl-split > *, .cl-row > * { min-width: 0; }
+/* Scrollers contain their absolutely positioned children (sr-only captions and labels) so they cannot widen the page. */
+.table-wrap, .tabs { position: relative; }
+/* Breadcrumb items shrink so a long page title wraps. */
+.breadcrumbs li, .breadcrumbs li > * { min-width: 0; }
+/* Long unbroken words (URLs, pasted text) wrap instead of widening the page; break-word leaves table sizing alone. */
+body { overflow-wrap: break-word; }
+.user-text, .prose, .card h1, .card h2, .card h3 { overflow-wrap: anywhere; }
+
+/* Consent banner: a compact bottom sheet, the long text sits behind "More detail". */
+.consent-banner { padding-bottom: env(safe-area-inset-bottom); }
+.consent-inner { max-height: 60vh; max-height: 60dvh; }
+.consent-more > summary { display: inline-flex; align-items: center; min-height: 44px; color: var(--primary); cursor: pointer; font-size: .875rem; }
+.consent-more[open] > summary { margin-bottom: .25rem; }
+@media (max-width: 40rem) {
+  .consent-inner { gap: .5rem; padding-block: .625rem; }
+  .consent-inner h2 { font-size: .9375rem; margin-bottom: .125rem; }
+  .consent-inner p { font-size: .8125rem; margin-bottom: .25rem; }
+  .consent-actions { flex-wrap: nowrap; }
+  .consent-actions .btn { flex: 1 1 0; min-width: 0; padding-inline: .5rem; white-space: normal; line-height: 1.25; }
+}
+
+/* An alert without an icon holds plain flowing content; flex would lay its children out side by side. */
+.alert:not(:has(> .icon)) { display: block; }
+
+/* Dialogs scroll on short viewports. */
+.mfh-modal { max-height: calc(100dvh - 2rem); overflow-y: auto; }
+
+/* Touch: 44px minimum for every control that is not an inline link in running text (phones and small tablets). */
+@media (max-width: 48rem) {
+  .btn, .btn-sm { min-height: 44px; }
+  .icon-btn { width: 44px; height: 44px; }
+  .brand { min-height: 44px; }
+  .footer-grid a, .footer-link-btn, .footer-bottom a, .breadcrumbs a, .toc a, summary { display: inline-flex; align-items: center; min-height: 44px; }
+  .footer-grid a, .footer-bottom a, .breadcrumbs a, .toc a { min-width: 44px; }
+  .tap-link, .home-links a, .home-activity a, .crisis-banner a, a.help, .consent-more a { display: inline-flex; align-items: center; min-height: 44px; min-width: 44px; }
+  .cl-link { display: inline-flex; align-items: center; min-height: 44px; }
+  .footer-grid li + li { margin-top: 0; }
+  .helpline-list a { padding: .5rem 0; }
+  .breadcrumbs { padding-top: 0; }
+  .breadcrumbs ol { gap: 0 .25rem; }
+  .breadcrumbs li { display: flex; align-items: center; min-height: 44px; }
+  .check { min-height: 44px; }
+  .check > label { flex: 1; min-height: 44px; padding-block: .55rem; cursor: pointer; }
+  div.check > input { margin-top: .8rem; }
+  label.check { padding-block: .5rem; }
+  .table .btn { white-space: nowrap; }
+  .input, .select { min-height: 44px; }
+  .accordion summary, details > summary { display: flex; }
+}
+
+/* Phones: filter bars and key-value lists stack instead of forcing width. */
+@media (max-width: 40rem) {
+  .cl-filters .field { flex: 1 1 100%; min-width: 0; }
+  .cl-filters .btn { flex: 1 1 auto; }
+  .cl-dl { grid-template-columns: 1fr; gap: 0; }
+  .cl-dl dd { margin-bottom: .5rem; }
+  .page-actions .btn { flex: 1 1 auto; justify-content: center; }
+}
+
+/* Notched phones in landscape (viewport-fit=cover): keep content and floating layers inside the safe area. */
+.container, .breadcrumbs { padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right)); }
+.toast-region, .back-to-top { right: max(var(--gutter), env(safe-area-inset-right)); bottom: max(var(--gutter), env(safe-area-inset-bottom)); }
+
+/* Phones: statistic tiles sit two per row and use less padding. */
+@media (max-width: 40rem) {
+  .cl-grid:has(> .stat) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+  .stat { padding: .75rem; }
+  .stat-value { font-size: 1.5rem; }
+}

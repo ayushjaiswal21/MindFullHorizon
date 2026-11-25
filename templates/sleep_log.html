@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+
+{% block title %}Sleep log{% endblock %}
+{% block meta_description %}Note when you went to bed and woke up, and see the last 14 days.{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellbeing.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <header class="page-header">
+    <h1>Sleep log</h1>
+    <p class="lead">Note when you went to bed and when you woke up, and how rested you felt. It is a record of what you enter, nothing more. It is private: counsellors do not see it unless you download your data and show it to them.</p>
+    <div class="page-actions">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('patient.patient_dashboard') }}">{{ icon('arrow-left') }} Back to dashboard</a>
+    </div>
+  </header>
+
+  <div class="wl-grid wl-grid-2">
+    <section class="card" aria-labelledby="add-heading">
+      <div class="card-header"><h2 id="add-heading" class="text-lg">Add last night</h2></div>
+      <div class="card-body">
+        {% if error %}<div class="alert alert-danger mb-4" role="alert">{{ error }}</div>{% endif %}
+        <form method="post" action="{{ url_for('patient.sleep_log_save') }}" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="client_request_id" value="{{ request_id }}">
+          <div class="field"><label class="label" for="night_date">Date you woke up</label>
+            <input class="input" type="date" id="night_date" name="night_date" value="{{ form.get('night_date') or today }}" max="{{ today }}" required></div>
+          <div class="sleep-times">
+            <div class="field"><label class="label" for="bedtime">Bedtime</label>
+              <input class="input" type="time" id="bedtime" name="bedtime" value="{{ form.get('bedtime') or '23:00' }}" required></div>
+            <div class="field"><label class="label" for="wake_time">Wake time</label>
+              <input class="input" type="time" id="wake_time" name="wake_time" value="{{ form.get('wake_time') or '07:00' }}" required></div>
+          </div>
+          <fieldset class="field sleep-quality">
+            <legend class="label">How rested did you feel?</legend>
+            {% for q, text in quality.items() %}
+            <label class="check"><input type="radio" name="quality" value="{{ q }}" {{ 'checked' if (form.get('quality') or '3')|string == q|string }}> {{ q }}, {{ text|lower }}</label>
+            {% endfor %}
+          </fieldset>
+          <div class="field"><label class="label" for="note">Note (optional)</label>
+            <input class="input" type="text" id="note" name="note" maxlength="{{ limits.MAX_NOTE }}" value="{{ form.get('note') or '' }}" autocomplete="off">
+            <p class="help">Up to {{ limits.MAX_NOTE }} characters. Keep it short.</p></div>
+          <button class="btn btn-primary" type="submit">Save entry</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="chart-heading">
+      <div class="card-header"><h2 id="chart-heading" class="text-lg">Last 14 days</h2></div>
+      <div class="card-body">
+        {% if s.count %}
+        <p><strong>Average: {{ s.average }}</strong> <span class="muted">over {{ s.count }} logged {{ 'night' if s.count == 1 else 'nights' }}. Nights without an entry are not counted.</span></p>
+        {% else %}
+        <p class="muted">No entries in the last 14 days. Add your first night to see the chart.</p>
+        {% endif %}
+        <svg class="sleep-chart" viewBox="0 0 {{ s.w }} {{ s.h }}" role="img" aria-labelledby="sc-title sc-desc" focusable="false">
+          <title id="sc-title">Hours slept each night, last 14 days</title>
+          <desc id="sc-desc">A bar for each night you logged. The table below lists the same numbers.</desc>
+          {% for g in s.grid %}
+          <line class="sc-grid" x1="{{ s.left }}" x2="{{ s.w }}" y1="{{ g.y }}" y2="{{ g.y }}"></line>
+          <text class="sc-axis" x="{{ s.left - 4 }}" y="{{ g.y + 4 }}" text-anchor="end">{{ g.label }}</text>
+          {% endfor %}
+          {% for b in s.bars %}
+          {% if b.has %}<rect class="sc-bar" x="{{ b.x }}" y="{{ b.y }}" width="{{ b.w }}" height="{{ b.h }}" rx="2"><title>{{ b.title }}</title></rect>{% endif %}
+          <text class="sc-axis" x="{{ b.tx }}" y="{{ s.h - 6 }}" text-anchor="middle">{{ b.label }}</text>
+          {% endfor %}
+        </svg>
+        <p class="help">Hours on the left, day of the month along the bottom.</p>
+        <p class="wl-note mt-3">This is not a sleep score and not a diagnosis. Many things change how we sleep. If poor sleep is worrying you or lasts for weeks, talk to your counsellor or a doctor.</p>
+      </div>
+    </section>
+  </div>
+
+  <section class="card mt-6" aria-labelledby="table-heading">
+    <div class="card-header"><h2 id="table-heading" class="text-lg">The same 14 days as a table</h2></div>
+    <div class="card-body">
+      <div class="table-wrap sleep-wrap">
+        <table class="table sleep-table">
+          <thead><tr><th scope="col">Date</th><th scope="col">Bedtime</th><th scope="col">Woke</th><th scope="col">Slept</th><th scope="col">Rested</th><th scope="col">Note</th><th scope="col"><span class="sr-only">Delete</span></th></tr></thead>
+          <tbody>
+          {% for r in s.rows %}
+          {% if r.log %}
+          <tr><th scope="row">{{ r.day.strftime('%a %d %b') }}</th><td>{{ r.log.bedtime }}</td><td>{{ r.log.wake_time }}</td><td>{{ r.hours }}</td><td>{{ r.log.quality }} of 5, {{ quality[r.log.quality]|lower }}</td><td class="sleep-note">{{ r.log.note or '' }}</td>
+            <td><form method="post" action="{{ url_for('patient.sleep_log_delete', log_id=r.log.id) }}" data-confirm="Delete the entry for {{ r.day.strftime('%d %b') }}?">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-ghost btn-sm" type="submit" aria-label="Delete entry for {{ r.day.strftime('%d %b') }}">{{ icon('trash') }}</button></form></td></tr>
+          {% else %}
+          <tr><th scope="row">{{ r.day.strftime('%a %d %b') }}</th><td colspan="6" class="muted">No entry</td></tr>
+          {% endif %}
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

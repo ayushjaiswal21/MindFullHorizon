@@ -2,7 +2,7 @@
 {% from 'partials/breadcrumbs.html' import breadcrumb %}
 {% from '_macros.html' import jsonld_scripts, helpline_list %}
 
-{% block title %}About Mindful Horizon{% endblock %}
+{% block title %}About the service{% endblock %}
 {% block meta_description %}{{ page_description }}{% endblock %}
 {% block canonical %}{{ canonical_url }}{% endblock %}
 {% block robots %}index, follow{% endblock %}
@@ -27,7 +27,7 @@
       <li>A daily mood log and a journal.</li>
       <li>The PHQ-9 (low mood) and GAD-7 (anxiety) screening questionnaires, with a score and a plain explanation of what it means.</li>
       <li>Breathing, yoga, music and digital-detox tools, plus goals you set yourself.</li>
-      <li>A chat companion called Anya, which is an AI assistant.</li>
+      <li>A chat companion called Anya, which is {{ anya_kind }}.</li>
       <li>Appointment booking with a counsellor at your institution.</li>
     </ul>
     <p>For counsellors, it gives a list of the students assigned to them, appointments, crisis alerts for their institution, and group-level totals.</p>
@@ -48,7 +48,11 @@
       <li>You type something in, such as a mood, a journal entry, a questionnaire answer or a chat message.</li>
       <li>The server stores it in the service database, tied to your account.</li>
       <li>Scores for PHQ-9 and GAD-7 are calculated on the server, not in your browser.</li>
+      {% if ai_personal_text %}
       <li>When you use an AI feature, the text for that feature is sent to the Google Gemini API to get a reply. Nothing is sent for features that do not use AI.</li>
+      {% else %}
+      <li>No text you write and no data about you is sent to an AI model on this server. The Google Gemini API is used only for general content such as the tip of the day.</li>
+      {% endif %}
       <li>Your assigned counsellor can see your records. Other counsellors at your institution see only group totals and crisis alerts.</li>
       <li>You can download or delete your data from <a href="{{ account_data_url }}">your data page</a>.</li>
     </ol>

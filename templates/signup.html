@@ -1,9 +1,11 @@
 {% extends "base.html" %}
 {% from '_macros.html' import form_field, check, alert %}
+{% from 'partials/breadcrumbs.html' import breadcrumb %}
 
-{% block title %}Create your account - Mindful Horizon{% endblock %}
+{% block title %}Create your account{% endblock %}
 {% block meta_description %}Create a free student account to track your mood, take PHQ-9 and GAD-7 screenings and book a counsellor. You must be 18 or older.{% endblock %}
 {% block robots %}index, follow{% endblock %}
+{% block breadcrumbs %}{{ breadcrumb([('Home', '/'), ('Create account', None)]) }}{% endblock %}
 {% block head_extra %}
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">

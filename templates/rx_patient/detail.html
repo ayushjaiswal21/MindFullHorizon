@@ -2,7 +2,8 @@
 {% from 'partials/icons.html' import icon %}
 {% from 'rx_patient/_macros.html' import status_badge, collection_label, send_control %}
 
-{% block title %}Prescription {{ rx.number or '' }} - MindFull Horizon{% endblock %}
+{% block title %}Prescription {{ rx.number or '' }}{% endblock %}
+{% block meta_description %}The medicines, doses and status of a prescription issued to you by a verified doctor.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">

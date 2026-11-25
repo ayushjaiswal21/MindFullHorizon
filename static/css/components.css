@@ -163,7 +163,23 @@
 @media (min-width: 52rem) {
   .contact-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; }
 }
+/* ---------- Listen button (speechSynthesis) ---------- */
+.mfh-listen { display: inline-flex; align-items: center; gap: .375rem; }
+.mfh-listen .mfh-listen-icon { display: inline-flex; }
+.mfh-listen.is-speaking { color: var(--primary); border-color: var(--primary); }
+@media (prefers-reduced-motion: no-preference) {
+  .mfh-listen.is-speaking .mfh-listen-icon { animation: mfh-listen-pulse 1.4s ease-in-out infinite; }
+  @keyframes mfh-listen-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+}
+
 .helpline-list { margin: .5rem 0 0; padding: 0; list-style: none; }
 .helpline-list li { margin: .25rem 0; }
 .flow-list { margin: 1rem 0; padding-left: 1.25rem; }
 .flow-list li { margin: .5rem 0; }
+/* Classes that replace inline style attributes (the CSP forbids them). */
+.pt-md { padding-top: 1rem; }
+.m-flush { margin: 0; }
+.field-narrow { max-width: 14rem; }
+.field-wide { max-width: 36rem; }
+.wl-actions-split { justify-content: space-between; align-items: flex-start; }
+.wl-grid-auto { grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }

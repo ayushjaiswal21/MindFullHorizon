@@ -1,0 +1,38 @@
+{# Follow-ups panel on the provider dashboard. Needs fu_panel and fu_outcomes (routes/provider_followups.py). #}
+{% from 'partials/icons.html' import icon %}
+{% set groups = [('overdue', 'Overdue'), ('today', 'Due today'), ('soon', 'Next 7 days')] %}
+<section class="card fu-card" aria-labelledby="fu-heading" data-fu-root
+         data-step-url="{{ url_for('provider_followups.api_step', step_id=0) }}"
+         data-reminders-url="{{ url_for('provider_followups.api_reminders') }}">
+    <div class="card-header"><h2 id="fu-heading">Follow-ups after a crisis alert</h2></div>
+    <div class="card-body">
+        {% if fu_panel.overdue or fu_panel.today or fu_panel.soon %}
+        {% for key, title in groups if fu_panel[key] %}
+        <div class="fu-group fu-{{ key }}">
+            <h3>{{ title }} <span class="muted">({{ fu_panel[key]|length }})</span></h3>
+            <ul class="fu-list">
+                {% for it in fu_panel[key] %}
+                <li class="fu-item">
+                    <div>
+                        {% if it.can_act %}<a href="{{ url_for('provider.wellness_report', user_id=it.patient_id) }}"><strong>{{ it.name }}</strong></a>{% else %}<strong>{{ it.name }}</strong>{% endif %}
+                        <div class="help">Follow-up {{ it.seq }} of {{ it.of }}, {{ it.when }}{% if not it.can_act %}. This student is not on your caseload, so you can see the plan but not change it.{% endif %}</div>
+                        {% if it.offer %}<div class="help">A session with this student was completed after this plan began. Record it as this follow-up?</div>{% endif %}
+                    </div>
+                    {% if it.can_act %}
+                    <button type="button" class="btn {{ 'btn-primary' if it.offer else 'btn-secondary' }} btn-sm" data-fu-done data-step-id="{{ it.step_id }}" data-name="{{ it.name }}" data-seq="{{ it.seq }}"{% if it.offer %} data-suggest="contacted_in_person"{% endif %}>{{ icon('check') }} {{ 'Record session' if it.offer else 'Mark done' }}</button>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state">
+            {{ icon('check') }}
+            <h3>No follow-ups due</h3>
+            <p>When you acknowledge a crisis alert, a plan of follow-up check-ins is created and the due ones appear here.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% include 'provider_followups/_dialogs.html' %}

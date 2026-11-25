@@ -245,7 +245,7 @@
       li.append(' (' + hl.hours + ')');
       ul.appendChild(li);
     });
-    b.append(h, p, ul);
+    b.append(h, p, ul, ...Array.from(document.querySelectorAll('#helplines-fallback p'), function (n) { return n.cloneNode(true); })); // safety plan link: an extra line after the helplines
     slot.appendChild(b);
     return b;
   }

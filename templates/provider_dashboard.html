@@ -1,7 +1,9 @@
 {% extends "base.html" %}
 {% from 'partials/icons.html' import icon %}
 
-{% block title %}Provider dashboard - Mindful Horizon{% endblock %}
+{% from 'provider_followups/_flags.html' import flag_badges %}
+{% block title %}Provider dashboard{% endblock %}
+{% block meta_description %}Your linked patients, upcoming appointments and crisis alerts for your institution.{% endblock %}
 
 {% macro stat(label, value, note='') %}
 <div class="stat">
@@ -13,7 +15,7 @@
 
 {% block legacy_head %}{% endblock %}
 {% block legacy_scripts %}
-<script nonce="{{ g.csp_nonce }}" src="https://cdn.socket.io/4.7.4/socket.io.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='vendor/socket.io.min.js') }}"></script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/base_inline_2.js') }}"></script>
 {% endblock %}
 
@@ -22,6 +24,7 @@
 {# Groups under 5 students are never shown, even if the server sent numbers. #}
 {% set hidden = bi.aggregates_hidden or bi.total_patients is none or bi.total_patients < 5 %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/provider.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/followups.css') }}">
 <div class="container" id="provider-config"
      data-appointments-url="{{ url_for('provider.provider_appointments') }}"
      data-accept-url="{{ url_for('provider.accept_appointment', appointment_id=0) }}"
@@ -69,6 +72,7 @@
     </div>
 
     {% if rx_section %}{% include 'provider_rx/_dashboard_section.html' %}{% endif %}
+    {% if fu_panel is defined %}{% include 'provider_followups/_panel.html' %}{% endif %}
 
     <section class="section" aria-labelledby="summary-heading">
         <h2 id="summary-heading" class="sr-only">Institution summary</h2>
@@ -141,10 +145,11 @@
                             <option value="Low" {% if filter_risk == 'Low' %}selected{% endif %}>Low</option>
                         </select>
                     </div>
+                    <label class="check"><input type="checkbox" id="caseloadFlagged" name="flag" value="1"> With score flag</label>
                     <button type="submit" class="btn btn-primary">Filter</button>
                     <a href="{{ url_for('provider.provider_dashboard') }}" class="btn btn-ghost">Reset</a>
                 </form>
-                <p class="help">Risk level comes from the latest PHQ-9 and GAD-7 scores and open crisis alerts. It is a screening signal, not a diagnosis. Inactive means no digital wellness log in the last 7 days.</p>
+                <p class="help">Risk level comes from the latest PHQ-9 and GAD-7 scores and open crisis alerts. It is a screening signal, not a diagnosis. Inactive means no digital wellness log in the last 7 days. A score flag appears when the latest PHQ-9 or GAD-7 result rose by 5 or more points, or entered a higher band, since the previous result of the same screening. A mood or sleep flag appears after a sustained downward pattern across several logged days (never a single low day). Like the risk level, these are screening results and patterns, not a diagnosis, and nothing happens automatically.</p>
 
                 {% if caseload %}
                 <div class="table-wrap">
@@ -161,8 +166,8 @@
                         </thead>
                         <tbody>
                             {% for patient in caseload %}
-                            <tr data-risk-name="{{ patient.name }}" data-risk="{{ patient.risk_level }}" data-email="{{ patient.email }}">
-                                <th scope="row">{{ patient.name }}{% if patient.has_rx %} <span class="badge badge-info" title="Has an active prescription">Rx</span>{% endif %}</th>
+                            <tr data-risk-name="{{ patient.name }}" data-risk="{{ patient.risk_level }}" data-email="{{ patient.email }}" data-flag="{{ 1 if score_flags and score_flags.get(patient.user_id) else 0 }}">
+                                <th scope="row">{{ patient.name }}{% if patient.has_rx %} <span class="badge badge-info" title="Has an active prescription">Rx</span>{% endif %}{% if score_flags %}<div>{{ flag_badges(score_flags.get(patient.user_id)) }}</div>{% endif %}</th>
                                 <td><span class="badge {{ 'badge-danger' if patient.risk_level == 'High' else 'badge-warning' if patient.risk_level == 'Medium' else 'badge-success' }}">{{ patient.risk_level }}</span></td>
                                 <td>{{ patient.last_session }}</td>
                                 <td><span class="badge {{ 'badge-neutral' if patient.status == 'Inactive' else 'badge-success' }}">{{ patient.status }}</span></td>
@@ -257,4 +262,5 @@
 </dialog>
 
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/provider_dashboard.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/followups.js') }}" defer></script>
 {% endblock %}

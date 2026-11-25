@@ -1,0 +1,7 @@
+{
+  "intent": "journal",
+  "review_status": "clinician_reviewed",
+  "source": "paraphrase of the 'journal' FAQ entry in routes/pages.py (build_faqs)",
+  "snippet": "You can write in your private journal from the menu. It is tied to your account and is not shown to other students or displayed on a counsellor's page.",
+  "reviewed_at": "2026-11-25"
+}

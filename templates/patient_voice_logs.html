@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% from 'partials/icons.html' import icon %}
 
-{% block title %}Voice logs | MindFull Horizon{% endblock %}
+{% block title %}Voice logs{% endblock %}
+{% block meta_description %}Speak a short note about how you feel and review your voice logs.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
@@ -23,13 +24,12 @@
       <section class="card" aria-labelledby="privacy-heading">
         <div class="card-header"><h2 id="privacy-heading" class="text-lg">What is saved</h2></div>
         <div class="card-body">
-          <ul class="flow-list" style="margin:0">
+          <ul class="flow-list m-flush">
             <li>Not stored: the audio itself. Your recording is analysed when you press Save and then discarded, so it cannot be played back later.</li>
-            <li>Measurements taken from the sound: length, pitch, loudness. There is no transcript of your words.</li>
-            <li>A rough label for your tone, such as calm or stressed. It is a guess from the sound of your voice, it can be wrong, and it is not a diagnosis.</li>
-            <li>If the AI service is switched on for this site, the measurements (not the audio) may be sent to it to write the short note shown with each log.</li>
+            <li>Only the length of the recording, in seconds. There is no transcript of your words.</li>
+            <li>No pitch, tone or emotion analysis is performed, and nothing about your mood is inferred from your voice. Earlier versions of this page showed a guessed tone label; it was removed because it was not a reliable signal.</li>
           </ul>
-          <p class="wl-note mt-2">Deleting a log removes its measurements and note.</p>
+          <p class="wl-note mt-2">Deleting a log removes its measurement.</p>
         </div>
       </section>
 
@@ -69,11 +69,9 @@
           {% for log in voice_logs|sort(attribute='id', reverse=true) %}
           <article class="card voice-log" data-log-id="{{ log.id }}" {% if loop.index > page_size %}hidden{% endif %}>
             <div class="card-body">
-              <div class="wl-actions" style="justify-content:space-between;align-items:flex-start">
+              <div class="wl-actions wl-actions-split">
                 <div>
-                  <h3 class="text-lg" style="margin:0">{{ log.created_at.strftime('%d %b %Y, %H:%M') }} UTC</h3>
-                  {% set tone = (log.ai_analysis.split(':')[0] if log.ai_analysis else log.emotion) %}
-                  {% if tone %}<p class="wl-meta">Tone guessed from the sound: {{ tone|trim|capitalize }}</p>{% endif %}
+                  <h3 class="text-lg m-flush">{{ log.created_at.strftime('%d %b %Y, %H:%M') }} UTC</h3>
                 </div>
                 <button type="button" class="btn btn-ghost btn-sm delete-voice-log-btn" data-log-id="{{ log.id }}" aria-label="Delete voice log from {{ log.created_at.strftime('%d %b %Y, %H:%M') }}">{{ icon('trash') }} Delete</button>
               </div>
@@ -81,16 +79,7 @@
               {% if log.audio_features %}
               <dl class="wl-kv mt-2">
                 <div><dt>Length</dt><dd>{{ "%.1f"|format(log.audio_features.duration or 0) }} s</dd></div>
-                {% if log.audio_features.mean_pitch %}<div><dt>Average pitch</dt><dd>{{ "%.0f"|format(log.audio_features.mean_pitch) }} Hz</dd></div>{% endif %}
-                {% if log.audio_features.mean_energy %}<div><dt>Average loudness</dt><dd>{{ "%.3f"|format(log.audio_features.mean_energy) }}</dd></div>{% endif %}
               </dl>
-              {% endif %}
-
-              {% if log.ai_analysis %}
-              <div class="wl-ai">
-                <h4>AI-generated note, not advice</h4>
-                <p class="wl-pre" style="margin:0">{{ log.ai_analysis }}</p>
-              </div>
               {% endif %}
             </div>
           </article>

@@ -181,8 +181,10 @@ init_logging(app)
 init_jobs(app)
 from services.admin_cli import init_admin_cli  # flask create-admin and friends
 from services.ops_jobs import init_ops_cli  # flask ops-daily-schedule
+from ai.kb import init_kb_cli  # flask list-kb-drafts (chat router knowledge-base review)
 init_admin_cli(app)
 init_ops_cli(app)
+init_kb_cli(app)
 
 # Asset management
 assets = Environment(app)
@@ -204,38 +206,8 @@ css_bundle = Bundle(
 )
 assets.register('css_all', css_bundle)
 
-# --- CSP Report-Only: generate nonce per request and set CSP-Report-Only header ---
-@app.before_request
-def generate_csp_nonce():
-    # 18 random bytes -> base64 ascii nonce
-    g.csp_nonce = base64.b64encode(os.urandom(18)).decode('ascii')
-
-
-
-# Report-only until templates stop using inline handlers/scripts, then switch to enforcing.
-CSP_REPORT_ONLY = (
-    "default-src 'self'; "
-    "script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://cdn.socket.io https://unpkg.com; "
-    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; "
-    "font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; "
-    "img-src 'self' data: https:; media-src 'self' https:; connect-src 'self' ws: wss:; "
-    "frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
-)
-
-@app.after_request
-def add_security_headers(response):
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["Permissions-Policy"] = "camera=(self), microphone=(self), geolocation=()"
-    # CSP_ENFORCE=1 switches from Report-Only to enforcing (the lead flips it once no page needs inline code)
-    csp_header = "Content-Security-Policy" if app.config['CSP_ENFORCE'] else "Content-Security-Policy-Report-Only"
-    response.headers[csp_header] = CSP_REPORT_ONLY
-    if os.getenv('FLASK_ENV') == 'production':
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
-    return response
-
-app.config['CSP_ENFORCE'] = os.getenv('CSP_ENFORCE') == '1'
+from utils.security_headers import init_security_headers  # nonce, CSP and the other security headers
+init_security_headers(app)
 
 # Versioned static files (?v=..., webassets ?<hash>, or a hash in the file name) never change under the same URL
 _HASHED_NAME = re.compile(r'\.[0-9a-f]{8,}\.[a-z0-9]+$')
@@ -518,24 +490,6 @@ def delete_voice_log(voice_log_id):
     return jsonify({'success': True, 'message': 'Voice log deleted successfully'})
 
 
-def get_ai_voice_emotion_analysis(audio_features, basic_emotion='neutral'):
-    """Return "emotion: explanation". Uses Gemini when a key is set, else the acoustic guess."""
-    fallback = f"{basic_emotion.title()}: Estimated from the sound of your recording only."
-    if not os.environ.get('GEMINI_API_KEY'):
-        return fallback
-    try:
-        from utils.ai_cap import run_capped
-        ok, text = run_capped(ai_service.analyze_voice_emotion, '', audio_features, seconds=8.0)
-        text = text if ok and isinstance(text, str) else ''
-        m = re.search(r'EMOTION:\s*([A-Za-z]+)', text)
-        if m:
-            insight = re.search(r'INSIGHTS:\s*(.+)', text)
-            return f"{m.group(1)}: {insight.group(1).strip() if insight else 'AI analysis of your recording.'}"[:500]
-    except Exception:
-        logger.warning("AI voice analysis unavailable")
-    return fallback
-
-
 @app.route('/api/upload-voice', methods=['POST'])
 @login_required
 @role_required('patient')
@@ -554,15 +508,12 @@ def upload_voice():
         return jsonify({'success': False, 'message': error_message}), 400
 
     try:
-        from utils.voice_features import extract_features  # analysed in memory/temp file; only the numbers are stored
-        audio_features, emotion = extract_features(audio_file, audio_file.filename.rsplit('.', 1)[1].lower())
-        analysis = get_ai_voice_emotion_analysis(audio_features, emotion)
+        from utils.voice_features import extract_features  # analysed in memory/temp file; only duration is stored
+        audio_features = extract_features(audio_file, audio_file.filename.rsplit('.', 1)[1].lower())
         voice_log = VoiceLog(
             user_id=user_id,
             filename='not-stored',  # placeholder for the non-null column: the audio is never kept
-            emotion=analysis.split(':')[0].strip().lower()[:30] or emotion,
             audio_features=audio_features,
-            ai_analysis=analysis,
         )
         db.session.add(voice_log)
         db.session.commit()
@@ -571,7 +522,7 @@ def upload_voice():
         return jsonify({
             'success': True,
             'message': 'Voice log saved. The audio was analysed and not kept.',
-            'voice_log': {'id': voice_log.id, 'emotion': voice_log.emotion, 'audio_features': audio_features}
+            'voice_log': {'id': voice_log.id, 'audio_features': audio_features}
         })
     except Exception:
         db.session.rollback()

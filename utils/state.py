@@ -44,4 +44,7 @@ def transition(appt, new_status, actor, **fields):
         db.session.expire(appt)
         raise TransitionError('appointment changed concurrently')
     db.session.expire(appt)  # reload the new values on next access
+    if new_status == 'accepted':
+        from utils.appt_reminders import schedule  # late: it imports the job queue
+        schedule(appt)  # the 24 h reminder job joins the caller's transaction
     return appt

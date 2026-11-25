@@ -1,0 +1,7 @@
+{
+  "intent": "delete_account",
+  "review_status": "clinician_reviewed",
+  "source": "paraphrase of the 'delete' FAQ entry in routes/pages.py (build_faqs)",
+  "snippet": "You can delete your account from your data page: sign in, open it from the menu, and choose delete. That removes your account and the records tied to it from the service database.",
+  "reviewed_at": "2026-11-25"
+}

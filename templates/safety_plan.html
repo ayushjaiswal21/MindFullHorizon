@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+{% from 'patient_macros.html' import helpline_list %}
+
+{% block title %}My safety plan{% endblock %}
+{% block meta_description %}A private plan you write for yourself for the moments when things feel too much.{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellbeing.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container section sp-page">
+  <header class="page-header">
+    <h1>My safety plan</h1>
+    <p class="lead">A short plan you write for yourself, for the moments when things feel too much. It is a personal tool. It is not a diagnosis and it does not replace a counsellor.</p>
+    <div class="page-actions no-print">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('patient.patient_dashboard') }}">{{ icon('arrow-left') }} Back to dashboard</a>
+      {% if plan %}
+      <a class="btn btn-secondary btn-sm" href="{{ url_for('patient.safety_plan_edit') }}">{{ icon('edit') }} Edit</a>
+      <button type="button" class="btn btn-secondary btn-sm" data-print-page>{{ icon('file') }} Print</button>
+      {% endif %}
+    </div>
+  </header>
+
+  <aside class="alert alert-danger no-print" role="note" aria-label="Helplines">
+    <div><strong>If you are in danger right now, call 112 or a helpline below.</strong> Do not wait to finish your plan.
+    {{ helpline_list(helplines, false) }}</div>
+  </aside>
+
+  {% if not plan %}
+  <section class="card mt-6" aria-labelledby="empty-heading">
+    <div class="card-body empty-state">
+      {{ icon('shield') }}
+      <h2 id="empty-heading">You have not made a safety plan yet</h2>
+      <p>It has six short parts: warning signs, what you can do on your own, people and places that help, people you can ask for help, professionals and helplines, and making your surroundings safer. It takes about ten minutes. You can leave parts empty and come back.</p>
+      <p class="muted">Only you can read it. Your plan is never sent to the AI. You can choose to share it with your counsellor later.</p>
+      <a class="btn btn-primary" href="{{ url_for('patient.safety_plan_edit') }}">Make my safety plan</a>
+    </div>
+  </section>
+  {% else %}
+  <div class="sp-print-title" aria-hidden="true">My safety plan, {{ session.get('user_name') }}</div>
+  <ol class="sp-steps mt-6">
+    <li class="card"><div class="card-body"><h2 class="text-lg">1. Warning signs</h2>
+      {% if v.warning_signs %}<p class="wl-pre">{{ v.warning_signs }}</p>{% else %}<p class="muted">Nothing written yet.</p>{% endif %}</div></li>
+    <li class="card"><div class="card-body"><h2 class="text-lg">2. Things I can do on my own</h2>
+      {% if v.coping_alone %}<p class="wl-pre">{{ v.coping_alone }}</p>{% else %}<p class="muted">Nothing written yet.</p>{% endif %}</div></li>
+    <li class="card"><div class="card-body"><h2 class="text-lg">3. People and places that help me feel better</h2>
+      {% if v.places_people %}<p class="wl-pre">{{ v.places_people }}</p>{% else %}<p class="muted">Nothing written yet.</p>{% endif %}</div></li>
+    <li class="card"><div class="card-body"><h2 class="text-lg">4. People I can ask for help</h2>
+      {% if v.help_people %}
+      <ul class="sp-people">{% for p in v.help_people %}<li><strong>{{ p.name or 'Name not written' }}</strong>{% if p.phone %} <a href="tel:{{ p.phone|replace(' ', '')|replace('-', '') }}">{{ p.phone }}</a>{% endif %}</li>{% endfor %}</ul>
+      {% else %}<p class="muted">Nobody added yet.</p>{% endif %}</div></li>
+    <li class="card"><div class="card-body"><h2 class="text-lg">5. Professionals and helplines</h2>
+      {% if v.professionals %}<p class="wl-pre">{{ v.professionals }}</p>{% endif %}
+      <p class="muted">National helplines, free and open at any hour:</p>
+      {{ helpline_list(helplines, false) }}</div></li>
+    <li class="card"><div class="card-body"><h2 class="text-lg">6. Making my surroundings safer</h2>
+      {% if v.safer_surroundings %}<p class="wl-pre">{{ v.safer_surroundings }}</p>{% else %}<p class="muted">Nothing written yet.</p>{% endif %}</div></li>
+  </ol>
+  <p class="wl-note mt-4">Last updated {{ plan.updated_at.strftime('%d %b %Y') }}. Keep a copy somewhere you can reach it quickly, such as a printout or a photo on your phone.</p>
+
+  <section class="card mt-6 no-print" aria-labelledby="share-heading">
+    <div class="card-body">
+      <h2 id="share-heading" class="text-lg">Who can read this</h2>
+      <p>Only you can read your plan. If you want, counsellors at your college who are assigned to you can read it too. They cannot change it, and each time they open it a record is kept. You can turn this off at any time.</p>
+      <form method="post" action="{{ url_for('patient.safety_plan_sharing') }}" class="mt-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <label class="check"><input type="checkbox" name="share" value="on" {{ 'checked' if plan.share_with_counsellors }}> Share with my counsellor (read only)</label>
+        <p class="mt-3"><button class="btn btn-secondary btn-sm" type="submit">Save this choice</button></p>
+      </form>
+    </div>
+  </section>
+
+  <section class="card mt-6 no-print" aria-labelledby="del-heading">
+    <div class="card-body">
+      <h2 id="del-heading" class="text-lg">Delete my plan</h2>
+      <p class="muted">This removes the plan from your account. It cannot be undone.</p>
+      <form method="post" action="{{ url_for('patient.safety_plan_delete') }}" data-confirm="Delete your safety plan? This cannot be undone.">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-danger btn-sm" type="submit">{{ icon('trash') }} Delete my safety plan</button>
+      </form>
+    </div>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/wellbeing.js') }}" defer></script>
+{% endblock %}

@@ -2,11 +2,21 @@
 {% from 'partials/icons.html' import icon %}
 {% from 'partials/breadcrumbs.html' import breadcrumb %}
 
-{% block title %}{{ post.title }}{% endblock %}
-{% block meta_description %}{{ post.content|striptags|truncate(155, True, '') }}{% endblock %}
+{% block title %}{{ post.title|truncate(41, True, '...') }}{% endblock %}
+{% block meta_description %}{% set _d = post.content.split()|join(' ') %}{{ (_d if _d|length >= 50 else _d ~ ' A community post on the MindFull Horizon blog.')|truncate(157, True, '...') }}{% endblock %}
 {% block canonical %}{{ (site_url or request.url_root.rstrip('/')) }}{{ url_for('blog.blog_detail', post_id=post.id) }}{% endblock %}
 {% block robots %}{{ 'index, follow' if post.is_published else 'noindex, nofollow' }}{% endblock %}
-{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">{% endblock %}
+{% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+{%- if post.is_published %}
+<script type="application/ld+json" nonce="{{ g.csp_nonce }}">{{ {
+  "@context": "https://schema.org", "@type": "Article", "headline": post.title|truncate(110, True, '...'),
+  "datePublished": post.created_at.isoformat(), "dateModified": (post.updated_at or post.created_at).isoformat(),
+  "author": {"@type": "Person", "name": post.author.name if post.author else "MindFull Horizon"},
+  "publisher": {"@id": site_url ~ "/#organization"}, "inLanguage": "en-IN",
+  "mainEntityOfPage": site_url ~ url_for('blog.blog_detail', post_id=post.id),
+  "image": site_url ~ url_for('static', filename='img/og-default.png')} | tojson }}</script>
+{%- endif %}
+{% endblock %}
 {% block breadcrumbs %}{{ breadcrumb([('Home', '/'), ('Blog', url_for('blog.blog_list')), (post.title, None)]) }}{% endblock %}
 
 {% block content %}

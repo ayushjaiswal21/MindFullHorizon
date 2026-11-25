@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% from 'partials/icons.html' import icon %}
 
-{% block title %}Wellness report, {{ patient.name }} - Mindful Horizon{% endblock %}
+{% block title %}Wellness report{% endblock %}
+{% block meta_description %}A summary of mood and screening results for one patient. Handle it as confidential.{% endblock %}
 
 {% macro sev_badge(kind, score) %}
 {% set info = get_severity_info(kind, score) %}
@@ -30,6 +31,7 @@
     {% if latest.gad is none and 'GAD-7' in a.assessment_type %}{% set latest.gad = a %}{% endif %}
 {% endfor %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/provider.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/followups.css') }}">
 <div class="container" id="report-root" data-patient-id="{{ patient.id }}">
     <div class="page-header">
         <h1>Wellness report</h1>
@@ -73,6 +75,9 @@
             {{ stat('Digital wellness logs', detox|length, 'In the last 90 days') }}
         </div>
     </section>
+
+    {% if fu_plans is defined %}{% include 'provider_followups/_report.html' %}{% endif %}
+    {% if trend_spark is defined %}{% include 'provider_followups/_trend.html' %}{% endif %}
 
     <section class="card section" aria-labelledby="mood-heading">
         <div class="card-header"><h2 id="mood-heading">Mood, last 90 days</h2></div>
@@ -252,6 +257,11 @@
             <p class="muted">No goal ideas available right now.</p>
             {% endif %}
             <h3>Medication adherence</h3>
+            {% if ai_medication_adherence_insights and ai_medication_adherence_insights.adherence_score is defined %}
+            <p><strong>{{ ai_medication_adherence_insights.adherence_score }}/100</strong>
+                (from {{ ai_medication_adherence_insights.logged_count|default('n/a') }} logged dose entries)</p>
+            <p class="alert alert-info">This number is an estimate written by an AI model from a few logged entries. It is not a clinical measurement and has not been checked against real adherence. Use the logged dates below to see what was actually recorded.</p>
+            {% endif %}
             {% if ai_medication_adherence_insights and ai_medication_adherence_insights.summary %}
             <p>{{ ai_medication_adherence_insights.summary }}</p>
             {% if ai_medication_adherence_insights.recommendations %}
@@ -259,13 +269,14 @@
                 {% for recommendation in ai_medication_adherence_insights.recommendations %}<li>{{ recommendation }}</li>{% endfor %}
             </ul>
             {% endif %}
-            {% else %}
+            {% elif not (ai_medication_adherence_insights and ai_medication_adherence_insights.adherence_score is defined) %}
             <p class="muted">No medication adherence summary available right now.</p>
             {% endif %}
         </div>
     </section>
 
     {% include 'provider_meds/_panel.html' %}
+    {% include 'partials/safety_plan_readonly.html' %}
 </div>
 
 <script type="application/json" id="report-data" nonce="{{ g.csp_nonce }}">{{ {
@@ -275,5 +286,6 @@
     'patient': patient.name, 'patient_id': patient.id
 }|tojson }}</script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/provider-charts.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/followups.js') }}" defer></script>
 <script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/inline_extracted/wellness_report_inline_1.js') }}" defer></script>
 {% endblock %}

@@ -24,7 +24,18 @@ def _get(env, name):
 
 
 def normalize_db_url(url):
-    return 'postgresql://' + url[len('postgres://'):] if url.startswith('postgres://') else url
+    """Mirrors utils/database_utils.py::normalize_db_url (duplicated, not imported, to stay stdlib-only here).
+
+    Also pins a bare postgresql:// to the psycopg2 driver: SQLAlchemy 2.1's default dialect order for an
+    unpinned URL is psycopg (v3), which requirements.txt does not install, crashing the app at startup against
+    a real Postgres database (found 2026-11-25 against a live Neon connection; every test before that used
+    SQLite). Keep both copies in sync if this logic ever changes again.
+    """
+    if url.startswith('postgres://'):
+        url = 'postgresql://' + url[len('postgres://'):]
+    if url.startswith('postgresql://'):
+        url = 'postgresql+psycopg2://' + url[len('postgresql://'):]
+    return url
 
 
 def check_flask_env(env):
@@ -80,6 +91,16 @@ def check_gemini(env):
     if _get(env, 'GEMINI_API_KEY'):
         return [(PASS, 'GEMINI_API_KEY', f"set, {len(_get(env, 'GEMINI_API_KEY'))} chars")]
     return [(WARN, 'GEMINI_API_KEY', 'not set: the AI companion falls back to canned text')]
+
+
+def check_ai_policy(env):
+    """Personal text to Gemini is off unless the operator turns it on; on needs the written approval on record."""
+    if _get(env, 'AI_SEND_PERSONAL_TEXT').lower() not in ('1', 'true', 'yes', 'on'):
+        return [(PASS, 'AI_SEND_PERSONAL_TEXT', 'off: no student text or health data is sent to an AI model')]
+    if not _get(env, 'AI_PERSONAL_TEXT_APPROVED_BY'):
+        return [(WARN, 'AI_SEND_PERSONAL_TEXT', 'on without AI_PERSONAL_TEXT_APPROVED_BY: the free tier may let Google use submitted '
+                 'content; record the written approval of the college or switch it off')]
+    return [(PASS, 'AI_SEND_PERSONAL_TEXT', 'on, approval recorded')]
 
 
 def check_site_url(env):
@@ -179,7 +200,7 @@ def check_flags(env):
 
 def run_checks(env, pilot=False):
     results = []
-    for fn in (check_flask_env, check_secret_key, check_database_url, check_gemini, check_site_url, check_smtp,
+    for fn in (check_flask_env, check_secret_key, check_database_url, check_gemini, check_ai_policy, check_site_url, check_smtp,
                check_invite_codes, check_audio, check_legal, check_flags):
         results += fn(env)
     results += check_crisis_email(env, pilot)

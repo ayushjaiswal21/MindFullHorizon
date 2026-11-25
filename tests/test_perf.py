@@ -117,8 +117,12 @@ def test_engine_options_per_dialect():
 
 
 def test_postgres_scheme_is_normalised():
-    assert normalize_db_url('postgres://u:p@h/db') == 'postgresql://u:p@h/db'
-    assert normalize_db_url('postgresql://u:p@h/db') == 'postgresql://u:p@h/db'
+    # Also pinned to the psycopg2 driver explicitly: SQLAlchemy 2.1's own default dialect order picks psycopg
+    # (v3) for a bare postgresql:// URL, which requirements.txt does not install (only psycopg2-binary),
+    # crashing at startup the first time the app meets a real Postgres database (found 2026-11-25 against Neon).
+    assert normalize_db_url('postgres://u:p@h/db') == 'postgresql+psycopg2://u:p@h/db'
+    assert normalize_db_url('postgresql://u:p@h/db') == 'postgresql+psycopg2://u:p@h/db'
+    assert normalize_db_url('postgresql+psycopg://u:p@h/db') == 'postgresql+psycopg://u:p@h/db'  # driver already named: left alone
     assert normalize_db_url(None) is None
 
 
@@ -410,35 +414,7 @@ def test_templates_do_not_autoreload_outside_debug(app):
     assert app.jinja_env.bytecode_cache is not None
 
 
-# ---------- CSP switch ----------
-
-def test_csp_enforce_switch(app, client):
-    assert 'Content-Security-Policy-Report-Only' in client.get('/login').headers
-    app.config['CSP_ENFORCE'] = True
-    try:
-        h = client.get('/login').headers
-        assert 'Content-Security-Policy' in h and 'Content-Security-Policy-Report-Only' not in h
-    finally:
-        app.config['CSP_ENFORCE'] = False
-
-
-def test_report_inline_handlers_and_scripts_without_nonce():
-    """Report only (never fails): what must be gone before CSP_ENFORCE=1 can be flipped."""
-    handler = re.compile(r'<[a-zA-Z][^>]*\son[a-z]+\s*=', re.S)
-    script = re.compile(r'<script\b(?![^>]*\bsrc=)(?![^>]*\bnonce=)(?![^>]*type=["\']application/(?:ld\+)?json)[^>]*>', re.S)
-    findings = []
-    tdir = os.path.join(ROOT, 'templates')
-    for dirpath, _, files in os.walk(tdir):
-        for f in files:
-            if f.endswith('.html'):
-                src = open(os.path.join(dirpath, f), encoding='utf-8').read()
-                h, s = len(handler.findall(src)), len(script.findall(src))
-                if h or s:
-                    findings.append(f'{os.path.relpath(os.path.join(dirpath, f), ROOT)}: {h} inline on*= attributes, {s} inline scripts without nonce')
-    if findings:
-        warnings.warn('CSP_ENFORCE blockers:\n  ' + '\n  '.join(findings), stacklevel=1)
-    print(f'CSP blockers in {len(findings)} templates')
-
+# CSP header and inline-code checks live in tests/test_csp.py
 
 # ---------- memory ----------
 

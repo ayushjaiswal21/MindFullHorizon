@@ -36,7 +36,11 @@
 
       <div class="diff" id="diff-6">
         <dt>A labelled AI that does not diagnose</dt>
+        {% if ai_personal_text %}
         <dd>The companion tells you it is an AI. It is instructed not to diagnose or name medicines or doses, and a filter replaces replies that state a diagnosis or a dose. It does not replace a counsellor, and it does not prescribe: counselling and prescribing are done by people.</dd>
+        {% else %}
+        <dd>With the current settings the companion is labelled an automated assistant: chat replies come from a fixed safety check and saved answers, and no AI model reads what you write. The AI model is used only for general content such as the tip of the day, which is labelled and is instructed not to diagnose or name medicines or doses, with a filter that replaces text stating a diagnosis or a dose. None of this replaces a counsellor, and nothing here prescribes: counselling and prescribing are done by people.</dd>
+        {% endif %}
         <dd class="compare-with"><strong>Compared with:</strong> India's Telemedicine Practice Guidelines (2020 text, clause 5.4) do not allow AI platforms to counsel patients or prescribe medicines. That is why we describe the companion as a chat tool, not a counsellor.</dd>
       </div>
     </dl>

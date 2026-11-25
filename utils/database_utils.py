@@ -10,9 +10,19 @@ from extensions import db
 
 
 def normalize_db_url(url):
-    """Render and Heroku hand out `postgres://`, which SQLAlchemy 1.4+ rejects."""
+    """Render and Heroku hand out `postgres://`, which SQLAlchemy 1.4+ rejects.
+
+    Also pins a bare `postgresql://` to the `psycopg2` driver explicitly. Without this, SQLAlchemy 2.1's own
+    default dialect order picks `psycopg` (v3) first regardless of what is installed; `requirements.txt` only
+    ships `psycopg2-binary`, so an unpinned URL crashes the app at startup with `ModuleNotFoundError: No module
+    named 'psycopg'` the first time it is pointed at a real Postgres database (every test and the CI docker job
+    use SQLite, so this was never exercised until a live Neon connection on 2026-11-25). A URL that already
+    names a driver (`postgresql+psycopg2://`, `postgresql+psycopg://`) is left alone.
+    """
     if url and url.startswith('postgres://'):
-        return 'postgresql://' + url[len('postgres://'):]
+        url = 'postgresql://' + url[len('postgres://'):]
+    if url and url.startswith('postgresql://'):
+        url = 'postgresql+psycopg2://' + url[len('postgresql://'):]
     return url
 
 

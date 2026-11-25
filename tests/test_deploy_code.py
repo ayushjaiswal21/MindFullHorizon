@@ -147,7 +147,10 @@ def test_voice_upload_stores_measurements_only(app, patient_client):
     assert r.status_code == 200
     with app.app_context():
         row = VoiceLog.query.one()
-        assert row.filename == "not-stored" and row.ai_analysis
+        # The voice-tone label was removed (docs/research/ai/decisions/voice-tone-removed.md): no AI analysis of
+        # voice is performed any more, and only duration is extracted, never pitch/energy/zcr.
+        assert row.filename == "not-stored" and row.ai_analysis is None and row.emotion is None
+        assert not (row.audio_features or {}).keys() - {"duration"}
     assert _uploads() == before and "UPLOAD_FOLDER" not in app.config
     page = c.get("/patient/voice-logs").get_data(as_text=True)
     assert "static/uploads" not in page and "<audio controls preload=\"none\"" not in page
@@ -164,7 +167,8 @@ def test_extract_features_deletes_its_temp_file_on_failure(monkeypatch):
     monkeypatch.setitem(sys.modules, "numpy", types.ModuleType("numpy"))
     monkeypatch.setattr(voice_features, "LIBROSA_AVAILABLE", True)
     upload = types.SimpleNamespace(save=lambda f: f.write(b"audio"))
-    assert voice_features.extract_features(upload, "wav") == ({}, "neutral")
+    # extract_features now returns a plain dict (duration only, no emotion label - voice-tone label removed)
+    assert voice_features.extract_features(upload, "wav") == {}
     assert len(seen) == 1 and not os.path.exists(seen[0])
 
 

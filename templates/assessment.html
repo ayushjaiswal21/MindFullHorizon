@@ -2,7 +2,8 @@
 {% from 'partials/icons.html' import icon %}
 {% from 'patient_macros.html' import band_badge, helpline_list %}
 
-{% block title %}Screenings - MindFull Horizon{% endblock %}
+{% block title %}Screenings{% endblock %}
+{% block meta_description %}Take the PHQ-9 and GAD-7 screening questionnaires and see what your score means. A screening is not a diagnosis.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">

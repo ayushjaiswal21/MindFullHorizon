@@ -58,7 +58,7 @@
 
 /* Logged-in home */
 .home-today { display: grid; gap: 1rem; grid-template-columns: 1fr; }
-@media (min-width: 48rem) { .home-today { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 64rem) { .home-today { grid-template-columns: repeat(3, 1fr); } }
 .home-today .card-body { display: grid; gap: .5rem; align-content: start; height: 100%; }
 .home-today h3 { margin: 0; display: flex; align-items: center; gap: .5rem; }
 .home-today h3 svg { width: 1.25rem; height: 1.25rem; color: var(--primary); }

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% from 'partials/icons.html' import icon %}
+
+{% block title %}Grounding exercise{% endblock %}
+{% block meta_description %}A short five-step exercise that uses your senses to bring you back to the present moment.{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/wellbeing.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container section">
+  <header class="page-header">
+    <h1>Grounding exercise</h1>
+    <p class="lead">When your mind is racing, your senses can bring you back to the room you are in. This takes about two minutes. There is nothing to get right.</p>
+    <div class="page-actions">
+      <a class="btn btn-ghost btn-sm" href="{{ url_for('patient.patient_dashboard') }}">{{ icon('arrow-left') }} Back to dashboard</a>
+      <a class="btn btn-secondary btn-sm" href="#helplines">{{ icon('phone') }} I need to talk to someone now</a>
+    </div>
+  </header>
+
+  <section class="card gr" id="grounding" aria-labelledby="gr-title"
+           data-complete-url="{{ url_for('patient.grounding_complete') }}" data-request-id="{{ request_id }}">
+    <div class="card-body">
+      <h2 id="gr-title" class="sr-only">Steps</h2>
+      <p class="gr-progress" id="gr-progress" role="status" aria-live="polite" hidden></p>
+      <ol class="gr-steps">
+        {% for n, sense, title, hint in steps %}
+        <li class="gr-step" data-step="{{ loop.index }}">
+          <p class="gr-count" aria-hidden="true">{{ n }}</p>
+          <h3 class="gr-heading" tabindex="-1">{{ title }}</h3>
+          <p class="muted">{{ hint }}</p>
+        </li>
+        {% endfor %}
+        <li class="gr-step gr-end" data-step="{{ steps|length + 1 }}">
+          <h3 class="gr-heading" tabindex="-1">You did it</h3>
+          <p>Notice how your body feels now. If the feeling is still strong, you can go through the steps again, or use your breathing exercise.</p>
+          <p class="muted" id="gr-result" role="status"></p>
+        </li>
+      </ol>
+      <div class="wl-actions gr-nav" id="gr-nav" hidden>
+        <button type="button" class="btn btn-secondary" id="gr-back">{{ icon('arrow-left') }} Back</button>
+        <button type="button" class="btn btn-primary" id="gr-next">Next {{ icon('arrow-right') }}</button>
+        <button type="button" class="btn btn-primary" id="gr-finish" hidden>Finish</button>
+        <button type="button" class="btn btn-ghost" id="gr-again" hidden>Start again</button>
+      </div>
+      <noscript><p class="wl-note">Without JavaScript all five steps are shown above. Go through them in order, one at a time.</p></noscript>
+      <p class="wl-note mt-4">This exercise is for relaxation, not treatment. If you feel unsafe, stop and call a helpline. {% set l = safety_plan_link() %}{% if l %}<a href="{{ l.url }}">{{ l.label }}</a>.{% endif %}</p>
+    </div>
+  </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/wellness-common.js') }}" defer></script>
+<script nonce="{{ g.csp_nonce }}" src="{{ url_for('static', filename='js/grounding.js') }}" defer></script>
+{% endblock %}

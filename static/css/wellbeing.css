@@ -1,0 +1,59 @@
+/* Wellbeing tools: safety plan, grounding, sleep log, reminders. Tokens from site.css only; flat surfaces; no motion. */
+
+/* Safety plan */
+.sp-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 1rem; }
+.sp-people { list-style: none; margin: 0; padding: 0; display: grid; gap: .375rem; }
+.sp-people a { font-weight: 600; margin-left: .5rem; }
+.sp-print-title { display: none; }
+.sp-form .field { margin-bottom: 1.25rem; }
+.sp-people-set { border: 0; padding: 0; margin: 0 0 1.25rem; }
+.sp-person { display: grid; gap: .75rem; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .sp-person { grid-template-columns: 2fr 1fr; } }
+.sp-helplines { margin-bottom: 1.25rem; }
+.sp-link { margin: .5rem 0 0; font-weight: 600; }
+.sp-link a { color: inherit; text-decoration: underline; }
+.sp-readonly dl { margin: 0; }
+.sp-readonly dt { font-weight: 600; margin-top: .75rem; }
+.sp-readonly dd { margin: .125rem 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+@media print {
+  /* A clean one-page plan: no site chrome (print.css), no buttons, no helpline alert; boxes stay together. */
+  .sp-page .no-print { display: none !important; }
+  .sp-page .sp-print-title { display: block; font-size: 16pt; font-weight: 700; margin-bottom: .5rem; }
+  .sp-page .page-header { display: block; }
+  .sp-page .page-header .lead { font-size: 10pt; }
+  .sp-page .sp-steps { gap: .5rem; margin-top: .5rem; }
+  .sp-page .card { border: 1px solid var(--text); }
+  .sp-page .card-body { padding: .5rem .75rem; }
+  .sp-page h2 { font-size: 12pt; margin: 0 0 .25rem; }
+  .sp-page .wl-pre, .sp-page p { font-size: 10.5pt; }
+  .sp-page .helpline-list li { padding: .1rem 0; border: 0; }
+  .sp-page a { text-decoration: none; }
+}
+
+/* Grounding: one calm step at a time, large type, no animation at all */
+.gr { max-width: 40rem; }
+.gr-step { list-style: none; text-align: center; padding: 1rem 0; }
+.gr-steps { margin: 0; padding: 0; }
+.gr-step[hidden] { display: none !important; }
+.gr-count { font-size: 4.5rem; line-height: 1; font-weight: 600; margin: 0 0 .5rem; color: var(--primary); }
+.gr-heading { font-size: 1.5rem; margin: 0 0 .5rem; }
+.gr-heading:focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
+.gr-progress { text-align: center; color: var(--text-muted); margin: 0 0 .5rem; }
+.gr-nav { justify-content: center; }
+.gr-end .gr-heading { color: var(--text); }
+
+/* Sleep log */
+.sleep-times { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+.sleep-quality { border: 0; padding: 0; margin: 0 0 1rem; display: grid; gap: .25rem; }
+.sleep-chart { width: 100%; height: auto; max-width: 32rem; display: block; margin-top: .75rem; }
+.sleep-chart .sc-grid { stroke: var(--border); stroke-width: 1; }
+.sleep-chart .sc-axis { fill: var(--text-muted); font-size: 10px; }
+.sleep-chart .sc-bar { fill: var(--primary); }
+.sleep-wrap { position: relative; } /* keeps the sr-only header cell inside the scroll area */
+.sleep-table th, .sleep-table td { white-space: nowrap; }
+.sleep-table .sleep-note { max-width: 18rem; white-space: normal; overflow-wrap: anywhere; }
+
+/* Reminders */
+.rem-grid { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .rem-grid { grid-template-columns: repeat(3, 1fr); } }

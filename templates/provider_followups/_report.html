@@ -1,0 +1,82 @@
+{# Screening trend sparklines and the follow-up timeline for one assigned patient (wellness report). #}
+{% from 'partials/icons.html' import icon %}
+{% from 'provider_followups/_flags.html' import flag_badges %}
+<section class="card fu-card" aria-labelledby="fu-trend-heading">
+    <div class="card-header"><h2 id="fu-trend-heading">Change since the last screening</h2></div>
+    <div class="card-body">
+        {% if fu_spark %}
+        <p class="help">Last results of each screening on a fixed scale (PHQ-9 0 to 27, GAD-7 0 to 21). A flag appears when a score rises by 5 or more points or enters a higher band. It describes a screening result, not a diagnosis, and nothing happens automatically.</p>
+        <div class="fu-spark-grid">
+            {% for kind, sp in fu_spark.items() %}
+            <div class="fu-spark-box">
+                <div class="stat-label">{{ kind }}, last {{ sp.rows|length }} result{{ '' if sp.rows|length == 1 else 's' }}</div>
+                <svg class="fu-spark" viewBox="0 0 160 48" width="160" height="48" role="img" aria-label="{{ kind }} scores from {{ sp.rows[0][0] }} to {{ sp.rows[-1][0] }}, latest {{ sp.rows[-1][1] }} of {{ sp.max }}. The table below has the same values.">
+                    {% if sp.xy|length > 1 %}<polyline points="{% for x, y in sp.xy %}{{ '%.1f,%.1f'|format(x, y) }} {% endfor %}" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/>{% endif %}
+                    {% for x, y in sp.xy %}<circle cx="{{ '%.1f'|format(x) }}" cy="{{ '%.1f'|format(y) }}" r="{{ 3 if loop.last else 2 }}" fill="currentColor"/>{% endfor %}
+                </svg>
+                <div>{{ flag_badges(sp.flags) }}{% if not sp.flags %}<span class="muted">No change flag</span>{% endif %}</div>
+                <details class="mt-2">
+                    <summary>Show {{ kind }} as a table</summary>
+                    <div class="table-wrap"><table class="table">
+                        <caption class="sr-only">{{ kind }} scores by date</caption>
+                        <thead><tr><th scope="col">Date</th><th scope="col">Score</th></tr></thead>
+                        <tbody>{% for d, sc in sp.rows %}<tr><th scope="row">{{ d }}</th><td>{{ sc }}</td></tr>{% endfor %}</tbody>
+                    </table></div>
+                </details>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">{{ icon('chart') }}<h3>No screening results yet</h3><p>Change flags need at least two results of the same screening.</p></div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="card fu-card" aria-labelledby="fu-timeline-heading" data-fu-root
+         data-step-url="{{ url_for('provider_followups.api_step', step_id=0) }}"
+         data-close-url="{{ url_for('provider_followups.api_close', plan_id=0) }}">
+    <div class="card-header"><h2 id="fu-timeline-heading">Follow-ups after a crisis alert</h2></div>
+    <div class="card-body">
+        {% for plan in fu_plans %}
+        <div class="fu-plan">
+            <h3>Plan opened {{ plan.created }}
+                <span class="badge {{ 'badge-info' if plan.status == 'open' else 'badge-success' if plan.status == 'completed' else 'badge-neutral' }}">{{ {'open': 'Open', 'completed': 'Completed', 'closed_early': 'Closed early'}[plan.status] }}</span></h3>
+            <ol class="fu-steps">
+                {% for s in plan.steps %}
+                <li class="fu-step fu-step-{{ s.status }}">
+                    <div>
+                        <strong>Follow-up {{ s.seq }}</strong>, due {{ s.due }}
+                        {% if s.status == 'done' %}<span class="badge badge-success">Done</span> {{ s.outcome }}{% if s.done %} on {{ s.done }}{% endif %}
+                        {% elif s.status == 'missed' %}<span class="badge badge-neutral">Missed</span>
+                        {% elif s.status == 'skipped' %}<span class="badge badge-neutral">Skipped</span>
+                        {% elif s.overdue %}<span class="badge badge-warning">Overdue</span>
+                        {% else %}<span class="badge badge-neutral">Upcoming</span>{% endif %}
+                    </div>
+                    {% if s.status == 'pending' and plan.status == 'open' %}
+                    <button type="button" class="btn btn-secondary btn-sm no-print" data-fu-done data-step-id="{{ s.id }}" data-name="{{ patient.name }}" data-seq="{{ s.seq }}">{{ icon('check') }} Mark done</button>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ol>
+            {% if plan.status == 'open' %}
+            <button type="button" class="btn btn-ghost btn-sm no-print" data-fu-close data-plan-id="{{ plan.id }}">Close plan early</button>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="empty-state">{{ icon('calendar') }}<h3>No follow-up plan</h3><p>A plan of follow-up check-ins is created when a crisis alert for this student is acknowledged.</p></div>
+        {% endfor %}
+    </div>
+</section>
+{% include 'provider_followups/_dialogs.html' %}
+<dialog id="fuCloseDialog" class="pv-dialog" aria-labelledby="fuCloseTitle">
+    <h2 id="fuCloseTitle" class="text-lg">Close this plan early</h2>
+    <p class="help">Remaining follow-ups are marked skipped. Pick the closest reason.</p>
+    <div class="field">
+        <label class="label" for="fuCloseReason">Reason</label>
+        <select id="fuCloseReason" class="select">{% for code, label in fu_close_reasons.items() %}<option value="{{ code }}">{{ label }}</option>{% endfor %}</select>
+    </div>
+    <div class="flex flex-wrap justify-end gap-2 mt-4">
+        <button type="button" class="btn btn-ghost" id="fuCloseCancel">Cancel</button>
+        <button type="button" class="btn btn-danger" id="fuCloseSave">Close plan</button>
+    </div>
+</dialog>

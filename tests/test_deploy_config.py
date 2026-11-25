@@ -112,7 +112,7 @@ def test_crisis_email_is_warn_normally_and_fail_for_a_pilot():
 def test_postgres_scheme_is_normalised_and_localhost_needs_no_ssl():
     res = levels(with_(DATABASE_URL='postgres://u:p@localhost:5432/db'))
     assert res['DATABASE_URL'] == pc.PASS and 'DATABASE_URL sslmode' not in res
-    assert pc.normalize_db_url('postgres://a') == 'postgresql://a'
+    assert pc.normalize_db_url('postgres://a') == 'postgresql+psycopg2://a'
 
 
 def test_main_exit_codes_and_no_secret_in_output(capsys):

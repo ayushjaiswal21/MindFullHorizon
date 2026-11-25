@@ -1,8 +1,11 @@
 {% extends "base.html" %}
 {% from '_macros.html' import form_field, alert %}
+{% from 'partials/breadcrumbs.html' import breadcrumb %}
 
-{% block title %}Sign in - Mindful Horizon{% endblock %}
-{% block meta_description %}Sign in to Mindful Horizon as a student or a counsellor.{% endblock %}
+{% block title %}Sign in{% endblock %}
+{% block meta_description %}Sign in to MindFull Horizon as a student or a counsellor to reach your mood log, screenings and appointments.{% endblock %}
+{% block robots %}index, follow{% endblock %}
+{% block breadcrumbs %}{{ breadcrumb([('Home', '/'), ('Sign in', None)]) }}{% endblock %}
 {% block head_extra %}
 {{ super() }}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">

@@ -46,10 +46,13 @@ Contents: 1 Why these two services, 2 What you need, 3 Environment variables, 4 
 | Variable | Where it comes from | Notes |
 |---|---|---|
 | `FLASK_ENV=production` | fixed in render.yaml | turns on secure cookies, HSTS, the SECRET_KEY check, ProxyFix, stdout-only logging and the `JOBS_INPROCESS` default |
+| `CSP_REPORT_ONLY` | not set (optional) | emergency fallback: `1` sends the Content-Security-Policy as Report-Only so a page that breaks under the policy works again while you fix it. Default is enforcing. See docs/SECURITY.md |
 | `SECRET_KEY` | Render generates it | the app refuses to start without it. If it changes, all signed data (CSRF tokens, session cookies once cookie sessions are used) is invalidated |
 | `DATABASE_URL` | you paste the Neon DIRECT string | see section 4 |
 | `SITE_URL` | you | `https://...`, no trailing slash |
-| `GEMINI_API_KEY` | you (optional) | without it the AI uses canned text |
+| `GEMINI_API_KEY` | you (optional) | without it the AI uses canned text. With it, Gemini is used only for the general "Tip of the day" |
+| `AI_SEND_PERSONAL_TEXT` | fixed `0` in render.yaml | `0` (default): nothing a student writes or that is tied to a user is sent to Gemini; chat answers come from the crisis check and saved answers. `1` sends it, which on Google's free tier may let Google use the content, so only with the college's written approval, recorded in `AI_PERSONAL_TEXT_APPROVED_BY`. See docs/LLM_SECURITY.md |
+| `AI_PERSONAL_TEXT_APPROVED_BY` | you (only with the flag on) | free-text record of the written approval; `scripts/predeploy_check.py` warns when the flag is on without it |
 | `PROVIDER_INVITE_CODE` | Render generates it | counsellors need it to sign up. Copy it from the dashboard. Unset means provider signup is off |
 | `CRISIS_ESCALATION_EMAIL` | you | **required for a pilot**: emailed at escalation levels 2 and 3. Without it, an institution with no counsellor accounts notifies nobody |
 | `CONTACT_RECIPIENT`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | you (optional) | all-or-none; without them the contact page says the message was saved |

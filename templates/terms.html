@@ -72,7 +72,7 @@
       <p>We can limit or close an account that breaks these rules.</p>
 
       <h2 id="ai">Limits of the AI</h2>
-      <p>The chat companion and AI suggestions come from a language model. It can be wrong, can miss things, and is not a therapist. It does not remember you like a person does. A fixed safety check looks at your messages and shows helplines when it finds signs of risk, but it can miss some cases. Do not rely on it to keep you safe. Treat suggestions as ideas and check anything important with a professional.</p>
+      <p>{% if ai_personal_text %}The chat companion and AI suggestions come from a language model. It can be wrong,{% else %}The chat companion is an automated assistant that replies from saved answers and a fixed safety check, and no AI model reads what you write. General content such as the tip of the day may come from a language model. It can be wrong,{% endif %} can miss things, and is not a therapist. It does not remember you like a person does. A fixed safety check looks at your messages and shows helplines when it finds signs of risk, but it can miss some cases. Do not rely on it to keep you safe. Treat suggestions as ideas and check anything important with a professional.</p>
 
       <h2 id="content">Your content</h2>
       <p>Your mood entries, journal, chat messages and other content stay yours. You allow us to store and process them to run the service, and to share them as the <a href="{{ url_for('pages.privacy') }}">privacy policy</a> describes. You can export or delete them from <a href="{{ account_data_url }}">your data page</a>.</p>

@@ -67,6 +67,10 @@ Table `audit_log` (`actor_id`, `action`, `target_type`, `target_id`, `meta` JSON
 | `assign_patient` | CLI assignment | `provider_id`, `source` |
 | `export_account` | user downloads their data | none |
 | `delete_account` | user deletes their account | none; `actor_id` is empty, `target_id` is the deleted user id |
+| `followup_plan_create` | a post-crisis follow-up plan is created when a provider acknowledges a crisis event | `crisis_event_id`, `steps` (count) |
+| `followup_step_done`, `followup_step_missed`, `followup_step_skipped` | a provider records a follow-up step | `plan_id`, `seq`, `outcome` code |
+| `followup_plan_complete`, `followup_plan_close` | all steps recorded, or the plan is closed early | `reason` code |
+| `view_safety_plan` | a provider reads a safety plan the student chose to share | none (target is the plan) |
 
 When a user is deleted the database sets `actor_id` to empty on their earlier audit rows; the rows remain. Retention of the audit log is an open item.
 
@@ -74,7 +78,7 @@ When a user is deleted the database sets `actor_id` to empty on their earlier au
 
 `/account/data` (any logged-in role) explains what is stored and offers both actions.
 
-- **Export**, `POST /account/export`: a JSON download (`Content-Disposition: attachment`, `Cache-Control: no-store`), rate limited, audited. Contents: profile without the password hash; assessments; mood and daily check-ins; journal entries; voice log measurements and AI analysis (the audio is never stored); digital detox, medication, breathing, yoga and music logs; goals; progress recommendations; appointments (as patient; as provider only date, time, type and status); notifications addressed to the user; crisis events as source, severity, code and time only; consent records; prescriptions received; the user's blog posts and comments; contact messages they sent; assigned providers (ids). Not included: other people's data, **clinical notes written by providers** (the product does not show them to patients, so they are not exported; change this together with any feature that shows notes to patients), chat messages (chat is not stored; only the Notification inbox is).
+- **Export**, `POST /account/export`: a JSON download (`Content-Disposition: attachment`, `Cache-Control: no-store`), rate limited, audited. Contents: profile without the password hash; assessments; mood and daily check-ins; journal entries; voice log recording length (the audio is never stored, and no tone/emotion analysis is performed); digital detox, medication, breathing, yoga and music logs; goals; progress recommendations; appointments (as patient; as provider only date, time, type and status); notifications addressed to the user; crisis events as source, severity, code and time only; consent records; prescriptions received; the user's blog posts and comments; contact messages they sent; assigned providers (ids). Not included: other people's data, **clinical notes written by providers** (the product does not show them to patients, so they are not exported; change this together with any feature that shows notes to patients), chat messages (chat is not stored; only the Notification inbox is).
 - **Delete**, `POST /account/delete`: needs the current password. Google-only accounts (no usable password) type their email address and the phrase `DELETE MY ACCOUNT`. CSRF protected, rate limited (5 per hour per client). The user row is deleted and the database cascades remove every dependent row. Rows that must survive are set to NULL: appointments where the user was the provider, `crisis_events.acknowledged_by`, audit actors, sent notifications. No uploaded files exist to remove: voice audio is analysed in memory and discarded, and profile pictures are not supported. The session is cleared, and the server-side stamp (docs/SECURITY.md, Sessions) makes any other cookie for this account stale. Only the `delete_account` audit row remains. The audit rows of other people that mention this id as `target_id` (for example a provider viewed this student earlier) keep the number but no name or text.
 - Backups and logs: deletion does not reach database backups or the application log file. **Operator task:** state the backup retention in the privacy policy.
 
@@ -86,7 +90,7 @@ When a user is deleted the database sets `actor_id` to empty on their earlier au
 | `assessments` | PHQ-9, GAD-7, daily mood results and AI insight | Owner; assigned providers | Until deletion (period to be set) | Yes (cascade) |
 | `mood_logs`, `rpm_data` | Mood and check-in series | Owner; assigned providers | Until deletion | Yes |
 | `journal_entries` | Journal text, sentiment, AI suggestions | Owner only (providers see no journal text) | Until deletion | Yes |
-| `voice_logs` | Voice measurements, emotion guess, AI note (no audio, no transcript) | Owner only | Until deletion | Yes |
+| `voice_logs` | Recording length only; no audio, no transcript, no tone/emotion analysis (removed 2026-11-25, see docs/research/ai/decisions/voice-tone-removed.md) | Owner only | Until deletion | Yes |
 | `digital_detox_logs` | Screen-time logs | Owner; assigned providers | Until deletion | Yes |
 | `medications`, `medication_logs` | Reminders and adherence | Owner; assigned providers (adherence view) | Until deletion | Yes |
 | `breathing_exercise_logs`, `yoga_logs`, `music_therapy_logs` | Activity history | Owner; counted in aggregates | Until deletion | Yes |
@@ -106,13 +110,22 @@ When a user is deleted the database sets `actor_id` to empty on their earlier au
 
 Health data is stored as plain text in the database; there is no field-level encryption yet (tracker item O-04). Do not describe it as encrypted.
 
-## 9. Open legal and operator items
+## 9. AI and personal text (decision 2026-11-24)
+
+The service is deployed at zero cost, and Google's Gemini API free tier (unpaid services) may use submitted content to improve Google products; the paid tier does not (source: ai.google.dev/gemini-api/terms, data logging page). Billing is not acceptable, so the decision is "AI only for non-personal work".
+
+- **Default (`AI_SEND_PERSONAL_TEXT` off):** nothing a student writes or that is tied to a user is sent to any external AI service: chat messages and history, journal text, voice-log measurements, assessment answers and scores, mood notes, goals, medication logs, digital detox values, progress summaries, counsellor session transcripts. Chat replies come from the deterministic crisis check and saved answers. Gemini is used only for general content with no user data: the "Tip of the day" and the saved answers to the fixed starter questions.
+- **Operator switch (on):** `AI_SEND_PERSONAL_TEXT=1` restores the features above, sending that text to Gemini (never name, email or user id). It requires the college's written approval, because of the free-tier terms; record who approved and when in `AI_PERSONAL_TEXT_APPROVED_BY` (not shown in the UI; `scripts/predeploy_check.py` warns when the flag is on without it).
+- **Copy:** the chat page, `/ai`, the privacy policy, the terms, the FAQ, the about page and the landing comparison claim 6 read the flag (`ai_personal_text` in `utils/site_context.py`) and describe what actually happens. The companion is "an automated assistant" when off and "an AI assistant" when on.
+- **Code:** `utils/ai_policy.py`; every model call must say `personal=True` or `personal=False` (see docs/LLM_SECURITY.md).
+
+## 10. Open legal and operator items
 
 - **Operator task:** name the data fiduciary (`DATA_FIDUCIARY_NAME`).
 - **Operator task:** name the grievance officer and mailbox (`GRIEVANCE_EMAIL`), with the response time promised.
 - **Operator task:** set retention periods per data class (assessments, journal, voice, crisis events, audit log, backups) with counsel; no automatic deletion job exists.
 - **Operator task:** decide whether a Data Protection Officer or a significant-data-fiduciary assessment applies.
 - **Operator task:** decide the handling of under-18 students (parental consent) before lowering the age gate.
-- **Operator task:** confirm cross-border processing terms for the AI provider.
+- **Operator task:** confirm cross-border processing terms for the AI provider, and keep personal-text AI off (section 9) until the college has approved in writing.
 - **Operator task:** state who may read database backups and application logs, and how access is recorded.
 - Registered-prescriber verification does not exist; prescriptions stay behind `ENABLE_PRESCRIPTIONS` (default off) until it does.

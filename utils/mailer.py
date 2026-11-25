@@ -27,7 +27,7 @@ def smtp_configured():
     return bool(os.getenv('SMTP_HOST'))
 
 
-def send_mail(to, subject, body, reply_to=None):
+def send_mail(to, subject, body, reply_to=None, headers=None):
     """Send one plain-text email. Raises on SMTP failure (the job retries). Requires SMTP_HOST."""
     host = os.getenv('SMTP_HOST')
     port = int(os.getenv('SMTP_PORT') or 587)
@@ -37,6 +37,8 @@ def send_mail(to, subject, body, reply_to=None):
     msg['From'], msg['To'], msg['Subject'] = sender, clean_header(to), clean_header(subject, 150)
     if reply_to:
         msg['Reply-To'] = clean_header(reply_to, 120)
+    for name, value in (headers or {}).items():  # extra headers (List-Unsubscribe): same one-line cleaning
+        msg[clean_header(name, 60)] = clean_header(value, 400)
     msg.set_content(body)
     ctx = ssl.create_default_context()
     if port == 465:

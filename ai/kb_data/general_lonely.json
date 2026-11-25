@@ -1,0 +1,7 @@
+{
+  "intent": "general_lonely",
+  "review_status": "clinician_reviewed",
+  "source": "adapted from the 'lonely' chat starter template in utils/chat_templates.py (same supportive tone and counsellor pointer, shortened)",
+  "snippet": "Feeling lonely or homesick when you are away from home is very common. If it feels heavy or does not lift, your college counsellor is a good person to talk to, and you can book a session from the menu.",
+  "reviewed_at": "2026-11-25"
+}

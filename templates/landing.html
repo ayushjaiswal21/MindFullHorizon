@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% from 'partials/icons.html' import icon %}
 
-{% block title %}Mood tracking and PHQ-9 and GAD-7 screening for college students{% endblock %}
-{% block meta_description %}Log your mood, take PHQ-9 and GAD-7 screenings, talk to a clearly labelled AI companion, and book a session with your college counsellor. For students aged 18 and over.{% endblock %}
+{% block title %}Mood tracking and counsellor booking{% endblock %}
+{% block meta_description %}Log your mood, take PHQ-9 and GAD-7 screenings, use a clearly labelled AI companion, and book your college counsellor. For adults aged 18 and over.{% endblock %}
 {% block canonical %}{{ (site_url or request.url_root.rstrip('/')) }}/{% endblock %}
 {% block robots %}index, follow{% endblock %}
 {% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">{% endblock %}
@@ -45,9 +45,11 @@
     <ul class="home-features">
       <li class="home-feature">{{ icon('mood') }}<h3>Log your mood</h3><p>Rate how you feel from 1 to 10, add a short note, and see your history over time.</p></li>
       <li class="home-feature">{{ icon('chart') }}<h3>Take PHQ-9 and GAD-7 screenings</h3><p>Two standard questionnaires for low mood and anxiety. The score is calculated on the server and shown with what it means.</p></li>
-      <li class="home-feature">{{ icon('chat') }}<h3>Talk to the AI companion</h3><p>Anya is an AI assistant, not a therapist. It listens, suggests coping steps, and points you to a counsellor when it matters.</p></li>
+      <li class="home-feature">{{ icon('chat') }}{% if ai_personal_text %}<h3>Talk to the AI companion</h3><p>Anya is an AI assistant, not a therapist. It listens, suggests coping steps, and points you to a counsellor when it matters.</p>{% else %}<h3>Chat with Anya</h3><p>Anya is an automated assistant, not a therapist. It answers from saved answers and a safety check, and no AI model reads what you write. It shows help numbers and points you to a counsellor when it matters.</p>{% endif %}</li>
       <li class="home-feature">{{ icon('journal') }}<h3>Keep a journal</h3><p>Write entries in private and look back at them when you want to.</p></li>
       <li class="home-feature">{{ icon('wind') }}<h3>Breathing, yoga and music</h3><p>Guided breathing exercises, yoga sessions and calming audio for study breaks.</p></li>
+      <li class="home-feature">{{ icon('shield') }}<h3>Write a safety plan</h3><p>A short private plan for hard moments, with the national helplines on it. You can print it, and you choose whether your counsellor can read it.</p></li>
+      <li class="home-feature">{{ icon('leaf') }}<h3>Grounding and sleep log</h3><p>A five-step grounding exercise that uses your senses, and a simple sleep log with a 14-day chart. Both are optional and private.</p></li>
       <li class="home-feature">{{ icon('target') }}<h3>Set goals</h3><p>Track small, measurable goals such as screen time or exercise.</p></li>
       <li class="home-feature">{{ icon('calendar') }}<h3>Book a counsellor</h3><p>Request an appointment with a counsellor at your institution and see its status.</p></li>
       <li class="home-feature">{{ icon('users') }}<h3>Counsellor dashboard</h3><p>Counsellors see their own patients, appointment requests and screening results in one place.</p></li>
@@ -62,7 +64,7 @@
     <ol class="home-steps">
       <li><h3>Create an account</h3><p>Sign up with your email and your college name. You confirm that you are 18 or over.</p></li>
       <li><h3>Check in</h3><p>Log your mood, take a screening, or write in your journal. Use the breathing and yoga tools when you need a break.</p></li>
-      <li><h3>Get support</h3><p>Chat with the AI companion any time, or book your college counsellor for a real conversation.</p></li>
+      <li><h3>Get support</h3><p>{% if ai_personal_text %}Chat with the AI companion any time{% else %}Use the chat for saved answers and help numbers any time{% endif %}, or book your college counsellor for a real conversation.</p></li>
     </ol>
   </div>
 </section>
@@ -76,7 +78,7 @@
     <p class="intro">What this service does and does not do.</p>
     <ul class="home-facts">
       <li>{{ icon('info') }}<div><strong>Screening is not diagnosis.</strong><span>PHQ-9 and GAD-7 describe how you have felt over the last two weeks. Only a qualified clinician can diagnose.</span></div></li>
-      <li>{{ icon('shield') }}<div><strong>A fixed crisis check runs on every chat message.</strong><span>If it finds language about harming yourself, you see helplines and a fixed reply, whatever the AI says. <a href="{{ url_for('core.how_ai_works') }}">How the AI companion works</a>.</span></div></li>
+      <li>{{ icon('shield') }}<div><strong>A fixed crisis check runs on every chat message.</strong><span>If it finds language about harming yourself, you see helplines and a fixed reply{% if ai_personal_text %}, whatever the AI says{% endif %}. <a href="{{ url_for('core.how_ai_works') }}">How the AI companion works</a>.</span></div></li>
       <li>{{ icon('phone') }}<div><strong>If you are in danger, call now.</strong><span>{% for h in helplines %}{{ h.name }}: <a href="tel:{{ h.tel }}">{{ h.number }}</a>{% if not loop.last %}. {% endif %}{% endfor %}.</span></div></li>
       <li>{{ icon('user') }}<div><strong>For people aged 18 and over.</strong><span>You confirm this when you sign up. Minors should use a service built for them.</span></div></li>
       <li>{{ icon('lock') }}<div><strong>Read the policies.</strong><span>The <a href="/privacy">Privacy policy</a> and <a href="/terms">Terms</a> describe what we store and who can see it.</span></div></li>
@@ -92,7 +94,8 @@
     </div>
     <ul class="home-facts">
       <li>{{ icon('users') }}<div><strong>Assigned patients only.</strong><span>You see an individual patient's mood, screening results and notes only when they are linked to you, for example by booking an appointment.</span></div></li>
-      <li>{{ icon('calendar') }}<div><strong>Appointment requests in one list.</strong><span>Accept or decline requests and see today's sessions.</span></div></li>
+      <li>{{ icon('calendar') }}<div><strong>Appointment requests in one list.</strong><span>Accept or decline requests and see today's sessions. An accepted appointment sends you and the student a reminder 24 hours before.</span></div></li>
+      <li>{{ icon('check') }}<div><strong>Follow-ups after a crisis alert.</strong><span>Acknowledging an alert opens a plan of check-ins, three by default, due 2, 7 and 14 days later. Due and overdue ones show on your dashboard. A flag shows when a student's PHQ-9 or GAD-7 result rises; it is a screening result, not a diagnosis.</span></div></li>
       <li>{{ icon('chart') }}<div><strong>Aggregate data for the institution.</strong><span>Institution-level views show combined figures, not individual students.</span></div></li>
     </ul>
   </div>

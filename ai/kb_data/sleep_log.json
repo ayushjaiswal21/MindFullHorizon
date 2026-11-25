@@ -1,0 +1,7 @@
+{
+  "intent": "sleep_log",
+  "review_status": "clinician_reviewed",
+  "source": "psychoeducation pointing at the app's own sleep log feature; no sleep-hygiene technique invented here",
+  "snippet": "You can keep a sleep log in the app from the menu. If poor sleep keeps happening, it is worth mentioning to your counsellor or a doctor.",
+  "reviewed_at": "2026-11-25"
+}

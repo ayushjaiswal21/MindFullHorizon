@@ -2,7 +2,8 @@
 {% from 'partials/icons.html' import icon %}
 {% from 'patient_macros.html' import band_badge, status_badge %}
 
-{% block title %}Progress - MindFull Horizon{% endblock %}
+{% block title %}Progress{% endblock %}
+{% block meta_description %}See your mood and screening results over time and what has changed.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
@@ -127,7 +128,7 @@
         <section class="card" aria-labelledby="ideas-heading">
             <div class="card-body">
                 <h2 class="pt-title" id="ideas-heading">Suggestions</h2>
-                <p class="pt-sub">Written by an AI assistant from your scores and goals. General information, not clinical advice.</p>
+                <p class="pt-sub">{% if ai_personal_text %}Written by an AI assistant from your scores and goals. General information, not clinical advice.{% else %}No AI model reads your scores or goals on this server, so no written suggestions appear here.{% endif %}</p>
                 <div id="suggestions" class="mt-4" data-src="{{ url_for('patient.progress_suggestions') }}" aria-live="polite" aria-busy="true">
                     <div class="skeleton card-skel" aria-hidden="true"></div>
                     <noscript><p class="muted">Turn on JavaScript to load suggestions. Your scores and goals above do not need it.</p></noscript>

@@ -95,7 +95,7 @@ def test_provider_that_hangs_is_cut_off_by_the_interactive_timeout(monkeypatch, 
     monkeypatch.setattr(g, "PROVIDER", p)
     t0 = time.perf_counter()
     with pytest.raises(TimeoutError):
-        g.ask_gemini_system_user("sys", "user", interactive=True)
+        g.ask_gemini_system_user("sys", "user", interactive=True, personal=False)
     assert time.perf_counter() - t0 < 1.0
     assert p.calls == 1 and not fast  # the deadline is used up, so there is no second try and no jitter sleep
 
@@ -107,7 +107,7 @@ def test_interactive_timeout_is_capped_at_ten_seconds_whatever_the_caller_asks(m
     monkeypatch.setattr(g, "PROVIDER", p)
     monkeypatch.setattr(g, "BREAKER", CircuitBreaker(clock=Clock()))
     assert g.INTERACTIVE_TIMEOUT <= 10
-    g.ask_gemini_system_user("s", "u", timeout=60, interactive=True)
+    g.ask_gemini_system_user("s", "u", timeout=60, interactive=True, personal=False)
     assert seen and 0 < seen[0] <= 10
 
 
@@ -115,19 +115,19 @@ def test_interactive_retries_once_only_for_transient_errors(monkeypatch, fast):
     monkeypatch.setattr(g, "INTERACTIVE_TIMEOUT", 5.0)
     p = Scripted(Coded(503), "fine")
     monkeypatch.setattr(g, "PROVIDER", p)
-    assert g.ask_gemini_system_user("s", "u", interactive=True) == "fine"
+    assert g.ask_gemini_system_user("s", "u", interactive=True, personal=False) == "fine"
     assert p.calls == 2 and fast == [0.5]  # one retry, short jitter
 
     p = Scripted(Coded(503))
     monkeypatch.setattr(g, "PROVIDER", p)
     with pytest.raises(Coded):
-        g.ask_gemini_system_user("s", "u", interactive=True)
+        g.ask_gemini_system_user("s", "u", interactive=True, personal=False)
     assert p.calls == 2  # never more than one retry (the old default allowed two)
 
     p = Scripted(Coded(400))
     monkeypatch.setattr(g, "PROVIDER", p)
     with pytest.raises(Coded):
-        g.ask_gemini_system_user("s", "u", interactive=True)
+        g.ask_gemini_system_user("s", "u", interactive=True, personal=False)
     assert p.calls == 1
 
 
@@ -135,7 +135,7 @@ def test_non_interactive_calls_keep_the_configured_timeout_and_two_retries(monke
     p = Scripted(Coded(503))
     monkeypatch.setattr(g, "PROVIDER", p)
     with pytest.raises(Coded):
-        g.ask_gemini_system_user("s", "u")
+        g.ask_gemini_system_user("s", "u", personal=False)
     assert p.calls == 3
 
 

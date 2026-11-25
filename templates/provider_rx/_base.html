@@ -1,5 +1,6 @@
 {#- Layout for the clinical screens. Pages override: title, rx_body (with their own .page-header), page_scripts. -#}
 {% extends "base.html" %}
+{% block meta_description %}{{ self.title()|striptags }}: a page for signed-in staff of your institution on MindFull Horizon.{% endblock %}
 {% block legacy_head %}{% endblock %}
 {% block legacy_scripts %}{% endblock %}
 {% block head_extra %}<link rel="stylesheet" href="{{ url_for('static', filename='css/clinical.css') }}?v={{ asset_version }}">{% endblock %}

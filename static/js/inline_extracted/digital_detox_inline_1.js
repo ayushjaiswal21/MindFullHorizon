@@ -107,8 +107,10 @@
     }).then(function (r) {
       if (r.ok && r.d && r.d.success) {
         var ai = r.d.ai_analysis || {};
-        $('ai-score').textContent = ai.ai_score || 'n/a';
-        $('ai-suggestion').textContent = ai.ai_suggestion || 'No suggestion available.';
+        $('ai-score').textContent = ai.score || 'n/a';
+        $('ai-suggestion').textContent = ai.analysis || 'No suggestion available.';
+        if (r.d.logged_count != null) $('ai-score-count').textContent = String(r.d.logged_count);
+        if (r.d.caveat) $('ai-score-caveat').textContent = r.d.caveat;
         $('last-analysis-time').textContent = new Date().toLocaleTimeString();
         $('last-analysis').hidden = false;
         if (r.d.log) {

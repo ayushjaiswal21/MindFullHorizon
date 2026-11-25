@@ -13,6 +13,7 @@ from itsdangerous import BadSignature, URLSafeSerializer
 
 from extensions import db, limiter
 from models import ContactMessage
+from utils import ai_policy
 from utils.helplines import get_helplines
 from utils.jobs import enqueue
 from utils.seo import site_url
@@ -36,19 +37,27 @@ def _hl(key):
 
 def build_faqs():
   nums = {k: _hl(k) for k in ('Tele-MANAS', 'KIRAN', 'Emergency')}
+  on = ai_policy.personal_text_allowed()  # answers about the AI must match what this server really sends
   return [
     {'id': 'therapy', 'q': 'Is Mindful Horizon therapy?',
      'a': 'No. It is a wellness and screening tool. You can log your mood, take the PHQ-9 and GAD-7 questionnaires, '
-          'write a journal, try breathing and movement exercises, and book a session with a counsellor at your college. '
+          'write a journal, try breathing, grounding and movement exercises, keep a sleep log, write a private safety plan, '
+          'and book a session with a counsellor at your college. '
           'It does not diagnose anything and it does not replace a counsellor, doctor or psychiatrist.'},
     {'id': 'human', 'q': 'Is the chat a human?',
-     'a': 'No. The chat companion, Anya, is an AI assistant. It is not a therapist and it cannot see your history with '
-          'a counsellor. If you want to talk to a person, book an appointment with a counsellor or call a helpline.'},
+     'a': ('No. The chat companion, Anya, is an AI assistant. It is not a therapist and it cannot see your history with '
+           'a counsellor. ' if on else
+           'No. The chat companion, Anya, is an automated assistant. It answers from saved answers and a fixed safety '
+           'check, and no AI model reads what you write. It is not a therapist and it cannot see your history with '
+           'a counsellor. ') +
+          'If you want to talk to a person, book an appointment with a counsellor or call a helpline.'},
     {'id': 'who-sees', 'q': 'Who can see my data?',
      'a': 'You can. Your assigned counsellor can see the patient data that your assignment allows. Counsellors at your '
-          'institution see only totals for groups above a minimum size, plus crisis alerts. Our AI provider, Google '
-          'Gemini, receives the text of the features that use AI. Every counsellor view of an individual record is '
-          'written to an audit log. The privacy policy lists each category in full.',
+          'institution see only totals for groups above a minimum size, plus crisis alerts. ' +
+          ('Our AI provider, Google Gemini, receives the text of the features that use AI. ' if on else
+           'No AI model reads your messages, journal, voice, mood or screening data on this server. ') +
+          'Every counsellor view of an individual record is written to an audit log. The privacy policy lists each '
+          'category in full.',
      'link': ('pages.privacy', 'Read the privacy policy')},
     {'id': 'self-harm', 'q': 'What happens if I mention self-harm?',
      'a': 'Every chat message goes through a fixed rule-based check before anything else, and it works even if the AI '
@@ -60,14 +69,18 @@ def build_faqs():
           f"call {nums['Emergency']}."},
     {'id': 'journal', 'q': 'Are my journal entries private?',
      'a': 'Journal entries are tied to your account and are not shown to other students. The counsellor pages '
-          'do not display journal entries. If you ask for an AI suggestion on an entry, the text of '
-          'that entry is sent to Google Gemini to produce the suggestion. Your entries are stored in the service database; '
-          'we do not claim they are encrypted at rest.'},
+          'do not display journal entries. ' +
+          ('If you ask for an AI suggestion on an entry, the text of that entry is sent to Google Gemini to produce '
+           'the suggestion. ' if on else 'The text of an entry is not sent to any AI model on this server. ') +
+          'Your entries are stored in the service database; we do not claim they are encrypted at rest.'},
     {'id': 'counsellor-sees', 'q': 'What does my counsellor see?',
      'a': 'Only counsellors linked to you see your individual records. A link is created when you book an appointment '
           'with a counsellor, or when one is added by hand. They can see your assessments, mood history and appointments. '
+          'They can read your safety plan only if you switch on sharing for it. Your sleep log stays private. '
           'A counsellor at your institution can also see an unacknowledged crisis alert, even without a link, so that no '
-          'alert is missed. Those views are audited.'},
+          'alert is missed. Those views are audited. When a counsellor acknowledges an alert, a follow-up plan is opened for the '
+          'counsellors linked to you and the one who acknowledged it. It holds dates and a short outcome choice, not text from you. '
+          'Linked counsellors also see a flag when a PHQ-9 or GAD-7 result rises.'},
     {'id': 'cost', 'q': 'What does it cost?',
      'a': 'There is no payment or subscription feature in the app, and nothing to buy. The service is an early-stage '
           'project run by its operator, so features and availability can change.'},
@@ -81,10 +94,16 @@ def build_faqs():
           'host keeps any, expire on their own schedule.',
      'link': ('auth.account_data', 'Open the data page')},
     {'id': 'ai-model', 'q': 'Which AI model is used and what is sent to it?',
-     'a': 'Google Gemini, through the Gemini API (a Flash model, set by the operator). It receives your chat messages, '
-          'and, only when you use the matching feature, a journal entry, assessment scores and answers, or goal, '
-          'medication and mood summaries. Your name, email address and user ID are not part of those requests. '
-          'The AI is told it is not a therapist, and its output is never what decides whether to show crisis help.'},
+     'a': ('Google Gemini, through the Gemini API (a Flash model, set by the operator). It receives your chat messages, '
+           'and, only when you use the matching feature, a journal entry, assessment scores and answers, or goal, '
+           'medication and mood summaries. Your name, email address and user ID are not part of those requests. '
+           'The AI is told it is not a therapist, and its output is never what decides whether to show crisis help. '
+           "Google's free-tier terms may allow it to use submitted content to improve its products, which is why the "
+           "operator needs the college's written approval before switching this on." if on else
+           'On this server, nothing you write and no data about you is sent to an AI model: not chat messages, journal, '
+           'voice, mood, screening, goals, medication or progress data. Google Gemini is used only for general content '
+           'that involves no personal data, such as the tip of the day and the saved answers to the starter questions. '
+           'The operator can switch personal-text AI on; the policy pages then change to say what is sent.')},
     {'id': 'devices', 'q': 'Which browsers and devices work?',
      'a': 'Any current version of Chrome, Edge, Firefox or Safari on a phone, tablet or computer. Pages work with '
           'JavaScript on or off for sign-in and forms. Chat, charts, voice logs and video sessions need JavaScript, '

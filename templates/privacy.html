@@ -59,13 +59,16 @@
         <tbody>
           <tr><th scope="row">Account</th><td>Name, email address, institution, role (student or counsellor), a hashed password or a Google account ID if you sign in with Google, and when you accepted this policy and confirmed you are 18 or older.</td></tr>
           <tr><th scope="row">Mood</th><td>Mood ratings and notes you log.</td></tr>
-          <tr><th scope="row">Screenings</th><td>Your PHQ-9 and GAD-7 answers, the scores calculated from them, and any AI explanation you asked for.</td></tr>
+          <tr><th scope="row">Screenings</th><td>Your PHQ-9 and GAD-7 answers, the scores calculated from them, {% if ai_personal_text %}and any AI explanation you asked for{% else %}and a fixed band description{% endif %}.</td></tr>
           <tr><th scope="row">Journal</th><td>Entry titles, text and a sentiment label.</td></tr>
-          <tr><th scope="row">Voice logs</th><td>Audio measurements (length, pitch, loudness), a rough tone label and any AI note. The recording itself is analysed when you save and is not stored.</td></tr>
+          <tr><th scope="row">Voice logs</th><td>The length of the recording in seconds. The recording itself is analysed when you save and is not stored, and no pitch, tone or emotion analysis is performed.</td></tr>
           <tr><th scope="row">Chat</th><td>Messages you send to the AI companion and its replies.</td></tr>
           <tr><th scope="row">Appointments</th><td>Appointment times, the counsellor, status, and notes a counsellor writes about a session.</td></tr>
           <tr><th scope="row">Medication</th><td>Medication names you enter and when you log taking them.</td></tr>
           <tr><th scope="row">Prescriptions</th><td>If a doctor at your institution issues you a prescription: your name, the diagnosis the doctor enters, allergies and current medicines as entered, the medicines with dose and duration, the doctor's name and registration number, dates, whether you sent it to the pharmacy desk and what was collected. Your decision to allow or withdraw e-prescriptions is stored with its date. The app does not prescribe by itself and the AI companion cannot prescribe.</td></tr>
+          <tr><th scope="row">Safety plan</th><td>The text you write in your safety plan and the names and phone numbers you add. It is never sent to the AI. Your assigned counsellors can read it only if you switch on sharing; each read is audited.</td></tr>
+          <tr><th scope="row">Sleep log</th><td>Dates, bedtime, wake time, a 1 to 5 rating and an optional short note. Not shown to counsellors.</td></tr>
+          <tr><th scope="row">Reminder email choice</th><td>Whether you turned reminders on, how often, the hour, and the date of the last reminder. Reminders go to your account address after you confirm from your inbox and contain no health information.</td></tr>
           <tr><th scope="row">Wellness activity</th><td>Goals, breathing, yoga and music sessions, digital-detox answers, and notifications.</td></tr>
           <tr><th scope="row">Crisis records</th><td>When the safety check fires: the time, where it happened (chat or PHQ-9), a severity number and a short reason code. The message text is not stored in this record.</td></tr>
           <tr><th scope="row">Contact messages</th><td>If you use the contact form: your name, email, subject and message.</td></tr>
@@ -92,7 +95,11 @@
 
       <h2 id="processors">Services that receive data</h2>
       <ul>
-        <li><strong>Google Gemini API</strong> (AI companion and AI suggestions). When you use an AI feature, we send the text for that feature: your chat message; a journal entry's title, text and sentiment; screening type, score and answers; goal, medication-log and mood summaries; a voice transcript and audio measurements. Counsellor tools can send a pasted session transcript to draft a note. We do not send your name, email address or user ID. Google processes the request to return a reply. Check Google's current terms for how it handles API data.</li>
+        {% if not ai_personal_text %}
+        <li><strong>Google Gemini API</strong> (general content only). On this server no personal text is sent to an AI model: not your chat messages, journal, voice log measurements, mood notes, screening answers or scores, goals, medication logs, screen-time values, progress summaries, or counsellor session transcripts. The model is used only for general content that involves no personal data, such as the tip of the day and the saved answers to the fixed starter questions. Those requests are fixed text with no data tied to you. The operator can switch personal-text AI on; this policy then changes to list what is sent, and the operator must first have your college's written approval.</li>
+        {% else %}
+        <li><strong>Google Gemini API</strong> (AI companion and AI suggestions). When you use an AI feature, we send the text for that feature: your chat message; a journal entry's title, text and sentiment; screening type, score and answers; goal, medication-log and mood summaries; a voice transcript and audio measurements. Counsellor tools can send a pasted session transcript to draft a note. We do not send your name, email address or user ID. Google processes the request to return a reply. Google's free-tier terms may allow it to use submitted content to improve its products, so this is switched on only with your college's written approval. Check Google's current terms for how it handles API data.</li>
+        {% endif %}
         <li><strong>The hosting provider</strong> stores the database and files and serves the app. [Hosting provider and region to be set by the operator.]</li>
         <li><strong>An email (SMTP) provider</strong>, only if the operator has set one up, to forward contact-form messages to the team. [SMTP provider to be set by the operator.]</li>
         <li><strong>Google sign-in</strong>, only if you choose it. Google tells us your name, email address and account ID.</li>
@@ -137,7 +144,11 @@
       <p>We do not claim that data is encrypted at rest in the database, and we make no claim of certification under HIPAA or similar standards. No system is perfectly secure. If a breach affects your data, we will tell you and the authorities as the law requires.</p>
 
       <h2 id="transfers">Data sent outside India</h2>
+      {% if ai_personal_text %}
       <p>Text sent to the Google Gemini API is processed by Google, and may be processed on servers outside India. The hosting provider's region is [to be set by the operator]. If you do not want your text sent to Google, do not use the AI chat, journal suggestions or other AI features. The rest of the app works without them.</p>
+      {% else %}
+      <p>No text you write is sent to the Google Gemini API on this server. Only fixed, general requests (the tip of the day, saved answers to starter questions) go to Google, and they may be processed on servers outside India. The hosting provider's region is [to be set by the operator].</p>
+      {% endif %}
 
       <h2 id="changes">Changes to this policy</h2>
       <p>The version number and date at the top change when this policy changes. If a change affects how we use your data, we will ask for your consent again before it applies to you.</p>

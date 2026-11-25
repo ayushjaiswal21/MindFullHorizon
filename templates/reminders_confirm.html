@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Confirm reminders{% endblock %}
+{% block content %}
+<div class="container section">
+  <header class="page-header"><h1>Turn on reminder emails?</h1>
+    <p class="lead">We will email {{ email }} a short, gentle reminder. The email never contains health information and always has a link to stop it.</p></header>
+  <form method="post" action="{{ url_for('patient.reminders_confirm', token=token) }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="btn btn-primary" type="submit">Yes, turn on reminders</button>
+    <a class="btn btn-ghost" href="{{ url_for('core.index') }}">No thanks</a>
+  </form>
+</div>
+{% endblock %}

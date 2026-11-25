@@ -2,7 +2,8 @@
 {% from 'partials/icons.html' import icon %}
 {% from 'patient_macros.html' import band_badge, status_badge, helpline_list %}
 
-{% block title %}Dashboard - MindFull Horizon{% endblock %}
+{% block title %}Dashboard{% endblock %}
+{% block meta_description %}Log how you feel today, see your recent mood history and reach your screenings, journal and appointments.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/patient.css') }}">
@@ -60,16 +61,19 @@
                     <li><a href="{{ url_for('patient.yoga') }}">{{ icon('activity') }}<div><strong>Yoga</strong><span>Log sessions and open guided videos.</span></div></a></li>
                     <li><a href="{{ url_for('music') }}">{{ icon('music') }}<div><strong>Music</strong><span>Calming audio tracks.</span></div></a></li>
                     <li><a href="{{ url_for('patient.digital_detox') }}">{{ icon('clock') }}<div><strong>Screen time</strong><span>Log daily screen time.</span></div></a></li>
-                    <li><a href="{{ url_for('chat') }}">{{ icon('chat') }}<div><strong>Chat with Anya</strong><span>An AI assistant, not a therapist.</span></div></a></li>
+                    <li><a href="{{ url_for('chat') }}">{{ icon('chat') }}<div><strong>Chat with Anya</strong><span>{{ 'An AI assistant' if ai_personal_text else 'An automated assistant' }}, not a therapist.</span></div></a></li>
                     <li><a href="{{ url_for('telehealth') }}">{{ icon('video') }}<div><strong>Video session</strong><span>Join a session with your counsellor.</span></div></a></li>
                     {% if prescriptions_enabled %}
                     <li><a href="{{ url_for('patient.my_prescriptions') }}">{{ icon('file') }}<div><strong>My prescriptions</strong><span>Prescriptions from your college doctor.</span></div></a></li>
                     {% endif %}
                 </ul>
             </section>
+
+            {% include 'partials/wellbeing_tools.html' %}
         </div>
 
         <div class="pt-stack">
+            {% include 'partials/tip_card.html' %}
             {% include 'partials/gamification_card.html' %}
             <section class="card" aria-labelledby="screening-heading">
                 <div class="card-body">

@@ -9,7 +9,6 @@ from ai.service import (
     generate_goal_suggestions,
     analyze_medication_adherence,
     generate_journal_insights,
-    analyze_voice_emotion
 )
 
 # Configure logging
@@ -39,14 +38,6 @@ async def test_ai_service():
         "Negative"
     )
     print(f"Journal Insights: {journal_insights}")
-
-    # 4. Test Voice Analysis
-    print("\n4. Testing Voice Analysis...")
-    voice_analysis = analyze_voice_emotion(
-        "I am just so tired of everything.", 
-        {"mean_pitch": 120, "mean_energy": 0.02} # Low pitch/energy -> Sad
-    )
-    print(f"Voice Analysis: {voice_analysis}")
 
     print("\n--- Test Complete ---")
 

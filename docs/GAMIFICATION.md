@@ -23,6 +23,10 @@ Small on purpose. The aim is a gentle reason to come back each day, not a game.
 | Goal progress (current value changed, or goal completed) | 10 | `goal:<id>:<yyyy-mm-dd>` | once per goal per day, 3 per day |
 | Assessment, mood | 0 | none | never |
 
+Voice log points reward the act of recording and reflecting, not any measurement of the recording: the voice-log
+tone/emotion label was removed 2026-11-25 as measured invalid (see `docs/research/ai/decisions/voice-tone-removed.md`),
+but the student still showed up and journaled by voice, so `voice_log` stays in `ACTIVITY_TYPES`.
+
 Music sessions are not an award because the app has no route that records a music session yet. Add one with `award_points` when it exists.
 
 `award_points` writes a `PointsLedger` row first. `UNIQUE(user_id, ref)` makes a replay a no-op. The daily cap is 3 paid awards per activity type per IST day; past the cap a row with 0 points is written. The IST day is the day boundary everywhere (`utils/timeutil.py`).

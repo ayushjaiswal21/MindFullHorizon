@@ -1,0 +1,20 @@
+{# Read-only safety plan panel for an assigned provider. Shows nothing unless the student switched sharing on.
+   Included once in wellness_report.html. Reading it is audited (view_safety_plan, ids only). Needs `patient`. #}
+{% set shared = shared_safety_plan(patient.id) if shared_safety_plan is defined else none %}
+{% if shared %}
+<section class="card section sp-readonly" aria-labelledby="sp-heading">
+    <div class="card-header"><h2 id="sp-heading">Safety plan, shared by the student</h2></div>
+    <div class="card-body">
+        <p class="muted">The student chose to share this plan with their counsellors. It is read only and each view is recorded. Last updated {{ shared.updated_at.strftime('%d %b %Y') }}.</p>
+        <dl>
+            {% for label, value in [('Warning signs', shared.warning_signs), ('Things they can do on their own', shared.coping_alone), ('People and places that help', shared.places_people)] %}
+            {% if value %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endif %}
+            {% endfor %}
+            {% if shared.help_people %}<dt>People they can ask for help</dt><dd>{% for p in shared.help_people %}{{ p.name }}{% if p.phone %}, {{ p.phone }}{% endif %}{{ '\n' if not loop.last }}{% endfor %}</dd>{% endif %}
+            {% for label, value in [('Professionals they listed', shared.professionals), ('Making their surroundings safer', shared.safer_surroundings)] %}
+            {% if value %}<dt>{{ label }}</dt><dd>{{ value }}</dd>{% endif %}
+            {% endfor %}
+        </dl>
+    </div>
+</section>
+{% endif %}

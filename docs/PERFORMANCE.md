@@ -56,7 +56,7 @@ Flask-Compress: gzip and brotli (`br` first), `COMPRESS_MIN_SIZE=500`, `COMPRESS
 `TEMPLATES_AUTO_RELOAD` is on only with `FLASK_DEBUG=1`; outside debug a Jinja `FileSystemBytecodeCache` lives in `instance/jinja_cache`. The two `after_request` hooks do header work only (no queries; the cache hook reads the already loaded session). Gemini calls already have timeouts and are owned by `ai/`. The Dockerfile `CMD` is unchanged: `--preload` is unsafe with eventlet and the jobs thread, `--max-requests` would drop WebSockets, and the eventlet worker already multiplexes connections.
 
 ### CSP switch (item 9)
-`CSP_ENFORCE=1` sends `Content-Security-Policy` instead of `Content-Security-Policy-Report-Only` (default off, policy string unchanged). `test_report_inline_handlers_and_scripts_without_nonce` never fails; it emits a warning listing templates that still hold inline `on*=` attributes or `<script>` blocks without a nonce. The policy still contains `'unsafe-inline'`; remove it when that list is empty, then flip the switch.
+The CSP is enforcing by default and its rules are tested in tests/test_csp.py (see docs/SECURITY.md); `CSP_REPORT_ONLY=1` is the emergency fallback.
 
 ## 3. Pagination contract
 
@@ -83,7 +83,7 @@ The music and audio routes (`/api/mood-music`, `/api/play-mood`, `/audio/<path>`
 
 ## 5. Environment variables added
 
-`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, `DB_POOL_TIMEOUT`, `DB_POOL_RECYCLE`, `DB_CONNECT_TIMEOUT`, `DB_STATEMENT_TIMEOUT_MS`, `SQLITE_BUSY_TIMEOUT_MS`, `CACHE_TYPE`, `CACHE_DEFAULT_TIMEOUT`, `CACHE_THRESHOLD`, `REDIS_URL`, `RATELIMIT_STORAGE_URI`, `SESSION_LIFETIME_HOURS`, `CSP_ENFORCE`, `JOB_IDLE_MAX_SECONDS`, `TRUST_PROXY`, `LOG_TO_STDOUT`.
+`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, `DB_POOL_TIMEOUT`, `DB_POOL_RECYCLE`, `DB_CONNECT_TIMEOUT`, `DB_STATEMENT_TIMEOUT_MS`, `SQLITE_BUSY_TIMEOUT_MS`, `CACHE_TYPE`, `CACHE_DEFAULT_TIMEOUT`, `CACHE_THRESHOLD`, `REDIS_URL`, `RATELIMIT_STORAGE_URI`, `SESSION_LIFETIME_HOURS`, `CSP_REPORT_ONLY`, `JOB_IDLE_MAX_SECONDS`, `TRUST_PROXY`, `LOG_TO_STDOUT`.
 
 ## 6. Not done, and risks
 

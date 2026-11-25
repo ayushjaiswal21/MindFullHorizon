@@ -173,7 +173,7 @@ def _run(text):
     return asyncio.run(ask_with_severity(text, user_id=1))
 
 
-KEYS = {"reply", "severity", "reason", "recommended_action", "escalate", "helplines"}
+KEYS = {"reply", "severity", "reason", "recommended_action", "escalate", "helplines"}  # subset check (<=), not exact
 
 
 def test_crisis_forces_emergency_even_if_llm_says_none(monkeypatch):
@@ -251,7 +251,7 @@ def test_ask_passes_through_tokens_and_temperature(monkeypatch):
         seen.update(kw, system=system, user=user)
         return "x"
     monkeypatch.setattr(svc, "ask_gemini_system_user", fake)
-    assert svc.ask("hi", system_prompt="sys", max_tokens=77, temperature=0.1) == "x"
+    assert svc.ask("hi", system_prompt="sys", max_tokens=77, temperature=0.1, personal=False) == "x"
     assert seen["max_tokens"] == 77 and seen["temperature"] == 0.1 and seen["system"] == "sys"
 
 
@@ -299,7 +299,7 @@ def test_gemini_impl_uses_system_instruction_and_env_model(monkeypatch):
     monkeypatch.setattr(g, "GEMINI_MODEL_NAME", "my-model")
     monkeypatch.setattr(g.genai, "configure", lambda **k: None)
     monkeypatch.setattr(g.genai, "GenerativeModel", FakeModel)
-    assert g.ask_gemini_system_user("SYS", "USER") == "hello"
+    assert g.ask_gemini_system_user("SYS", "USER", personal=False) == "hello"
     assert calls["name"] == "my-model" and calls["si"] == "SYS" and calls["contents"] == "USER"
     assert calls["opts"]["timeout"] > 0
 
@@ -322,7 +322,7 @@ def test_gemini_safety_block_raises_blocked(monkeypatch):
     monkeypatch.setattr(g.genai, "configure", lambda **k: None)
     monkeypatch.setattr(g.genai, "GenerativeModel", M)
     with pytest.raises(g.GeminiBlocked):
-        g.ask_gemini_system_user("s", "u")
+        g.ask_gemini_system_user("s", "u", personal=False)
 
 
 # ---------- api_save_assessment ----------

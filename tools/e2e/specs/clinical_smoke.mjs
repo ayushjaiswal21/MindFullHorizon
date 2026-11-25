@@ -1,4 +1,5 @@
 import { launch, login, B } from '../lib.mjs';
+let failed = 0;
 const run = async (label, scheme, email, role, paths, adminLogin = false) => {
   const { browser, page } = await launch(scheme);
   if (adminLogin) {
@@ -13,6 +14,7 @@ const run = async (label, scheme, email, role, paths, adminLogin = false) => {
     page.errors.length = 0;
     const resp = await page.goto(B + p, { waitUntil: 'networkidle' }).catch(e => ({ status: () => 'ERR ' + e.message.slice(0, 40) }));
     const h1 = await page.$eval('h1', e => e.textContent.trim().slice(0, 40)).catch(() => '-');
+    if (resp.status() !== 200 || page.errors.length) failed++;
     console.log(`  ${p.padEnd(30)} ${resp.status()}  h1="${h1}"  ${page.errors.length ? 'ERRORS: ' + page.errors.slice(0, 3).join(' | ') : ''}`);
   }
   await browser.close();
@@ -21,3 +23,5 @@ await run('ADMIN', 'light', 'demo.admin@example.com', 'admin', ['/admin/', '/adm
 await run('DOCTOR', 'light', 'demo.doctor@example.com', 'provider', ['/provider/dashboard', '/provider/prescribe', '/provider/prescriptions', '/provider/analytics']);
 await run('COUNSELLOR', 'light', 'demo.provider@example.com', 'provider', ['/provider/dashboard', '/provider/analytics', '/provider/ai-documentation']);
 await run('PATIENT', 'light', 'demo.patient@example.com', 'patient', ['/patient/dashboard', '/patient/my-prescriptions', '/patient/schedule', '/account/data']);
+console.log(failed ? failed + ' page(s) failed' : 'ALL PASSED');
+process.exit(failed ? 1 : 0);

@@ -1,7 +1,8 @@
 {% extends 'base.html' %}
 {% from 'partials/icons.html' import icon %}
 
-{% block title %}Yoga | MindFull Horizon{% endblock %}
+{% block title %}Yoga{% endblock %}
+{% block meta_description %}Yoga sessions and poses to follow for stretching and relaxation.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
@@ -62,7 +63,7 @@
       <div class="card-header"><h2 id="routines-heading" class="text-lg">Timed routines</h2></div>
       <div class="card-body">
         <p class="wl-note mb-2">Each routine sets the timer for a length. It does not play a video. Pick one from the <a href="{{ url_for('patient.yoga_videos') }}">video library</a> to follow along.</p>
-        <div class="wl-grid" style="grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))">
+        <div class="wl-grid wl-grid-auto">
           <button type="button" class="session-card start-guided-session-card" data-session-type="yoga" data-session-name="morning" data-log-name="Morning Energy Flow" data-session-duration="15"><strong>Morning flow</strong><span>15 minutes, gentle stretches</span></button>
           <button type="button" class="session-card start-guided-session-card" data-session-type="yoga" data-session-name="desk" data-log-name="Desk Worker's Relief" data-session-duration="10"><strong>Desk relief</strong><span>10 minutes, neck, shoulders, back</span></button>
           <button type="button" class="session-card start-guided-session-card" data-session-type="yoga" data-session-name="evening" data-log-name="Evening Wind-Down" data-session-duration="20"><strong>Evening wind-down</strong><span>20 minutes, slow and quiet</span></button>

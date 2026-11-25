@@ -11,10 +11,12 @@
 {%- endmacro %}
 
 {# Helplines come from the `helplines` context variable (utils/helplines.py); numbers are never typed in templates. #}
-{% macro helpline_list(helplines) -%}
+{% macro helpline_list(helplines, plan_link=true) -%}
 <ul class="helpline-list">
     {% for h in helplines or [] %}
     <li><a href="tel:{{ h.tel }}">{{ h.name }}: {{ h.number }}</a> <span class="muted">({{ h.hours }})</span>{% if h.note %}<br><span class="muted">{{ h.note }}</span>{% endif %}</li>
     {% endfor %}
 </ul>
+{% set spl = safety_plan_link() if plan_link and safety_plan_link is defined else none %}
+{% if spl %}<p class="mt-2"><a class="tap-link" href="{{ spl.url }}"><strong>{{ spl.label }}</strong></a></p>{% endif %}
 {%- endmacro %}

@@ -358,8 +358,8 @@ def test_security_headers(client):
     assert r.headers["X-Content-Type-Options"] == "nosniff"
     assert r.headers["Referrer-Policy"]
     assert r.headers["Permissions-Policy"]
-    assert "Content-Security-Policy-Report-Only" in r.headers
-    assert "Content-Security-Policy" not in r.headers
+    assert "Content-Security-Policy" in r.headers  # enforcing; details in tests/test_csp.py
+    assert "Content-Security-Policy-Report-Only" not in r.headers
     assert "Strict-Transport-Security" not in r.headers  # only in production
 
 

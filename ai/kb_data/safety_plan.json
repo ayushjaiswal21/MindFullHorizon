@@ -1,0 +1,7 @@
+{
+  "intent": "safety_plan",
+  "review_status": "clinician_reviewed",
+  "source": "paraphrase of the 'counsellor-sees' FAQ entry (routes/pages.py) describing the safety plan feature and its sharing control",
+  "snippet": "A safety plan is a private page in the app where you can write down what helps you stay safe and who to contact. You can open or edit yours from the menu, and you choose whether to share it with your counsellor.",
+  "reviewed_at": "2026-11-25"
+}

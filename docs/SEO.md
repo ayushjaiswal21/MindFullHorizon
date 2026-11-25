@@ -4,23 +4,49 @@ Code: `routes/seo.py`, `utils/seo.py`, `templates/search.html`, tests in `tests/
 
 ## What is indexed
 
-`utils/seo.py::PUBLIC_PAGES` lists the pages a guest can open without a login redirect: `/`, `/login`, `/signup`, `/about`, `/faq`, `/contact`, `/privacy`, `/terms`, `/blog/` plus every published blog post (`/blog/<id>`). `/blog` is only a redirect, so the registry uses `/blog/`. `/yoga/videos` is not listed: the real page is `/patient/yoga/videos` and needs a patient login.
+`utils/seo.py::PUBLIC_PAGES` lists the pages a guest can open without a login redirect: `/`, `/login`, `/signup`, `/about`, `/faq`, `/contact`, `/privacy`, `/terms`, `/ai`, `/blog/` plus every published blog post (`/blog/<id>`). `/blog` is only a redirect, so the registry uses `/blog/`. Everything else is `noindex, nofollow`: signed-in pages, `/admin/*` (including `/admin/login`), `/consent`, `/role_selection`, `/search`, error pages, drafts and all JSON and operational endpoints. The signed-in home at `/` is a private page, so its robots tag is `noindex` for a logged-in visitor and `index, follow` for a guest.
 
-A registry path appears in `robots.txt` and `sitemap.xml` only if the URL map resolves it (`app.url_map.bind('').match`), so pages that other agents have not built yet are skipped and appear on their own once the route exists. Add a new public page by adding one registry entry.
+A registry path appears in `robots.txt` and `sitemap.xml` only if the URL map resolves it (`app.url_map.bind('').match`). The sitemap lists the registry pages (with `<lastmod>` from `SITE_LAST_UPDATED` in `utils/site_context.py`, bump it when public content changes) and published posts only (`<lastmod>` from `updated_at`, else `created_at`). Drafts and private paths never enter it.
 
-`PRIVATE_PREFIXES` (patient, provider, chat, `/api/`, profile, telehealth, music, `/search`, ...) are disallowed in `robots.txt`. `robots.txt` is advisory; real protection is `@login_required`. Drafts and private data never enter the sitemap.
+`PRIVATE_PREFIXES` are disallowed in `robots.txt`. Every noindex page path must start with one of them (`tests/test_meta_tags.py` enforces this), and no public path may. `robots.txt` is advisory; real protection is `@login_required`.
 
 - `/robots.txt`: `text/plain`, cached 1 day.
-- `/sitemap.xml`: sitemap protocol 0.9, max 5000 URLs, `<lastmod>` for blog posts from `updated_at` (else `created_at`), cached 1 hour in a per-process memo (not Flask-Caching: that object lives in `app.py` and importing it from a blueprint is circular). The memo is skipped under `TESTING`.
-- `/favicon.ico` is served by `app.py` (`favicon`, from `static/favicon.ico`); `seo.py` does not redefine it.
+- `/sitemap.xml`: sitemap protocol 0.9, max 5000 URLs, cached 1 hour in a per-process memo (skipped under `TESTING`).
+- `/favicon.ico` is served by `app.py`.
+- `X-Robots-Tag: noindex, nofollow`: one `after_app_request` in `routes/seo.py` adds it to every response whose path is not public (`is_indexable_path`), except `/robots.txt`, `/sitemap.xml`, `/favicon.ico` and static files. Public pages are left to their meta tag so a draft post stays noindex there. A route that sets its own header keeps it.
 
-## Titles, meta, canonical, OG, JSON-LD
+## Rules for every page
 
-Per-page tags come from the `base.html` blocks in `docs/DESIGN_SYSTEM.md`: `title`, `meta_description`, `canonical`, `robots` (default `noindex, nofollow`; public pages set `index, follow`), `og_image`, `breadcrumbs` (macro also emits BreadcrumbList JSON-LD) and `head_extra` (for page-specific JSON-LD such as `Article` on blog posts). Public templates must override `robots` to `index, follow`, set a unique `title` and `meta_description`, and set `canonical` to `{{ site_url }}<path>`. `search.html` and every `/api/*` response also send `X-Robots-Tag: noindex`.
+Per-page tags come from the `base.html` blocks in `docs/DESIGN_SYSTEM.md`. `base.html` appends ` | MindFull Horizon` to the title, so:
+
+- `title`: the page part only, at most 41 characters (60 with the suffix), unique. Never write the brand in it. Dynamic pages cut data with `truncate(41, True, '...')`.
+- `meta_description`: 50 to 160 characters, written for that page, plain, no emoji, no em dash, no claim the app cannot back. Public pages must differ from each other.
+- `canonical`: the default is `site_url + request.path` (no query string), which is right for almost every page. Override only if the path differs.
+- `robots`: default `noindex, nofollow`. A public page sets `index, follow`.
+- `og_image`: default is `static/img/og-default.png` (1200x630, WebP twin beside it), made absolute with `site_url`. A blog post uses the default image.
+- Exactly one `<h1>` per page.
+- `breadcrumbs`: every public page below the home page uses the `breadcrumb` macro (nav plus BreadcrumbList JSON-LD). Private pages do not need it.
+- JSON-LD: `Organization` and `WebSite` come from `base.html`. `FAQPage` is built from `routes/pages.py::build_faqs`. Blog posts emit `Article` (headline, datePublished, dateModified, author name) from `blog_detail.html` through `tojson`, never `|safe`, so user text cannot close the script tag. Published posts only.
+- Dynamic pages: the blog post sets title and description from the post (description is the body text, whitespace collapsed, padded to 50 characters when the post is short). Search uses the query in title and description and is noindex.
+- Clinical templates (`admin/_base.html`, `provider_rx/_base.html`) derive a default description from the page title, so a new page there only needs a `title`.
+
+### Add a page
+
+1. Route in a blueprint (`routes/pages.py` for static pages). Public and indexable: add one entry to `PUBLIC_PAGES` (path, title, description, changefreq, priority). Private: do nothing, but add its prefix to `PRIVATE_PREFIXES` if it is a new top-level path.
+2. Template: set `title`, `meta_description`, and for a public page `robots` plus `breadcrumbs`.
+3. Run `pytest tests/test_meta_tags.py tests/test_seo.py`. The crawl test visits every parameter-free GET route as guest, patient, provider, doctor, admin and pharmacy-desk admin and fails on a missing, long or duplicate title, a bad description, a wrong canonical or robots value, a second h1, broken JSON-LD, or a sitemap URL that is not indexable.
+
+## Behind a proxy
+
+`site_url()` (one function, `utils/site_context.py`, re-exported by `utils/seo.py`) returns `SITE_URL` when set, else the request root. In production ProxyFix (`utils/proxy.py`) makes that root use the forwarded scheme and host. Set `SITE_URL` anyway: then no canonical, Open Graph URL, sitemap entry or JSON-LD id can contain `localhost` or an internal host name.
+
+## Titles, meta, canonical, OG: summary of files
+
+`templates/base.html` (shell and defaults), `templates/partials/breadcrumbs.html`, `tests/test_meta_tags.py` (crawl), `tests/test_seo.py` (sitemap, robots, search, events).
 
 ## Custom domain
 
-Set `SITE_URL=https://yourdomain.in` (no trailing slash needed). Without it the origin is taken from the request, which depends on the `Host` header and the proxy scheme, so set it in production. It feeds `Sitemap:` in `robots.txt`, every sitemap `<loc>` and the search canonical.
+Set `SITE_URL=https://yourdomain.in` (no trailing slash needed). Without it the origin is taken from the request, which depends on the `Host` header and the proxy scheme, so set it in production. It feeds `Sitemap:` in `robots.txt`, every sitemap `<loc>`, every canonical and og:image URL.
 
 ## Verify
 

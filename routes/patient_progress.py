@@ -11,6 +11,7 @@ from flask import flash, jsonify, redirect, render_template, session, url_for
 
 import ai.service as ai_service
 from ai import gemini_impl
+from utils import ai_policy
 from ai.scoring import canonical_type
 from decorators import login_required, patient_required
 from extensions import db
@@ -26,6 +27,7 @@ FAIL_TTL_SECONDS = 600.0
 MAX_AGE = timedelta(days=7)
 FAILED = NegativeCache(ttl=FAIL_TTL_SECONDS, limit=2000)
 UNAVAILABLE = 'Suggestions are not available right now. Your scores and goals on this page are up to date. Try again later.'
+NOT_USED = 'No AI model reads your scores or goals on this service, so there are no written suggestions here. Your scores and goals on this page are up to date.'
 EMPTY = 'Complete a screening or log your mood and suggestions will appear here.'
 
 
@@ -126,6 +128,8 @@ def progress_suggestions():
     rows = Assessment.query.filter_by(user_id=user_id).order_by(Assessment.created_at.desc()).limit(200).all()
     if not rows and not goals:
         return _reply('empty', message=EMPTY)
+    if not ai_policy.personal_text_allowed():  # scores and goals never go to a model in this deployment mode
+        return _reply('unavailable', message=NOT_USED)
     if FAILED.blocked(user_id) or not gemini_impl.PROVIDER.configured():
         return _reply('unavailable', message=UNAVAILABLE)
 

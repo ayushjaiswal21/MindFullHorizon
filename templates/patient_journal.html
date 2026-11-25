@@ -1,7 +1,8 @@
 {% extends "base.html" %}
 {% from 'partials/icons.html' import icon %}
 
-{% block title %}Journal | MindFull Horizon{% endblock %}
+{% block title %}Journal{% endblock %}
+{% block meta_description %}Write journal entries and look back on how you felt over time.{% endblock %}
 
 {% block head_extra %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/wellness.css') }}">
@@ -37,7 +38,7 @@
             <div class="wl-actions">
               <button type="submit" class="btn btn-primary" data-loading-text="Saving">Save entry</button>
             </div>
-            <p class="wl-note mt-2">When you save, the text of the entry may be sent to an AI service to write the suggestions shown under it. If you would rather not, do not write it here.</p>
+            <p class="wl-note mt-2">{% if ai_personal_text %}When you save, the text of the entry may be sent to an AI service to write the suggestions shown under it. If you would rather not, do not write it here.{% else %}The text of your entry is not sent to any AI model on this server.{% endif %}</p>
           </form>
         </div>
       </section>
@@ -55,9 +56,9 @@
           {% for entry in journal_entries|sort(attribute='id', reverse=true) %}
           <article class="card journal-entry" data-entry-id="{{ entry.id }}" {% if loop.index > page_size %}hidden data-extra="1"{% endif %}>
             <div class="card-body">
-              <div class="wl-actions" style="justify-content:space-between;align-items:flex-start">
+              <div class="wl-actions wl-actions-split">
                 <div>
-                  <h3 class="text-lg" style="margin:0">{{ entry.title }}</h3>
+                  <h3 class="text-lg m-flush">{{ entry.title }}</h3>
                   <p class="wl-meta">{{ entry.created_at.strftime('%d %b %Y, %H:%M') }} UTC{% if entry.sentiment %}. Tone guessed by software: {{ entry.sentiment }}{% endif %}</p>
                 </div>
                 <button type="button" class="btn btn-ghost btn-sm delete-journal-entry-btn" data-entry-id="{{ entry.id }}" aria-label="Delete entry: {{ entry.title }}">{{ icon('trash') }} Delete</button>
@@ -74,7 +75,7 @@
               {% if entry.ai_suggestions %}
               <div class="wl-ai">
                 <h4>AI-generated suggestions, not advice</h4>
-                <p class="wl-pre" style="margin:0">{{ entry.ai_suggestions }}</p>
+                <p class="wl-pre wl-pre-flush">{{ entry.ai_suggestions }}</p>
               </div>
               {% endif %}
             </div>
