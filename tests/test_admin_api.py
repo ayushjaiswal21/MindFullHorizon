@@ -144,6 +144,43 @@ def _metric(report, name):
     return next(m for s in report['sections'] for m in s['metrics'] if m['name'] == name)
 
 
+def test_annual_report_followup_counts_and_month_breakdown(app, admin_client, make_user):
+    """O-04b/UGC-alignment follow-up: completed follow-up steps are counted, and a month breakdown exists."""
+    from models import CrisisEvent as CE
+    from models import FollowUpPlan, FollowUpStep
+    from services import annual_report
+    from utils.timeutil import ist_today, utcnow
+
+    c, _ = admin_client
+    pids = [make_user('patient') for _ in range(6)]  # >= K=5 so nothing is suppressed
+    year = ist_today().year
+    with app.app_context():
+        for pid in pids[:5]:
+            ce = CE(user_id=pid, source='chat', severity=3, reason='kw')
+            db.session.add(ce)
+            db.session.commit()
+            plan = FollowUpPlan(crisis_event_id=ce.id, patient_id=pid, status='completed')
+            db.session.add(plan)
+            db.session.commit()
+            db.session.add(FollowUpStep(plan_id=plan.id, seq=1, due_date=ist_today(),
+                                         status='done', completed_at=utcnow()))
+        db.session.commit()
+        rep = annual_report.build('test university', year)
+        m = _metric(rep, 'Follow-up steps completed')
+        assert m['value'] == 5 and not m['suppressed']
+
+        month_section = next(s for s in rep['sections'] if s['title'] == 'Crisis alerts and follow-ups by month')
+        assert len(month_section['metrics']) == 24  # 12 months x (crisis alerts, follow-ups completed)
+        this_month = ist_today().strftime('%B')
+        mm = next(x for x in month_section['metrics'] if x['name'] == f'{this_month}: follow-up steps completed')
+        assert mm['value'] == 5 and not mm['suppressed']
+
+    r = c.get('/admin/annual-report.csv')
+    body = r.data.decode()
+    assert 'Crisis alerts and follow-ups by month' in body
+    assert 'follow-up steps completed' in body
+
+
 def test_annual_k_suppression_and_csv_columns(app, admin_client, make_user):
     from services import annual_report
     from utils.timeutil import ist_today

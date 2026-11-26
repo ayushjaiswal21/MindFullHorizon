@@ -3,22 +3,22 @@
 
 Not a prevalence estimate: counts from this service only.
 """
-from datetime import date
+from datetime import date, datetime, timezone
 from statistics import median
 
 from sqlalchemy import func, or_, union
 
 from ai.scoring import band_for, canonical_type
 from core.extensions import db
-from models import (Appointment, Assessment, BreathingExerciseLog, CrisisEvent, DigitalDetoxLog, InventoryBatch,
-                    InventoryTransaction, MedicationLog, MoodLog, MusicTherapyLog, PrescriberProfile, Prescription,
-                    User, YogaLog)
+from models import (Appointment, Assessment, BreathingExerciseLog, CrisisEvent, DigitalDetoxLog, FollowUpPlan,
+                    FollowUpStep, InventoryBatch, InventoryTransaction, MedicationLog, MoodLog, MusicTherapyLog,
+                    PrescriberProfile, Prescription, User, YogaLog)
 from services import config
 from services.db_util import inst_match
 from services.http import iso
 from utils.aggregates import patient_ids_query
 from services.inventory_csv import to_csv
-from utils.timeutil import ist_day_bounds, to_ist_date, utcnow
+from utils.timeutil import IST, ist_day_bounds, to_ist_date, utcnow
 
 CSV_COLUMNS = ['section', 'metric', 'value', 'note']
 BANDS = {'PHQ-9': ('None', 'Minimal', 'Mild', 'Moderate', 'Moderately Severe', 'Severe'),
@@ -86,6 +86,15 @@ def _appointments(pids, start, end, k):
     return out
 
 
+def _completed_followups(pids, start, end):
+    """Follow-up steps marked done in the period, for the given patients. -> (count, distinct people)."""
+    rows = db.session.query(FollowUpPlan.patient_id).join(
+        FollowUpStep, FollowUpStep.plan_id == FollowUpPlan.id).filter(
+        FollowUpPlan.patient_id.in_(pids), FollowUpStep.status == 'done',
+        FollowUpStep.completed_at >= start, FollowUpStep.completed_at < end).all()
+    return len(rows), len({r[0] for r in rows})
+
+
 def _crisis(pids, start, end, k):
     rows = db.session.query(CrisisEvent.user_id, CrisisEvent.created_at, CrisisEvent.acknowledged_at).filter(
         CrisisEvent.user_id.in_(pids), CrisisEvent.created_at >= start, CrisisEvent.created_at < end).all()
@@ -94,9 +103,33 @@ def _crisis(pids, start, end, k):
     within = sum(1 for s in mins if s <= window)
     share = round(within / len(rows) * 100, 1) if rows else None
     med = round(median(mins) / 60, 1) if mins else None
+    fu_count, fu_people = _completed_followups(pids, start, end)
     return [_metric('Crisis alerts raised', len(rows), people, k),
             _metric('Alerts acknowledged within the escalation time (%)', share, people, k),
-            _metric('Median minutes to acknowledge', med, people, k)]
+            _metric('Median minutes to acknowledge', med, people, k),
+            _metric('Follow-up steps completed', fu_count, fu_people, k)]
+
+
+def _month_bounds(year, month):
+    """[start, end) of an IST calendar month as naive UTC datetimes, for filtering stored timestamps."""
+    start = datetime(year, month, 1, tzinfo=IST).astimezone(timezone.utc).replace(tzinfo=None)
+    ny, nm = (year + 1, 1) if month == 12 else (year, month + 1)
+    end = datetime(ny, nm, 1, tzinfo=IST).astimezone(timezone.utc).replace(tzinfo=None)
+    return start, end
+
+
+def _by_month(pids, year, k):
+    """Crisis alerts and completed follow-ups, broken down by calendar month (alongside the yearly totals)."""
+    out = []
+    for month in range(1, 13):
+        m_start, m_end = _month_bounds(year, month)
+        label = date(year, month, 1).strftime('%B')
+        crisis_people = db.session.query(CrisisEvent.user_id).filter(
+            CrisisEvent.user_id.in_(pids), CrisisEvent.created_at >= m_start, CrisisEvent.created_at < m_end).all()
+        fu_count, fu_people = _completed_followups(pids, m_start, m_end)
+        out.append(_metric(f'{label}: crisis alerts raised', len(crisis_people), len({r[0] for r in crisis_people}), k))
+        out.append(_metric(f'{label}: follow-up steps completed', fu_count, fu_people, k))
+    return out
 
 
 def _staff(key):
@@ -130,6 +163,7 @@ def build(institution_key, year, k=None):
     pids = patient_ids_query(institution_key)
     sections = [('Students', _people(pids, start, end, k)), ('Screenings', _screenings(pids, start, end, k)),
                 ('Appointments', _appointments(pids, start, end, k)), ('Crisis alerts', _crisis(pids, start, end, k)),
+                ('Crisis alerts and follow-ups by month', _by_month(pids, year, k)),
                 ('Staff', _staff(institution_key)), ('Prescriptions and medicines', _clinical(institution_key, start, end, k))]
     return {'year': year, 'institution': institution_key, 'generated_at': iso(utcnow()), 'k': k, 'note': NOTE,
             'sections': [{'title': t, 'metrics': m} for t, m in sections]}
