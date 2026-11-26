@@ -34,7 +34,9 @@ def _files(kind):
     if kind == 'js':
         return _walk('static/js', ('.js',))
     if kind == 'css':
-        return [p for p in (os.path.join(ROOT, 'static/css', n) for n in ('site.css', 'components.css', 'print.css')) if os.path.exists(p)]
+        names = ('site.css', 'site-components.css', 'components.css', 'print.css') + tuple(
+            f'site-legacy-{i}.css' for i in range(1, 8))
+        return [p for p in (os.path.join(ROOT, 'static/css', n) for n in names) if os.path.exists(p)]
     if kind == 'prompts':
         return _walk('ai_prompts', ('',))
     if kind == 'py':

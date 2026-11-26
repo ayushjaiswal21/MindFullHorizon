@@ -85,7 +85,8 @@ def test_site_context_values(app):
 def test_static_shell_files_exist():
     import os
     root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    for rel in ("static/css/site.css", "static/css/tailwind.css", "static/css/print.css", "static/js/shell.js", "static/img/icons.svg",
+    for rel in ("static/css/site.css", "static/css/site-components.css", "static/css/site-legacy-1.css",
+                "static/css/tailwind.css", "static/css/print.css", "static/js/shell.js", "static/img/icons.svg",
                 "static/img/favicon.svg", "static/img/favicon.ico", "static/favicon.ico", "static/img/apple-touch-icon.png",
                 "static/img/icon-192.png", "static/img/icon-512.png", "static/img/og-default.png", "static/img/og-default.webp",
                 "static/site.webmanifest"):

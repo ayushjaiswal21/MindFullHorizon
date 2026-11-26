@@ -16,8 +16,9 @@ from utils.helplines import get_helplines
 SITE_LAST_UPDATED = '2026-11-24'
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_ASSET_FILES = ('static/css/site.css', 'static/css/components.css', 'static/css/tailwind.css',
-                'static/js/shell.js', 'static/js/components.js')
+_ASSET_FILES = ('static/css/site.css', 'static/css/site-components.css', 'static/css/components.css',
+                'static/css/tailwind.css', 'static/js/shell.js', 'static/js/components.js') + tuple(
+    f'static/css/site-legacy-{i}.css' for i in range(1, 8))
 
 
 def _asset_version():
