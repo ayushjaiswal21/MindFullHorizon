@@ -166,13 +166,8 @@ _WEAK = {  # a hit alone is only "low": markup and links are common in pasted te
                 _c(r'\bdecode (?:this|the following)\b')],
 }
 _SQUASH_PHRASES = ('ignorepreviousinstructions', 'ignoreallpreviousinstructions', 'ignoreallinstructions',
-                   'systemprompt', 'youarenow', 'developermode', 'disregardpreviousinstructions',
-                   'ignorerules', 'forgetyourinstructions', 'ignoretheabove',
-                   # Hinglish/Hindi-transliterated equivalents of the same phrases above (SOV word order,
-                   # so "instructions ignore karo" not "ignore instructions"), de-spaced the same way.
-                   'pichleinstructionsignorekaro', 'pichlesaareinstructionsignorekaro',
-                   'sabhiinstructionsignorekaro', 'saareinstructionsignorekaro',
-                   'niyamignorekaro', 'rulesignorekaro', 'instructionsbhooljao', 'niyambhooljao', 'abtum')
+                   'systemprompt', 'youarenow', 'developermode', 'disregardpreviousinstructions', 'ignorerules', 'forgetyourinstructions',
+                   'ignoretheabove', 'pichleinstructionsignorekaro', 'pichlesaareinstructionsignorekaro', 'sabhiinstructionsignorekaro', 'saareinstructionsignorekaro', 'niyamignorekaro', 'rulesignorekaro', 'instructionsbhooljao', 'niyambhooljao', 'abtum')  # + Hinglish equivalents, SOV order
 
 
 class Verdict(NamedTuple):
