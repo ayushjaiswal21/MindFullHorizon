@@ -1,9 +1,9 @@
-"""Query-count guard for the pages that carry the follow-up panel, caseload flags and report timeline (see test_perf.py)."""
+"""Query-count guard for the pages that carry the follow-up panel, caseload flags and report timeline (see test_perf_db.py)."""
 from datetime import timedelta
 
 from core.extensions import db
 from models import Assessment, CrisisEvent, FollowUpPlan, FollowUpStep, ProviderPatient
-from test_perf import _count_queries, _seed_caseload
+from test_perf_db import _count_queries, _seed_caseload
 from utils.timeutil import ist_today, utcnow
 
 

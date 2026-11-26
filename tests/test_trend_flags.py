@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from core.extensions import db
 from models import MoodLog, ProviderPatient
 from models import SleepLog
-from test_perf import _count_queries, _seed_caseload
+from test_perf_db import _count_queries, _seed_caseload
 from utils import trend_flags
 from utils.timeutil import utcnow
 

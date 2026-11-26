@@ -4,12 +4,6 @@
  "static/js/components.js": 448,
  "static/js/provider_dashboard.js": 315,
  "static/js/shell.js": 324,
- "tests/test_jobs.py": 363,
  "tests/test_llm_injection.py": 540,
- "tests/test_llm_resilience.py": 378,
- "tests/test_patient.py": 322,
- "tests/test_perf.py": 445,
- "tests/test_safety.py": 423,
- "tests/test_security.py": 419,
  "utils/llm_guard.py": 391
 }
