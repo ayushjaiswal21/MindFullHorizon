@@ -76,7 +76,7 @@ services:
         sync: false
       - key: SMTP_FROM
         sync: false
-      - key: AI_SEND_PERSONAL_TEXT   # 0 = no student text or health data goes to Gemini (zero-cost policy, docs/LLM_SECURITY.md)
-        value: "0"
-      - key: AI_PERSONAL_TEXT_APPROVED_BY   # only if you set the flag to 1: who approved in writing, and when
+      - key: AI_SEND_PERSONAL_TEXT   # 1 = student text/health data may reach Gemini (owner approved in chat, 2026-11-26; zero-cost policy, docs/LLM_SECURITY.md)
+        value: "1"
+      - key: AI_PERSONAL_TEXT_APPROVED_BY   # required now that the flag above is 1: your name and today's date, e.g. "Ayush Jaiswal, 2026-11-26"
         sync: false
