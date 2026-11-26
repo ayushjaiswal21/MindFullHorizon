@@ -225,8 +225,13 @@ def test_followup_due_job_skips_resolved_steps_and_works_without_smtp(app, case)
 def test_completed_appointment_offers_next_step_but_never_auto_completes(app, case):
     ack(case)
     with app.app_context():
+        # updated_at is set well after plan.created_at (not via a second utcnow() call) so the `met > ...`
+        # comparison in panel() can't land on two timestamps too close together to compare reliably (O-17):
+        # naive UTC timestamps here are only as precise as the OS clock, which on Windows can be ~15ms.
+        plan_created_at = FollowUpPlan.query.filter_by(crisis_event_id=case["event"]).one().created_at
         db.session.add(Appointment(user_id=case["patient"], provider_id=case["provider"], date=ist_today(), time="10:00",
-                                   appointment_type="counselling", status="completed", updated_at=utcnow()))
+                                   appointment_type="counselling", status="completed",
+                                   updated_at=plan_created_at + timedelta(milliseconds=1)))
         db.session.commit()
     _, steps = plan_steps(app, case["event"])
     with app.app_context():
