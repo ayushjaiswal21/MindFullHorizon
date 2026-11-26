@@ -5,6 +5,7 @@ Design: docs/CLINICAL_DESIGN.md sections 2 to 4 and 6. Table and constraint name
 the migrations.
 """
 from core.extensions import db
+from utils.field_encryption import EncryptedText
 from utils.timeutil import utcnow
 
 __all__ = ["PrescriberProfile", "Medicine", "InventoryBatch", "ReorderRule", "Prescription", "PrescriptionItem",
@@ -145,11 +146,11 @@ class Prescription(db.Model):
     consult_appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id', ondelete='SET NULL'), nullable=True)
     tpg_context = db.Column(db.String(10), nullable=True)
     same_condition_attested = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
-    diagnosis = db.Column(db.String(120), nullable=True)
+    diagnosis = db.Column(EncryptedText, nullable=True)  # O-04b: free text, encrypted at rest
     allergies_status = db.Column(db.String(12), nullable=True)
-    allergies = db.Column(db.String(300), nullable=True)
+    allergies = db.Column(EncryptedText, nullable=True)  # O-04b
     current_meds_status = db.Column(db.String(12), nullable=True)
-    current_meds = db.Column(db.String(300), nullable=True)
+    current_meds = db.Column(EncryptedText, nullable=True)  # O-04b
     warnings_ack = db.Column(db.JSON, nullable=True)
     consent_version = db.Column(db.String(20), nullable=True)
     amends_id = db.Column(db.Integer, db.ForeignKey('prescriptions.id', ondelete='SET NULL'), nullable=True)

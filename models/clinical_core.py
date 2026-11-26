@@ -56,9 +56,9 @@ class Appointment(db.Model):
     date = db.Column(db.Date, nullable=False, index=True)
     time = db.Column(db.String(10), nullable=False)
     appointment_type = db.Column(db.String(50), nullable=False)
-    notes = db.Column(db.Text, nullable=True)
+    notes = db.Column(EncryptedText, nullable=True)  # O-04b: free text, encrypted at rest
     status = db.Column(db.String(20), default='pending', nullable=False, index=True)
-    rejection_reason = db.Column(db.Text, nullable=True)
+    rejection_reason = db.Column(EncryptedText, nullable=True)  # O-04b
     modality = db.Column(db.String(10), nullable=True)  # doctor appointments: video | in_person (design 3.3)
     consult_started_at = db.Column(db.DateTime, nullable=True)  # set once by the doctor pressing "Start consult"
     client_request_id = db.Column(db.String(64), nullable=True)  # idempotency key (utils/idempotency.py)

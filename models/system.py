@@ -1,6 +1,7 @@
 """Cross-cutting system tables: notifications, background jobs, audit, consent, analytics."""
 from datetime import datetime
 from core.extensions import db
+from utils.field_encryption import EncryptedText
 
 __all__ = ["Notification", "Job", "AuditLog", "ConsentRecord", "AnalyticsEvent"]
 
@@ -13,7 +14,7 @@ class Notification(db.Model):
     recipient_id = db.Column(db.Integer, db.ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     type = db.Column(db.String(50), nullable=False, default='message')
     payload = db.Column(db.JSON, nullable=True)
-    message = db.Column(db.Text, nullable=True)
+    message = db.Column(EncryptedText, nullable=True)  # O-04b: free text, encrypted at rest
     read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

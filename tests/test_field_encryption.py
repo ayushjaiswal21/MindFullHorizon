@@ -1,15 +1,17 @@
-"""O-04: clinical free-text columns are encrypted at rest (utils/field_encryption.py).
+"""O-04/O-04b: clinical free-text columns are encrypted at rest (utils/field_encryption.py).
 
 ORM round-trip is covered incidentally by every existing model test (JournalEntry, SafetyPlan, MoodLog,
 ClinicalNote, Assessment, VoiceLog all still assert plain Python values). This file checks the thing
 those tests cannot: what is actually sitting in the database column.
 """
+from datetime import date
+
 from cryptography.fernet import Fernet, InvalidToken
 from sqlalchemy import text
 
 from core.extensions import db
-from models import Assessment, ClinicalNote, JournalEntry, MoodLog
-from models import SafetyPlan
+from models import Appointment, Assessment, ClinicalNote, JournalEntry, MoodLog
+from models import Notification, Prescription, SafetyPlan
 from utils.field_encryption import EncryptedText, reset_cipher_cache
 
 SECRET = "I have been thinking about ending my life and nobody knows."
@@ -86,6 +88,61 @@ def test_mood_log_notes_and_assessment_responses_are_ciphertext_on_disk(app, pat
 
     with app.app_context():
         assert Assessment.query.get(a_id).responses == {"mood": 3, "notes": SECRET}
+
+
+def test_appointment_notes_and_rejection_reason_are_ciphertext_on_disk(app, patient_client, make_user):
+    _, uid = patient_client
+    doctor_id = make_user("provider", provider_type="doctor")
+    with app.app_context():
+        appt = Appointment(user_id=uid, provider_id=doctor_id, date=date.today(), time="10:00",
+                            appointment_type="video", status="rejected", notes=SECRET,
+                            rejection_reason="patient disclosed: " + SECRET)
+        db.session.add(appt)
+        db.session.commit()
+        appt_id = appt.id
+
+    for column in ("notes", "rejection_reason"):
+        raw = _raw_column(app, "appointments", column, appt_id)
+        assert SECRET.encode("utf-8") not in bytes(raw)
+
+    with app.app_context():
+        saved = Appointment.query.get(appt_id)
+        assert saved.notes == SECRET
+        assert saved.rejection_reason == "patient disclosed: " + SECRET
+
+
+def test_prescription_diagnosis_allergies_meds_are_ciphertext_on_disk(app, patient_client, make_user):
+    _, uid = patient_client
+    doctor_id = make_user("provider", provider_type="doctor")
+    with app.app_context():
+        rx = Prescription(provider_id=doctor_id, patient_id=uid, status="draft",
+                           diagnosis=SECRET, allergies=SECRET, current_meds=SECRET)
+        db.session.add(rx)
+        db.session.commit()
+        rx_id = rx.id
+
+    for column in ("diagnosis", "allergies", "current_meds"):
+        raw = _raw_column(app, "prescriptions", column, rx_id)
+        assert SECRET.encode("utf-8") not in bytes(raw)
+
+    with app.app_context():
+        saved = Prescription.query.get(rx_id)
+        assert saved.diagnosis == SECRET and saved.allergies == SECRET and saved.current_meds == SECRET
+
+
+def test_notification_message_is_ciphertext_on_disk(app, patient_client):
+    _, uid = patient_client
+    with app.app_context():
+        notif = Notification(recipient_id=uid, type="message", message=SECRET)
+        db.session.add(notif)
+        db.session.commit()
+        notif_id = notif.id
+
+    raw = _raw_column(app, "notifications", "message", notif_id)
+    assert SECRET.encode("utf-8") not in bytes(raw)
+
+    with app.app_context():
+        assert Notification.query.get(notif_id).message == SECRET
 
 
 def test_round_trip_is_exact(app):
