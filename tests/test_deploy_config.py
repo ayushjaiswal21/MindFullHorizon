@@ -223,9 +223,14 @@ def test_every_render_env_var_is_read_by_the_code():
     source = ''
     for folder in ('.', 'ai', 'routes', 'utils'):
         base = os.path.join(ROOT, folder)
-        for name in (os.listdir(base) if folder != '.' else ['app.py', os.path.join('core', 'extensions.py')]):
-            if name.endswith('.py'):
-                with open(os.path.join(base, name), encoding='utf-8', errors='ignore') as fh:
+        if folder == '.':
+            paths = [os.path.join(base, 'app.py'), os.path.join(base, 'core', 'extensions.py')]
+        else:
+            paths = [os.path.join(dirpath, name) for dirpath, _, names in os.walk(base) for name in names
+                     if name.endswith('.py')]
+        for path in paths:
+            if path.endswith('.py'):
+                with open(path, encoding='utf-8', errors='ignore') as fh:
                     source += fh.read()
     for item in env:
         assert re.search(r"['\"]%s['\"]" % item['key'], source), f"{item['key']} is in render.yaml but no code reads it"
