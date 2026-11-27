@@ -1,9 +1,11 @@
 /* Layout for the landing page, the logged-in home and the AI explainer.
    Tokens only (defined in site.css); no colours of its own, so dark mode follows automatically. */
 
-.home-hero {
-  display: grid; gap: 2rem; padding-block: 2.5rem 2rem;
-  background-image: linear-gradient(color-mix(in srgb, var(--bg) 94%, transparent), color-mix(in srgb, var(--bg) 94%, transparent)), url('../img/hero-bg.webp');
+.home-hero { display: grid; gap: 2rem; padding-block: 2.5rem 2rem; }
+/* Background photo is a light teal-to-white gradient; it only reads well against the light
+   theme's own light --bg, so it's scoped there (dark theme stays plain, no clash). */
+:root:not([data-theme="dark"]) .home-hero {
+  background-image: linear-gradient(color-mix(in srgb, var(--bg) 65%, transparent), color-mix(in srgb, var(--bg) 65%, transparent)), url('../img/hero-bg.webp');
   background-size: cover; background-position: center; background-repeat: no-repeat;
 }
 .home-hero h1 { font-size: 1.875rem; line-height: 1.2; max-width: 24ch; margin: 0 0 1rem; }
