@@ -1,7 +1,11 @@
 /* Layout for the landing page, the logged-in home and the AI explainer.
    Tokens only (defined in site.css); no colours of its own, so dark mode follows automatically. */
 
-.home-hero { display: grid; gap: 2rem; padding-block: 2.5rem 2rem; }
+.home-hero {
+  display: grid; gap: 2rem; padding-block: 2.5rem 2rem;
+  background-image: linear-gradient(color-mix(in srgb, var(--bg) 94%, transparent), color-mix(in srgb, var(--bg) 94%, transparent)), url('../img/hero-bg.webp');
+  background-size: cover; background-position: center; background-repeat: no-repeat;
+}
 .home-hero h1 { font-size: 1.875rem; line-height: 1.2; max-width: 24ch; margin: 0 0 1rem; }
 .home-hero .lead { max-width: 38rem; margin: 0; color: var(--text-muted); font-size: 1.125rem; }
 .home-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }

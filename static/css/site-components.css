@@ -157,8 +157,7 @@ details.accordion > summary, .accordion summary {
 .site-header-inner { display: flex; align-items: center; gap: 1rem; height: var(--header-h); }
 .brand { display: inline-flex; align-items: center; gap: .625rem; color: var(--text); font-weight: 700; font-size: 1.0625rem; text-decoration: none; white-space: nowrap; }
 .brand:hover { color: var(--text); text-decoration: none; }
-.brand svg { flex: none; border-radius: var(--radius); }
-.brand-rect { fill: var(--primary); } .brand-glyph { fill: var(--primary-contrast); }
+.brand-mark { flex: none; width: 32px; height: 32px; }
 .site-header-actions { display: flex; align-items: center; gap: .25rem; margin-left: auto; }
 .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: var(--radius); color: var(--text); transition: background-color .15s; }
 .icon-btn:hover { background: var(--surface-2); }
