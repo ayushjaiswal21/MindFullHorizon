@@ -15,7 +15,7 @@ checking the key first matters: checking it after retyping columns can leave the
 
 SQLite: `op.batch_alter_table` recreates the table (render_as_batch=True in migrations/env.py). PostgreSQL
 cannot implicitly cast TEXT to BYTEA, so `postgresql_using='NULL'` clears the column during the type
-change and step 3 refills it - only tested against SQLite here (same untested PostgreSQL gap as 0011/O-11).
+change and step 3 refills it - verified against a real PostgreSQL 18 database 2026-11-25 (O-11), same as 0011.
 """
 import json
 import os

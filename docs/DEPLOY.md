@@ -163,6 +163,11 @@ docker run --rm -p 5000:5000 \
 ```
 (PowerShell: use `` ` `` at line ends, and put a 32+ character `SECRET_KEY` literal.) Then open http://localhost:5000/health. Expected: the log shows the migration, then `Using worker: eventlet`. Also try `docker run --rm mindfull-test ls static/gen` to confirm `packed.js` and `packed.css` were built into the image, and `docker run --rm mindfull-test id` to confirm it runs as user `app`.
 
+**Update 2026-11-27 (O-11).** Ran the migration and app-boot part of this check for real, against a throwaway Neon project (PostgreSQL 18.7, direct host, created empty for this test only, not Docker — Docker is still not installed on the dev machine, so this used `flask run` instead of a container):
+- `flask db upgrade` applied all 12 migrations (0001 through 0012) cleanly on the first try, start to finish, with no fix needed. In particular 0011/0012's `postgresql_using='NULL'` retype of the encrypted columns worked as written (verified the resulting columns are `BYTEA` and `alembic_version` lands on `0012`); `migrations/env.py`'s `render_as_batch=True` is set unconditionally (not only for SQLite) but caused no failure on Postgres either.
+- `python -c "import app"` and a `flask run` against the same database both came up clean; `/health` returned `{"status":"ok"}` and `/ready` returned `{"status":"ready", "checks": {"database": "ok", "migrations": "ok", ...}}`.
+- Still not verified by this pass: the actual `docker build .` / container boot (no Docker on this machine), the Neon **pooled** (`-pooler`) host, `scripts/backup_db.py` / `pg_restore`, and running `pytest` against Postgres — `tests/conftest.py` hardcodes a SQLite temp file for every test (`os.environ["DATABASE_URL"] = "sqlite:///..."`, unconditional), so the test suite itself does not exercise Postgres; that is by design here, not a gap this pass closed. See `docs/TRACKER.md` O-11.
+
 ## 8. Domain, SITE_URL, favicon and OG image
 
 1. Buy a domain or use a free subdomain you control. In Render open the service, **Settings**, **Custom Domains**, add it, and create the DNS record Render shows at your registrar. Render issues the HTTPS certificate itself.

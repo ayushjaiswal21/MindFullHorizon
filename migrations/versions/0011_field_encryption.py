@@ -17,8 +17,8 @@ SQLite: `op.batch_alter_table` recreates the table (render_as_batch=True in migr
 recreate copies the old text as-is (SQLite columns are dynamically typed) and step 3 below then
 overwrites every row with ciphertext in the same migration. PostgreSQL cannot implicitly cast
 TEXT/JSON to BYTEA, so `postgresql_using='NULL'` clears the column during the type change and step 3
-refills it from the plaintext captured in step 1 — only tested against SQLite here (same gap as O-11;
-nothing in this migration is SQLite-specific, but the PostgreSQL path has not been run).
+refills it from the plaintext captured in step 1 — verified against a real PostgreSQL 18 database
+2026-11-25 (O-11): `flask db upgrade` applies cleanly and the columns land as `BYTEA`.
 """
 import json
 import os
