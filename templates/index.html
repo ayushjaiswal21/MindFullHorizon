@@ -120,7 +120,7 @@
   <section aria-labelledby="sessions-title" class="home-block">
     <div class="home-heading">
       <h2 id="sessions-title">Today's sessions</h2>
-      <a href="{{ url_for('provider.provider_appointments') }}">All appointments</a>
+      <a href="{{ url_for('provider.provider_appointments') }}" class="tap-link">All appointments</a>
     </div>
     <div class="home-two">
       <div class="card"><div class="card-body">
@@ -137,7 +137,7 @@
       <div class="stat">
         <span class="stat-label">Appointment requests waiting</span>
         <span class="stat-value">{{ home.get('pending_count', 'n/a') }}</span>
-        <span class="stat-note"><a href="{{ url_for('provider.provider_appointments') }}">Review requests</a></span>
+        <span class="stat-note"><a href="{{ url_for('provider.provider_appointments') }}" class="tap-link">Review requests</a></span>
       </div>
     </div>
   </section>
