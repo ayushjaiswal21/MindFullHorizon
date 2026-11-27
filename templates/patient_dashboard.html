@@ -25,7 +25,7 @@
     {% if alerts %}
     <div class="alert alert-warning mb-6" role="alert">
         <strong>Readings to be aware of</strong>
-        <ul>
+        <ul class="pl-5">
             {% for alert in alerts %}<li>{{ alert }}</li>{% endfor %}
         </ul>
         <p class="mt-2">These come from recorded readings and are not a diagnosis. Talk to your counsellor or doctor if they worry you.</p>
