@@ -26,6 +26,11 @@
   --warning-soft: color-mix(in srgb, var(--warning) 10%, var(--surface));
   --success-soft: color-mix(in srgb, var(--success) 10%, var(--surface));
   --info-soft: color-mix(in srgb, var(--info) 10%, var(--surface));
+  /* Glass (structural chrome only, see docs/DESIGN_SYSTEM.md). Built from the tokens above, so
+     it stays on-brand and adapts to dark mode without a separate definition. */
+  --glass-tint: color-mix(in srgb, var(--surface) 68%, transparent);
+  --glass-tint-strong: color-mix(in srgb, var(--surface-raised) 90%, transparent);
+  --glass-border: color-mix(in srgb, var(--border) 65%, var(--text) 25%);
   color-scheme: light;
 }
 :root[data-theme="dark"] {

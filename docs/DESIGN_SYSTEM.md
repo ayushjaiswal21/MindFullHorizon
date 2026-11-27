@@ -55,6 +55,18 @@ Use Tailwind utilities for **layout only** (flex, grid, gap, margin, padding, wi
 - Text helpers: `.muted`, `.text-danger`, `.text-success`, `.prose` (long-form pages: privacy, terms, blog).
 - Crisis banner: `.crisis-banner` (always readable, high contrast, links `tel:`). Helplines come from `utils/helplines.py`, never typed in templates.
 
+## Glass (structural chrome only)
+
+The owner has asked for Apple-style translucency on a handful of structural surfaces: the sticky header (`.site-header`), the desktop dropdown menu (`.menu-popover`), the confirm/delete modal (`.mfh-modal` and its `::backdrop`), and dashboard stat tiles (`.stat`). This is a deliberate, narrow addition, not a reversal of "flat surfaces only" above: everywhere else in the product (cards, forms, journal and assessment text, chat, body content) stays flat with the hairline border and no shadow, exactly as before. Glass goes on chrome you look past, never on anything you read or write.
+
+Implementation (`static/css/components.css`, gated by `@supports (backdrop-filter: blur(1px))`):
+- `backdrop-filter: blur(...) saturate(...)` (10-20px blur depending on how much the surface overlaps content; 130-150% saturation so colour behind the glass does not wash out).
+- A translucent background built from existing tokens only, never a new colour: `--glass-tint` (`color-mix(in srgb, var(--surface) 68%, transparent)`) for lighter chrome (header, stat tiles), `--glass-tint-strong` (`color-mix(in srgb, var(--surface-raised) 90%, transparent)`) where text needs to stay legible over arbitrary page content (menu, modal). Both tokens are defined once in `site.css` from the theme-aware `--surface`/`--surface-raised`, so they resolve correctly in light and dark mode without a second definition.
+- A 1px edge, `--glass-border` (`color-mix(in srgb, var(--border) 65%, var(--text) 25%)`), slightly more visible than the normal hairline so the glass surface still reads as a bounded panel.
+- No `@supports not` override is needed: every glass rule only replaces a background/border that is already solid elsewhere in the same stylesheet, so a browser without `backdrop-filter` (or with it disabled) simply keeps that solid surface and stays fully readable.
+
+The crisis/helpline banner stays flat and opaque on purpose: it must read as unambiguous and urgent, not decorative, so it was left out of this pass.
+
 ## Icons
 
 Inline SVG sprite at `static/img/icons.svg`, 24px grid, 1.75 stroke, `currentColor`. Use the macro:

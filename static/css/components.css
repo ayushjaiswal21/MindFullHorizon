@@ -182,4 +182,42 @@
 .field-narrow { max-width: 14rem; }
 .field-wide { max-width: 36rem; }
 .wl-actions-split { justify-content: space-between; align-items: flex-start; }
+
+/* ---------- Glass (structural chrome only; owner-approved, see docs/DESIGN_SYSTEM.md) ----------
+   Translucent surfaces for the header, dropdown menu, modal and stat tiles. Tokens come from
+   site.css so both themes stay in sync. Browsers without backdrop-filter keep the solid
+   background each of these rules already has, so nothing becomes unreadable. */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .site-header {
+    background: var(--glass-tint);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border-bottom-color: var(--glass-border);
+  }
+  .stat {
+    background: var(--glass-tint);
+    backdrop-filter: blur(10px) saturate(130%);
+    -webkit-backdrop-filter: blur(10px) saturate(130%);
+    border-color: var(--glass-border);
+  }
+  .mfh-modal {
+    background: var(--glass-tint-strong);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border-color: var(--glass-border);
+  }
+  .mfh-modal::backdrop { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  @media (min-width: 72rem) {
+    .menu-popover {
+      background: var(--glass-tint-strong);
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
+      border-color: var(--glass-border);
+    }
+  }
+}
+
+/* ---------- Hover polish (calm, 150-250ms; killed with everything else under reduced motion) ---------- */
+.table tbody tr { transition: background-color .18s ease; }
+.accordion summary { transition: background-color .18s ease; }
 .wl-grid-auto { grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); }
